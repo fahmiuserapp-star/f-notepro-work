@@ -10,6 +10,7 @@
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
     <!-- Cloudinary Upload Widget -->
@@ -27,6 +28,9 @@
             --primary-dark: #e8254a;
             --primary-light: rgba(254, 44, 85, 0.15);
             --secondary: #25f4ee;
+            --accent-gold: #f59e0b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
             --bg-primary: #121212;
             --bg-card: #1e1e1e;
             --bg-elevated: #252525;
@@ -41,7 +45,6 @@
             --warning: #f59e0b;
             --bottom-nav-height: 72px;
             --safe-bottom: env(safe-area-inset-bottom, 0px);
-            --card-radius: 0;
             --modal-radius: 28px;
         }
 
@@ -71,6 +74,146 @@
             left: 0;
         }
 
+        /* ============ AUTH SCREEN ============ */
+        .auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            padding: 20px;
+            transition: all 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+
+        .auth-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.05);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-logo .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 16px;
+            box-shadow: 0 15px 40px rgba(254, 44, 85, 0.4);
+            animation: logoPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { box-shadow: 0 15px 40px rgba(254, 44, 85, 0.4); transform: scale(1); }
+            50% { box-shadow: 0 20px 50px rgba(254, 44, 85, 0.6); transform: scale(1.03); }
+        }
+
+        .auth-logo h1 {
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .auth-btn {
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+            box-shadow: 0 10px 30px rgba(254, 44, 85, 0.3);
+        }
+
+        .auth-btn:active {
+            transform: scale(0.96);
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .auth-toggle span {
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .error-message {
+            color: var(--danger);
+            text-align: center;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 10px;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
         /* ============ APP CONTAINER ============ */
         .app-container {
             height: 100vh;
@@ -80,63 +223,97 @@
             position: relative;
         }
 
+        .app-container.hidden {
+            display: none;
+        }
+
         .main-content {
             flex: 1;
             overflow: hidden;
             position: relative;
         }
 
-        /* ============ SPLASH SCREEN ============ */
-        .splash-screen {
-            position: fixed;
+        /* ============ TOP HEADER BAR ============ */
+        .top-header {
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: var(--bg-primary);
+            z-index: 100;
+            padding: 12px 16px;
+            padding-top: calc(env(safe-area-inset-top, 20px) + 8px);
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            z-index: 5000;
-            transition: all 0.6s cubic-bezier(0.76, 0, 0.24, 1);
-        }
-
-        .splash-screen.hide {
-            opacity: 0;
+            justify-content: space-between;
             pointer-events: none;
-            transform: scale(1.1);
         }
 
-        .splash-logo {
-            width: 90px;
-            height: 90px;
+        .top-header > * {
+            pointer-events: auto;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-logo .mini-icon {
+            width: 34px;
+            height: 34px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 24px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 44px;
-            animation: splashPulse 2s ease-in-out infinite;
-            box-shadow: 0 20px 60px rgba(254, 44, 85, 0.4);
+            font-size: 16px;
         }
 
-        .splash-title {
-            font-size: 28px;
-            font-weight: 900;
-            margin-top: 20px;
-            letter-spacing: -1px;
+        .header-logo span {
+            font-weight: 800;
+            font-size: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .splash-subtitle {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-top: 4px;
+        .header-actions {
+            display: flex;
+            gap: 8px;
         }
 
-        @keyframes splashPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 20px 60px rgba(254, 44, 85, 0.4); }
-            50% { transform: scale(1.05); box-shadow: 0 25px 70px rgba(254, 44, 85, 0.6); }
+        .header-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:active {
+            transform: scale(0.9);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .header-btn.logout-btn:active {
+            background: var(--danger);
+            border-color: var(--danger);
         }
 
         /* ============ FEED SCREEN ============ */
@@ -181,15 +358,40 @@
             left: 0;
             right: 0;
             height: 65%;
-            background: linear-gradient(
-                to top,
-                rgba(0, 0, 0, 0.95) 0%,
-                rgba(0, 0, 0, 0.75) 25%,
-                rgba(0, 0, 0, 0.4) 50%,
-                rgba(0, 0, 0, 0.1) 75%,
-                transparent 100%
-            );
+            background: linear-gradient(to top,
+                    rgba(0, 0, 0, 0.95) 0%,
+                    rgba(0, 0, 0, 0.75) 25%,
+                    rgba(0, 0, 0, 0.4) 50%,
+                    rgba(0, 0, 0, 0.1) 75%,
+                    transparent 100%);
             pointer-events: none;
+        }
+
+        .card-vehicle-badge {
+            position: absolute;
+            top: 110px;
+            left: 16px;
+            z-index: 3;
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .vehicle-thumb {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .vehicle-thumb:active {
+            transform: scale(1.1);
+            border-color: var(--primary);
         }
 
         .card-top-badge {
@@ -213,6 +415,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            cursor: pointer;
         }
 
         .card-badge.favorite-badge {
@@ -349,43 +552,111 @@
             animation: heartPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .action-btn.favorite.active .btn-icon i {
-            animation: starSpin 0.4s ease;
-        }
-
         .action-btn.whatsapp:active .btn-icon {
             background: #25D366;
             border-color: #25D366;
-            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
         }
-
         .action-btn.call:active .btn-icon {
             background: var(--success);
             border-color: var(--success);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
         }
-
         .action-btn.share:active .btn-icon {
-            background: #3b82f6;
-            border-color: #3b82f6;
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-        }
-
-        .action-btn.delete:active .btn-icon {
-            background: var(--danger);
-            border-color: var(--danger);
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
         }
 
         @keyframes heartPop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.25); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.25);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
 
-        @keyframes starSpin {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.3); }
-            100% { transform: rotate(360deg) scale(1); }
+        /* ============ IMAGE VIEWER MODAL ============ */
+        .image-viewer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 4000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-viewer-overlay.active {
+            display: flex;
+        }
+
+        .image-viewer-content {
+            max-width: 95vw;
+            max-height: 85vh;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .image-viewer-content img {
+            width: 100%;
+            height: auto;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 16px;
+        }
+
+        .image-viewer-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-viewer-switch {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .image-viewer-switch button {
+            padding: 10px 20px;
+            border-radius: 24px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .image-viewer-switch button.active {
+            background: var(--primary);
+            border-color: var(--primary);
         }
 
         /* ============ EMPTY STATE ============ */
@@ -420,7 +691,6 @@
             margin-bottom: 8px;
             color: var(--text-primary);
         }
-
         .empty-state p {
             font-size: 14px;
             color: var(--text-tertiary);
@@ -444,9 +714,10 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* ============ SEARCH SCREEN ============ */
@@ -456,7 +727,6 @@
             flex-direction: column;
             overflow: hidden;
         }
-
         .search-screen.active {
             display: flex;
         }
@@ -481,17 +751,14 @@
             transition: all 0.3s ease;
             gap: 10px;
         }
-
         .search-input-wrapper:focus-within {
             border-color: var(--primary);
             box-shadow: 0 0 0 4px var(--primary-light);
         }
-
         .search-input-wrapper i {
             color: var(--text-tertiary);
             font-size: 16px;
         }
-
         .search-input-wrapper input {
             flex: 1;
             background: none;
@@ -502,7 +769,6 @@
             padding: 4px 0;
             min-width: 0;
         }
-
         .search-input-wrapper input::placeholder {
             color: var(--text-tertiary);
         }
@@ -522,7 +788,6 @@
             flex-shrink: 0;
             transition: all 0.3s ease;
         }
-
         .voice-search-btn.recording {
             background: var(--danger);
             color: white;
@@ -530,9 +795,40 @@
             animation: pulse 1.2s infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-            50% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
+        /* Color filter chips */
+        .color-filters {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+        .color-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .color-chip .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .color-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
 
         .search-results {
@@ -556,12 +852,10 @@
             overflow: hidden;
             transition: all 0.2s ease;
         }
-
         .search-result-item:active {
             transform: scale(0.94);
             opacity: 0.9;
         }
-
         .search-result-overlay {
             position: absolute;
             bottom: 0;
@@ -570,7 +864,6 @@
             padding: 8px 6px;
             background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 100%);
         }
-
         .search-result-overlay .sr-name {
             font-size: 11px;
             font-weight: 700;
@@ -578,22 +871,16 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         .search-result-overlay .sr-lang {
             font-size: 10px;
             color: var(--text-secondary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
-
         .no-results {
             grid-column: 1 / -1;
             text-align: center;
             padding: 60px 20px;
             color: var(--text-tertiary);
         }
-
         .no-results i {
             font-size: 48px;
             margin-bottom: 12px;
@@ -617,14 +904,16 @@
             z-index: 2000;
             animation: fadeIn 0.25s ease;
         }
-
         .modal-overlay.active {
             display: flex;
         }
-
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         .modal-sheet {
@@ -638,12 +927,14 @@
             animation: slideUp 0.45s cubic-bezier(0.32, 0.72, 0, 1);
             box-shadow: 0 -10px 50px rgba(0, 0, 0, 0.6);
         }
-
         @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
         }
-
         .modal-handle {
             width: 36px;
             height: 5px;
@@ -651,7 +942,6 @@
             border-radius: 3px;
             margin: 14px auto 4px;
         }
-
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -664,12 +954,10 @@
             z-index: 2;
             backdrop-filter: blur(10px);
         }
-
         .modal-header h2 {
             font-size: 19px;
             font-weight: 800;
         }
-
         .modal-close {
             background: var(--bg-elevated);
             border: none;
@@ -684,7 +972,6 @@
             border-radius: 50%;
             transition: all 0.2s ease;
         }
-
         .modal-close:active {
             background: rgba(255, 255, 255, 0.15);
             transform: scale(0.9);
@@ -697,16 +984,21 @@
             gap: 14px;
         }
 
+        /* Dual image upload */
+        .dual-image-upload {
+            display: flex;
+            gap: 12px;
+        }
         .image-upload-area {
-            width: 100%;
-            height: 170px;
+            flex: 1;
+            height: 150px;
             border: 2px dashed rgba(255, 255, 255, 0.15);
             border-radius: 18px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             color: var(--text-tertiary);
             cursor: pointer;
             transition: all 0.3s ease;
@@ -716,45 +1008,39 @@
             position: relative;
             overflow: hidden;
         }
-
         .image-upload-area:active {
-            transform: scale(0.98);
+            transform: scale(0.97);
         }
-
         .image-upload-area.has-image {
             border-color: var(--success);
             border-style: solid;
         }
-
         .image-upload-area i {
-            font-size: 40px;
+            font-size: 32px;
             transition: all 0.3s ease;
         }
-
         .image-upload-area span {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
+            text-align: center;
         }
-
         .image-upload-area.has-image i,
         .image-upload-area.has-image span {
             display: none;
         }
-
         .image-change-badge {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
+            bottom: 8px;
+            right: 8px;
             background: rgba(0, 0, 0, 0.7);
             color: white;
-            padding: 6px 12px;
-            border-radius: 14px;
-            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
             font-weight: 600;
             display: none;
             backdrop-filter: blur(10px);
         }
-
         .image-upload-area.has-image .image-change-badge {
             display: block;
         }
@@ -764,14 +1050,12 @@
             flex-direction: column;
             gap: 6px;
         }
-
         .form-group label {
             font-size: 13px;
             font-weight: 700;
             color: var(--text-secondary);
             letter-spacing: 0.3px;
         }
-
         .form-group input,
         .form-group select,
         .form-group textarea {
@@ -785,7 +1069,6 @@
             font-family: 'Cairo', sans-serif;
             transition: all 0.3s ease;
         }
-
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
@@ -793,7 +1076,6 @@
             box-shadow: 0 0 0 4px var(--primary-light);
             background: rgba(255, 255, 255, 0.08);
         }
-
         .form-group textarea {
             resize: vertical;
             min-height: 80px;
@@ -804,11 +1086,9 @@
             display: flex;
             gap: 8px;
         }
-
         .voice-input-group input {
             flex: 1;
         }
-
         .voice-input-btn {
             width: 48px;
             height: 48px;
@@ -824,25 +1104,31 @@
             flex-shrink: 0;
             transition: all 0.3s ease;
         }
-
         .voice-input-btn:active {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
         }
-
         .voice-input-btn.recording {
             background: var(--danger);
             color: white;
             border-color: var(--danger);
             animation: pulse 1.2s infinite;
         }
+        @keyframes pulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 0 14px rgba(239, 68, 68, 0);
+            }
+        }
 
         .form-row {
             display: flex;
             gap: 10px;
         }
-
         .form-row .form-group {
             flex: 1;
         }
@@ -862,23 +1148,15 @@
             letter-spacing: 0.5px;
             box-shadow: 0 8px 30px rgba(254, 44, 85, 0.3);
         }
-
         .submit-btn:active {
             transform: scale(0.96);
-            box-shadow: 0 4px 15px rgba(254, 44, 85, 0.2);
         }
-
         .submit-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
 
-        .submit-btn i {
-            margin-left: 6px;
-        }
-
-        /* ============ DELETE CONFIRMATION ============ */
         .delete-confirm {
             display: none;
             padding: 16px 20px;
@@ -888,47 +1166,126 @@
             margin-top: 8px;
             text-align: center;
         }
-
         .delete-confirm.show {
             display: block;
         }
-
         .delete-confirm p {
             font-size: 13px;
             margin-bottom: 10px;
             color: var(--danger);
         }
-
         .delete-confirm-btns {
             display: flex;
             gap: 8px;
             justify-content: center;
         }
-
         .delete-confirm-btns button {
             padding: 8px 20px;
             border-radius: 20px;
             font-weight: 700;
             font-size: 13px;
             cursor: pointer;
-            transition: all 0.2s ease;
             border: none;
             font-family: 'Cairo', sans-serif;
         }
-
         .btn-confirm-delete {
             background: var(--danger);
             color: white;
         }
-
         .btn-cancel-delete {
             background: var(--bg-elevated);
             color: var(--text-primary);
         }
 
-        .btn-confirm-delete:active,
-        .btn-cancel-delete:active {
-            transform: scale(0.94);
+        /* ============ SETTINGS PANEL ============ */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100vh;
+            height: 100dvh;
+            background: var(--bg-card);
+            z-index: 3500;
+            transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+        }
+        .settings-panel.open {
+            right: 0;
+        }
+        .settings-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 3400;
+            display: none;
+        }
+        .settings-backdrop.show {
+            display: block;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .settings-header h3 {
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .settings-section {
+            margin-bottom: 24px;
+        }
+        .settings-section h4 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .setting-item span {
+            font-size: 14px;
+        }
+        .toggle-switch {
+            width: 50px;
+            height: 28px;
+            background: var(--bg-elevated);
+            border-radius: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        .toggle-switch.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .toggle-switch.active::after {
+            left: 25px;
         }
 
         /* ============ BOTTOM NAVIGATION ============ */
@@ -948,7 +1305,6 @@
             z-index: 1000;
             padding-bottom: var(--safe-bottom);
         }
-
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -964,21 +1320,17 @@
             position: relative;
             min-width: 70px;
         }
-
         .nav-item.active {
             color: var(--text-primary);
         }
-
         .nav-item i {
             font-size: 22px;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
         .nav-item span {
             font-size: 11px;
             font-weight: 700;
         }
-
         .nav-indicator {
             position: absolute;
             top: -1px;
@@ -991,11 +1343,9 @@
             transition: all 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             opacity: 0;
         }
-
         .nav-item.active .nav-indicator {
             opacity: 1;
         }
-
         .nav-item.add-btn i {
             font-size: 30px;
             background: linear-gradient(135deg, var(--primary), #ff6b81);
@@ -1003,10 +1353,6 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             filter: drop-shadow(0 4px 8px rgba(254, 44, 85, 0.5));
-        }
-
-        .nav-item.add-btn:active i {
-            transform: scale(0.85);
         }
 
         /* ============ TOAST ============ */
@@ -1021,7 +1367,6 @@
             gap: 8px;
             pointer-events: none;
         }
-
         .toast {
             background: var(--bg-elevated);
             color: var(--text-primary);
@@ -1038,48 +1383,73 @@
             gap: 8px;
             pointer-events: auto;
         }
-
         .toast.success {
             border-color: var(--success);
             color: var(--success);
             background: rgba(16, 185, 129, 0.1);
         }
-
         .toast.error {
             border-color: var(--danger);
             color: var(--danger);
             background: rgba(239, 68, 68, 0.1);
         }
-
         @keyframes toastIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
-
         @keyframes toastOut {
-            from { transform: translateY(0); opacity: 1; }
-            to { transform: translateY(20px); opacity: 0; }
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(20px);
+                opacity: 0;
+            }
         }
 
-        /* ============ SCROLLBAR ============ */
+        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 0;
-            height: 0;
         }
 
-        /* ============ RESPONSIVE ============ */
+        /* Responsive */
         @media (max-width: 360px) {
-            .guide-name { font-size: 24px; }
-            .action-btn .btn-icon { width: 38px; height: 38px; font-size: 17px; }
-            .form-row { flex-direction: column; }
+            .guide-name {
+                font-size: 24px;
+            }
+            .action-btn .btn-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 17px;
+            }
+            .form-row {
+                flex-direction: column;
+            }
+            .dual-image-upload {
+                flex-direction: column;
+            }
         }
-
         @media (min-width: 768px) {
-            .search-results { grid-template-columns: repeat(4, 1fr); gap: 4px; }
-            .guide-name { font-size: 34px; }
-            .modal-sheet { border-radius: var(--modal-radius); margin-bottom: 20px; max-height: 80vh; }
+            .search-results {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px;
+            }
+            .guide-name {
+                font-size: 34px;
+            }
+            .modal-sheet {
+                border-radius: var(--modal-radius);
+                margin-bottom: 20px;
+                max-height: 80vh;
+            }
         }
-
         @media (min-width: 1024px) {
             body {
                 max-width: 430px;
@@ -1098,20 +1468,78 @@
 </head>
 <body>
 
-    <!-- ==================== SPLASH SCREEN ==================== -->
-    <div id="splashScreen" class="splash-screen">
-        <div class="splash-logo">
-            <i class="fa-solid fa-shield-halved" style="color: white;"></i>
+    <!-- ==================== AUTH SCREEN ==================== -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color: white;"></i></div>
+                <h1>F-Note Pro</h1>
+            </div>
+            <form id="authForm" class="auth-form">
+                <input type="email" id="authEmail" placeholder="البريد الإلكتروني" required dir="ltr">
+                <input type="password" id="authPassword" placeholder="كلمة المرور" required>
+                <button type="submit" class="auth-btn" id="authSubmitBtn">تسجيل الدخول</button>
+            </form>
+            <p class="auth-toggle" id="authToggle">
+                ليس لديك حساب؟ <span onclick="toggleAuthMode()">إنشاء حساب جديد</span>
+            </p>
+            <p class="error-message" id="authError"></p>
         </div>
-        <div class="splash-title">F-Note Pro</div>
-        <div class="splash-subtitle">إدارة المرشدين السياحيين</div>
+    </div>
+
+    <!-- ==================== SETTINGS PANEL ==================== -->
+    <div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings()"></div>
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h3><i class="fa-solid fa-gear"></i> الإعدادات</h3>
+            <button class="modal-close" onclick="closeSettings()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="settings-section">
+            <h4>المظهر</h4>
+            <div class="setting-item">
+                <span><i class="fa-solid fa-moon"></i> الوضع الليلي</span>
+                <div class="toggle-switch active" id="darkModeToggle" onclick="toggleSetting('darkMode')"></div>
+            </div>
+            <div class="setting-item">
+                <span><i class="fa-solid fa-wand-magic-sparkles"></i> تأثيرات حركية</span>
+                <div class="toggle-switch active" id="animationsToggle" onclick="toggleSetting('animations')"></div>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h4>البحث</h4>
+            <div class="setting-item">
+                <span><i class="fa-solid fa-microphone"></i> البحث الصوتي</span>
+                <div class="toggle-switch active" id="voiceSearchToggle" onclick="toggleSetting('voiceSearch')"></div>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h4>الحساب</h4>
+            <button class="submit-btn" style="width: 100%; background: transparent; border: 1.5px solid var(--danger); color: var(--danger); box-shadow: none;" onclick="logout()">
+                <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
+            </button>
+        </div>
     </div>
 
     <!-- ==================== APP CONTAINER ==================== -->
-    <div class="app-container">
-        
+    <div id="appContainer" class="app-container hidden">
+
         <!-- Feed Screen -->
         <div id="feedScreen" class="feed-screen active">
+            <!-- Top Header -->
+            <div class="top-header">
+                <div class="header-logo">
+                    <div class="mini-icon"><i class="fa-solid fa-shield-halved" style="color: white; font-size: 14px;"></i></div>
+                    <span>F-Note Pro</span>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="openSettings()" title="الإعدادات">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                    <button class="header-btn logout-btn" onclick="logout()" title="تسجيل الخروج">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
             <div class="main-content">
                 <div id="feedStack" class="feed-stack"></div>
             </div>
@@ -1126,6 +1554,20 @@
                 </div>
                 <button class="voice-search-btn" id="voiceSearchBtn" onclick="startVoiceSearch()" title="بحث صوتي">
                     <i class="fa-solid fa-microphone"></i>
+                </button>
+            </div>
+            <div class="color-filters" id="colorFilters">
+                <button class="color-chip active" data-color="all" onclick="filterByColor('all', this)">
+                    <span class="color-dot" style="background: linear-gradient(135deg, var(--primary), var(--secondary));"></span> الكل
+                </button>
+                <button class="color-chip" data-color="star" onclick="filterByColor('star', this)">
+                    <span class="color-dot" style="background: var(--warning);"></span> المفضلين
+                </button>
+                <button class="color-chip" data-color="whatsapp" onclick="filterByColor('whatsapp', this)">
+                    <span class="color-dot" style="background: #25D366;"></span> واتساب
+                </button>
+                <button class="color-chip" data-color="phone" onclick="filterByColor('phone', this)">
+                    <span class="color-dot" style="background: var(--success);"></span> اتصال
                 </button>
             </div>
             <div class="search-results" id="searchResults">
@@ -1160,22 +1602,26 @@
             <div class="modal-handle"></div>
             <div class="modal-header">
                 <h2 id="modalTitle">إضافة مرشد جديد</h2>
-                <button class="modal-close" onclick="closeAddModal()">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <button class="modal-close" onclick="closeAddModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="addGuideForm" class="modal-form" onsubmit="saveGuide(event)">
                 <input type="hidden" id="editGuideId" value="">
-                
-                <!-- Image Upload -->
-                <div class="image-upload-area" id="imageUpload" onclick="openCloudinaryWidget()">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <span>اضغط لرفع صورة المرشد</span>
-                    <div class="image-change-badge">
-                        <i class="fa-solid fa-camera"></i> تغيير الصورة
+
+                <!-- Dual Image Upload -->
+                <label style="font-size: 13px; font-weight: 700; color: var(--text-secondary);">الصور</label>
+                <div class="dual-image-upload">
+                    <div class="image-upload-area" id="guideImageUpload" onclick="openCloudinaryWidget('guide')">
+                        <i class="fa-solid fa-user"></i>
+                        <span>صورة المرشد</span>
+                        <div class="image-change-badge"><i class="fa-solid fa-camera"></i></div>
+                    </div>
+                    <div class="image-upload-area" id="vehicleImageUpload" onclick="openCloudinaryWidget('vehicle')">
+                        <i class="fa-solid fa-bus"></i>
+                        <span>صورة الحافلة</span>
+                        <div class="image-change-badge"><i class="fa-solid fa-camera"></i></div>
                     </div>
                 </div>
-                
+
                 <!-- Name with Voice -->
                 <div class="form-group">
                     <label>اسم المرشد <span style="color: var(--danger);">*</span></label>
@@ -1186,13 +1632,13 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Phone -->
                 <div class="form-group">
                     <label>رقم الهاتف <span style="color: var(--danger);">*</span></label>
                     <input type="tel" id="guidePhone" placeholder="+216 XX XXX XXX" required dir="ltr">
                 </div>
-                
+
                 <!-- License & Language Row -->
                 <div class="form-row">
                     <div class="form-group">
@@ -1210,14 +1656,14 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- Notes -->
                 <div class="form-group">
                     <label>ملاحظات</label>
                     <textarea id="guideNotes" placeholder="أي ملاحظات إضافية..."></textarea>
                 </div>
-                
-                <!-- Delete Confirmation (for edit mode) -->
+
+                <!-- Delete Confirmation -->
                 <div class="delete-confirm" id="deleteConfirm">
                     <p>هل أنت متأكد من حذف هذا المرشد؟</p>
                     <div class="delete-confirm-btns">
@@ -1225,14 +1671,14 @@
                         <button type="button" class="btn-confirm-delete" onclick="confirmDelete()">حذف</button>
                     </div>
                 </div>
-                
+
                 <!-- Submit -->
                 <button type="submit" class="submit-btn" id="submitGuideBtn">
                     <i class="fa-solid fa-check"></i> حفظ المرشد
                 </button>
-                
-                <!-- Delete Button (edit mode only) -->
-                <button type="button" class="submit-btn" id="deleteGuideBtn" 
+
+                <!-- Delete Button -->
+                <button type="button" class="submit-btn" id="deleteGuideBtn"
                         style="display:none; background: transparent; border: 1.5px solid var(--danger); color: var(--danger); box-shadow: none;"
                         onclick="showDeleteConfirm()">
                     <i class="fa-solid fa-trash"></i> حذف المرشد
@@ -1241,14 +1687,27 @@
         </div>
     </div>
 
+    <!-- ==================== IMAGE VIEWER ==================== -->
+    <div id="imageViewer" class="image-viewer-overlay" onclick="closeImageViewer()">
+        <div class="image-viewer-content" onclick="event.stopPropagation()">
+            <button class="image-viewer-close" onclick="closeImageViewer()"><i class="fa-solid fa-xmark"></i></button>
+            <img id="viewerImage" src="" alt="صورة">
+            <div class="image-viewer-switch" id="viewerSwitch">
+                <button class="active" data-type="guide" onclick="switchViewerImage('guide')">صورة المرشد</button>
+                <button data-type="vehicle" onclick="switchViewerImage('vehicle')">صورة الحافلة</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== TOAST CONTAINER ==================== -->
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
-        // ==================== FIREBASE CONFIGURATION ====================
+        // ==================== FIREBASE CONFIG ====================
         const firebaseConfig = {
             apiKey: "AIzaSyAJLpdRoKamaHHofnCh4qQk6mHKeI25Tgc",
             authDomain: "f-notepro-work.firebaseapp.com",
+            databaseURL: "https://f-notepro-work-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "f-notepro-work",
             storageBucket: "f-notepro-work.firebasestorage.app",
             messagingSenderId: "645688115664",
@@ -1256,91 +1715,154 @@
             measurementId: "G-SS24M0LZN2"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // ==================== CLOUDINARY CONFIGURATION ====================
+        // ==================== CLOUDINARY CONFIG ====================
         const CLOUDINARY_CLOUD_NAME = 'dmhtx93nj';
         const CLOUDINARY_UPLOAD_PRESET = 'ml_default';
 
         // ==================== APP STATE ====================
+        let currentUser = null;
         let guides = [];
         let currentFeedIndex = 0;
         let startY = 0;
         let isDragging = false;
         let currentScreen = 'feed';
-        let uploadedImageUrl = '';
+        let uploadedGuideImage = '';
+        let uploadedVehicleImage = '';
+        let currentUploadTarget = 'guide';
         let recognition = null;
         let pendingDeleteId = null;
-        const USER_ID = 'admin-user'; // يمكنك تغييره حسب احتياجك
+        let currentViewerGuide = null;
+        let currentViewerType = 'guide';
+        let activeColorFilter = 'all';
+        let settings = {
+            darkMode: true,
+            animations: true,
+            voiceSearch: true
+        };
 
-        // ==================== INITIALIZATION ====================
-        function initApp() {
-            loadGuides();
-            
-            // Hide splash after 2 seconds
-            setTimeout(() => {
-                document.getElementById('splashScreen').classList.add('hide');
-                setTimeout(() => {
-                    document.getElementById('splashScreen').style.display = 'none';
-                }, 600);
-            }, 2000);
+        // ==================== AUTH FUNCTIONS ====================
+        let isLoginMode = true;
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authSubmitBtn').textContent = isLoginMode ? 'تسجيل الدخول' : 'إنشاء حساب';
+            document.getElementById('authToggle').innerHTML = isLoginMode ?
+                'ليس لديك حساب؟ <span onclick="toggleAuthMode()">إنشاء حساب جديد</span>' :
+                'لديك حساب بالفعل؟ <span onclick="toggleAuthMode()">تسجيل الدخول</span>';
+        }
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const errorEl = document.getElementById('authError');
+            try {
+                errorEl.classList.remove('show');
+                if (isLoginMode) {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } else {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                }
+            } catch (error) {
+                errorEl.textContent = getArabicError(error.code);
+                errorEl.classList.add('show');
+            }
+        });
+
+        function getArabicError(code) {
+            const m = {
+                'auth/email-already-in-use': 'البريد الإلكتروني مستخدم بالفعل',
+                'auth/invalid-email': 'البريد الإلكتروني غير صالح',
+                'auth/weak-password': 'كلمة المرور ضعيفة (6 أحرف على الأقل)',
+                'auth/user-not-found': 'المستخدم غير موجود',
+                'auth/wrong-password': 'كلمة المرور غير صحيحة',
+                'auth/too-many-requests': 'محاولات كثيرة، الرجاء المحاولة لاحقاً'
+            };
+            return m[code] || 'حدث خطأ، الرجاء المحاولة مرة أخرى';
+        }
+
+        function logout() {
+            auth.signOut();
+            closeSettings();
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appContainer').classList.remove('hidden');
+                loadGuides();
+            } else {
+                currentUser = null;
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('appContainer').classList.add('hidden');
+            }
+        });
+
+        // ==================== SETTINGS ====================
+        function openSettings() {
+            document.getElementById('settingsPanel').classList.add('open');
+            document.getElementById('settingsBackdrop').classList.add('show');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsPanel').classList.remove('open');
+            document.getElementById('settingsBackdrop').classList.remove('show');
+        }
+
+        function toggleSetting(key) {
+            settings[key] = !settings[key];
+            const toggle = document.getElementById(key + 'Toggle');
+            if (settings[key]) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+            showToast(`تم ${settings[key] ? 'تفعيل' : 'إلغاء'} الإعداد`, 'success');
         }
 
         // ==================== LOAD GUIDES ====================
         function loadGuides() {
             const feedStack = document.getElementById('feedStack');
             feedStack.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
-            
-            db.collection('guides')
-                .orderBy('createdAt', 'desc')
+            db.collection('guides').where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc')
                 .onSnapshot((snapshot) => {
                     guides = [];
-                    snapshot.forEach((doc) => {
-                        guides.push({ id: doc.id, ...doc.data() });
-                    });
+                    snapshot.forEach((doc) => guides.push({ id: doc.id, ...doc.data() }));
                     renderFeed();
                 }, (error) => {
-                    console.error('خطأ في تحميل البيانات:', error);
-                    feedStack.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                            <h3>خطأ في التحميل</h3>
-                            <p>الرجاء التحقق من اتصال الإنترنت وتحديث الصفحة</p>
-                        </div>`;
+                    feedStack.innerHTML =
+                        `<div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><h3>خطأ في التحميل</h3><p>تحقق من اتصال الإنترنت</p></div>`;
                 });
         }
 
         // ==================== RENDER FEED ====================
         function renderFeed() {
             const feedStack = document.getElementById('feedStack');
-            
             if (guides.length === 0) {
-                feedStack.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon"><i class="fa-solid fa-users-slash"></i></div>
-                        <h3>لا يوجد مرشدين بعد</h3>
-                        <p>اضغط على زر <span style="color: var(--primary);">+</span> لإضافة أول مرشد سياحي</p>
-                    </div>`;
+                feedStack.innerHTML =
+                    `<div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-users-slash"></i></div><h3>لا يوجد مرشدين</h3><p>اضغط على <span style="color: var(--primary);">+</span> لإضافة أول مرشد</p></div>`;
                 return;
             }
-            
             feedStack.innerHTML = guides.map((guide, index) => `
-                <div class="guide-card" 
-                     style="background-image: url('${guide.image || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80'}')"
-                     data-index="${index}"
-                     data-id="${guide.id}">
+                <div class="guide-card" style="background-image: url('${guide.image || guide.guideImage || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80'}')" data-index="${index}" data-id="${guide.id}">
                     <div class="card-overlay"></div>
                     <div class="card-top-badge">
-                        ${guide.isFavorite ? `
-                        <div class="card-badge favorite-badge">
-                            <i class="fa-solid fa-star"></i> مفضل
-                        </div>` : ''}
-                        <div class="card-badge" onclick="event.stopPropagation(); editGuide('${guide.id}')">
-                            <i class="fa-solid fa-pen-to-square"></i> تعديل
-                        </div>
+                        ${guide.isFavorite ? `<div class="card-badge favorite-badge"><i class="fa-solid fa-star"></i> مفضل</div>` : ''}
+                        <div class="card-badge" onclick="event.stopPropagation(); editGuide('${guide.id}')"><i class="fa-solid fa-pen-to-square"></i> تعديل</div>
                     </div>
+                    ${guide.vehicleImage ? `
+                    <div class="card-vehicle-badge">
+                        <div class="vehicle-thumb" style="background-image: url('${guide.vehicleImage}')" onclick="event.stopPropagation(); openImageViewer('${guide.id}', 'vehicle')" title="صورة الحافلة"></div>
+                    </div>` : ''}
+                    ${guide.image || guide.guideImage ? `
+                    <div class="card-vehicle-badge" style="top: ${guide.vehicleImage ? '190px' : '110px'};">
+                        <div class="vehicle-thumb" style="background-image: url('${guide.image || guide.guideImage}')" onclick="event.stopPropagation(); openImageViewer('${guide.id}', 'guide')" title="صورة المرشد"></div>
+                    </div>` : ''}
                     <div class="card-content">
                         <div class="guide-info">
                             <h2 class="guide-name">${guide.name}</h2>
@@ -1351,31 +1873,22 @@
                             ${guide.notes ? `<p class="guide-notes">${guide.notes}</p>` : ''}
                         </div>
                         <div class="action-buttons">
-                            <button class="action-btn favorite ${guide.isFavorite ? 'active' : ''}" 
-                                    onclick="event.stopPropagation(); toggleFavorite('${guide.id}', ${index})">
-                                <div class="btn-icon"><i class="fa-solid fa-star"></i></div>
-                                <span class="btn-label">مفضل</span>
+                            <button class="action-btn favorite ${guide.isFavorite ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${guide.id}', ${index})">
+                                <div class="btn-icon"><i class="fa-solid fa-star"></i></div><span class="btn-label">مفضل</span>
                             </button>
-                            <button class="action-btn whatsapp" 
-                                    onclick="event.stopPropagation(); openWhatsApp('${guide.phone}')">
-                                <div class="btn-icon"><i class="fa-brands fa-whatsapp"></i></div>
-                                <span class="btn-label">واتساب</span>
+                            <button class="action-btn whatsapp" onclick="event.stopPropagation(); openWhatsApp('${guide.phone}')">
+                                <div class="btn-icon"><i class="fa-brands fa-whatsapp"></i></div><span class="btn-label">واتساب</span>
                             </button>
-                            <button class="action-btn call" 
-                                    onclick="event.stopPropagation(); callGuide('${guide.phone}')">
-                                <div class="btn-icon"><i class="fa-solid fa-phone"></i></div>
-                                <span class="btn-label">اتصال</span>
+                            <button class="action-btn call" onclick="event.stopPropagation(); callGuide('${guide.phone}')">
+                                <div class="btn-icon"><i class="fa-solid fa-phone"></i></div><span class="btn-label">اتصال</span>
                             </button>
-                            <button class="action-btn share" 
-                                    onclick="event.stopPropagation(); shareGuide('${guide.id}')">
-                                <div class="btn-icon"><i class="fa-solid fa-share-nodes"></i></div>
-                                <span class="btn-label">مشاركة</span>
+                            <button class="action-btn share" onclick="event.stopPropagation(); shareGuide('${guide.id}')">
+                                <div class="btn-icon"><i class="fa-solid fa-share-nodes"></i></div><span class="btn-label">مشاركة</span>
                             </button>
                         </div>
                     </div>
                 </div>
             `).join('');
-            
             currentFeedIndex = 0;
             updateFeedPosition();
             setupSwipeGestures();
@@ -1384,114 +1897,65 @@
         // ==================== SWIPE GESTURES ====================
         function setupSwipeGestures() {
             const feedStack = document.getElementById('feedStack');
-            
-            // Remove old listeners by cloning
             const newFeedStack = feedStack.cloneNode(true);
             feedStack.parentNode.replaceChild(newFeedStack, feedStack);
-            
-            // Touch events
             newFeedStack.addEventListener('touchstart', handleTouchStart, { passive: false });
             newFeedStack.addEventListener('touchmove', handleTouchMove, { passive: false });
             newFeedStack.addEventListener('touchend', handleTouchEnd);
-            
-            // Mouse events
             newFeedStack.addEventListener('mousedown', handleMouseDown);
             window.addEventListener('mousemove', handleMouseMove);
             window.addEventListener('mouseup', handleMouseUp);
         }
 
-        function handleTouchStart(e) {
-            if (guides.length === 0) return;
+        function handleTouchStart(e) { if (!guides.length) return;
             startY = e.touches[0].clientY;
             isDragging = true;
-            document.getElementById('feedStack').style.transition = 'none';
-        }
+            document.getElementById('feedStack').style.transition = 'none'; }
 
-        function handleTouchMove(e) {
-            if (!isDragging || guides.length === 0) return;
-            const deltaY = e.touches[0].clientY - startY;
-            const damping = 0.6;
-            const offset = -currentFeedIndex * window.innerHeight + deltaY * damping;
-            document.getElementById('feedStack').style.transform = `translateY(${offset}px)`;
-        }
+        function handleTouchMove(e) { if (!isDragging || !guides.length) return; const d = e.touches[0].clientY -
+                startY;
+            document.getElementById('feedStack').style.transform =
+            `translateY(${-currentFeedIndex * window.innerHeight + d * 0.6}px)`; }
 
-        function handleTouchEnd(e) {
-            if (!isDragging || guides.length === 0) return;
-            isDragging = false;
-            const feedStack = document.getElementById('feedStack');
-            feedStack.style.transition = 'transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            
-            const deltaY = e.changedTouches[0].clientY - startY;
-            handleSwipeEnd(deltaY);
-        }
+        function handleTouchEnd(e) { if (!isDragging || !guides.length) return;
+            isDragging = false; const fs = document.getElementById('feedStack');
+            fs.style.transition = 'transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            handleSwipeEnd(e.changedTouches[0].clientY - startY); }
 
-        function handleMouseDown(e) {
-            if (guides.length === 0) return;
+        function handleMouseDown(e) { if (!guides.length) return;
             startY = e.clientY;
             isDragging = true;
             document.getElementById('feedStack').style.transition = 'none';
-            document.getElementById('feedStack').style.cursor = 'grabbing';
-        }
+            document.getElementById('feedStack').style.cursor = 'grabbing'; }
 
-        function handleMouseMove(e) {
-            if (!isDragging || guides.length === 0) return;
-            const deltaY = e.clientY - startY;
-            const damping = 0.6;
-            const offset = -currentFeedIndex * window.innerHeight + deltaY * damping;
-            document.getElementById('feedStack').style.transform = `translateY(${offset}px)`;
-        }
+        function handleMouseMove(e) { if (!isDragging || !guides.length) return; const d = e.clientY - startY;
+            document.getElementById('feedStack').style.transform =
+            `translateY(${-currentFeedIndex * window.innerHeight + d * 0.6}px)`; }
 
-        function handleMouseUp(e) {
-            if (!isDragging || guides.length === 0) return;
-            isDragging = false;
-            const feedStack = document.getElementById('feedStack');
-            feedStack.style.transition = 'transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            feedStack.style.cursor = 'grab';
-            
-            const deltaY = e.clientY - startY;
-            handleSwipeEnd(deltaY);
-        }
+        function handleMouseUp(e) { if (!isDragging || !guides.length) return;
+            isDragging = false; const fs = document.getElementById('feedStack');
+            fs.style.transition = 'transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            fs.style.cursor = 'grab';
+            handleSwipeEnd(e.clientY - startY); }
 
-        function handleSwipeEnd(deltaY) {
-            if (Math.abs(deltaY) > 70) {
-                if (deltaY > 0 && currentFeedIndex > 0) {
-                    currentFeedIndex--;
-                } else if (deltaY < 0 && currentFeedIndex < guides.length - 1) {
-                    currentFeedIndex++;
-                }
-            }
-            updateFeedPosition();
-        }
+        function handleSwipeEnd(d) { if (Math.abs(d) > 70) { if (d > 0 && currentFeedIndex > 0) currentFeedIndex--; else if (
+                d < 0 && currentFeedIndex < guides.length - 1) currentFeedIndex++; }
+            updateFeedPosition(); }
 
-        function updateFeedPosition() {
-            const feedStack = document.getElementById('feedStack');
-            feedStack.style.transform = `translateY(-${currentFeedIndex * window.innerHeight}px)`;
-        }
+        function updateFeedPosition() { document.getElementById('feedStack').style.transform =
+            `translateY(-${currentFeedIndex * window.innerHeight}px)`; }
 
-        // ==================== SCREEN SWITCHING ====================
+        // ==================== SCREENS ====================
         function switchScreen(screen) {
             currentScreen = screen;
-            
-            document.getElementById('feedScreen').classList.remove('active');
-            document.getElementById('searchScreen').classList.remove('active');
-            
-            if (screen === 'feed') {
-                document.getElementById('feedScreen').classList.add('active');
-                updateFeedPosition();
-            } else if (screen === 'search') {
-                document.getElementById('searchScreen').classList.add('active');
-                setTimeout(() => document.getElementById('searchInput').focus(), 300);
-            }
-            
-            document.querySelectorAll('.nav-item[data-screen]').forEach(item => {
-                item.classList.remove('active');
-                if (item.dataset.screen === screen) {
-                    item.classList.add('active');
-                }
-            });
+            document.getElementById('feedScreen').classList.toggle('active', screen === 'feed');
+            document.getElementById('searchScreen').classList.toggle('active', screen === 'search');
+            if (screen === 'search') setTimeout(() => document.getElementById('searchInput').focus(), 300);
+            document.querySelectorAll('.nav-item[data-screen]').forEach(item => item.classList.toggle('active', item
+                .dataset.screen === screen));
         }
 
-        // ==================== MODAL FUNCTIONS ====================
+        // ==================== MODAL ====================
         function openAddModal() {
             resetForm();
             document.getElementById('modalTitle').textContent = 'إضافة مرشد جديد';
@@ -1501,49 +1965,40 @@
             document.body.style.overflow = 'hidden';
         }
 
-        function closeAddModal() {
-            document.getElementById('addModal').classList.remove('active');
+        function closeAddModal() { document.getElementById('addModal').classList.remove('active');
             document.body.style.overflow = '';
-            resetForm();
-        }
+            resetForm(); }
 
         function resetForm() {
             document.getElementById('addGuideForm').reset();
             document.getElementById('editGuideId').value = '';
-            uploadedImageUrl = '';
+            uploadedGuideImage = '';
+            uploadedVehicleImage = '';
             pendingDeleteId = null;
-            const imageArea = document.getElementById('imageUpload');
-            imageArea.classList.remove('has-image');
-            imageArea.style.backgroundImage = '';
-            imageArea.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>اضغط لرفع صورة المرشد</span><div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير الصورة</div>';
+            ['guideImageUpload', 'vehicleImageUpload'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('has-image');
+                el.style.backgroundImage = '';
+                el.innerHTML =
+                    `${id === 'guideImageUpload' ? '<i class="fa-solid fa-user"></i><span>صورة المرشد</span>' : '<i class="fa-solid fa-bus"></i><span>صورة الحافلة</span>'}<div class="image-change-badge"><i class="fa-solid fa-camera"></i></div>`;
+            });
             document.getElementById('deleteConfirm').classList.remove('show');
             document.getElementById('deleteGuideBtn').style.display = 'none';
         }
 
-        // ==================== EDIT GUIDE ====================
         function editGuide(guideId) {
             const guide = guides.find(g => g.id === guideId);
             if (!guide) return;
-            
             document.getElementById('editGuideId').value = guideId;
             document.getElementById('guideName').value = guide.name || '';
             document.getElementById('guidePhone').value = guide.phone || '';
             document.getElementById('guideLicense').value = guide.license || '';
             document.getElementById('guideLanguage').value = guide.language || 'العربية';
             document.getElementById('guideNotes').value = guide.notes || '';
-            uploadedImageUrl = guide.image || '';
-            
-            const imageArea = document.getElementById('imageUpload');
-            if (uploadedImageUrl) {
-                imageArea.style.backgroundImage = `url(${uploadedImageUrl})`;
-                imageArea.classList.add('has-image');
-                imageArea.innerHTML = '<div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير الصورة</div>';
-            } else {
-                imageArea.classList.remove('has-image');
-                imageArea.style.backgroundImage = '';
-                imageArea.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>اضغط لرفع صورة المرشد</span><div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير الصورة</div>';
-            }
-            
+            uploadedGuideImage = guide.image || guide.guideImage || '';
+            uploadedVehicleImage = guide.vehicleImage || '';
+            updateImagePreview('guideImageUpload', uploadedGuideImage, 'guide');
+            updateImagePreview('vehicleImageUpload', uploadedVehicleImage, 'vehicle');
             document.getElementById('modalTitle').textContent = 'تعديل المرشد';
             document.getElementById('deleteGuideBtn').style.display = 'block';
             document.getElementById('deleteConfirm').classList.remove('show');
@@ -1551,381 +2006,230 @@
             document.body.style.overflow = 'hidden';
         }
 
-        function showDeleteConfirm() {
-            document.getElementById('deleteConfirm').classList.add('show');
-            pendingDeleteId = document.getElementById('editGuideId').value;
+        function updateImagePreview(elId, url, type) {
+            const el = document.getElementById(elId);
+            if (url) { el.style.backgroundImage = `url(${url})`;
+                el.classList.add('has-image');
+                el.innerHTML =
+                '<div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير</div>'; } else { el
+                    .classList.remove('has-image');
+                el.style.backgroundImage = '';
+                el.innerHTML =
+                    `${type === 'guide' ? '<i class="fa-solid fa-user"></i><span>صورة المرشد</span>' : '<i class="fa-solid fa-bus"></i><span>صورة الحافلة</span>'}<div class="image-change-badge"><i class="fa-solid fa-camera"></i></div>`; }
         }
 
-        function cancelDelete() {
-            document.getElementById('deleteConfirm').classList.remove('show');
-            pendingDeleteId = null;
-        }
+        function showDeleteConfirm() { document.getElementById('deleteConfirm').classList.add('show');
+            pendingDeleteId = document.getElementById('editGuideId').value; }
 
-        async function confirmDelete() {
-            if (!pendingDeleteId) return;
-            
-            try {
-                await db.collection('guides').doc(pendingDeleteId).delete();
-                showToast('تم حذف المرشد بنجاح', 'success');
-                closeAddModal();
-                switchScreen('feed');
-            } catch (error) {
-                console.error('خطأ في الحذف:', error);
-                showToast('حدث خطأ أثناء الحذف', 'error');
-            }
-            pendingDeleteId = null;
-        }
+        function cancelDelete() { document.getElementById('deleteConfirm').classList.remove('show');
+            pendingDeleteId = null; }
+
+        async function confirmDelete() { if (!pendingDeleteId) return; try { await db.collection('guides').doc(
+                pendingDeleteId).delete();
+            showToast('تم حذف المرشد', 'success');
+            closeAddModal();
+            switchScreen('feed'); } catch (e) { showToast('خطأ في الحذف', 'error'); }
+            pendingDeleteId = null; }
 
         // ==================== SAVE GUIDE ====================
         async function saveGuide(e) {
             e.preventDefault();
-            
-            const submitBtn = document.getElementById('submitGuideBtn');
+            const btn = document.getElementById('submitGuideBtn');
             const editId = document.getElementById('editGuideId').value;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
-            
-            const guideData = {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+            const data = {
                 name: document.getElementById('guideName').value.trim(),
                 phone: document.getElementById('guidePhone').value.trim(),
                 license: document.getElementById('guideLicense').value.trim(),
                 language: document.getElementById('guideLanguage').value,
                 notes: document.getElementById('guideNotes').value.trim(),
-                image: uploadedImageUrl,
+                image: uploadedGuideImage,
+                guideImage: uploadedGuideImage,
+                vehicleImage: uploadedVehicleImage,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
-            
-            // التحقق من الحقول المطلوبة
-            if (!guideData.name || !guideData.phone) {
-                showToast('الرجاء ملء الاسم ورقم الهاتف', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> حفظ المرشد';
-                return;
-            }
-            
+            if (!data.name || !data.phone) { showToast('الرجاء ملء الاسم والهاتف', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> حفظ المرشد'; return; }
             try {
-                if (editId) {
-                    // تحديث مرشد موجود
-                    await db.collection('guides').doc(editId).update(guideData);
-                    showToast('تم تحديث المرشد بنجاح ✨', 'success');
-                } else {
-                    // إضافة مرشد جديد
-                    guideData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                    guideData.isFavorite = false;
-                    await db.collection('guides').add(guideData);
-                    showToast('تمت إضافة المرشد بنجاح 🎉', 'success');
-                }
+                if (editId) { await db.collection('guides').doc(editId).update(data);
+                    showToast('تم التحديث ✨', 'success'); } else { data.createdAt = firebase.firestore.FieldValue
+                        .serverTimestamp();
+                    data.isFavorite = false;
+                    data.userId = currentUser.uid; await db.collection('guides').add(data);
+                    showToast('تمت الإضافة 🎉', 'success'); }
                 closeAddModal();
                 switchScreen('feed');
-            } catch (error) {
-                console.error('خطأ في الحفظ:', error);
-                showToast('حدث خطأ أثناء الحفظ', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> حفظ المرشد';
-            }
+            } catch (er) { showToast('خطأ في الحفظ', 'error'); } finally { btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> حفظ المرشد'; }
         }
 
-        // ==================== CLOUDINARY UPLOAD ====================
-        function openCloudinaryWidget() {
-            cloudinary.openUploadWidget(
-                {
-                    cloudName: CLOUDINARY_CLOUD_NAME,
-                    uploadPreset: CLOUDINARY_UPLOAD_PRESET,
-                    sources: ['local', 'url', 'camera'],
-                    multiple: false,
-                    maxFileSize: 8000000,
-                    folder: 'f-note-pro',
-                    language: 'ar',
-                    cropping: true,
-                    croppingAspectRatio: 0.75,
-                    showSkipCropButton: false,
-                    styles: {
-                        palette: {
-                            window: "#1a1a1a",
-                            windowBorder: "#333",
-                            tabIcon: "#fe2c55",
-                            menuIcons: "#a1a1aa",
-                            textDark: "#ffffff",
-                            textLight: "#a1a1aa",
-                            link: "#fe2c55",
-                            action: "#fe2c55",
-                            inactiveTabIcon: "#71717a",
-                            error: "#ef4444",
-                            inProgress: "#fe2c55",
-                            complete: "#10b981",
-                            sourceBg: "#252525"
-                        }
-                    }
-                },
-                (error, result) => {
-                    if (!error && result && result.event === 'success') {
-                        uploadedImageUrl = result.info.secure_url;
-                        const imageArea = document.getElementById('imageUpload');
-                        imageArea.style.backgroundImage = `url(${uploadedImageUrl})`;
-                        imageArea.classList.add('has-image');
-                        imageArea.innerHTML = '<div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير الصورة</div>';
-                        showToast('تم رفع الصورة بنجاح 📸', 'success');
-                    }
-                    if (error) {
-                        console.error('خطأ في رفع الصورة:', error);
-                        showToast('فشل رفع الصورة', 'error');
-                    }
+        // ==================== CLOUDINARY ====================
+        function openCloudinaryWidget(target) {
+            currentUploadTarget = target;
+            cloudinary.openUploadWidget({
+                cloudName: CLOUDINARY_CLOUD_NAME,
+                uploadPreset: CLOUDINARY_UPLOAD_PRESET,
+                sources: ['local', 'url', 'camera'],
+                multiple: false,
+                maxFileSize: 8000000,
+                folder: 'f-note-pro',
+                language: 'ar',
+                cropping: true,
+                croppingAspectRatio: target === 'vehicle' ? 1.5 : 0.75,
+                showSkipCropButton: false,
+                styles: { palette: { window: "#1a1a1a", windowBorder: "#333", tabIcon: "#fe2c55",
+                        menuIcons: "#a1a1aa", textDark: "#ffffff", textLight: "#a1a1aa", link: "#fe2c55",
+                        action: "#fe2c55", inactiveTabIcon: "#71717a", error: "#ef4444",
+                        inProgress: "#fe2c55", complete: "#10b981", sourceBg: "#252525" } }
+            }, (error, result) => {
+                if (!error && result && result.event === 'success') {
+                    const url = result.info.secure_url;
+                    if (currentUploadTarget === 'guide') { uploadedGuideImage = url;
+                        updateImagePreview('guideImageUpload', url, 'guide'); } else { uploadedVehicleImage =
+                            url;
+                        updateImagePreview('vehicleImageUpload', url, 'vehicle'); }
+                    showToast('تم رفع الصورة 📸', 'success');
                 }
-            );
+            });
         }
 
-        // ==================== GUIDE ACTIONS ====================
-        async function toggleFavorite(guideId, index) {
-            try {
-                const guide = guides[index];
-                const newStatus = !guide.isFavorite;
-                await db.collection('guides').doc(guideId).update({
-                    isFavorite: newStatus
-                });
-                // UI will update automatically via onSnapshot
-            } catch (error) {
-                console.error('خطأ في تحديث المفضلة:', error);
-                showToast('حدث خطأ', 'error');
-            }
-        }
-
-        function openWhatsApp(phone) {
-            const cleanedPhone = phone.replace(/[^0-9+]/g, '');
-            window.open(`https://wa.me/${cleanedPhone}`, '_blank');
-        }
-
-        function callGuide(phone) {
-            window.location.href = `tel:${phone}`;
-        }
-
-        async function shareGuide(guideId) {
+        // ==================== IMAGE VIEWER ====================
+        function openImageViewer(guideId, type) {
             const guide = guides.find(g => g.id === guideId);
             if (!guide) return;
-            
-            const shareText = `🚐 *مرشد سياحي*\n👤 الاسم: ${guide.name}\n📞 الهاتف: ${guide.phone}\n📋 الرخصة: ${guide.license || 'غير محدد'}\n🗣 اللغة: ${guide.language || 'العربية'}\n📝 ${guide.notes || ''}\n\n📱 تمت المشاركة عبر F-Note Pro`;
-            
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'F-Note Pro - مرشد سياحي',
-                        text: shareText,
-                    });
-                } catch (err) {
-                    // User cancelled
-                }
-            } else {
-                try {
-                    await navigator.clipboard.writeText(shareText);
-                    showToast('تم نسخ المعلومات 📋', 'success');
-                } catch (err) {
-                    showToast('تعذر النسخ', 'error');
-                }
-            }
+            currentViewerGuide = guide;
+            currentViewerType = type;
+            const img = document.getElementById('viewerImage');
+            const switchDiv = document.getElementById('viewerSwitch');
+            img.src = type === 'guide' ? (guide.image || guide.guideImage) : guide.vehicleImage;
+            if (guide.image && guide.vehicleImage) { switchDiv.style.display = 'flex';
+                switchDiv.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.type ===
+                    type)); } else { switchDiv.style.display = 'none'; }
+            document.getElementById('imageViewer').classList.add('active');
         }
+
+        function switchViewerImage(type) {
+            if (!currentViewerGuide) return;
+            currentViewerType = type;
+            document.getElementById('viewerImage').src = type === 'guide' ? (currentViewerGuide.image || currentViewerGuide
+                .guideImage) : currentViewerGuide.vehicleImage;
+            document.getElementById('viewerSwitch').querySelectorAll('button').forEach(b => b.classList.toggle('active', b
+                .dataset.type === type));
+        }
+
+        function closeImageViewer() { document.getElementById('imageViewer').classList.remove('active'); }
+
+        // ==================== GUIDE ACTIONS ====================
+        async function toggleFavorite(guideId, index) { try { const s = !guides[index].isFavorite; await db.collection(
+                'guides').doc(guideId).update({ isFavorite: s }); } catch (e) { showToast('خطأ', 'error'); } }
+
+        function openWhatsApp(p) { window.open(`https://wa.me/${p.replace(/[^0-9+]/g, '')}`, '_blank'); }
+
+        function callGuide(p) { window.location.href = `tel:${p}`; }
+
+        async function shareGuide(guideId) { const g = guides.find(gg => gg.id === guideId); if (!g) return; const t =
+                `🚐 مرشد: ${g.name}\n📞 ${g.phone}\n📋 ${g.license||''}\n🗣 ${g.language||''}\n📱 F-Note Pro`; if (
+                navigator.share) { try { await navigator.share({ title: 'F-Note Pro', text: t }); } catch (e) {} } else { try { await navigator
+                    .clipboard.writeText(t);
+                showToast('تم النسخ 📋', 'success'); } catch (e) { showToast('تعذر النسخ', 'error'); } } }
 
         // ==================== SEARCH ====================
-        document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
-            const searchTerm = e.target.value.trim();
-            if (searchTerm) {
-                searchGuides(searchTerm);
-            } else {
-                document.getElementById('searchResults').innerHTML = `
-                    <div class="no-results">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <p>ابدأ البحث عن مرشد</p>
-                    </div>`;
-            }
-        }, 350));
+        document.getElementById('searchInput').addEventListener('input', debounce(function(e) { const term = e.target.value
+                .trim(); if (term) searchGuides(term);
+            else document.getElementById('searchResults').innerHTML =
+                '<div class="no-results"><i class="fa-solid fa-magnifying-glass"></i><p>ابدأ البحث</p></div>'; },
+            350));
+
+        function filterByColor(color, btn) {
+            activeColorFilter = color;
+            document.querySelectorAll('#colorFilters .color-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            const term = document.getElementById('searchInput').value.trim();
+            if (term) searchGuides(term);
+        }
 
         async function searchGuides(term) {
-            const resultsContainer = document.getElementById('searchResults');
-            resultsContainer.innerHTML = '<div class="loading-spinner" style="grid-column: 1/-1; padding: 60px;"><div class="spinner"></div></div>';
-            
+            const rc = document.getElementById('searchResults');
+            rc.innerHTML =
+                '<div class="loading-spinner" style="grid-column:1/-1;padding:60px;"><div class="spinner"></div></div>';
             try {
-                const snapshot = await db.collection('guides')
-                    .orderBy('name')
-                    .startAt(term)
-                    .endAt(term + '\uf8ff')
-                    .limit(30)
-                    .get();
-                
-                const results = [];
-                snapshot.forEach(doc => {
-                    results.push({ id: doc.id, ...doc.data() });
-                });
-                
-                if (results.length === 0) {
-                    resultsContainer.innerHTML = `
-                        <div class="no-results">
-                            <i class="fa-solid fa-face-sad-tear"></i>
-                            <p>لا توجد نتائج لـ "${term}"</p>
-                        </div>`;
-                    return;
-                }
-                
-                resultsContainer.innerHTML = results.map(guide => `
-                    <div class="search-result-item" 
-                         style="background-image: url('${guide.image || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=60'}')"
-                         onclick="viewGuideFromSearch('${guide.id}')">
-                        <div class="search-result-overlay">
-                            <div class="sr-name">${guide.name}</div>
-                            <div class="sr-lang">${guide.language || ''}</div>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('خطأ في البحث:', error);
-                resultsContainer.innerHTML = `
-                    <div class="no-results">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <p>خطأ في البحث</p>
-                    </div>`;
-            }
+                const snap = await db.collection('guides').where('userId', '==', currentUser.uid).orderBy('name').startAt(
+                    term).endAt(term + '\uf8ff').limit(30).get();
+                let results = [];
+                snap.forEach(d => results.push({ id: d.id, ...d.data() }));
+                if (activeColorFilter === 'star') results = results.filter(g => g.isFavorite);
+                if (!results.length) { rc.innerHTML =
+                        `<div class="no-results"><i class="fa-solid fa-face-sad-tear"></i><p>لا نتائج لـ "${term}"</p></div>`; return; }
+                rc.innerHTML = results.map(g => `
+                    <div class="search-result-item" style="background-image:url('${g.image||g.guideImage||'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=60'}')" onclick="viewFromSearch('${g.id}')">
+                        <div class="search-result-overlay"><div class="sr-name">${g.name}</div><div class="sr-lang">${g.language||''}</div></div>
+                    </div>`).join('');
+            } catch (e) { rc.innerHTML =
+                    '<div class="no-results"><i class="fa-solid fa-triangle-exclamation"></i><p>خطأ</p></div>'; }
         }
 
-        function viewGuideFromSearch(guideId) {
-            const index = guides.findIndex(g => g.id === guideId);
-            if (index !== -1) {
-                currentFeedIndex = index;
+        function viewFromSearch(id) { const i = guides.findIndex(g => g.id === id); if (i !== -1) { currentFeedIndex = i;
                 updateFeedPosition();
-                switchScreen('feed');
-            }
-        }
+                switchScreen('feed'); } }
 
-        // ==================== VOICE SEARCH ====================
-        function startVoiceSearch() {
-            const btn = document.getElementById('voiceSearchBtn');
-            
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                showToast('المتصفح لا يدعم البحث الصوتي', 'error');
-                return;
-            }
-            
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
+        // ==================== VOICE ====================
+        function startVoiceSearch() { if (!settings.voiceSearch) return; const btn = document.getElementById(
+                'voiceSearchBtn'); if (!('webkitSpeechRecognition' in window)) { showToast('غير مدعوم', 'error'); return; }
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR();
             recognition.lang = 'ar-TN';
             recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-            
             btn.classList.add('recording');
             recognition.start();
-            
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('searchInput').value = transcript;
-                searchGuides(transcript);
-                btn.classList.remove('recording');
-            };
-            
-            recognition.onerror = () => {
-                btn.classList.remove('recording');
-                showToast('لم يتم التعرف على الصوت', 'error');
-            };
-            
-            recognition.onend = () => {
-                btn.classList.remove('recording');
-            };
-        }
+            recognition.onresult = (e) => { document.getElementById('searchInput').value = e.results[0][0].transcript;
+                searchGuides(e.results[0][0].transcript);
+                btn.classList.remove('recording'); };
+            recognition.onerror = () => { btn.classList.remove('recording');
+                showToast('لم يتم التعرف على الصوت', 'error'); };
+            recognition.onend = () => btn.classList.remove('recording'); }
 
-        function startNameVoice() {
-            const btn = document.getElementById('nameVoiceBtn');
-            
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                showToast('المتصفح لا يدعم الإدخال الصوتي', 'error');
-                return;
-            }
-            
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
+        function startNameVoice() { const btn = document.getElementById('nameVoiceBtn'); if (!('webkitSpeechRecognition' in
+                window)) { showToast('غير مدعوم', 'error'); return; } const SR = window.SpeechRecognition || window
+                .webkitSpeechRecognition;
+            recognition = new SR();
             recognition.lang = 'ar-TN';
             recognition.interimResults = false;
-            
             btn.classList.add('recording');
             recognition.start();
-            
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('guideName').value = transcript;
-                btn.classList.remove('recording');
-            };
-            
-            recognition.onerror = () => {
-                btn.classList.remove('recording');
-            };
-            
-            recognition.onend = () => {
-                btn.classList.remove('recording');
-            };
-        }
+            recognition.onresult = (e) => { document.getElementById('guideName').value = e.results[0][0].transcript;
+                btn.classList.remove('recording'); };
+            recognition.onerror = () => btn.classList.remove('recording');
+            recognition.onend = () => btn.classList.remove('recording'); }
 
         // ==================== TOAST ====================
-        function showToast(message, type = '') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            let icon = '';
-            if (type === 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
-            else if (type === 'error') icon = '<i class="fa-solid fa-circle-xmark"></i>';
-            else icon = '<i class="fa-solid fa-bell"></i>';
-            
-            toast.innerHTML = `${icon} ${message}`;
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 2800);
-        }
+        function showToast(msg, type = '') { const c = document.getElementById('toastContainer'); const t = document
+                .createElement('div');
+            t.className = `toast ${type}`; const icons = { success: 'circle-check', error: 'circle-xmark' };
+            t.innerHTML = `<i class="fa-solid fa-${icons[type]||'bell'}"></i> ${msg}`;
+            c.appendChild(t);
+            setTimeout(() => { if (t.parentNode) t.remove(); }, 2800); }
 
-        // ==================== UTILITY ====================
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-        }
+        function debounce(f, w) { let t; return function(...a) { clearTimeout(t);
+                t = setTimeout(() => f.apply(this, a), w); }; }
 
         // ==================== EVENT LISTENERS ====================
-        document.getElementById('addModal').addEventListener('click', function(e) {
-            if (e.target === this) closeAddModal();
-        });
+        document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) closeAddModal(
+            ); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { if (document.getElementById('addModal')
+                .classList.contains('active')) closeAddModal(); if (document.getElementById('imageViewer').classList
+                .contains('active')) closeImageViewer(); if (document.getElementById('settingsPanel').classList.contains(
+                    'open')) closeSettings(); } if (currentScreen === 'feed' && !document.getElementById('addModal')
+                .classList.contains('active') && !document.getElementById('imageViewer').classList.contains('active')) { if (
+                    e.key === 'ArrowDown' && currentFeedIndex < guides.length - 1) { e.preventDefault();
+                    currentFeedIndex++;
+                    updateFeedPosition(); } else if (e.key === 'ArrowUp' && currentFeedIndex > 0) { e.preventDefault();
+                    currentFeedIndex--;
+                    updateFeedPosition(); } } });
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('addModal').classList.contains('active')) {
-                closeAddModal();
-            }
-            
-            // Keyboard navigation for feed
-            if (currentScreen === 'feed' && !document.getElementById('addModal').classList.contains('active')) {
-                if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-                    e.preventDefault();
-                    if (currentFeedIndex < guides.length - 1) {
-                        currentFeedIndex++;
-                        updateFeedPosition();
-                    }
-                } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-                    e.preventDefault();
-                    if (currentFeedIndex > 0) {
-                        currentFeedIndex--;
-                        updateFeedPosition();
-                    }
-                }
-            }
-        });
-
-        // ==================== START APP ====================
-        initApp();
-        
-        console.log('🚀 F-Note Pro - Ready');
-        console.log('📦 Firebase Project:', firebaseConfig.projectId);
-        console.log('☁️ Cloudinary Cloud:', CLOUDINARY_CLOUD_NAME);
-        console.log('👤 Mode: Single User (Admin Managed)');
-        console.log('📱 Swipe up/down to navigate guides');
+        console.log('🚀 F-Note Pro - Ultimate Merged Version Ready');
+        console.log('👤 Auth + ☁️ Cloudinary + 🖼️ Dual Images + 🎨 Color Filters + ⚙️ Settings');
     </script>
 </body>
 </html>
