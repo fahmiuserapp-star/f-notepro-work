@@ -8,7 +8,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <!-- Cloudinary Widget - سريع ومباشر -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Tajawal', 'Poppins', system-ui, sans-serif; }
@@ -223,8 +224,6 @@
         .preview-img { width: 90px; height: 90px; border-radius: 24px; object-fit: cover; border: 2px solid var(--gold); }
         .upload-status { font-size: 12px; margin-top: 10px; color: var(--text-secondary); display: none; }
         .upload-status.show { display: block; }
-        .progress-bar { width: 100%; height: 4px; background: var(--border); border-radius: 2px; margin-top: 10px; display: none; }
-        .progress-bar .progress { width: 0%; height: 100%; background: var(--success); border-radius: 2px; transition: width 0.3s; }
 
         .modal {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -293,7 +292,7 @@
         <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
         <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
         <button class="login-btn" id="loginBtn">دخول</button>
-        <p style="font-size:12px; margin-top:20px; color:var(--text-muted);">🔐 حساب سحابي آمن - الصور والبيانات محفوظة</p>
+        <p style="font-size:12px; margin-top:20px; color:var(--text-muted);">🔐 حساب سحابي آمن - الصور على Cloudinary</p>
     </div>
 </div>
 
@@ -309,24 +308,24 @@
     <div class="sidebar-section">
         <h3>⚙️ الإعدادات</h3>
         <select id="langSelect">
-            <option value="ar">📖 العربية الفصحى</option>
-            <option value="tn">🎤 تونسي (الدارجة)</option>
+            <option value="ar">📖 العربية</option>
+            <option value="tn">🎤 تونسي</option>
             <option value="fr">🇫🇷 Français</option>
         </select>
         <div class="sidebar-item" id="darkModeSidebar"><span>🌙</span><span id="darkModeText">الوضع الداكن</span></div>
-        <div class="sidebar-item" id="syncNowBtn"><span>🔄</span><span>مزامنة مع السحاب</span></div>
-        <div class="sidebar-item" id="exportDataBtn"><span>💾</span><span>تصدير JSON</span></div>
-        <div class="sidebar-item" id="exportPdfBtn"><span>📄</span><span>تصدير PDF</span></div>
+        <div class="sidebar-item" id="syncNowBtn"><span>🔄</span><span>مزامنة</span></div>
+        <div class="sidebar-item" id="exportDataBtn"><span>💾</span><span>تصدير</span></div>
+        <div class="sidebar-item" id="exportPdfBtn"><span>📄</span><span>PDF</span></div>
     </div>
     <div class="sidebar-section">
         <h3>ℹ️ عن التطبيق</h3>
-        <p style="font-size:12px;">نسخة 22.0 - نهائية<br>☁️ تخزين سحابي كامل<br>🎤 بحث صوتي</p>
+        <p style="font-size:12px;">نسخة 23.0 - نهائية<br>☁️ Cloudinary 10GB للصور<br>🎤 بحث صوتي</p>
     </div>
 </div>
 
 <div class="toolbar">
     <div class="search-container">
-        <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث عن مرشد بالاسم أو الهاتف أو اللوحة...">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث عن مرشد...">
         <button class="voice-btn" id="voiceSearchBtn">🎤</button>
     </div>
     <button class="add-btn" id="openModalBtn">+</button>
@@ -349,7 +348,7 @@
 
 <div id="guidesContainer" class="guides-list"><div class="loading">⏳ جاري التحميل...</div></div>
 
-<div id="guideModal" class="modal"><div class="modal-content"><h3 id="modalTitle">➕ إضافة مرشد جديد</h3>
+<div id="guideModal" class="modal"><div class="modal-content"><h3 id="modalTitle">➕ إضافة مرشد</h3>
 <input type="text" id="guideName" placeholder="الاسم الكامل *">
 <input type="tel" id="guidePhone" placeholder="رقم الهاتف">
 <input type="text" id="plateNumber" placeholder="رقم اللوحة">
@@ -361,7 +360,6 @@
         <div class="upload-icon">📷</div>
         <div class="upload-title">اضغط لرفع صورة المرشد</div>
         <div class="upload-subtitle">من الألبوم أو الكاميرا</div>
-        <div class="progress-bar" id="guideProgress"><div class="progress"></div></div>
         <div class="upload-preview" id="guidePreviewContainer" style="display:none;"><img id="guidePhotoPreview" class="preview-img"></div>
         <div id="guideUploadStatus" class="upload-status"></div>
     </div>
@@ -373,7 +371,6 @@
         <div class="upload-icon">🚐</div>
         <div class="upload-title">اضغط لرفع صورة الحافلة</div>
         <div class="upload-subtitle">من الألبوم أو الكاميرا</div>
-        <div class="progress-bar" id="busProgress"><div class="progress"></div></div>
         <div class="upload-preview" id="busPreviewContainer" style="display:none;"><img id="busPhotoPreview" class="preview-img"></div>
         <div id="busUploadStatus" class="upload-status"></div>
     </div>
@@ -381,12 +378,12 @@
 
 <input type="text" id="transportType" placeholder="وسيلة النقل">
 <input type="text" id="agency" placeholder="الوكالة">
-<textarea id="guideNotes" rows="2" placeholder="ملاحظات إضافية"></textarea>
+<textarea id="guideNotes" rows="2" placeholder="ملاحظات"></textarea>
 <div class="color-selector" id="colorSelector"></div>
-<div class="modal-buttons"><button class="save-btn" id="saveGuideBtn">💾 حفظ المرشد</button><button class="cancel-btn" id="closeModalBtn">❌ إلغاء</button></div></div></div>
+<div class="modal-buttons"><button class="save-btn" id="saveGuideBtn">💾 حفظ</button><button class="cancel-btn" id="closeModalBtn">❌ إلغاء</button></div></div></div>
 
-<div id="detailModal" class="modal"><div class="modal-content"><h3 id="detailName"></h3><div id="detailContent"></div><button class="share-wa-btn" id="shareWhatsappBtn">📱 مشاركة عبر واتساب</button><button class="cancel-btn" id="closeDetailBtn">إغلاق</button></div></div>
-<div id="fullImageModal" class="modal"><div class="modal-content" style="text-align:center"><img id="fullImage" style="max-width:100%;border-radius:28px;"><button class="cancel-btn" id="closeFullImageBtn" style="margin-top:16px;">إغلاق</button></div></div>
+<div id="detailModal" class="modal"><div class="modal-content"><h3 id="detailName"></h3><div id="detailContent"></div><button class="share-wa-btn" id="shareWhatsappBtn">📱 مشاركة واتساب</button><button class="cancel-btn" id="closeDetailBtn">إغلاق</button></div></div>
+<div id="fullImageModal" class="modal"><div class="modal-content" style="text-align:center"><img id="fullImage" style="max-width:100%;border-radius:28px;"><button class="cancel-btn" id="closeFullImageBtn">إغلاق</button></div></div>
 
 <script>
     // ===== Firebase =====
@@ -398,8 +395,11 @@
         messagingSenderId: "645688115664",
         appId: "1:645688115664:web:5dbfee1e28c41e0a1c79d5"
     };
-    let db, auth, storage;
-    try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); auth = firebase.auth(); storage = firebase.storage(); } catch(e) { console.error(e); }
+    let db, auth;
+    try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); auth = firebase.auth(); } catch(e) { console.error(e); }
+
+    // ===== Cloudinary (رفع الصور) =====
+    const cloudinaryConfig = { cloudName: "dmhtx93nj", uploadPreset: "ml_default" };
 
     let currentUser = null, guides = [], currentLang = 'ar';
     let currentEditId = null, selectedColor = "#e94560";
@@ -409,73 +409,22 @@
     // ===== الترجمة =====
     const translations = {
         ar: {
-            searchPlaceholder: "🔍 بحث عن مرشد بالاسم أو الهاتف أو اللوحة...",
-            addGuide: "➕ إضافة مرشد جديد",
-            editGuide: "✏️ تعديل مرشد",
-            save: "💾 حفظ المرشد",
-            cancel: "❌ إلغاء",
-            phoneRequired: "⚠️ الاسم والهاتف مطلوبان",
-            phoneInvalid: "⚠️ رقم الهاتف يجب أن يحتوي على أرقام فقط",
-            noResults: "😕 لا توجد نتائج، حاول تغيير كلمة البحث",
-            loading: "⏳ جاري تحميل المرشدين...",
-            share: "📱 مشاركة عبر واتساب",
-            close: "إغلاق",
-            favorite: "⭐ مرشد نشط حالياً",
-            noNotes: "لا توجد ملاحظات",
-            call: "📞 اتصل",
-            filter: "🎨 فلتر الألوان",
-            saved: "✅ تم حفظ المرشد بنجاح",
-            sync: "مزامنة",
-            uploading: "📤 جاري رفع الصورة...",
-            uploadSuccess: "✅ تم رفع الصورة بنجاح",
-            uploadError: "❌ خطأ في رفع الصورة",
-            selectImage: "اختر صورة"
+            searchPlaceholder: "🔍 بحث عن مرشد...", addGuide: "➕ إضافة مرشد", editGuide: "✏️ تعديل", save: "💾 حفظ", cancel: "❌ إلغاء",
+            phoneRequired: "⚠️ الاسم والهاتف مطلوبان", phoneInvalid: "⚠️ أرقام فقط", noResults: "😕 لا توجد نتائج", loading: "⏳ جاري التحميل...",
+            share: "📱 واتساب", close: "إغلاق", favorite: "⭐ مرشد نشط", noNotes: "لا توجد ملاحظات", call: "📞 اتصل", filter: "🎨 فلتر",
+            saved: "✅ تم الحفظ", sync: "مزامنة", uploading: "📤 جاري رفع الصورة...", uploadSuccess: "✅ تم رفع الصورة", uploadError: "❌ خطأ في الرفع"
         },
         tn: {
-            searchPlaceholder: "🔍 فتش على مرشد...",
-            addGuide: "➕ أضف مرشد",
-            editGuide: "✏️ بدل مرشد",
-            save: "💾 أحفظ",
-            cancel: "❌ ألغى",
-            phoneRequired: "⚠️ الاسم والهاتف مطلوبين",
-            phoneInvalid: "⚠️ أرقام فقط",
-            noResults: "😕 ماكاش نتائج",
-            loading: "⏳ جاري التحميل...",
-            share: "📱 واتساب",
-            close: "إغلاق",
-            favorite: "⭐ مرشد نشط",
-            noNotes: "ماكاش ملاحظات",
-            call: "📞 اتصل",
-            filter: "🎨 فلتر",
-            saved: "✅ تم الحفظ",
-            sync: "مزامنة",
-            uploading: "📤 جاري الرفع...",
-            uploadSuccess: "✅ تم الرفع",
-            uploadError: "❌ خطأ في الرفع",
-            selectImage: "اختر صورة"
+            searchPlaceholder: "🔍 فتش على مرشد...", addGuide: "➕ أضف مرشد", editGuide: "✏️ بدل", save: "💾 أحفظ", cancel: "❌ ألغى",
+            phoneRequired: "⚠️ الاسم والهاتف مطلوبين", phoneInvalid: "⚠️ أرقام فقط", noResults: "😕 ماكاش نتائج", loading: "⏳ جاري التحميل...",
+            share: "📱 واتساب", close: "إغلاق", favorite: "⭐ مرشد نشط", noNotes: "ماكاش ملاحظات", call: "📞 اتصل", filter: "🎨 فلتر",
+            saved: "✅ تم الحفظ", sync: "مزامنة", uploading: "📤 جاري الرفع...", uploadSuccess: "✅ تم الرفع", uploadError: "❌ خطأ في الرفع"
         },
         fr: {
-            searchPlaceholder: "Rechercher un guide...",
-            addGuide: "➕ Ajouter",
-            editGuide: "✏️ Modifier",
-            save: "💾 Enregistrer",
-            cancel: "❌ Annuler",
-            phoneRequired: "⚠️ Nom et téléphone requis",
-            phoneInvalid: "⚠️ Chiffres uniquement",
-            noResults: "😕 Aucun résultat",
-            loading: "⏳ Chargement...",
-            share: "📱 WhatsApp",
-            close: "Fermer",
-            favorite: "⭐ Guide actif",
-            noNotes: "Aucune note",
-            call: "📞 Appeler",
-            filter: "🎨 Filtre",
-            saved: "✅ Enregistré",
-            sync: "Synchroniser",
-            uploading: "📤 Téléchargement...",
-            uploadSuccess: "✅ Succès",
-            uploadError: "❌ Erreur",
-            selectImage: "Choisir une photo"
+            searchPlaceholder: "Rechercher...", addGuide: "➕ Ajouter", editGuide: "✏️ Modifier", save: "💾 Enregistrer", cancel: "❌ Annuler",
+            phoneRequired: "⚠️ Nom requis", phoneInvalid: "⚠️ Chiffres", noResults: "😕 Aucun résultat", loading: "⏳ Chargement...",
+            share: "📱 WhatsApp", close: "Fermer", favorite: "⭐ Actif", noNotes: "Aucune note", call: "📞 Appeler", filter: "🎨 Filtre",
+            saved: "✅ Enregistré", sync: "Sync", uploading: "📤 Upload...", uploadSuccess: "✅ Succès", uploadError: "❌ Erreur"
         }
     };
     function t(key) { return translations[currentLang]?.[key] || translations.ar[key] || key; }
@@ -485,81 +434,55 @@
         document.getElementById("saveGuideBtn").innerHTML = t('save');
         document.getElementById("closeModalBtn").innerHTML = t('cancel');
         document.getElementById("shareWhatsappBtn").innerHTML = t('share');
-        document.getElementById("closeDetailBtn").innerHTML = t('close');
         document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ▼`;
         renderList();
     }
 
-    // ===== رفع الصور إلى Firebase Storage =====
-    async function uploadImage(file, type) {
-        if (!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return null; }
-        if (!file) return null;
+    // ===== رفع الصور عبر Cloudinary (يعمل فوراً) =====
+    function openCloudinaryWidget(type) {
+        if (!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
         
         const statusDiv = document.getElementById(type === 'guide' ? 'guideUploadStatus' : 'busUploadStatus');
-        const progressBar = document.getElementById(type === 'guide' ? 'guideProgress' : 'busProgress');
-        
         statusDiv.innerText = t('uploading');
         statusDiv.classList.add('show');
-        if (progressBar) progressBar.style.display = "block";
         
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 8)}.${fileExt}`;
-        const storageRef = storage.ref().child(`guides/${currentUser.uid}/${type}/${fileName}`);
-        const uploadTask = storageRef.put(file);
-        
-        return new Promise((resolve, reject) => {
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    if (progressBar) {
-                        const progressFill = progressBar.querySelector('.progress');
-                        if (progressFill) progressFill.style.width = progress + "%";
-                    }
-                    statusDiv.innerText = `${t('uploading')} ${Math.round(progress)}%`;
-                },
-                (error) => {
-                    console.error("Upload error:", error);
-                    statusDiv.innerText = t('uploadError');
-                    setTimeout(() => statusDiv.classList.remove('show'), 2000);
-                    if (progressBar) progressBar.style.display = "none";
-                    showToast(t('uploadError'), true);
-                    reject(error);
-                },
-                async () => {
-                    const url = await uploadTask.snapshot.ref.getDownloadURL();
-                    if (type === 'guide') {
-                        currentGuidePhotoUrl = url;
-                        document.getElementById("guidePhotoPreview").src = url;
-                        document.getElementById("guidePreviewContainer").style.display = "flex";
-                    } else {
-                        currentBusPhotoUrl = url;
-                        document.getElementById("busPhotoPreview").src = url;
-                        document.getElementById("busPreviewContainer").style.display = "flex";
-                    }
-                    statusDiv.innerText = t('uploadSuccess');
-                    setTimeout(() => statusDiv.classList.remove('show'), 2000);
-                    if (progressBar) progressBar.style.display = "none";
-                    showToast(t('uploadSuccess'));
-                    resolve(url);
-                }
-            );
-        });
-    }
-
-    function triggerFileUpload(type) {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = async (e) => {
-            if (e.target.files[0]) {
-                await uploadImage(e.target.files[0], type);
+        const widget = cloudinary.createUploadWidget({
+            cloudName: cloudinaryConfig.cloudName,
+            uploadPreset: cloudinaryConfig.uploadPreset,
+            multiple: false,
+            cropping: true,
+            croppingAspectRatio: 1,
+            sources: ['local', 'camera'],
+            folder: `f-note-pro/${currentUser.uid}`,
+            showAdvancedOptions: false
+        }, (error, result) => {
+            if (error) {
+                statusDiv.innerText = t('uploadError');
+                setTimeout(() => statusDiv.classList.remove('show'), 2000);
+                showToast(t('uploadError'), true);
+                return;
             }
-        };
-        input.click();
+            if (result && result.event === "success") {
+                const url = result.info.secure_url;
+                if (type === 'guide') {
+                    currentGuidePhotoUrl = url;
+                    document.getElementById("guidePhotoPreview").src = url;
+                    document.getElementById("guidePreviewContainer").style.display = "flex";
+                } else {
+                    currentBusPhotoUrl = url;
+                    document.getElementById("busPhotoPreview").src = url;
+                    document.getElementById("busPreviewContainer").style.display = "flex";
+                }
+                statusDiv.innerText = t('uploadSuccess');
+                setTimeout(() => statusDiv.classList.remove('show'), 2000);
+                showToast(t('uploadSuccess'));
+            }
+        });
+        widget.open();
     }
 
-    document.getElementById("guideUploadCard").onclick = () => triggerFileUpload('guide');
-    document.getElementById("busUploadCard").onclick = () => triggerFileUpload('bus');
+    document.getElementById("guideUploadCard").onclick = () => openCloudinaryWidget('guide');
+    document.getElementById("busUploadCard").onclick = () => openCloudinaryWidget('bus');
 
     // ===== البحث =====
     function smartSearch(query, text) {
@@ -594,12 +517,12 @@
                 ${guide.busPhoto ? `<img src="${guide.busPhoto}" style="width:90px;height:90px;border-radius:24px;object-fit:cover;border:2px solid var(--border);margin:8px;cursor:pointer;" onclick="window.showImage('${guide.busPhoto}')">` : ''}
             </div>
             <div style="background:var(--card-note-bg);padding:20px;border-radius:28px;">
-                <p style="margin:8px 0;"><strong>📞 رقم الهاتف:</strong> <a href="tel:${guide.phone}" style="color:var(--gold);">${guide.phone}</a></p>
-                <p style="margin:8px 0;"><strong>🚐 وسيلة النقل:</strong> ${escapeHtml(guide.transportType || '—')}</p>
-                <p style="margin:8px 0;"><strong>🚍 رقم اللوحة:</strong> <span class="plate-number" style="background:${guide.cardColor}">${escapeHtml(guide.plateNumber || '—')}</span></p>
-                <p style="margin:8px 0;"><strong>🏢 الوكالة:</strong> ${escapeHtml(guide.agency || '—')}</p>
-                <p style="margin:8px 0;"><strong>📝 ملاحظات:</strong> ${escapeHtml(guide.notes || t('noNotes'))}</p>
-                ${guide.favorite ? `<p style="margin:8px 0; color:var(--gold);">⭐ ${t('favorite')}</p>` : ''}
+                <p><strong>📞 الهاتف:</strong> <a href="tel:${guide.phone}" style="color:var(--gold);">${guide.phone}</a></p>
+                <p><strong>🚐 وسيلة النقل:</strong> ${escapeHtml(guide.transportType || '—')}</p>
+                <p><strong>🚍 رقم اللوحة:</strong> <span class="plate-number" style="background:${guide.cardColor}">${escapeHtml(guide.plateNumber || '—')}</span></p>
+                <p><strong>🏢 الوكالة:</strong> ${escapeHtml(guide.agency || '—')}</p>
+                <p><strong>📝 ملاحظات:</strong> ${escapeHtml(guide.notes || t('noNotes'))}</p>
+                ${guide.favorite ? `<p>⭐ ${t('favorite')}</p>` : ''}
             </div>
         `;
         document.getElementById("detailModal").classList.add("show");
@@ -613,7 +536,7 @@
             guides[idx].favorite = !guides[idx].favorite;
             if (currentUser) syncToCloud();
             renderList();
-            showToast(guides[idx].favorite ? "⭐ تمت الإضافة إلى النشطاء" : "تمت الإزالة");
+            showToast(guides[idx].favorite ? "⭐ تمت الإضافة" : "تمت الإزالة");
         }
     }
 
@@ -640,10 +563,8 @@
                     </div>
                 </div>
                 <div class="details-mini">
-                    <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
-                        <span>🚐 ${escapeHtml(guide.transportType || '—')}</span>
-                        <span>🏢 ${escapeHtml(guide.agency || '—')}</span>
-                    </div>
+                    <div>🚐 ${escapeHtml(guide.transportType || '—')}</div>
+                    <div>🏢 ${escapeHtml(guide.agency || '—')}</div>
                 </div>
             </div>
         `).join("");
@@ -732,7 +653,7 @@
             let doc = await db.collection("guides").doc(currentUser.uid).get();
             guides = (doc.exists && doc.data().data) ? doc.data().data : [];
             renderList();
-            showToast(`✅ تم تحميل ${guides.length} مرشد`);
+            showToast(`✅ ${guides.length} مرشد`);
         } catch(e) { showToast("❌ " + e.message, true); }
     }
 
@@ -777,38 +698,29 @@
     document.getElementById("closeDetailBtn").onclick = () => document.getElementById("detailModal").classList.remove("show");
     document.getElementById("closeFullImageBtn").onclick = () => document.getElementById("fullImageModal").classList.remove("show");
     document.getElementById("searchInput").oninput = () => renderList();
-    document.getElementById("syncNowBtn").onclick = async () => { if (currentUser) await syncToCloud(); else showToast("الرجاء تسجيل الدخول أولاً", true); };
+    document.getElementById("syncNowBtn").onclick = async () => { if (currentUser) await syncToCloud(); else showToast("الرجاء تسجيل الدخول", true); };
     document.getElementById("exportDataBtn").onclick = () => {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], {type: "application/json"}));
-        a.download = `F-NotePro_Backup_${new Date().toISOString().slice(0,19)}.json`;
+        a.download = `F-NotePro_${Date.now()}.json`;
         a.click();
-        showToast("تم تصدير البيانات");
+        showToast("تم التصدير");
     };
     document.getElementById("darkModeSidebar").onclick = () => {
         document.body.classList.toggle("dark");
         localStorage.setItem("darkMode", document.body.classList.contains("dark"));
         document.getElementById("darkModeText").innerHTML = document.body.classList.contains("dark") ? "الوضع المضيء" : "الوضع الداكن";
     };
-    document.getElementById("exportPdfBtn").onclick = async () => {
-        showToast("جاري إنشاء PDF...");
-        let element = document.createElement("div");
-        element.dir = "rtl";
-        element.style.padding = "20px";
-        element.innerHTML = `<h1 style="text-align:center;color:#e94560;">F-Note Pro</h1><h3 style="text-align:center;">دليل المرشدين</h3><hr>`;
+    document.getElementById("exportPdfBtn").onclick = () => {
+        let el = document.createElement("div");
+        el.dir = "rtl";
+        el.innerHTML = `<h1 style="text-align:center;color:#e94560;">F-Note Pro</h1><hr>`;
         guides.forEach(g => {
-            element.innerHTML += `<div style="border:1px solid #ccc;border-radius:16px;padding:16px;margin:12px 0;">
-                <strong style="font-size:18px;">${g.name}</strong><br>
-                📞 ${g.phone}<br>
-                🚐 ${g.transportType || '-'}<br>
-                🚍 ${g.plateNumber || '-'}<br>
-                🏢 ${g.agency || '-'}<br>
-                📝 ${g.notes || '-'}
+            el.innerHTML += `<div style="border:1px solid #ccc;border-radius:16px;padding:16px;margin:12px 0;">
+                <strong>${g.name}</strong><br>📞 ${g.phone}<br>🚐 ${g.transportType || '-'}<br>🚍 ${g.plateNumber || '-'}<br>🏢 ${g.agency || '-'}<br>📝 ${g.notes || '-'}
             </div>`;
         });
-        element.innerHTML += `<div style="text-align:center; margin-top:30px; font-size:12px;">تم التصدير بواسطة F-Note Pro</div>`;
-        html2pdf().from(element).set({ margin: 1, filename: `F-NotePro_Guides_${new Date().toISOString().slice(0,19)}.pdf` }).save();
-        setTimeout(() => showToast("✅ تم إنشاء PDF"), 1000);
+        html2pdf().from(el).set({ margin: 1, filename: `F-NotePro_${Date.now()}.pdf` }).save();
     };
 
     document.getElementById("filterToggleBtn").onclick = () => {
@@ -851,7 +763,7 @@
     let recognition;
     if ('webkitSpeechRecognition' in window) recognition = new webkitSpeechRecognition();
     document.getElementById("voiceSearchBtn").onclick = () => {
-        if (!recognition) { showToast("البحث الصوتي غير مدعوم في هذا المتصفح", true); return; }
+        if (!recognition) { showToast("البحث الصوتي غير مدعوم", true); return; }
         recognition.lang = currentLang === 'fr' ? 'fr-FR' : 'ar-TN';
         recognition.start();
         document.getElementById("voiceSearchBtn").classList.add("listening");
@@ -860,17 +772,16 @@
             document.getElementById("searchInput").value = e.results[0][0].transcript;
             renderList();
             document.getElementById("voiceSearchBtn").classList.remove("listening");
-            showToast("🔍 تم البحث");
         };
         recognition.onerror = () => {
             document.getElementById("voiceSearchBtn").classList.remove("listening");
-            showToast("❌ لم يتم التعرف على الصوت", true);
+            showToast("❌ لم يتم التعرف", true);
         };
         recognition.onend = () => document.getElementById("voiceSearchBtn").classList.remove("listening");
     };
     document.getElementById("shareWhatsappBtn").onclick = () => {
         if (currentGuideForDetail) {
-            const msg = `*${currentGuideForDetail.name}*\n📞 ${currentGuideForDetail.phone}\n🚐 ${currentGuideForDetail.transportType || ''}\n🚍 لوحة: ${currentGuideForDetail.plateNumber || ''}\n🏢 ${currentGuideForDetail.agency || ''}`;
+            const msg = `*${currentGuideForDetail.name}*\n📞 ${currentGuideForDetail.phone}\n🚐 ${currentGuideForDetail.transportType || ''}\n🚍 لوحة: ${currentGuideForDetail.plateNumber || ''}`;
             window.open(`https://wa.me/${currentGuideForDetail.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
         }
     };
@@ -879,7 +790,7 @@
     if (localStorage.getItem("lang")) { currentLang = localStorage.getItem("lang"); document.getElementById("langSelect").value = currentLang; } else { currentLang = 'ar'; document.getElementById("langSelect").value = 'ar'; }
     document.getElementById("langSelect").onchange = e => { currentLang = e.target.value; localStorage.setItem("lang", currentLang); updateUI(); };
     updateUI();
-    console.log("✅ F-Note Pro 22.0 - اللغة العربية الافتراضية - رفع الصور عبر Firebase Storage");
+    console.log("✅ F-Note Pro 23.0 - رفع الصور عبر Cloudinary (يعمل فوراً)");
 </script>
 </body>
 </html>
