@@ -1,57 +1,59 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="tn" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>F-Note Pro Cloud - دليل المرشدين السحابي</title>
+    <title>F-Note Pro تونس - دليل المرشدين</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <!-- Cloudinary SDK - تحميل سريع -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, 'Segoe UI', 'Tajawal', 'Poppins', sans-serif;
+            font-family: system-ui, 'Segoe UI', 'Tajawal', 'Poppins', 'Tahoma', sans-serif;
         }
 
         :root {
-            --bg-body: #f5f5f5;
+            --bg-body: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
             --bg-card: #ffffff;
-            --text-primary: #333333;
-            --text-secondary: #666666;
-            --text-muted: #999999;
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            --text-muted: #6c6c8a;
             --header-bg: #ffffff;
-            --search-bg: #f0f0f0;
+            --search-bg: #f0f2f5;
             --btn-primary: #e94560;
             --btn-primary-hover: #d43f59;
             --modal-bg: #ffffff;
-            --shadow: 0 2px 8px rgba(0,0,0,0.08);
-            --border: #eeeeee;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --border: #e2e8f0;
             --success: #10b981;
-            --card-note-bg: #fafafa;
-            --logo-opacity: 0.05;
-            --icon-color: #888888;
-            --card-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            --gold: #FFD700;
+            --card-note-bg: #f8fafc;
+            --logo-opacity: 0.04;
+            --icon-color: #94a3b8;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            --gold: #e94560;
+            --gold-light: #ff6b8a;
+            --input-bg: #ffffff;
         }
 
         body.dark {
-            --bg-body: #121212;
-            --bg-card: #1e1e1e;
-            --text-primary: #e0e0e0;
-            --text-secondary: #aaaaaa;
-            --text-muted: #777777;
-            --header-bg: #1e1e1e;
-            --search-bg: #2c2c2c;
-            --modal-bg: #1e1e1e;
-            --border: #2c2c2c;
-            --card-note-bg: #252525;
-            --logo-opacity: 0.08;
-            --card-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            --bg-body: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --header-bg: #1e293b;
+            --search-bg: #334155;
+            --modal-bg: #1e293b;
+            --border: #334155;
+            --card-note-bg: #0f172a;
+            --logo-opacity: 0.06;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            --input-bg: #334155;
         }
 
         body {
@@ -65,8 +67,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 60%;
-            max-width: 350px;
+            width: 55%;
+            max-width: 320px;
             aspect-ratio: 1;
             background-image: url('https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png');
             background-size: contain;
@@ -85,10 +87,10 @@
             align-items: center;
             position: relative;
             z-index: 20;
-            box-shadow: 0 1px 0 var(--border);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        .logo-header img { height: 70px; width: auto; }
+        .logo-header img { height: 65px; width: auto; }
 
         .menu-btn {
             position: absolute;
@@ -98,12 +100,13 @@
             background: transparent;
             border: none;
             color: var(--icon-color);
-            font-size: 24px;
+            font-size: 26px;
             cursor: pointer;
             padding: 8px 12px;
             border-radius: 12px;
         }
 
+        /* شاشة تسجيل الدخول */
         .login-screen {
             position: fixed;
             top: 0;
@@ -122,8 +125,8 @@
 
         .login-card {
             background: var(--bg-card);
-            border-radius: 32px;
-            padding: 48px 28px;
+            border-radius: 40px;
+            padding: 40px 28px;
             width: 100%;
             max-width: 340px;
             text-align: center;
@@ -131,12 +134,12 @@
             border: 1px solid var(--border);
         }
 
-        .login-logo img { width: 120px; margin-bottom: 24px; }
-        .login-title { font-size: 20px; font-weight: 500; color: var(--text-primary); margin-bottom: 28px; }
-        .login-input { width: 100%; padding: 14px 18px; margin: 8px 0; border: 1px solid var(--border); border-radius: 28px; background: var(--search-bg); color: var(--text-primary); }
-        .login-btn { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 28px; background: var(--btn-primary); color: white; font-weight: 500; cursor: pointer; transition: all 0.1s ease; }
+        .login-logo img { width: 110px; margin-bottom: 20px; }
+        .login-title { font-size: 22px; font-weight: 600; color: var(--text-primary); margin-bottom: 24px; }
+        .login-input { width: 100%; padding: 14px 18px; margin: 8px 0; border: 1px solid var(--border); border-radius: 30px; background: var(--input-bg); color: var(--text-primary); font-size: 14px; }
+        .login-input:focus { outline: none; border-color: var(--gold); }
+        .login-btn { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 30px; background: var(--gold); color: white; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-size: 16px; }
         .login-btn:active { transform: scale(0.97); }
-        .guest-btn { background: #64748b; }
 
         .sidebar {
             position: fixed;
@@ -147,19 +150,23 @@
             background: var(--bg-card);
             z-index: 1000;
             transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+            box-shadow: -4px 0 25px rgba(0,0,0,0.15);
             overflow-y: auto;
             direction: rtl;
         }
         .sidebar.open { right: 0; }
         .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+        .sidebar-header h2 { color: var(--text-primary); font-size: 18px; }
+        .close-sidebar { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--icon-color); }
         .sidebar-section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-section h3 { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
         .sidebar-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; cursor: pointer; color: var(--text-primary); border-radius: 12px; transition: all 0.1s ease; }
         .sidebar-item:active { transform: scale(0.98); background: rgba(0,0,0,0.05); }
         body.dark .sidebar-item:active { background: rgba(255,255,255,0.05); }
         .sidebar select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--search-bg); color: var(--text-primary); }
-        .sidebar button { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 28px; background: var(--btn-primary); color: white; cursor: pointer; transition: all 0.1s ease; }
+        .sidebar button { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 30px; background: var(--gold); color: white; cursor: pointer; transition: all 0.1s ease; }
         .sidebar button:active { transform: scale(0.97); }
+        .sidebar .danger-btn { background: #dc2626; }
 
         .overlay {
             position: fixed;
@@ -175,22 +182,21 @@
 
         .toolbar { display: flex; padding: 12px 16px; gap: 12px; background: var(--bg-body); position: sticky; top: 0; z-index: 15; }
         .search-container { display: flex; gap: 10px; flex: 1; }
-        .search-box { flex: 1; padding: 12px 18px; border: none; border-radius: 30px; background: var(--search-bg); color: var(--text-primary); }
-        .voice-btn, .add-btn { background: var(--btn-primary); border: none; color: white; border-radius: 30px; cursor: pointer; transition: all 0.1s ease; }
+        .search-box { flex: 1; padding: 12px 18px; border: none; border-radius: 30px; background: var(--search-bg); color: var(--text-primary); font-size: 14px; }
+        .search-box:focus { outline: none; }
+        .voice-btn, .add-btn { background: var(--gold); border: none; color: white; border-radius: 30px; cursor: pointer; transition: all 0.1s ease; }
         .voice-btn { padding: 0 18px; font-size: 18px; }
         .add-btn { padding: 0 24px; font-size: 22px; font-weight: bold; }
         .voice-btn:active, .add-btn:active { transform: scale(0.95); }
         .voice-btn.listening { animation: pulse 1s infinite; background: #10b981; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        .color-filter-wrapper {
-            padding: 8px 16px;
-            background: var(--bg-body);
-        }
+        /* فلتر الألوان */
+        .color-filter-wrapper { padding: 8px 16px; background: var(--bg-body); }
         .filter-toggle-btn {
             width: 100%;
             padding: 10px;
-            background: var(--btn-primary);
+            background: var(--gold);
             color: white;
             border: none;
             border-radius: 30px;
@@ -200,45 +206,20 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: all 0.1s ease;
         }
         .filter-toggle-btn:active { transform: scale(0.97); }
-        .colors-panel {
-            display: none;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 12px;
-            padding: 12px;
-            background: var(--bg-card);
-            border-radius: 20px;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--border);
-        }
+        .colors-panel { display: none; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding: 12px; background: var(--bg-card); border-radius: 20px; box-shadow: var(--card-shadow); border: 1px solid var(--border); }
         .colors-panel.show { display: flex; }
-        .color-filter-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid var(--border);
-            transition: all 0.1s ease;
-        }
+        .color-filter-btn { width: 42px; height: 42px; border-radius: 50%; cursor: pointer; border: 2px solid var(--border); transition: all 0.1s ease; }
         .color-filter-btn:active { transform: scale(0.92); }
-        .color-filter-btn.active { border: 3px solid var(--gold); transform: scale(1.05); }
-        .color-filter-btn.all-color { background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet); }
+        .color-filter-btn.active { border: 3px solid var(--gold); transform: scale(1.05); box-shadow: 0 0 0 2px rgba(233,69,96,0.3); }
+        .color-filter-btn.all-color { background: linear-gradient(45deg, #FFD700, #e94560, #10b981, #3b82f6); }
 
-        .guides-list {
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            position: relative;
-            z-index: 1;
-        }
+        .guides-list { padding: 12px; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
 
         .guide-card {
             background: var(--bg-card);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 16px;
             box-shadow: var(--card-shadow);
             border-right: 5px solid var(--gold);
@@ -247,20 +228,20 @@
             cursor: pointer;
         }
         .guide-card:active { transform: scale(0.99); }
-        .guide-card.favorite { border-right-color: var(--gold); background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255,215,0,0.05) 100%); }
+        .guide-card.favorite { border-right-color: var(--gold); background: linear-gradient(135deg, var(--bg-card) 0%, rgba(233,69,96,0.05) 100%); }
 
         .card-header { display: flex; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
         .photos-area { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-        .guide-photo { width: 80px; height: 80px; border-radius: 18px; object-fit: cover; border: 2px solid var(--gold); cursor: pointer; background: var(--search-bg); }
-        .bus-photo { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; background: var(--search-bg); }
+        .guide-photo { width: 80px; height: 80px; border-radius: 20px; object-fit: cover; border: 2px solid var(--gold); cursor: pointer; background: var(--search-bg); }
+        .bus-photo { width: 55px; height: 55px; border-radius: 14px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; background: var(--search-bg); }
         .guide-info { flex: 1; }
-        .guide-name { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+        .guide-name { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
         .phone-area { display: flex; align-items: center; gap: 8px; background: var(--search-bg); padding: 6px 12px; border-radius: 30px; direction: ltr; margin-top: 8px; }
-        .guide-phone { font-family: monospace; font-size: 14px; font-weight: 500; color: var(--btn-primary); flex: 1; }
-        .call-btn { background: #10b981; border: none; padding: 5px 14px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; transition: all 0.1s ease; }
+        .guide-phone { font-family: monospace; font-size: 14px; font-weight: 600; color: var(--gold); flex: 1; }
+        .call-btn { background: #10b981; border: none; padding: 5px 14px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; }
         .call-btn:active { transform: scale(0.95); }
         .details-mini { background: var(--card-note-bg); padding: 10px; border-radius: 16px; margin: 10px 0; font-size: 13px; color: var(--text-secondary); }
-        .favorite-star { position: absolute; top: 12px; left: 12px; font-size: 24px; cursor: pointer; color: var(--gold); background: rgba(0,0,0,0.3); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: all 0.1s ease; }
+        .favorite-star { position: absolute; top: 12px; left: 12px; font-size: 24px; cursor: pointer; color: var(--gold); background: rgba(0,0,0,0.2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .favorite-star:active { transform: scale(0.9); }
 
         .modal {
@@ -285,51 +266,43 @@
             max-width: 500px;
             max-height: 85vh;
             overflow-y: auto;
-            border-radius: 32px;
+            border-radius: 36px;
             padding: 24px;
         }
+        .modal-content h3 { color: var(--text-primary); margin-bottom: 20px; font-size: 22px; }
         .modal-content input, .modal-content textarea {
             width: 100%;
             margin: 8px 0;
-            padding: 14px;
+            padding: 14px 16px;
             border: 1px solid var(--border);
-            border-radius: 28px;
-            background: var(--search-bg);
+            border-radius: 30px;
+            font-size: 14px;
+            background: var(--input-bg);
             color: var(--text-primary);
         }
+        .modal-content input:focus, .modal-content textarea:focus { outline: none; border-color: var(--gold); }
         .color-selector { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
-        .color-option {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            cursor: pointer;
-            border: 2px solid var(--border);
-            transition: all 0.1s ease;
-        }
+        .color-option { width: 48px; height: 48px; border-radius: 16px; cursor: pointer; border: 2px solid var(--border); transition: all 0.1s ease; }
         .color-option:active { transform: scale(0.93); }
-        .color-option.selected { border: 3px solid var(--gold); transform: scale(1.05); }
-        .image-upload-area { border: 2px dashed var(--btn-primary); padding: 12px; border-radius: 24px; margin: 8px 0; text-align: center; }
-        .cloudinary-btn {
-            background: #3448c5;
+        .color-option.selected { border: 3px solid var(--gold); transform: scale(1.05); box-shadow: 0 0 0 2px rgba(233,69,96,0.3); }
+        .image-upload-area { border: 2px dashed var(--gold); padding: 12px; border-radius: 24px; margin: 8px 0; text-align: center; background: var(--card-note-bg); }
+        .direct-upload-btn {
+            background: var(--gold);
             color: white;
             border: none;
             padding: 12px;
-            border-radius: 28px;
+            border-radius: 30px;
             cursor: pointer;
             width: 100%;
             font-size: 14px;
+            font-weight: 500;
             transition: all 0.1s ease;
         }
-        .cloudinary-btn:active { transform: scale(0.97); }
-        .upload-status {
-            font-size: 12px;
-            margin-top: 8px;
-            color: var(--text-secondary);
-            display: none;
-        }
+        .direct-upload-btn:active { transform: scale(0.97); }
+        .upload-status { font-size: 12px; margin-top: 8px; color: var(--text-secondary); display: none; }
         .upload-status.show { display: block; }
         .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
-        .save-btn, .cancel-btn { flex: 1; padding: 14px; border-radius: 30px; border: none; font-weight: 500; cursor: pointer; transition: all 0.1s ease; }
+        .save-btn, .cancel-btn { flex: 1; padding: 14px; border-radius: 30px; border: none; font-weight: 600; cursor: pointer; transition: all 0.1s ease; }
         .save-btn:active, .cancel-btn:active { transform: scale(0.97); }
         .save-btn { background: #10b981; color: white; }
         .cancel-btn { background: #64748b; color: white; }
@@ -339,94 +312,90 @@
             bottom: 30px;
             left: 20px;
             right: 20px;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             backdrop-filter: blur(10px);
             color: white;
-            padding: 12px 20px;
-            border-radius: 50px;
+            padding: 14px 20px;
+            border-radius: 60px;
             text-align: center;
             z-index: 1200;
+            font-size: 14px;
             animation: slideUp 0.3s ease-out forwards;
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .share-wa-btn { background: #25D366; border: none; padding: 8px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 12px; margin-top: 8px; transition: all 0.1s ease; }
-        .share-wa-btn:active { transform: scale(0.95); }
-        .plate-number { font-family: monospace; font-size: 16px; font-weight: bold; background: var(--gold); color: #333; padding: 4px 8px; border-radius: 8px; display: inline-block; margin-top: 4px; }
-        body.dark .plate-number { color: #333; }
+        .share-wa-btn { background: #25D366; border: none; padding: 10px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 14px; margin-top: 12px; width: 100%; transition: all 0.1s ease; }
+        .share-wa-btn:active { transform: scale(0.97); }
+        .plate-number { font-family: monospace; font-size: 14px; font-weight: bold; background: var(--gold); color: white; padding: 4px 10px; border-radius: 20px; display: inline-block; margin-top: 6px; }
         .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
-        .sync-badge { background: var(--success); color: white; padding: 4px 8px; border-radius: 20px; font-size: 10px; margin-left: 8px; }
+        .sync-badge { background: var(--success); color: white; padding: 4px 10px; border-radius: 30px; font-size: 10px; margin-right: 8px; }
+        .user-email { font-size: 12px; color: var(--text-secondary); word-break: break-all; }
     </style>
 </head>
 <body>
 
 <div class="app-header">
-    <div class="logo-header"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="Logo"></div>
+    <div class="logo-header"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-Note Pro"></div>
     <button class="menu-btn" id="menuBtn">☰</button>
 </div>
 
 <div class="login-screen" id="loginScreen">
     <div class="login-card">
         <div class="login-logo"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="Logo"></div>
-        <div class="login-title">مرحباً بك</div>
-        <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
-        <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
-        <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
-        <div class="login-divider" style="margin:20px 0; border-top:1px solid var(--border); position:relative;"><span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--bg-card);padding:0 15px;">أو</span></div>
-        <button class="login-btn guest-btn" id="guestBtn">دخول كزائر (بيانات محلية مؤقتة)</button>
-        <p style="font-size:11px; color:var(--text-muted); margin-top:12px;">⚠️ وضع الزائر مؤقت - يفضل تسجيل الدخول لحفظ البيانات</p>
+        <div class="login-title">أهلا بيك في F-Note Pro</div>
+        <input type="email" id="loginEmail" class="login-input" placeholder="الإيميل" value="fahmiajmi5@gmail.com">
+        <input type="password" id="loginPassword" class="login-input" placeholder="كلمة السر">
+        <button class="login-btn" id="loginBtn">دخول</button>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:16px;">🔐 حسابك الخاص - البيانات محفوظة في السحاب</p>
     </div>
 </div>
 
 <div class="overlay" id="overlay"></div>
 
 <div class="sidebar" id="sidebar">
-    <div class="sidebar-header"><h2>القائمة</h2><button class="close-sidebar" id="closeSidebar">✕</button></div>
+    <div class="sidebar-header"><h2>✨ القائمة</h2><button class="close-sidebar" id="closeSidebar">✕</button></div>
     <div class="sidebar-section">
-        <h3>الحساب</h3>
-        <div id="userInfo" style="color:var(--text-secondary); font-size:13px; margin-bottom:12px;"></div>
-        <div class="sidebar-item" id="signOutBtn" style="display:none;"><span>🚪</span><span>تسجيل الخروج</span></div>
-        <div class="sidebar-item" id="exportDataBtn"><span>💾</span><span>تصدير JSON احتياطي</span></div>
+        <h3>👤 حسابي</h3>
+        <div id="userInfo" class="user-email" style="margin-bottom:12px;"></div>
+        <div class="sidebar-item" id="signOutBtn" style="display:none;"><span>🚪</span><span>خرور</span></div>
+        <div class="sidebar-item" id="exportDataBtn"><span>💾</span><span>تصدير البيانات</span></div>
     </div>
     <div class="sidebar-section">
-        <h3>الإعدادات</h3>
+        <h3>⚙️ الإعدادات</h3>
         <select id="langSelect">
-            <option value="ar">🇹🇳 العربية</option>
+            <option value="tn">🎤 تونسي (الدارجة)</option>
+            <option value="ar">📖 العربية الفصحى</option>
             <option value="fr">🇫🇷 Français</option>
         </select>
-        <div class="sidebar-item" id="darkModeSidebar"><span>🌙</span><span>الوضع الداكن / الفاتح</span></div>
+        <div class="sidebar-item" id="darkModeSidebar"><span>🌙</span><span>الوضع الليلي / النهاري</span></div>
         <div class="sidebar-item" id="syncNowBtn"><span>🔄</span><span>مزامنة مع السحاب</span></div>
         <div class="sidebar-item" id="exportPdfBtn"><span>📄</span><span>تصدير PDF</span></div>
-        <div class="sidebar-item" id="clearLocalCache"><span>🗑️</span><span>مسح الكاش المحلي</span></div>
     </div>
     <div class="sidebar-section">
-        <h3>عن التطبيق</h3>
-        <p style="font-size:12px;">نسخة 16.0 - سحابي بالكامل<br>رفع الصور على Cloudinary<br>حماية كاملة من ضياع البيانات</p>
+        <h3>ℹ️ عن التطبيق</h3>
+        <p style="font-size:12px; color:var(--text-secondary);">نسخة 17.0 - تونس<br>📡 سحابي بالكامل<br>🎤 بحث صوتي بالدارجة<br>📸 رفع صور مباشر</p>
     </div>
 </div>
 
 <div class="toolbar">
     <div class="search-container">
-        <input type="text" id="searchInput" class="search-box" placeholder="بحث...">
-        <button class="voice-btn" id="voiceSearchBtn">🎤</button>
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 فتش على مرشد...">
+        <button class="voice-btn" id="voiceSearchBtn" title="بحث بالصوت">🎤</button>
     </div>
     <button class="add-btn" id="openModalBtn">+</button>
 </div>
 
 <div class="color-filter-wrapper">
-    <button class="filter-toggle-btn" id="filterToggleBtn">🎨 فلتر الألوان ▼</button>
+    <button class="filter-toggle-btn" id="filterToggleBtn">🎨 فلتر بالألوان ▼</button>
     <div class="colors-panel" id="colorsPanel">
         <div class="color-filter-btn all-color" data-color="all" title="الكل">🌈</div>
-        <div class="color-filter-btn" style="background:#FFD700;" data-color="#FFD700"></div>
+        <div class="color-filter-btn" style="background:#e94560;" data-color="#e94560"></div>
         <div class="color-filter-btn" style="background:#2c7da0;" data-color="#2c7da0"></div>
         <div class="color-filter-btn" style="background:#e76f51;" data-color="#e76f51"></div>
         <div class="color-filter-btn" style="background:#2a9d8f;" data-color="#2a9d8f"></div>
         <div class="color-filter-btn" style="background:#e9c46a;" data-color="#e9c46a"></div>
-        <div class="color-filter-btn" style="background:#f4a261;" data-color="#f4a261"></div>
         <div class="color-filter-btn" style="background:#9b5de5;" data-color="#9b5de5"></div>
-        <div class="color-filter-btn" style="background:#ef233c;" data-color="#ef233c"></div>
         <div class="color-filter-btn" style="background:#06d6a0;" data-color="#06d6a0"></div>
-        <div class="color-filter-btn" style="background:#118ab2;" data-color="#118ab2"></div>
         <div class="color-filter-btn" style="background:#ff006e;" data-color="#ff006e"></div>
         <div class="color-filter-btn" style="background:#8338ec;" data-color="#8338ec"></div>
         <div class="color-filter-btn" style="background:#fb5607;" data-color="#fb5607"></div>
@@ -435,41 +404,43 @@
 
 <div id="guidesContainer" class="guides-list"><div class="loading">⏳ جاري التحميل...</div></div>
 
-<div id="guideModal" class="modal"><div class="modal-content"><h3 id="modalTitle">إضافة مرشد</h3>
-<input type="text" id="guideName" placeholder="الاسم الكامل *">
+<div id="guideModal" class="modal"><div class="modal-content"><h3 id="modalTitle">➕ أضف مرشد</h3>
+<input type="text" id="guideName" placeholder="الاسم كامل *">
 <input type="tel" id="guidePhone" placeholder="رقم الهاتف">
-<input type="text" id="plateNumber" placeholder="رقم لوحة الحافلة">
-<div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ رقم الهاتف يجب أن يحتوي على أرقام فقط</div>
-<label>لون البطاقة</label>
+<input type="text" id="plateNumber" placeholder="رقم اللوحة">
+<div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ رقم الهاتف لازم يكون أرقام فقط</div>
+<label>🎨 لون البطاقة</label>
 <div class="color-selector" id="colorSelector"></div>
-<label>صورة المرشد</label>
+<label>📷 صورة المرشد</label>
 <div class="image-upload-area">
-    <button type="button" id="cloudinaryGuideBtn" class="cloudinary-btn">📷 رفع صورة المرشد على السحاب</button>
+    <input type="file" id="guidePhotoInput" accept="image/*" style="display:none">
+    <button type="button" id="guideDirectBtn" class="direct-upload-btn">📸 أختار صورة من الألبوم</button>
     <div id="guideUploadStatus" class="upload-status"></div>
-    <img id="guidePhotoPreview" style="width:70px;height:70px;border-radius:16px;margin-top:8px;display:none;">
+    <img id="guidePhotoPreview" style="width:75px;height:75px;border-radius:18px;margin-top:10px;display:none;">
 </div>
-<label>صورة وسيلة النقل</label>
+<label>🚌 صورة الكار</label>
 <div class="image-upload-area">
-    <button type="button" id="cloudinaryBusBtn" class="cloudinary-btn">🚌 رفع صورة الحافلة على السحاب</button>
+    <input type="file" id="busPhotoInput" accept="image/*" style="display:none">
+    <button type="button" id="busDirectBtn" class="direct-upload-btn">🚌 أختار صورة الكار</button>
     <div id="busUploadStatus" class="upload-status"></div>
-    <img id="busPhotoPreview" style="width:55px;height:55px;border-radius:12px;margin-top:8px;display:none;">
+    <img id="busPhotoPreview" style="width:60px;height:60px;border-radius:14px;margin-top:10px;display:none;">
 </div>
-<input type="text" id="transportType" placeholder="وسيلة النقل">
-<input type="text" id="agency" placeholder="وكالة الأسفار">
-<textarea id="guideNotes" rows="2" placeholder="ملاحظات"></textarea>
-<div class="modal-buttons"><button class="save-btn" id="saveGuideBtn">حفظ</button><button class="cancel-btn" id="closeModalBtn">إلغاء</button></div></div></div>
+<input type="text" id="transportType" placeholder="🚐 وسيلة النقل">
+<input type="text" id="agency" placeholder="🏢 الوكالة">
+<textarea id="guideNotes" rows="2" placeholder="📝 ملاحظات"></textarea>
+<div class="modal-buttons"><button class="save-btn" id="saveGuideBtn">💾 أحفظ</button><button class="cancel-btn" id="closeModalBtn">❌ ألغى</button></div></div></div>
 
-<div id="detailModal" class="modal"><div class="modal-content" style="max-width:450px;"><h3 id="detailName"></h3>
+<div id="detailModal" class="modal"><div class="modal-content"><h3 id="detailName"></h3>
 <div id="detailContent"></div>
-<button class="share-wa-btn" id="shareWhatsappBtn" style="width:100%; margin-top:12px;">📱 مشاركة عبر واتساب</button>
+<button class="share-wa-btn" id="shareWhatsappBtn">📱 شارك على واتساب</button>
 <button class="cancel-btn" id="closeDetailBtn" style="margin-top:12px;">إغلاق</button></div></div>
 
-<div id="fullImageModal" class="modal"><div class="modal-content" style="text-align:center"><img id="fullImage" src="" style="max-width:100%;border-radius:20px;"><button class="cancel-btn" id="closeFullImageBtn" style="margin-top:16px;">إغلاق</button></div></div>
+<div id="fullImageModal" class="modal"><div class="modal-content" style="text-align:center"><img id="fullImage" src="" style="max-width:100%;border-radius:24px;"><button class="cancel-btn" id="closeFullImageBtn" style="margin-top:16px;">إغلاق</button></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
-    // ===== Firebase Configuration =====
+    // ===== Firebase =====
     const firebaseConfig = {
         apiKey: "AIzaSyAJLpdRoKamaHHofnCh4qQk6mHKeI25Tgc",
         authDomain: "f-notepro-work.firebaseapp.com",
@@ -479,167 +450,299 @@
         appId: "1:645688115664:web:5dbfee1e28c41e0a1c79d5"
     };
     
-    let db, auth;
+    let db, auth, storage;
     try {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
         auth = firebase.auth();
-    } catch(e) { console.error("Firebase init error:", e); }
-    
-    // ===== Cloudinary =====
-    const cloudinaryConfig = {
-        cloudName: "dmhtx93nj",
-        uploadPreset: "ml_default"
-    };
+        storage = firebase.storage();
+    } catch(e) { console.error("Firebase error:", e); }
     
     // ===== المتغيرات =====
-    let currentUser = null, isGuest = true, guides = [], currentLang = 'ar';
-    let currentEditId = null, selectedColor = "#FFD700";
+    let currentUser = null, guides = [], currentLang = 'tn';
+    let currentEditId = null, selectedColor = "#e94560";
     let currentColorFilter = "all", currentGuideForDetail = null;
     let currentGuidePhotoUrl = "", currentBusPhotoUrl = "";
     
-    // ===== وظائف مساعدة =====
-    function showToast(msg, isError = false) {
-        let toast = document.createElement("div");
-        toast.className = "toast";
-        toast.style.background = isError ? "rgba(220,38,38,0.9)" : "rgba(0,0,0,0.8)";
-        toast.innerText = msg;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-            toast.style.animation = "fadeOut 0.3s forwards";
-            setTimeout(() => toast.remove(), 300);
-        }, 2500);
-    }
-    
-    function validatePhone(phone) {
-        const cleaned = phone.replace(/[+\s-]/g, '');
-        return /^[0-9]{8,15}$/.test(cleaned);
-    }
-    
-    function escapeHtml(s) { if(!s) return ""; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
-    
-    // ===== رفع الصور إلى Cloudinary =====
-    function openCloudinaryWidget(type) {
-        if (isGuest) {
-            showToast("⚠️ الرجاء تسجيل الدخول أولاً لرفع الصور", true);
-            return;
+    // ===== الترجمة التونسية (الدارجة) =====
+    const translations = {
+        tn: {
+            appName: "F-Note Pro - دليل المرشدين",
+            search: "🔍 فتش على مرشد...",
+            addGuide: "➕ أضف مرشد",
+            editGuide: "✏️ بدل مرشد",
+            fullName: "الاسم كامل *",
+            phone: "رقم الهاتف",
+            plateNumber: "رقم اللوحة",
+            cardColor: "🎨 لون البطاقة",
+            guidePhoto: "📷 صورة المرشد",
+            busPhoto: "🚌 صورة الكار",
+            transportType: "🚐 وسيلة النقل",
+            agency: "🏢 الوكالة",
+            notes: "📝 ملاحظات",
+            save: "💾 أحفظ",
+            cancel: "❌ ألغى",
+            selectImage: "📸 أختار صورة",
+            uploading: "📤 جاري الرفع...",
+            uploadSuccess: "✅ الصورة ترفعت",
+            uploadError: "❌ خطأ في الرفع",
+            phoneRequired: "⚠️ الاسم والهاتف مطلوبين",
+            phoneInvalid: "⚠️ الهاتف لازم يكون أرقام فقط",
+            deleteConfirm: "🗑️ تحذف هذا المرشد نهائيا؟",
+            resetConfirm: "🗑️ تمسح كل البيانات؟",
+            noResults: "😕 ماكاش نتائج",
+            loading: "⏳ جاري التحميل...",
+            share: "📱 شارك على واتساب",
+            close: "إغلاق",
+            favorite: "⭐ مرشد نشط",
+            noNotes: "ماكاش ملاحظات",
+            call: "📞 أتصل",
+            filter: "فلتر بالألوان",
+            saved: "✅ تم الحفظ",
+            login: "دخول",
+            logout: "خرور",
+            guest: "زائر",
+            sync: "مزامنة",
+            export: "تصدير",
+            darkMode: "الوضع الليلي",
+            lightMode: "الوضع النهاري",
+            welcome: "أهلا بيك"
+        },
+        ar: {
+            appName: "F-Note Pro - دليل المرشدين",
+            search: "بحث عن مرشد...",
+            addGuide: "إضافة مرشد",
+            editGuide: "تعديل مرشد",
+            fullName: "الاسم الكامل *",
+            phone: "رقم الهاتف",
+            plateNumber: "رقم اللوحة",
+            cardColor: "لون البطاقة",
+            guidePhoto: "صورة المرشد",
+            busPhoto: "صورة الحافلة",
+            transportType: "وسيلة النقل",
+            agency: "وكالة الأسفار",
+            notes: "ملاحظات",
+            save: "حفظ",
+            cancel: "إلغاء",
+            selectImage: "اختيار صورة",
+            uploading: "جاري الرفع...",
+            uploadSuccess: "تم رفع الصورة",
+            uploadError: "خطأ في الرفع",
+            phoneRequired: "الاسم والهاتف مطلوبان",
+            phoneInvalid: "رقم الهاتف يجب أن يكون أرقاماً فقط",
+            deleteConfirm: "حذف هذا المرشد نهائياً؟",
+            resetConfirm: "مسح كل البيانات؟",
+            noResults: "لا توجد نتائج",
+            loading: "جاري التحميل...",
+            share: "مشاركة عبر واتساب",
+            close: "إغلاق",
+            favorite: "مرشد نشط",
+            noNotes: "لا توجد ملاحظات",
+            call: "اتصال",
+            filter: "فلتر الألوان",
+            saved: "تم الحفظ",
+            login: "تسجيل الدخول",
+            logout: "تسجيل الخروج",
+            guest: "زائر",
+            sync: "مزامنة",
+            export: "تصدير",
+            darkMode: "الوضع الداكن",
+            lightMode: "الوضع الفاتح",
+            welcome: "مرحباً بك"
+        },
+        fr: {
+            appName: "F-Note Pro - Guide",
+            search: "Rechercher...",
+            addGuide: "Ajouter",
+            editGuide: "Modifier",
+            fullName: "Nom complet *",
+            phone: "Téléphone",
+            plateNumber: "Plaque",
+            cardColor: "Couleur",
+            guidePhoto: "Photo guide",
+            busPhoto: "Photo bus",
+            transportType: "Transport",
+            agency: "Agence",
+            notes: "Notes",
+            save: "Enregistrer",
+            cancel: "Annuler",
+            selectImage: "Choisir photo",
+            uploading: "Téléchargement...",
+            uploadSuccess: "Photo téléchargée",
+            uploadError: "Erreur",
+            phoneRequired: "Nom et téléphone requis",
+            phoneInvalid: "Chiffres uniquement",
+            deleteConfirm: "Supprimer ?",
+            resetConfirm: "Effacer tout ?",
+            noResults: "Aucun résultat",
+            loading: "Chargement...",
+            share: "Partager WhatsApp",
+            close: "Fermer",
+            favorite: "Guide actif",
+            noNotes: "Aucune note",
+            call: "Appeler",
+            filter: "Filtrer",
+            saved: "Enregistré",
+            login: "Connexion",
+            logout: "Déconnexion",
+            guest: "Invité",
+            sync: "Synchroniser",
+            export: "Exporter",
+            darkMode: "Mode nuit",
+            lightMode: "Mode jour",
+            welcome: "Bienvenue"
         }
+    };
+    
+    function t(key) { return translations[currentLang]?.[key] || translations.tn[key] || key; }
+    
+    function updateUI() {
+        document.getElementById("searchInput").placeholder = t('search');
+        document.getElementById("modalTitle").innerHTML = currentEditId ? t('editGuide') : t('addGuide');
+        document.getElementById("saveGuideBtn").innerHTML = t('save');
+        document.getElementById("closeModalBtn").innerHTML = t('cancel');
+        document.getElementById("shareWhatsappBtn").innerHTML = t('share');
+        document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ▼`;
+        renderList();
+    }
+    
+    // ===== رفع مباشر للصور إلى Firebase Storage =====
+    async function uploadImageDirect(file, type) {
+        if (!currentUser) {
+            showToast("⚠️ الرجاء تسجيل الدخول أولاً", true);
+            return null;
+        }
+        if (!file) return null;
         
         const statusDiv = document.getElementById(type === 'guide' ? 'guideUploadStatus' : 'busUploadStatus');
-        statusDiv.innerText = "📤 جاري فتح نافذة الرفع...";
+        statusDiv.innerText = t('uploading');
         statusDiv.classList.add('show');
         
-        const widget = cloudinary.createUploadWidget(
-            {
-                cloudName: cloudinaryConfig.cloudName,
-                uploadPreset: cloudinaryConfig.uploadPreset,
-                multiple: false,
-                cropping: true,
-                croppingAspectRatio: 1,
-                sources: ['local', 'camera'],
-                showAdvancedOptions: false,
-                folder: `f-note-pro/${currentUser?.uid || 'guest'}`
-            },
-            (error, result) => {
-                if (error) {
-                    statusDiv.innerText = "❌ خطأ في الرفع";
-                    setTimeout(() => statusDiv.classList.remove('show'), 3000);
-                    showToast("خطأ في رفع الصورة", true);
-                    return;
-                }
-                
-                if (result && result.event === "success") {
-                    const url = result.info.secure_url;
-                    if (type === 'guide') {
-                        currentGuidePhotoUrl = url;
-                        document.getElementById("guidePhotoPreview").src = url;
-                        document.getElementById("guidePhotoPreview").style.display = "block";
-                        statusDiv.innerText = "✅ تم رفع صورة المرشد";
-                    } else {
-                        currentBusPhotoUrl = url;
-                        document.getElementById("busPhotoPreview").src = url;
-                        document.getElementById("busPhotoPreview").style.display = "block";
-                        statusDiv.innerText = "✅ تم رفع صورة الحافلة";
-                    }
-                    setTimeout(() => statusDiv.classList.remove('show'), 2000);
-                    showToast("✅ تم رفع الصورة بنجاح");
-                }
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 6)}.${fileExt}`;
+        const storageRef = storage.ref().child(`guides/${currentUser.uid}/${type}/${fileName}`);
+        
+        try {
+            const snapshot = await storageRef.put(file);
+            const url = await snapshot.ref.getDownloadURL();
+            
+            if (type === 'guide') {
+                currentGuidePhotoUrl = url;
+                document.getElementById("guidePhotoPreview").src = url;
+                document.getElementById("guidePhotoPreview").style.display = "block";
+            } else {
+                currentBusPhotoUrl = url;
+                document.getElementById("busPhotoPreview").src = url;
+                document.getElementById("busPhotoPreview").style.display = "block";
             }
-        );
-        widget.open();
+            
+            statusDiv.innerText = t('uploadSuccess');
+            setTimeout(() => statusDiv.classList.remove('show'), 2000);
+            showToast(t('uploadSuccess'));
+            return url;
+        } catch(error) {
+            console.error("Upload error:", error);
+            statusDiv.innerText = t('uploadError');
+            setTimeout(() => statusDiv.classList.remove('show'), 2000);
+            showToast(t('uploadError'), true);
+            return null;
+        }
     }
     
-    document.getElementById("cloudinaryGuideBtn").onclick = () => openCloudinaryWidget('guide');
-    document.getElementById("cloudinaryBusBtn").onclick = () => openCloudinaryWidget('bus');
+    document.getElementById("guideDirectBtn").onclick = () => document.getElementById("guidePhotoInput").click();
+    document.getElementById("busDirectBtn").onclick = () => document.getElementById("busPhotoInput").click();
     
-    // ===== البحث =====
-    function smartSearch(query, text) {
+    document.getElementById("guidePhotoInput").onchange = async (e) => {
+        if (e.target.files[0]) await uploadImageDirect(e.target.files[0], 'guide');
+    };
+    document.getElementById("busPhotoInput").onchange = async (e) => {
+        if (e.target.files[0]) await uploadImageDirect(e.target.files[0], 'bus');
+    };
+    
+    // ===== البحث المتقدم مع الدارجة =====
+    function tnSearch(query, text) {
         if (!query) return true;
         let q = query.trim().toLowerCase();
-        let t = (text || "").toLowerCase();
-        if (t.includes(q)) return true;
+        let tText = (text || "").toLowerCase();
+        
+        // كلمات تونسية شائعة
+        const tnMap = {
+            'مرشد': 'مرشدة', 'مرشدة': 'مرشد',
+            'كار': 'حافلة', 'حافلة': 'كار',
+            'لوحة': 'پلاكة', 'پلاكة': 'لوحة',
+            'تلفون': 'هاتف', 'هاتف': 'تلفون',
+            'وكالة': 'وكالة',
+            'سائق': 'سائق', 'سائق': 'سائق'
+        };
+        
+        for (let [key, value] of Object.entries(tnMap)) {
+            if (q.includes(key) && tText.includes(value)) return true;
+            if (q.includes(value) && tText.includes(key)) return true;
+        }
+        
+        if (tText.includes(q)) return true;
+        
         const numberMap = { '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
-        let tNormalized = t.replace(/[٠-٩]/g, m => numberMap[m]);
+        let tNormalized = tText.replace(/[٠-٩]/g, m => numberMap[m]);
         let qNormalized = q.replace(/[٠-٩]/g, m => numberMap[m]);
         if (tNormalized.includes(qNormalized)) return true;
+        
         return false;
     }
     
     function filterGuides() {
         let search = document.getElementById("searchInput").value;
         let filtered = guides.filter(g => 
-            smartSearch(search, g.name) || smartSearch(search, g.phone) || 
-            smartSearch(search, g.transportType) || smartSearch(search, g.agency) ||
-            smartSearch(search, g.plateNumber)
+            tnSearch(search, g.name) || tnSearch(search, g.phone) || 
+            tnSearch(search, g.transportType) || tnSearch(search, g.agency) ||
+            tnSearch(search, g.plateNumber)
         );
         if (currentColorFilter !== "all") filtered = filtered.filter(g => g.cardColor === currentColorFilter);
         filtered.sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
         return filtered;
     }
     
+    function escapeHtml(s) { if(!s) return ""; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+    
     function showGuideDetails(guide) {
         currentGuideForDetail = guide;
-        document.getElementById("detailName").innerHTML = `<span style="color:${guide.cardColor || '#FFD700'}">⭐</span> ${escapeHtml(guide.name)}`;
+        document.getElementById("detailName").innerHTML = `<span style="color:${guide.cardColor || '#e94560'}">⭐</span> ${escapeHtml(guide.name)}`;
         document.getElementById("detailContent").innerHTML = `
             <div style="text-align:center; margin-bottom:16px;">
-                ${guide.guidePhoto ? `<img src="${guide.guidePhoto}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid ${guide.cardColor || '#FFD700'};margin:8px;cursor:pointer;" onclick="window.showImage('${guide.guidePhoto}')">` : '<div style="width:120px;height:120px;border-radius:50%;background:var(--search-bg);display:flex;align-items:center;justify-content:center;margin:8px auto;">📷 لا توجد صورة</div>'}
+                ${guide.guidePhoto ? `<img src="${guide.guidePhoto}" style="width:120px;height:120px;border-radius:60px;object-fit:cover;border:3px solid ${guide.cardColor || '#e94560'};margin:8px;cursor:pointer;" onclick="window.showImage('${guide.guidePhoto}')">` : '<div style="width:120px;height:120px;border-radius:60px;background:var(--search-bg);display:flex;align-items:center;justify-content:center;margin:8px auto;">📷 ماكاش صورة</div>'}
                 ${guide.busPhoto ? `<img src="${guide.busPhoto}" style="width:100px;height:100px;border-radius:20px;object-fit:cover;border:2px solid var(--border);margin:8px;cursor:pointer;" onclick="window.showImage('${guide.busPhoto}')">` : ''}
             </div>
-            <div style="background:var(--card-note-bg); padding:16px; border-radius:16px;">
-                <p><strong>📞 الهاتف:</strong> <a href="tel:${guide.phone}" style="color:var(--btn-primary);">${guide.phone}</a></p>
-                <p><strong>🚌 وسيلة النقل:</strong> ${escapeHtml(guide.transportType || '—')}</p>
-                <p><strong>🚍 رقم اللوحة:</strong> <span class="plate-number">${escapeHtml(guide.plateNumber || '—')}</span></p>
-                <p><strong>🏢 الوكالة:</strong> ${escapeHtml(guide.agency || '—')}</p>
-                <p><strong>📝 ملاحظات:</strong> ${escapeHtml(guide.notes || 'لا توجد ملاحظات')}</p>
-                ${guide.favorite ? `<p><span style="color:gold;">⭐ مرشد نشط حالياً</span></p>` : ''}
+            <div style="background:var(--card-note-bg); padding:16px; border-radius:20px;">
+                <p><strong>📞 ${t('phone')}:</strong> <a href="tel:${guide.phone}" style="color:var(--gold);">${guide.phone}</a></p>
+                <p><strong>🚐 ${t('transportType')}:</strong> ${escapeHtml(guide.transportType || '—')}</p>
+                <p><strong>🚍 ${t('plateNumber')}:</strong> <span class="plate-number">${escapeHtml(guide.plateNumber || '—')}</span></p>
+                <p><strong>🏢 ${t('agency')}:</strong> ${escapeHtml(guide.agency || '—')}</p>
+                <p><strong>📝 ${t('notes')}:</strong> ${escapeHtml(guide.notes || t('noNotes'))}</p>
+                ${guide.favorite ? `<p><span style="color:var(--gold);">⭐ ${t('favorite')}</span></p>` : ''}
             </div>
         `;
         document.getElementById("detailModal").classList.add("show");
     }
     
-    window.showImage = (url) => { if(url && url!="") { document.getElementById("fullImage").src=url; document.getElementById("fullImageModal").classList.add("show"); } };
+    window.showImage = (url) => { if(url) { document.getElementById("fullImage").src=url; document.getElementById("fullImageModal").classList.add("show"); } };
     
     function toggleFavorite(guideId) {
         const index = guides.findIndex(g => g.id === guideId);
         if (index !== -1) {
             guides[index].favorite = !guides[index].favorite;
-            if (!isGuest && currentUser) {
-                syncToCloud().then(() => renderList());
-            } else {
-                saveToLocal();
-                renderList();
-            }
-            showToast(guides[index].favorite ? "⭐ تمت الإضافة إلى النشطاء" : "تمت الإزالة");
+            if (currentUser) syncToCloud();
+            renderList();
+            showToast(guides[index].favorite ? "⭐ مضاف للنشطاء" : "تمت الإزالة");
         }
     }
     
     function renderList() {
         let filtered = filterGuides();
         let container = document.getElementById("guidesContainer");
-        if (filtered.length === 0) { container.innerHTML = `<div class="loading">لا توجد نتائج</div>`; return; }
+        if (filtered.length === 0) { container.innerHTML = `<div class="loading">${t('noResults')}</div>`; return; }
         
         container.innerHTML = filtered.map(guide => `
-            <div class="guide-card ${guide.favorite ? 'favorite' : ''}" style="border-right-color: ${guide.cardColor || '#FFD700'};" onclick="showGuideDetails(${JSON.stringify(guide).replace(/</g, '\\u003c')})">
+            <div class="guide-card ${guide.favorite ? 'favorite' : ''}" style="border-right-color: ${guide.cardColor || '#e94560'};" onclick="showGuideDetails(${JSON.stringify(guide).replace(/</g, '\\u003c')})">
                 <div class="favorite-star" onclick="event.stopPropagation(); toggleFavorite('${guide.id}')">${guide.favorite ? '⭐' : '☆'}</div>
                 <div class="card-header">
                     <div class="photos-area">
@@ -650,13 +753,13 @@
                         <div class="guide-name">${escapeHtml(guide.name)}</div>
                         <div class="phone-area">
                             <span class="guide-phone">${guide.phone}</span>
-                            <button class="call-btn" onclick="event.stopPropagation(); window.location.href='tel:${guide.phone}'">📞 اتصال</button>
+                            <button class="call-btn" onclick="event.stopPropagation(); window.location.href='tel:${guide.phone}'">📞 ${t('call')}</button>
                         </div>
-                        ${guide.plateNumber ? `<div class="plate-number" style="font-size:12px; margin-top:4px;">🚍 ${escapeHtml(guide.plateNumber)}</div>` : ''}
+                        ${guide.plateNumber ? `<div class="plate-number" style="font-size:11px; margin-top:4px;">🚍 ${escapeHtml(guide.plateNumber)}</div>` : ''}
                     </div>
                 </div>
                 <div class="details-mini">
-                    <div>🚌 ${escapeHtml(guide.transportType || '—')}</div>
+                    <div>🚐 ${escapeHtml(guide.transportType || '—')}</div>
                     <div>🏢 ${escapeHtml(guide.agency || '—')}</div>
                 </div>
             </div>
@@ -668,7 +771,7 @@
     
     function resetForm() {
         currentEditId = null;
-        selectedColor = "#FFD700";
+        selectedColor = "#e94560";
         currentGuidePhotoUrl = "";
         currentBusPhotoUrl = "";
         document.getElementById("guideName").value = "";
@@ -679,131 +782,35 @@
         document.getElementById("guideNotes").value = "";
         document.getElementById("guidePhotoPreview").style.display = "none";
         document.getElementById("busPhotoPreview").style.display = "none";
-        document.getElementById("guidePhotoPreview").src = "";
-        document.getElementById("busPhotoPreview").src = "";
-        document.getElementById("guideUploadStatus").classList.remove("show");
-        document.getElementById("busUploadStatus").classList.remove("show");
         document.querySelectorAll(".color-option").forEach(o => o.classList.remove("selected"));
-        const defaultColor = document.querySelector(".color-option[data-color='#FFD700']");
+        const defaultColor = document.querySelector(".color-option[data-color='#e94560']");
         if (defaultColor) defaultColor.classList.add("selected");
-        document.getElementById("modalTitle").innerHTML = "إضافة مرشد";
+        document.getElementById("modalTitle").innerHTML = t('addGuide');
         document.getElementById("phoneError").style.display = "none";
     }
     
-    async function editGuideById(id) {
-        let g = guides.find(g => g.id === id);
-        if (g) {
-            currentEditId = id;
-            document.getElementById("guideName").value = g.name || "";
-            document.getElementById("guidePhone").value = g.phone || "";
-            document.getElementById("plateNumber").value = g.plateNumber || "";
-            document.getElementById("transportType").value = g.transportType || "";
-            document.getElementById("agency").value = g.agency || "";
-            document.getElementById("guideNotes").value = g.notes || "";
-            selectedColor = g.cardColor || "#FFD700";
-            currentGuidePhotoUrl = g.guidePhoto || "";
-            currentBusPhotoUrl = g.busPhoto || "";
-            
-            document.querySelectorAll(".color-option").forEach(opt => {
-                opt.classList.remove("selected");
-                if (opt.dataset.color === selectedColor) opt.classList.add("selected");
-            });
-            
-            if (currentGuidePhotoUrl) {
-                document.getElementById("guidePhotoPreview").src = currentGuidePhotoUrl;
-                document.getElementById("guidePhotoPreview").style.display = "block";
-            }
-            if (currentBusPhotoUrl) {
-                document.getElementById("busPhotoPreview").src = currentBusPhotoUrl;
-                document.getElementById("busPhotoPreview").style.display = "block";
-            }
-            document.getElementById("modalTitle").innerHTML = "تعديل مرشد";
-            document.getElementById("guideModal").classList.add("show");
-        }
+    function showToast(msg, isError = false) {
+        let toast = document.createElement("div");
+        toast.className = "toast";
+        toast.style.background = isError ? "rgba(220,38,38,0.9)" : "rgba(0,0,0,0.85)";
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 2500);
     }
     
-    // ===== حفظ البيانات في السحاب =====
-    function saveToLocal() {
-        if (isGuest) {
-            localStorage.setItem("guestGuides", JSON.stringify(guides));
-        }
-    }
+    function validatePhone(phone) { return /^[0-9]{8,15}$/.test(phone.replace(/[+\s-]/g, '')); }
     
-    function loadLocalData() {
-        if (isGuest) {
-            const stored = localStorage.getItem("guestGuides");
-            guides = stored ? JSON.parse(stored) : [];
-            renderList();
-        }
-    }
-    
-    async function syncToCloud() {
-        if (!currentUser || isGuest) {
-            showToast("الرجاء تسجيل الدخول أولاً", true);
-            return false;
-        }
-        try {
-            await db.collection("users").doc(currentUser.uid).set({ 
-                guides: guides, 
-                email: currentUser.email, 
-                updatedAt: new Date().toISOString() 
-            });
-            showToast("✅ تمت المزامنة مع السحاب");
-            return true;
-        } catch(e) { 
-            showToast("❌ خطأ في المزامنة: " + e.message, true); 
-            return false; 
-        }
-    }
-    
-    async function loadFromCloud() {
-        if (!currentUser || isGuest) return false;
-        try {
-            showToast("جاري التحميل من السحاب...");
-            const doc = await db.collection("users").doc(currentUser.uid).get();
-            if (doc.exists && doc.data().guides) {
-                guides = doc.data().guides;
-                renderList();
-                showToast(`✅ تم تحميل ${guides.length} مرشد من السحاب`);
-            } else {
-                guides = [];
-                renderList();
-            }
-            return true;
-        } catch(e) { 
-            showToast("❌ خطأ في التحميل: " + e.message, true); 
-            return false; 
-        }
-    }
-    
-    // ===== حفظ المرشد =====
     document.getElementById("saveGuideBtn").onclick = async () => {
         let name = document.getElementById("guideName").value.trim();
         let phone = document.getElementById("guidePhone").value.trim();
         
-        if (!name) {
-            showToast("الاسم مطلوب", true);
-            return;
-        }
-        if (!phone) {
-            showToast("رقم الهاتف مطلوب", true);
-            return;
-        }
-        if (!validatePhone(phone)) {
-            document.getElementById("phoneError").style.display = "block";
-            return;
-        }
+        if (!name || !phone) { showToast(t('phoneRequired'), true); return; }
+        if (!validatePhone(phone)) { document.getElementById("phoneError").style.display = "block"; return; }
         document.getElementById("phoneError").style.display = "none";
-        
-        // التحقق من وجود صور Cloudinary
-        if (!currentGuidePhotoUrl && currentGuidePhotoUrl === "") {
-            // لا مشكلة - الصورة اختيارية
-        }
         
         let newGuide = {
             id: currentEditId || Date.now().toString(),
-            name: name,
-            phone: phone,
+            name, phone,
             plateNumber: document.getElementById("plateNumber").value.trim(),
             guidePhoto: currentGuidePhotoUrl,
             busPhoto: currentBusPhotoUrl,
@@ -812,80 +819,88 @@
             agency: document.getElementById("agency").value.trim(),
             notes: document.getElementById("guideNotes").value.trim(),
             favorite: currentEditId ? (guides.find(g => g.id === currentEditId)?.favorite || false) : false,
-            createdAt: currentEditId ? undefined : new Date().toISOString()
+            updatedAt: new Date().toISOString()
         };
         
         if (currentEditId) {
             const index = guides.findIndex(g => g.id === currentEditId);
             if (index !== -1) guides[index] = newGuide;
-            else guides.push(newGuide);
         } else {
             guides.push(newGuide);
         }
         
-        if (!isGuest && currentUser) {
-            await syncToCloud();
-        } else {
-            saveToLocal();
-        }
-        
+        if (currentUser) await syncToCloud();
         renderList();
         document.getElementById("guideModal").classList.remove("show");
         resetForm();
-        showToast("✅ تم حفظ المرشد بنجاح");
+        showToast(t('saved'));
     };
     
-    // ===== المصادقة =====
-    async function handleLogin(email, password) {
+    async function syncToCloud() {
+        if (!currentUser) return false;
         try {
-            showToast("جاري تسجيل الدخول...");
-            let userCred = await auth.signInWithEmailAndPassword(email, password);
-            currentUser = userCred.user;
-            isGuest = false;
-            document.getElementById("loginScreen").classList.add("hide");
-            document.getElementById("signOutBtn").style.display = "flex";
-            document.getElementById("userInfo").innerHTML = `${currentUser.email} <span class="sync-badge">سحابي</span>`;
-            await loadFromCloud();
-            showToast("✅ تم تسجيل الدخول بنجاح");
-        } catch(e) { 
-            showToast(e.message, true); 
-        }
+            await db.collection("guides").doc(currentUser.uid).set({ 
+                data: guides, 
+                email: currentUser.email, 
+                updatedAt: new Date().toISOString() 
+            });
+            showToast("✅ " + t('sync'));
+            return true;
+        } catch(e) { showToast("❌ " + e.message, true); return false; }
     }
     
-    function handleGuest() {
-        currentUser = null;
-        isGuest = true;
-        document.getElementById("loginScreen").classList.add("hide");
-        document.getElementById("signOutBtn").style.display = "none";
-        document.getElementById("userInfo").innerHTML = `👤 وضع الزائر <span class="sync-badge" style="background:#64748b;">محلي</span>`;
-        loadLocalData();
-        showToast("⚠️ وضع الزائر - البيانات محلية فقط، سجل دخولك لحفظها");
+    async function loadFromCloud() {
+        if (!currentUser) return false;
+        try {
+            showToast(t('loading'));
+            const doc = await db.collection("guides").doc(currentUser.uid).get();
+            guides = doc.exists && doc.data().data ? doc.data().data : [];
+            renderList();
+            showToast(`✅ ${guides.length} مرشد`);
+            return true;
+        } catch(e) { showToast("❌ " + e.message, true); return false; }
+    }
+    
+    // ===== المصادقة (بدون وضع زائر) =====
+    async function handleLogin(email, password) {
+        try {
+            showToast("جاري الدخول...");
+            let userCred = await auth.signInWithEmailAndPassword(email, password);
+            currentUser = userCred.user;
+            document.getElementById("loginScreen").classList.add("hide");
+            document.getElementById("signOutBtn").style.display = "flex";
+            document.getElementById("userInfo").innerHTML = `${currentUser.email} <span class="sync-badge">📡 سحابي</span>`;
+            await loadFromCloud();
+            showToast(`أهلا بيك ${currentUser.email.split('@')[0]} 👋`);
+        } catch(e) { showToast(e.message, true); }
     }
     
     function handleLogout() {
-        if (confirm("تسجيل الخروج؟")) {
+        if (confirm("تأكد من الخرور؟")) {
             auth.signOut();
             currentUser = null;
-            handleGuest();
+            guides = [];
+            renderList();
+            document.getElementById("loginScreen").classList.remove("hide");
+            document.getElementById("signOutBtn").style.display = "none";
+            showToast("تم الخرور");
         }
     }
     
     document.getElementById("loginBtn").onclick = () => handleLogin(loginEmail.value.trim(), loginPassword.value.trim());
-    document.getElementById("guestBtn").onclick = handleGuest;
     document.getElementById("signOutBtn").onclick = handleLogout;
     
     auth.onAuthStateChanged(async (user) => {
-        if (user && document.getElementById("loginScreen") && !document.getElementById("loginScreen").classList.contains("hide")) {
+        if (user && !document.getElementById("loginScreen").classList.contains("hide")) {
             currentUser = user;
-            isGuest = false;
             document.getElementById("loginScreen").classList.add("hide");
             document.getElementById("signOutBtn").style.display = "flex";
-            document.getElementById("userInfo").innerHTML = `${user.email} <span class="sync-badge">سحابي</span>`;
+            document.getElementById("userInfo").innerHTML = `${user.email} <span class="sync-badge">📡 سحابي</span>`;
             await loadFromCloud();
         }
     });
     
-    // ===== أحداث الواجهة =====
+    // ===== أحداث =====
     document.getElementById("menuBtn").onclick = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); };
     document.getElementById("closeSidebar").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
     document.getElementById("overlay").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
@@ -894,46 +909,46 @@
     document.getElementById("closeDetailBtn").onclick = () => document.getElementById("detailModal").classList.remove("show");
     document.getElementById("closeFullImageBtn").onclick = () => document.getElementById("fullImageModal").classList.remove("show");
     document.getElementById("searchInput").oninput = () => renderList();
-    document.getElementById("syncNowBtn").onclick = async () => { if (!isGuest && currentUser) await syncToCloud(); else showToast("الرجاء تسجيل الدخول أولاً", true); };
-    document.getElementById("exportDataBtn").onclick = () => { 
-        const dataStr = JSON.stringify(guides, null, 2); 
-        const blob = new Blob([dataStr], {type: "application/json"}); 
-        const url = URL.createObjectURL(blob); 
-        const a = document.createElement("a"); 
-        a.href = url; 
-        a.download = `F-NotePro_Backup_${new Date().toISOString().slice(0,19)}.json`; 
-        a.click(); 
-        URL.revokeObjectURL(url); 
-        showToast("تم تصدير البيانات"); 
+    document.getElementById("syncNowBtn").onclick = async () => { if (currentUser) await syncToCloud(); else showToast("الرجاء تسجيل الدخول", true); };
+    document.getElementById("exportDataBtn").onclick = () => {
+        const dataStr = JSON.stringify(guides, null, 2);
+        const blob = new Blob([dataStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `F-NotePro_Backup_${new Date().toISOString().slice(0,19)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(t('export'));
     };
-    document.getElementById("clearLocalCache").onclick = async () => { 
-        if (confirm("مسح الكاش المحلي؟ (لن يتم حذف بيانات السحاب)")) { 
-            localStorage.removeItem("guestGuides");
-            if (isGuest) guides = [];
-            renderList();
-            showToast("تم مسح الكاش المحلي"); 
-        } 
-    };
-    document.getElementById("darkModeSidebar").onclick = () => { 
-        document.body.classList.toggle("dark"); 
-        localStorage.setItem("darkMode", document.body.classList.contains("dark")); 
+    document.getElementById("darkModeSidebar").onclick = () => {
+        document.body.classList.toggle("dark");
+        localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+        showToggleText();
     };
     document.getElementById("exportPdfBtn").onclick = () => {
         let element = document.createElement("div");
         element.innerHTML = `<h1 style="text-align:center;">F-Note Pro - دليل المرشدين</h1><hr>`;
-        guides.forEach(g => { 
+        guides.forEach(g => {
             element.innerHTML += `<div style="border:1px solid #ccc;border-radius:12px;padding:12px;margin:10px 0;">
-                <strong>${g.name}</strong><br>📞 ${g.phone}<br>🚌 ${g.transportType || '-'}<br>🚍 ${g.plateNumber || '-'}<br>🏢 ${g.agency || '-'}<br>📝 ${g.notes || '-'}
-            </div>`; 
+                <strong>${g.name}</strong><br>📞 ${g.phone}<br>🚐 ${g.transportType || '-'}<br>🚍 ${g.plateNumber || '-'}<br>🏢 ${g.agency || '-'}<br>📝 ${g.notes || '-'}
+            </div>`;
         });
         html2pdf().from(element).set({ margin: 1, filename: `F-NotePro_${new Date().toISOString().slice(0,19)}.pdf` }).save();
-        showToast("جاري إنشاء PDF...");
     };
+    
+    function showToggleText() {
+        const darkBtn = document.getElementById("darkModeSidebar");
+        if (darkBtn) {
+            const span = darkBtn.querySelector("span:last-child");
+            if (span) span.innerText = document.body.classList.contains("dark") ? t('lightMode') : t('darkMode');
+        }
+    }
     
     // فلتر الألوان
     document.getElementById("filterToggleBtn").onclick = () => {
         document.getElementById("colorsPanel").classList.toggle("show");
-        document.getElementById("filterToggleBtn").innerHTML = document.getElementById("colorsPanel").classList.contains("show") ? "🎨 فلتر الألوان ▲" : "🎨 فلتر الألوان ▼";
+        document.getElementById("filterToggleBtn").innerHTML = document.getElementById("colorsPanel").classList.contains("show") ? `🎨 ${t('filter')} ▲` : `🎨 ${t('filter')} ▼`;
     };
     
     document.querySelectorAll(".color-filter-btn").forEach(btn => {
@@ -943,7 +958,7 @@
             btn.classList.add("active");
             renderList();
             document.getElementById("colorsPanel").classList.remove("show");
-            document.getElementById("filterToggleBtn").innerHTML = "🎨 فلتر الألوان ▼";
+            document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ▼`;
         };
     });
     
@@ -951,62 +966,65 @@
     const colorSelectorDiv = document.getElementById("colorSelector");
     if (colorSelectorDiv) {
         colorSelectorDiv.innerHTML = `
-            <div class="color-option" style="background:#FFD700;" data-color="#FFD700"></div>
+            <div class="color-option" style="background:#e94560;" data-color="#e94560"></div>
             <div class="color-option" style="background:#2c7da0;" data-color="#2c7da0"></div>
             <div class="color-option" style="background:#e76f51;" data-color="#e76f51"></div>
             <div class="color-option" style="background:#2a9d8f;" data-color="#2a9d8f"></div>
             <div class="color-option" style="background:#e9c46a;" data-color="#e9c46a"></div>
-            <div class="color-option" style="background:#f4a261;" data-color="#f4a261"></div>
             <div class="color-option" style="background:#9b5de5;" data-color="#9b5de5"></div>
-            <div class="color-option" style="background:#ef233c;" data-color="#ef233c"></div>
             <div class="color-option" style="background:#06d6a0;" data-color="#06d6a0"></div>
-            <div class="color-option" style="background:#118ab2;" data-color="#118ab2"></div>
             <div class="color-option" style="background:#ff006e;" data-color="#ff006e"></div>
             <div class="color-option" style="background:#8338ec;" data-color="#8338ec"></div>
             <div class="color-option" style="background:#fb5607;" data-color="#fb5607"></div>
         `;
-        document.querySelectorAll("#colorSelector .color-option").forEach(opt => { 
-            opt.onclick = () => { 
-                document.querySelectorAll("#colorSelector .color-option").forEach(o => o.classList.remove("selected")); 
-                opt.classList.add("selected"); 
-                selectedColor = opt.dataset.color; 
-            }; 
+        document.querySelectorAll("#colorSelector .color-option").forEach(opt => {
+            opt.onclick = () => {
+                document.querySelectorAll("#colorSelector .color-option").forEach(o => o.classList.remove("selected"));
+                opt.classList.add("selected");
+                selectedColor = opt.dataset.color;
+            };
         });
-        const defaultColor = document.querySelector(".color-option[data-color='#FFD700']");
-        if (defaultColor) defaultColor.classList.add("selected");
+        document.querySelector(".color-option[data-color='#e94560']").classList.add("selected");
     }
     
-    // البحث الصوتي
+    // البحث الصوتي بالدارجة التونسية
     let recognition = null;
     if ('webkitSpeechRecognition' in window) {
         recognition = new webkitSpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
     }
+    
     document.getElementById("voiceSearchBtn").onclick = () => {
-        if (!recognition) { showToast("البحث الصوتي غير مدعوم", true); return; }
+        if (!recognition) { showToast("البحث بالصوت غير مدعوم", true); return; }
+        
+        // دعم اللهجة التونسية
         recognition.lang = 'ar-TN';
         recognition.start();
         document.getElementById("voiceSearchBtn").classList.add("listening");
-        showToast("🎤 تحدث الآن...");
+        showToast("🎤 تحدث بالدارجة التونسية...");
+        
         recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
+            let transcript = event.results[0][0].transcript;
+            // معالجة الكلمات التونسية
+            transcript = transcript.replace(/فوتش/g, 'فتش').replace(/قولو/g, 'قال');
             document.getElementById("searchInput").value = transcript;
             renderList();
             document.getElementById("voiceSearchBtn").classList.remove("listening");
+            showToast(`🔍 "${transcript}"`);
         };
-        recognition.onerror = () => { 
-            document.getElementById("voiceSearchBtn").classList.remove("listening"); 
-            showToast("❌ لم يتم التعرف على الصوت", true); 
+        recognition.onerror = () => {
+            document.getElementById("voiceSearchBtn").classList.remove("listening");
+            showToast("❌ ما فهمتش الكلام", true);
         };
-        recognition.onend = () => { 
-            document.getElementById("voiceSearchBtn").classList.remove("listening"); 
+        recognition.onend = () => {
+            document.getElementById("voiceSearchBtn").classList.remove("listening");
         };
     };
     
     document.getElementById("shareWhatsappBtn").onclick = () => {
         if (currentGuideForDetail) {
-            const msg = `*${currentGuideForDetail.name}*\n📞 ${currentGuideForDetail.phone}\n🚌 ${currentGuideForDetail.transportType || ''}\n🚍 لوحة: ${currentGuideForDetail.plateNumber || ''}\n🏢 ${currentGuideForDetail.agency || ''}\n📝 ${currentGuideForDetail.notes || ''}`;
+            const msg = `*${currentGuideForDetail.name}*\n📞 ${currentGuideForDetail.phone}\n🚐 ${currentGuideForDetail.transportType || ''}\n🚍 لوحة: ${currentGuideForDetail.plateNumber || ''}\n🏢 ${currentGuideForDetail.agency || ''}\n📝 ${currentGuideForDetail.notes || ''}`;
             window.open(`https://wa.me/${currentGuideForDetail.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
         }
     };
@@ -1021,16 +1039,13 @@
     document.getElementById("langSelect").onchange = e => { 
         currentLang = e.target.value; 
         localStorage.setItem("lang", currentLang); 
+        updateUI(); 
+        renderList();
+        showToggleText();
     };
     
-    // بدء التطبيق
-    if (localStorage.getItem("guestGuides")) {
-        const stored = localStorage.getItem("guestGuides");
-        guides = JSON.parse(stored);
-    }
-    renderList();
-    
-    console.log("✅ F-Note Pro V16 - سحابي بالكامل، رفع سريع للصور عبر Cloudinary");
+    updateUI();
+    console.log("✅ F-Note Pro Tunis - نسخة سحابية كاملة بالدارجة");
 </script>
 </body>
 </html>
