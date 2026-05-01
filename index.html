@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>F-Note Pro - دليل المرشدين</title>
+    <title>F-Note Pro Cloud - دليل المرشدين السحابي</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <!-- Cloudinary SDK - تحميل سريع -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <style>
         * {
             margin: 0;
@@ -36,7 +37,6 @@
             --icon-color: #888888;
             --card-shadow: 0 4px 12px rgba(0,0,0,0.05);
             --gold: #FFD700;
-            --gold-dark: #DAA520;
         }
 
         body.dark {
@@ -52,29 +52,11 @@
             --card-note-bg: #252525;
             --logo-opacity: 0.08;
             --card-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            --gold: #FFD700;
         }
 
         body {
             background: var(--bg-body);
             min-height: 100vh;
-        }
-
-        /* إصلاح الألوان في الوضع الداكن */
-        body.dark .color-option,
-        body.dark .color-filter-btn {
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-        
-        body.dark .color-option.selected,
-        body.dark .color-filter-btn.active {
-            border: 3px solid var(--gold);
-            box-shadow: 0 0 0 1px rgba(255,215,0,0.3);
-        }
-
-        body.dark .colors-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
         }
 
         body::before {
@@ -269,8 +251,8 @@
 
         .card-header { display: flex; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
         .photos-area { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-        .guide-photo { width: 80px; height: 80px; border-radius: 18px; object-fit: cover; border: 2px solid var(--gold); cursor: pointer; }
-        .bus-photo { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; }
+        .guide-photo { width: 80px; height: 80px; border-radius: 18px; object-fit: cover; border: 2px solid var(--gold); cursor: pointer; background: var(--search-bg); }
+        .bus-photo { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; background: var(--search-bg); }
         .guide-info { flex: 1; }
         .guide-name { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
         .phone-area { display: flex; align-items: center; gap: 8px; background: var(--search-bg); padding: 6px 12px; border-radius: 30px; direction: ltr; margin-top: 8px; }
@@ -327,10 +309,25 @@
         .color-option:active { transform: scale(0.93); }
         .color-option.selected { border: 3px solid var(--gold); transform: scale(1.05); }
         .image-upload-area { border: 2px dashed var(--btn-primary); padding: 12px; border-radius: 24px; margin: 8px 0; text-align: center; }
-        .upload-btn { background: #3448c5; color: white; border: none; padding: 10px; border-radius: 28px; cursor: pointer; width: 100%; margin-top: 8px; transition: all 0.1s ease; }
-        .upload-btn:active { transform: scale(0.97); }
-        .progress-bar { width: 100%; height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; display: none; }
-        .progress-bar .progress { width: 0%; height: 100%; background: var(--success); border-radius: 2px; transition: width 0.3s; }
+        .cloudinary-btn {
+            background: #3448c5;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 28px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            transition: all 0.1s ease;
+        }
+        .cloudinary-btn:active { transform: scale(0.97); }
+        .upload-status {
+            font-size: 12px;
+            margin-top: 8px;
+            color: var(--text-secondary);
+            display: none;
+        }
+        .upload-status.show { display: block; }
         .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
         .save-btn, .cancel-btn { flex: 1; padding: 14px; border-radius: 30px; border: none; font-weight: 500; cursor: pointer; transition: all 0.1s ease; }
         .save-btn:active, .cancel-btn:active { transform: scale(0.97); }
@@ -358,6 +355,7 @@
         .plate-number { font-family: monospace; font-size: 16px; font-weight: bold; background: var(--gold); color: #333; padding: 4px 8px; border-radius: 8px; display: inline-block; margin-top: 4px; }
         body.dark .plate-number { color: #333; }
         .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+        .sync-badge { background: var(--success); color: white; padding: 4px 8px; border-radius: 20px; font-size: 10px; margin-left: 8px; }
     </style>
 </head>
 <body>
@@ -370,37 +368,41 @@
 <div class="login-screen" id="loginScreen">
     <div class="login-card">
         <div class="login-logo"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="Logo"></div>
-        <div class="login-title" id="loginTitle">مرحباً بك</div>
+        <div class="login-title">مرحباً بك</div>
         <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
         <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
         <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
         <div class="login-divider" style="margin:20px 0; border-top:1px solid var(--border); position:relative;"><span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--bg-card);padding:0 15px;">أو</span></div>
-        <button class="login-btn guest-btn" id="guestBtn">دخول كزائر</button>
+        <button class="login-btn guest-btn" id="guestBtn">دخول كزائر (بيانات محلية مؤقتة)</button>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:12px;">⚠️ وضع الزائر مؤقت - يفضل تسجيل الدخول لحفظ البيانات</p>
     </div>
 </div>
 
 <div class="overlay" id="overlay"></div>
 
 <div class="sidebar" id="sidebar">
-    <div class="sidebar-header"><h2 id="menuTitle">القائمة</h2><button class="close-sidebar" id="closeSidebar">✕</button></div>
+    <div class="sidebar-header"><h2>القائمة</h2><button class="close-sidebar" id="closeSidebar">✕</button></div>
     <div class="sidebar-section">
-        <h3 id="accountSection">الحساب</h3>
+        <h3>الحساب</h3>
         <div id="userInfo" style="color:var(--text-secondary); font-size:13px; margin-bottom:12px;"></div>
-        <div class="sidebar-item" id="signOutBtn" style="display:none;"><span>🚪</span><span id="logoutText">تسجيل الخروج</span></div>
-        <div class="sidebar-item" id="exportLocalDataBtn"><span>💾</span><span id="exportText">تصدير البيانات</span></div>
+        <div class="sidebar-item" id="signOutBtn" style="display:none;"><span>🚪</span><span>تسجيل الخروج</span></div>
+        <div class="sidebar-item" id="exportDataBtn"><span>💾</span><span>تصدير JSON احتياطي</span></div>
     </div>
     <div class="sidebar-section">
-        <h3 id="settingsSection">الإعدادات</h3>
+        <h3>الإعدادات</h3>
         <select id="langSelect">
-            <option value="ar">🇹🇳 العربية (تونس)</option>
+            <option value="ar">🇹🇳 العربية</option>
             <option value="fr">🇫🇷 Français</option>
         </select>
-        <div class="sidebar-item" id="darkModeSidebar"><span>🌙</span><span id="darkModeText">الوضع الداكن / الفاتح</span></div>
-        <div class="sidebar-item" id="syncNowBtn"><span>🔄</span><span id="syncText">مزامنة مع السحاب</span></div>
-        <div class="sidebar-item" id="exportPdfBtn"><span>📄</span><span id="pdfText">تصدير PDF</span></div>
-        <div class="sidebar-item" id="resetDataBtn"><span>🗑️</span><span id="resetText">مسح البيانات</span></div>
+        <div class="sidebar-item" id="darkModeSidebar"><span>🌙</span><span>الوضع الداكن / الفاتح</span></div>
+        <div class="sidebar-item" id="syncNowBtn"><span>🔄</span><span>مزامنة مع السحاب</span></div>
+        <div class="sidebar-item" id="exportPdfBtn"><span>📄</span><span>تصدير PDF</span></div>
+        <div class="sidebar-item" id="clearLocalCache"><span>🗑️</span><span>مسح الكاش المحلي</span></div>
     </div>
-    <div class="sidebar-section"><h3 id="aboutTitle">عن التطبيق</h3><p style="font-size:12px;" id="aboutText">نسخة 15.0 - متكامل مع Firebase Storage</p></div>
+    <div class="sidebar-section">
+        <h3>عن التطبيق</h3>
+        <p style="font-size:12px;">نسخة 16.0 - سحابي بالكامل<br>رفع الصور على Cloudinary<br>حماية كاملة من ضياع البيانات</p>
+    </div>
 </div>
 
 <div class="toolbar">
@@ -438,20 +440,18 @@
 <input type="tel" id="guidePhone" placeholder="رقم الهاتف">
 <input type="text" id="plateNumber" placeholder="رقم لوحة الحافلة">
 <div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ رقم الهاتف يجب أن يحتوي على أرقام فقط</div>
-<label id="colorLabel">لون البطاقة</label>
+<label>لون البطاقة</label>
 <div class="color-selector" id="colorSelector"></div>
-<label id="guidePhotoLabel">صورة المرشد</label>
+<label>صورة المرشد</label>
 <div class="image-upload-area">
-    <input type="file" id="guidePhotoUpload" accept="image/*" style="display:none">
-    <button type="button" id="guideUploadBtn" class="upload-btn">📷 اختيار صورة المرشد</button>
-    <div class="progress-bar" id="guideProgress"><div class="progress"></div></div>
+    <button type="button" id="cloudinaryGuideBtn" class="cloudinary-btn">📷 رفع صورة المرشد على السحاب</button>
+    <div id="guideUploadStatus" class="upload-status"></div>
     <img id="guidePhotoPreview" style="width:70px;height:70px;border-radius:16px;margin-top:8px;display:none;">
 </div>
-<label id="busPhotoLabel">صورة وسيلة النقل</label>
+<label>صورة وسيلة النقل</label>
 <div class="image-upload-area">
-    <input type="file" id="busPhotoUpload" accept="image/*" style="display:none">
-    <button type="button" id="busUploadBtn" class="upload-btn">🚌 اختيار صورة الحافلة</button>
-    <div class="progress-bar" id="busProgress"><div class="progress"></div></div>
+    <button type="button" id="cloudinaryBusBtn" class="cloudinary-btn">🚌 رفع صورة الحافلة على السحاب</button>
+    <div id="busUploadStatus" class="upload-status"></div>
     <img id="busPhotoPreview" style="width:55px;height:55px;border-radius:12px;margin-top:8px;display:none;">
 </div>
 <input type="text" id="transportType" placeholder="وسيلة النقل">
@@ -479,13 +479,18 @@
         appId: "1:645688115664:web:5dbfee1e28c41e0a1c79d5"
     };
     
-    let db, auth, storage;
+    let db, auth;
     try {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
         auth = firebase.auth();
-        storage = firebase.storage();
     } catch(e) { console.error("Firebase init error:", e); }
+    
+    // ===== Cloudinary =====
+    const cloudinaryConfig = {
+        cloudName: "dmhtx93nj",
+        uploadPreset: "ml_default"
+    };
     
     // ===== المتغيرات =====
     let currentUser = null, isGuest = true, guides = [], currentLang = 'ar';
@@ -493,197 +498,79 @@
     let currentColorFilter = "all", currentGuideForDetail = null;
     let currentGuidePhotoUrl = "", currentBusPhotoUrl = "";
     
-    // ===== ملفات الترجمة =====
-    const translations = {
-        ar: {
-            appName: "F-Note Pro - دليل المرشدين",
-            welcome: "مرحباً بك",
-            login: "تسجيل الدخول",
-            guest: "دخول كزائر",
-            menu: "القائمة",
-            account: "الحساب",
-            logout: "تسجيل الخروج",
-            export: "تصدير البيانات",
-            settings: "الإعدادات",
-            darkMode: "الوضع الداكن / الفاتح",
-            sync: "مزامنة مع السحاب",
-            pdf: "تصدير PDF",
-            reset: "مسح البيانات",
-            about: "عن التطبيق",
-            aboutText: "نسخة 15.0 - متكامل مع Firebase Storage",
-            search: "بحث...",
-            addGuide: "إضافة مرشد",
-            editGuide: "تعديل مرشد",
-            fullName: "الاسم الكامل *",
-            phone: "رقم الهاتف",
-            plateNumber: "رقم لوحة الحافلة",
-            cardColor: "لون البطاقة",
-            guidePhoto: "صورة المرشد",
-            busPhoto: "صورة وسيلة النقل",
-            transportType: "وسيلة النقل",
-            agency: "وكالة الأسفار",
-            notes: "ملاحظات",
-            save: "حفظ",
-            cancel: "إلغاء",
-            selectImage: "اختيار صورة",
-            phoneRequired: "الاسم والهاتف مطلوبان",
-            phoneInvalid: "رقم الهاتف يجب أن يحتوي على أرقام فقط",
-            deleteConfirm: "حذف هذا المرشد نهائياً؟",
-            resetConfirm: "حذف كل البيانات نهائياً؟",
-            noResults: "لا توجد نتائج",
-            loading: "جاري التحميل...",
-            share: "مشاركة عبر واتساب",
-            close: "إغلاق",
-            favorite: "مرشد نشط حالياً",
-            noNotes: "لا توجد ملاحظات",
-            call: "اتصال",
-            filter: "فلتر الألوان",
-            saved: "تم الحفظ بنجاح",
-            error: "حدث خطأ"
-        },
-        fr: {
-            appName: "F-Note Pro - Guide des accompagnateurs",
-            welcome: "Bienvenue",
-            login: "Connexion",
-            guest: "Mode invité",
-            menu: "Menu",
-            account: "Compte",
-            logout: "Déconnexion",
-            export: "Exporter",
-            settings: "Paramètres",
-            darkMode: "Mode sombre/clair",
-            sync: "Synchroniser",
-            pdf: "Exporter PDF",
-            reset: "Effacer",
-            about: "À propos",
-            aboutText: "Version 15.0 - Firebase Storage",
-            search: "Rechercher...",
-            addGuide: "Ajouter",
-            editGuide: "Modifier",
-            fullName: "Nom complet *",
-            phone: "Téléphone",
-            plateNumber: "Plaque",
-            cardColor: "Couleur",
-            guidePhoto: "Photo guide",
-            busPhoto: "Photo bus",
-            transportType: "Transport",
-            agency: "Agence",
-            notes: "Notes",
-            save: "Enregistrer",
-            cancel: "Annuler",
-            selectImage: "Choisir",
-            phoneRequired: "Nom et téléphone requis",
-            phoneInvalid: "Chiffres uniquement",
-            deleteConfirm: "Supprimer ?",
-            resetConfirm: "Effacer tout ?",
-            noResults: "Aucun résultat",
-            loading: "Chargement...",
-            share: "Partager WhatsApp",
-            close: "Fermer",
-            favorite: "Guide actif",
-            noNotes: "Aucune note",
-            call: "Appeler",
-            filter: "Filtrer",
-            saved: "Enregistré",
-            error: "Erreur"
+    // ===== وظائف مساعدة =====
+    function showToast(msg, isError = false) {
+        let toast = document.createElement("div");
+        toast.className = "toast";
+        toast.style.background = isError ? "rgba(220,38,38,0.9)" : "rgba(0,0,0,0.8)";
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = "fadeOut 0.3s forwards";
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+    
+    function validatePhone(phone) {
+        const cleaned = phone.replace(/[+\s-]/g, '');
+        return /^[0-9]{8,15}$/.test(cleaned);
+    }
+    
+    function escapeHtml(s) { if(!s) return ""; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+    
+    // ===== رفع الصور إلى Cloudinary =====
+    function openCloudinaryWidget(type) {
+        if (isGuest) {
+            showToast("⚠️ الرجاء تسجيل الدخول أولاً لرفع الصور", true);
+            return;
         }
-    };
-    
-    function t(key) {
-        return translations[currentLang]?.[key] || translations.ar[key] || key;
-    }
-    
-    function updateUILanguage() {
-        document.title = t('appName');
-        document.getElementById("loginTitle").innerText = t('welcome');
-        document.getElementById("loginBtn").innerText = t('login');
-        document.getElementById("guestBtn").innerText = t('guest');
-        document.getElementById("menuTitle").innerText = t('menu');
-        document.getElementById("accountSection").innerText = t('account');
-        document.getElementById("logoutText").innerText = t('logout');
-        document.getElementById("exportText").innerText = t('export');
-        document.getElementById("settingsSection").innerText = t('settings');
-        document.getElementById("darkModeText").innerText = t('darkMode');
-        document.getElementById("syncText").innerText = t('sync');
-        document.getElementById("pdfText").innerText = t('pdf');
-        document.getElementById("resetText").innerText = t('reset');
-        document.getElementById("aboutTitle").innerText = t('about');
-        document.getElementById("aboutText").innerText = t('aboutText');
-        document.getElementById("searchInput").placeholder = t('search');
-        document.getElementById("modalTitle").innerText = currentEditId ? t('editGuide') : t('addGuide');
-        document.getElementById("colorLabel").innerText = t('cardColor');
-        document.getElementById("guidePhotoLabel").innerText = t('guidePhoto');
-        document.getElementById("busPhotoLabel").innerText = t('busPhoto');
-        document.getElementById("guideUploadBtn").innerText = t('selectImage');
-        document.getElementById("busUploadBtn").innerText = t('selectImage');
-        document.getElementById("saveGuideBtn").innerText = t('save');
-        document.getElementById("closeModalBtn").innerText = t('cancel');
-        document.getElementById("closeDetailBtn").innerText = t('close');
-        document.getElementById("shareWhatsappBtn").innerText = t('share');
-        document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ▼`;
-        renderList();
-    }
-    
-    // ===== رفع الصور =====
-    async function uploadImageToStorage(file, path) {
-        if (!file || isGuest) {
-            // في وضع الزائر نستخدم Base64
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.readAsDataURL(file);
-            });
-        }
-        return new Promise((resolve, reject) => {
-            const storageRef = storage.ref();
-            const imageRef = storageRef.child(`${path}/${Date.now()}_${file.name}`);
-            const uploadTask = imageRef.put(file);
-            
-            uploadTask.on('state_changed',
-                null,
-                (error) => reject(error),
-                async () => {
-                    const url = await imageRef.getDownloadURL();
-                    resolve(url);
-                }
-            );
-        });
-    }
-    
-    function handleImageUpload(file, type) {
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            if (type === 'guide') {
-                currentGuidePhotoUrl = e.target.result;
-                document.getElementById("guidePhotoPreview").src = e.target.result;
-                document.getElementById("guidePhotoPreview").style.display = "block";
-            } else {
-                currentBusPhotoUrl = e.target.result;
-                document.getElementById("busPhotoPreview").src = e.target.result;
-                document.getElementById("busPhotoPreview").style.display = "block";
-            }
-        };
-        reader.readAsDataURL(file);
         
-        // رفع إلى Firebase في الخلفية للمستخدمين المسجلين
-        if (!isGuest && currentUser) {
-            uploadImageToStorage(file, `guides/${currentUser.uid}`).then(url => {
-                if (type === 'guide') currentGuidePhotoUrl = url;
-                else currentBusPhotoUrl = url;
-            }).catch(console.error);
-        }
+        const statusDiv = document.getElementById(type === 'guide' ? 'guideUploadStatus' : 'busUploadStatus');
+        statusDiv.innerText = "📤 جاري فتح نافذة الرفع...";
+        statusDiv.classList.add('show');
+        
+        const widget = cloudinary.createUploadWidget(
+            {
+                cloudName: cloudinaryConfig.cloudName,
+                uploadPreset: cloudinaryConfig.uploadPreset,
+                multiple: false,
+                cropping: true,
+                croppingAspectRatio: 1,
+                sources: ['local', 'camera'],
+                showAdvancedOptions: false,
+                folder: `f-note-pro/${currentUser?.uid || 'guest'}`
+            },
+            (error, result) => {
+                if (error) {
+                    statusDiv.innerText = "❌ خطأ في الرفع";
+                    setTimeout(() => statusDiv.classList.remove('show'), 3000);
+                    showToast("خطأ في رفع الصورة", true);
+                    return;
+                }
+                
+                if (result && result.event === "success") {
+                    const url = result.info.secure_url;
+                    if (type === 'guide') {
+                        currentGuidePhotoUrl = url;
+                        document.getElementById("guidePhotoPreview").src = url;
+                        document.getElementById("guidePhotoPreview").style.display = "block";
+                        statusDiv.innerText = "✅ تم رفع صورة المرشد";
+                    } else {
+                        currentBusPhotoUrl = url;
+                        document.getElementById("busPhotoPreview").src = url;
+                        document.getElementById("busPhotoPreview").style.display = "block";
+                        statusDiv.innerText = "✅ تم رفع صورة الحافلة";
+                    }
+                    setTimeout(() => statusDiv.classList.remove('show'), 2000);
+                    showToast("✅ تم رفع الصورة بنجاح");
+                }
+            }
+        );
+        widget.open();
     }
     
-    document.getElementById("guideUploadBtn").onclick = () => document.getElementById("guidePhotoUpload").click();
-    document.getElementById("busUploadBtn").onclick = () => document.getElementById("busPhotoUpload").click();
-    
-    document.getElementById("guidePhotoUpload").onchange = e => {
-        if (e.target.files[0]) handleImageUpload(e.target.files[0], 'guide');
-    };
-    document.getElementById("busPhotoUpload").onchange = e => {
-        if (e.target.files[0]) handleImageUpload(e.target.files[0], 'bus');
-    };
+    document.getElementById("cloudinaryGuideBtn").onclick = () => openCloudinaryWidget('guide');
+    document.getElementById("cloudinaryBusBtn").onclick = () => openCloudinaryWidget('bus');
     
     // ===== البحث =====
     function smartSearch(query, text) {
@@ -710,23 +597,21 @@
         return filtered;
     }
     
-    function escapeHtml(s) { if(!s) return ""; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
-    
     function showGuideDetails(guide) {
         currentGuideForDetail = guide;
         document.getElementById("detailName").innerHTML = `<span style="color:${guide.cardColor || '#FFD700'}">⭐</span> ${escapeHtml(guide.name)}`;
         document.getElementById("detailContent").innerHTML = `
             <div style="text-align:center; margin-bottom:16px;">
-                ${guide.guidePhoto ? `<img src="${guide.guidePhoto}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid ${guide.cardColor || '#FFD700'};margin:8px;cursor:pointer;" onclick="window.showImage('${guide.guidePhoto}')">` : ''}
+                ${guide.guidePhoto ? `<img src="${guide.guidePhoto}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid ${guide.cardColor || '#FFD700'};margin:8px;cursor:pointer;" onclick="window.showImage('${guide.guidePhoto}')">` : '<div style="width:120px;height:120px;border-radius:50%;background:var(--search-bg);display:flex;align-items:center;justify-content:center;margin:8px auto;">📷 لا توجد صورة</div>'}
                 ${guide.busPhoto ? `<img src="${guide.busPhoto}" style="width:100px;height:100px;border-radius:20px;object-fit:cover;border:2px solid var(--border);margin:8px;cursor:pointer;" onclick="window.showImage('${guide.busPhoto}')">` : ''}
             </div>
             <div style="background:var(--card-note-bg); padding:16px; border-radius:16px;">
-                <p><strong>📞 ${t('phone')}:</strong> <a href="tel:${guide.phone}" style="color:var(--btn-primary);">${guide.phone}</a></p>
-                <p><strong>🚌 ${t('transportType')}:</strong> ${escapeHtml(guide.transportType || '—')}</p>
-                <p><strong>🚍 ${t('plateNumber')}:</strong> <span class="plate-number">${escapeHtml(guide.plateNumber || '—')}</span></p>
-                <p><strong>🏢 ${t('agency')}:</strong> ${escapeHtml(guide.agency || '—')}</p>
-                <p><strong>📝 ${t('notes')}:</strong> ${escapeHtml(guide.notes || t('noNotes'))}</p>
-                ${guide.favorite ? `<p><span style="color:gold;">⭐ ${t('favorite')}</span></p>` : ''}
+                <p><strong>📞 الهاتف:</strong> <a href="tel:${guide.phone}" style="color:var(--btn-primary);">${guide.phone}</a></p>
+                <p><strong>🚌 وسيلة النقل:</strong> ${escapeHtml(guide.transportType || '—')}</p>
+                <p><strong>🚍 رقم اللوحة:</strong> <span class="plate-number">${escapeHtml(guide.plateNumber || '—')}</span></p>
+                <p><strong>🏢 الوكالة:</strong> ${escapeHtml(guide.agency || '—')}</p>
+                <p><strong>📝 ملاحظات:</strong> ${escapeHtml(guide.notes || 'لا توجد ملاحظات')}</p>
+                ${guide.favorite ? `<p><span style="color:gold;">⭐ مرشد نشط حالياً</span></p>` : ''}
             </div>
         `;
         document.getElementById("detailModal").classList.add("show");
@@ -738,17 +623,20 @@
         const index = guides.findIndex(g => g.id === guideId);
         if (index !== -1) {
             guides[index].favorite = !guides[index].favorite;
-            saveToLocal();
-            if (!isGuest && currentUser) syncToCloud();
-            renderList();
-            showToast(guides[index].favorite ? "⭐ " + t('favorite') : "تمت الإزالة");
+            if (!isGuest && currentUser) {
+                syncToCloud().then(() => renderList());
+            } else {
+                saveToLocal();
+                renderList();
+            }
+            showToast(guides[index].favorite ? "⭐ تمت الإضافة إلى النشطاء" : "تمت الإزالة");
         }
     }
     
     function renderList() {
         let filtered = filterGuides();
         let container = document.getElementById("guidesContainer");
-        if (filtered.length === 0) { container.innerHTML = `<div class="loading">${t('noResults')}</div>`; return; }
+        if (filtered.length === 0) { container.innerHTML = `<div class="loading">لا توجد نتائج</div>`; return; }
         
         container.innerHTML = filtered.map(guide => `
             <div class="guide-card ${guide.favorite ? 'favorite' : ''}" style="border-right-color: ${guide.cardColor || '#FFD700'};" onclick="showGuideDetails(${JSON.stringify(guide).replace(/</g, '\\u003c')})">
@@ -762,7 +650,7 @@
                         <div class="guide-name">${escapeHtml(guide.name)}</div>
                         <div class="phone-area">
                             <span class="guide-phone">${guide.phone}</span>
-                            <button class="call-btn" onclick="event.stopPropagation(); window.location.href='tel:${guide.phone}'">📞 ${t('call')}</button>
+                            <button class="call-btn" onclick="event.stopPropagation(); window.location.href='tel:${guide.phone}'">📞 اتصال</button>
                         </div>
                         ${guide.plateNumber ? `<div class="plate-number" style="font-size:12px; margin-top:4px;">🚍 ${escapeHtml(guide.plateNumber)}</div>` : ''}
                     </div>
@@ -777,23 +665,6 @@
     
     window.toggleFavorite = toggleFavorite;
     window.showGuideDetails = showGuideDetails;
-    
-    function showToast(msg, isError = false) {
-        let toast = document.createElement("div");
-        toast.className = "toast";
-        toast.style.background = isError ? "rgba(220,38,38,0.9)" : "rgba(0,0,0,0.8)";
-        toast.innerText = msg;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-            toast.style.animation = "fadeOut 0.3s forwards";
-            setTimeout(() => toast.remove(), 300);
-        }, 2500);
-    }
-    
-    function validatePhone(phone) {
-        const cleaned = phone.replace(/[+\s-]/g, '');
-        return /^[0-9]{8,15}$/.test(cleaned);
-    }
     
     function resetForm() {
         currentEditId = null;
@@ -810,10 +681,12 @@
         document.getElementById("busPhotoPreview").style.display = "none";
         document.getElementById("guidePhotoPreview").src = "";
         document.getElementById("busPhotoPreview").src = "";
+        document.getElementById("guideUploadStatus").classList.remove("show");
+        document.getElementById("busUploadStatus").classList.remove("show");
         document.querySelectorAll(".color-option").forEach(o => o.classList.remove("selected"));
         const defaultColor = document.querySelector(".color-option[data-color='#FFD700']");
         if (defaultColor) defaultColor.classList.add("selected");
-        document.getElementById("modalTitle").innerHTML = t('addGuide');
+        document.getElementById("modalTitle").innerHTML = "إضافة مرشد";
         document.getElementById("phoneError").style.display = "none";
     }
     
@@ -844,62 +717,76 @@
                 document.getElementById("busPhotoPreview").src = currentBusPhotoUrl;
                 document.getElementById("busPhotoPreview").style.display = "block";
             }
-            document.getElementById("modalTitle").innerHTML = t('editGuide');
+            document.getElementById("modalTitle").innerHTML = "تعديل مرشد";
             document.getElementById("guideModal").classList.add("show");
         }
     }
     
-    // ===== حفظ البيانات =====
+    // ===== حفظ البيانات في السحاب =====
     function saveToLocal() {
-        try {
-            localStorage.setItem("guidesBackup", JSON.stringify(guides));
-            if (isGuest) {
-                let guestId = localStorage.getItem("guestUID");
-                if (!guestId) {
-                    guestId = "guest_" + Date.now();
-                    localStorage.setItem("guestUID", guestId);
-                }
-                localStorage.setItem(`guest_${guestId}`, JSON.stringify(guides));
-            }
-            console.log("Data saved to local storage:", guides.length, "guides");
-            return true;
-        } catch(e) {
-            console.error("Save error:", e);
-            showToast(t('error') + ": " + e.message, true);
-            return false;
+        if (isGuest) {
+            localStorage.setItem("guestGuides", JSON.stringify(guides));
         }
     }
     
     function loadLocalData() {
-        try {
-            if (isGuest) {
-                let guestId = localStorage.getItem("guestUID");
-                let stored = guestId ? localStorage.getItem(`guest_${guestId}`) : null;
-                guides = stored ? JSON.parse(stored) : [];
-            } else {
-                let stored = localStorage.getItem("guidesBackup");
-                guides = stored ? JSON.parse(stored) : [];
-            }
-            if (!Array.isArray(guides)) guides = [];
-            console.log("Data loaded from local storage:", guides.length, "guides");
-            renderList();
-        } catch(e) {
-            console.error("Load error:", e);
-            guides = [];
+        if (isGuest) {
+            const stored = localStorage.getItem("guestGuides");
+            guides = stored ? JSON.parse(stored) : [];
             renderList();
         }
     }
     
+    async function syncToCloud() {
+        if (!currentUser || isGuest) {
+            showToast("الرجاء تسجيل الدخول أولاً", true);
+            return false;
+        }
+        try {
+            await db.collection("users").doc(currentUser.uid).set({ 
+                guides: guides, 
+                email: currentUser.email, 
+                updatedAt: new Date().toISOString() 
+            });
+            showToast("✅ تمت المزامنة مع السحاب");
+            return true;
+        } catch(e) { 
+            showToast("❌ خطأ في المزامنة: " + e.message, true); 
+            return false; 
+        }
+    }
+    
+    async function loadFromCloud() {
+        if (!currentUser || isGuest) return false;
+        try {
+            showToast("جاري التحميل من السحاب...");
+            const doc = await db.collection("users").doc(currentUser.uid).get();
+            if (doc.exists && doc.data().guides) {
+                guides = doc.data().guides;
+                renderList();
+                showToast(`✅ تم تحميل ${guides.length} مرشد من السحاب`);
+            } else {
+                guides = [];
+                renderList();
+            }
+            return true;
+        } catch(e) { 
+            showToast("❌ خطأ في التحميل: " + e.message, true); 
+            return false; 
+        }
+    }
+    
+    // ===== حفظ المرشد =====
     document.getElementById("saveGuideBtn").onclick = async () => {
         let name = document.getElementById("guideName").value.trim();
         let phone = document.getElementById("guidePhone").value.trim();
         
         if (!name) {
-            showToast(t('fullName') + " " + t('phoneRequired'), true);
+            showToast("الاسم مطلوب", true);
             return;
         }
         if (!phone) {
-            showToast(t('phone') + " " + t('phoneRequired'), true);
+            showToast("رقم الهاتف مطلوب", true);
             return;
         }
         if (!validatePhone(phone)) {
@@ -907,6 +794,11 @@
             return;
         }
         document.getElementById("phoneError").style.display = "none";
+        
+        // التحقق من وجود صور Cloudinary
+        if (!currentGuidePhotoUrl && currentGuidePhotoUrl === "") {
+            // لا مشكلة - الصورة اختيارية
+        }
         
         let newGuide = {
             id: currentEditId || Date.now().toString(),
@@ -919,7 +811,8 @@
             transportType: document.getElementById("transportType").value.trim(),
             agency: document.getElementById("agency").value.trim(),
             notes: document.getElementById("guideNotes").value.trim(),
-            favorite: currentEditId ? (guides.find(g => g.id === currentEditId)?.favorite || false) : false
+            favorite: currentEditId ? (guides.find(g => g.id === currentEditId)?.favorite || false) : false,
+            createdAt: currentEditId ? undefined : new Date().toISOString()
         };
         
         if (currentEditId) {
@@ -930,51 +823,17 @@
             guides.push(newGuide);
         }
         
-        const saved = saveToLocal();
-        if (saved) {
-            if (!isGuest && currentUser) await syncToCloud();
-            renderList();
-            document.getElementById("guideModal").classList.remove("show");
-            resetForm();
-            showToast(t('saved'));
+        if (!isGuest && currentUser) {
+            await syncToCloud();
+        } else {
+            saveToLocal();
         }
+        
+        renderList();
+        document.getElementById("guideModal").classList.remove("show");
+        resetForm();
+        showToast("✅ تم حفظ المرشد بنجاح");
     };
-    
-    async function syncToCloud() {
-        if (!currentUser || isGuest) { 
-            showToast(t('sync') + " - " + t('login'), true); 
-            return false; 
-        }
-        try {
-            await db.collection("users").doc(currentUser.uid).set({ 
-                guides: guides, 
-                email: currentUser.email, 
-                updatedAt: new Date().toISOString() 
-            });
-            showToast(t('sync') + " ✅");
-            return true;
-        } catch(e) { 
-            showToast(t('sync') + ": " + e.message, true); 
-            return false; 
-        }
-    }
-    
-    async function loadFromCloud() {
-        if (!currentUser || isGuest) return false;
-        try {
-            const doc = await db.collection("users").doc(currentUser.uid).get();
-            if (doc.exists && doc.data().guides) {
-                guides = doc.data().guides;
-                saveToLocal();
-                renderList();
-                showToast("تم التحميل من السحاب");
-            }
-            return true;
-        } catch(e) { 
-            console.error("Cloud load error:", e);
-            return false; 
-        }
-    }
     
     // ===== المصادقة =====
     async function handleLogin(email, password) {
@@ -985,9 +844,9 @@
             isGuest = false;
             document.getElementById("loginScreen").classList.add("hide");
             document.getElementById("signOutBtn").style.display = "flex";
-            document.getElementById("userInfo").innerHTML = `${currentUser.email}`;
+            document.getElementById("userInfo").innerHTML = `${currentUser.email} <span class="sync-badge">سحابي</span>`;
             await loadFromCloud();
-            showToast(t('login') + " ✅");
+            showToast("✅ تم تسجيل الدخول بنجاح");
         } catch(e) { 
             showToast(e.message, true); 
         }
@@ -998,13 +857,13 @@
         isGuest = true;
         document.getElementById("loginScreen").classList.add("hide");
         document.getElementById("signOutBtn").style.display = "none";
-        document.getElementById("userInfo").innerHTML = `👤 ${t('guest')}`;
+        document.getElementById("userInfo").innerHTML = `👤 وضع الزائر <span class="sync-badge" style="background:#64748b;">محلي</span>`;
         loadLocalData();
-        showToast(t('guest'));
+        showToast("⚠️ وضع الزائر - البيانات محلية فقط، سجل دخولك لحفظها");
     }
     
     function handleLogout() {
-        if (confirm(t('logout') + "?")) {
+        if (confirm("تسجيل الخروج؟")) {
             auth.signOut();
             currentUser = null;
             handleGuest();
@@ -1021,7 +880,7 @@
             isGuest = false;
             document.getElementById("loginScreen").classList.add("hide");
             document.getElementById("signOutBtn").style.display = "flex";
-            document.getElementById("userInfo").innerHTML = `${user.email}`;
+            document.getElementById("userInfo").innerHTML = `${user.email} <span class="sync-badge">سحابي</span>`;
             await loadFromCloud();
         }
     });
@@ -1035,25 +894,24 @@
     document.getElementById("closeDetailBtn").onclick = () => document.getElementById("detailModal").classList.remove("show");
     document.getElementById("closeFullImageBtn").onclick = () => document.getElementById("fullImageModal").classList.remove("show");
     document.getElementById("searchInput").oninput = () => renderList();
-    document.getElementById("syncNowBtn").onclick = async () => { if (!isGuest && currentUser) await syncToCloud(); else showToast(t('login'), true); };
-    document.getElementById("exportLocalDataBtn").onclick = () => { 
+    document.getElementById("syncNowBtn").onclick = async () => { if (!isGuest && currentUser) await syncToCloud(); else showToast("الرجاء تسجيل الدخول أولاً", true); };
+    document.getElementById("exportDataBtn").onclick = () => { 
         const dataStr = JSON.stringify(guides, null, 2); 
         const blob = new Blob([dataStr], {type: "application/json"}); 
         const url = URL.createObjectURL(blob); 
         const a = document.createElement("a"); 
         a.href = url; 
-        a.download = `F-NotePro_${new Date().toISOString().slice(0,19)}.json`; 
+        a.download = `F-NotePro_Backup_${new Date().toISOString().slice(0,19)}.json`; 
         a.click(); 
         URL.revokeObjectURL(url); 
-        showToast(t('export')); 
+        showToast("تم تصدير البيانات"); 
     };
-    document.getElementById("resetDataBtn").onclick = async () => { 
-        if (confirm(t('resetConfirm'))) { 
-            guides = []; 
-            saveToLocal(); 
-            if (!isGuest && currentUser) await syncToCloud(); 
-            renderList(); 
-            showToast(t('reset')); 
+    document.getElementById("clearLocalCache").onclick = async () => { 
+        if (confirm("مسح الكاش المحلي؟ (لن يتم حذف بيانات السحاب)")) { 
+            localStorage.removeItem("guestGuides");
+            if (isGuest) guides = [];
+            renderList();
+            showToast("تم مسح الكاش المحلي"); 
         } 
     };
     document.getElementById("darkModeSidebar").onclick = () => { 
@@ -1062,19 +920,20 @@
     };
     document.getElementById("exportPdfBtn").onclick = () => {
         let element = document.createElement("div");
-        element.innerHTML = `<h1 style="text-align:center;">F-Note Pro - ${t('appName')}</h1><hr>`;
+        element.innerHTML = `<h1 style="text-align:center;">F-Note Pro - دليل المرشدين</h1><hr>`;
         guides.forEach(g => { 
             element.innerHTML += `<div style="border:1px solid #ccc;border-radius:12px;padding:12px;margin:10px 0;">
                 <strong>${g.name}</strong><br>📞 ${g.phone}<br>🚌 ${g.transportType || '-'}<br>🚍 ${g.plateNumber || '-'}<br>🏢 ${g.agency || '-'}<br>📝 ${g.notes || '-'}
             </div>`; 
         });
         html2pdf().from(element).set({ margin: 1, filename: `F-NotePro_${new Date().toISOString().slice(0,19)}.pdf` }).save();
+        showToast("جاري إنشاء PDF...");
     };
     
     // فلتر الألوان
     document.getElementById("filterToggleBtn").onclick = () => {
         document.getElementById("colorsPanel").classList.toggle("show");
-        document.getElementById("filterToggleBtn").innerHTML = document.getElementById("colorsPanel").classList.contains("show") ? `🎨 ${t('filter')} ▲` : `🎨 ${t('filter')} ▼`;
+        document.getElementById("filterToggleBtn").innerHTML = document.getElementById("colorsPanel").classList.contains("show") ? "🎨 فلتر الألوان ▲" : "🎨 فلتر الألوان ▼";
     };
     
     document.querySelectorAll(".color-filter-btn").forEach(btn => {
@@ -1084,7 +943,7 @@
             btn.classList.add("active");
             renderList();
             document.getElementById("colorsPanel").classList.remove("show");
-            document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ▼`;
+            document.getElementById("filterToggleBtn").innerHTML = "🎨 فلتر الألوان ▼";
         };
     });
     
@@ -1126,7 +985,7 @@
     }
     document.getElementById("voiceSearchBtn").onclick = () => {
         if (!recognition) { showToast("البحث الصوتي غير مدعوم", true); return; }
-        recognition.lang = currentLang === 'fr' ? 'fr-FR' : 'ar-TN';
+        recognition.lang = 'ar-TN';
         recognition.start();
         document.getElementById("voiceSearchBtn").classList.add("listening");
         showToast("🎤 تحدث الآن...");
@@ -1162,13 +1021,16 @@
     document.getElementById("langSelect").onchange = e => { 
         currentLang = e.target.value; 
         localStorage.setItem("lang", currentLang); 
-        updateUILanguage(); 
-        renderList(); 
     };
     
-    updateUILanguage();
-    loadLocalData();
-    console.log("✅ F-Note Pro V15 - ثابت ومستقر");
+    // بدء التطبيق
+    if (localStorage.getItem("guestGuides")) {
+        const stored = localStorage.getItem("guestGuides");
+        guides = JSON.parse(stored);
+    }
+    renderList();
+    
+    console.log("✅ F-Note Pro V16 - سحابي بالكامل، رفع سريع للصور عبر Cloudinary");
 </script>
 </body>
 </html>
