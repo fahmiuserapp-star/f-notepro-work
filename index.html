@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>F-Note Pro - دليل المرشدين</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <!-- Cloudinary SDK لرفع الصور -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', 'Tajawal', 'Poppins', sans-serif; }
+        
+        :root {
+            --bg-body: #f5f7fa; --bg-card: #ffffff; --text-primary: #1a1a2e; --text-secondary: #2d3748;
+            --text-muted: #4a5568; --header-bg: #0f3460; --header-text: white; --search-bg: white;
+            --search-border: #e2e8f0; --btn-primary: #e94560; --btn-primary-hover: #c72a4a;
+            --btn-danger: #dc2626; --modal-bg: white; --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --border: #e2e8f0; --sidebar-bg: white; --success: #10b981; --card-note-bg: #f8fafc;
+            --logo-opacity: 0.1; --sidebar-text: #1a1a2e; --sidebar-text-secondary: #4a5568;
+            --toast-bg: rgba(0,0,0,0.85); --toast-text: white;
+        }
+        body.dark {
+            --bg-body: #0a0a0f; --bg-card: #1a1a2e; --text-primary: #f0f0f0; --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8; --header-bg: #0a0a0f; --header-text: #f0f0f0; --search-bg: #2a2a3e;
+            --search-border: #3a3a4e; --modal-bg: #1a1a2e; --border: #2d2d42; --sidebar-bg: #1a1a2e;
+            --card-note-bg: #2a2a3e; --logo-opacity: 0.15; --sidebar-text: #f0f0f0;
+            --sidebar-text-secondary: #cbd5e1; --toast-bg: rgba(0,0,0,0.9);
+        }
+        body { background: var(--bg-body); padding-bottom: 80px; transition: all 0.3s; min-height: 100vh; position: relative; }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 75%;
+            max-width: 450px;
+            height: auto;
+            aspect-ratio: 1;
+            background-image: url('https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: var(--logo-opacity);
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .app-header {
+            background: var(--header-bg); padding: 15px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 20;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo-header img { height: 65px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .menu-btn {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: var(--header-text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 30px;
+            transition: 0.2s;
+        }
+        .menu-btn:active { transform: translateY(-50%) scale(0.96); }
+        
+        .search-container { display: flex; gap: 10px; flex: 1; }
+        .voice-btn {
+            background: var(--btn-primary); border: none; color: white;
+            padding: 0 15px; border-radius: 40px; cursor: pointer; font-size: 18px;
+        }
+        .voice-btn:active { transform: scale(0.95); }
+        .voice-btn.listening { animation: pulse 1s infinite; background: #10b981; }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-body);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: 0.3s;
+        }
+        .login-screen.hide { display: none; }
+        .login-card {
+            background: var(--bg-card);
+            border-radius: 48px;
+            padding: 40px 24px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            position: relative;
+            z-index: 2;
+        }
+        .login-logo img { width: 130px; margin-bottom: 20px; }
+        .login-input {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            font-size: 14px;
+            background: var(--search-bg);
+            color: var(--text-primary);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 40px;
+            background: var(--btn-primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .guest-btn { background: #64748b; }
+        .login-divider {
+            margin: 20px 0;
+            border-top: 1px solid var(--border);
+            position: relative;
+        }
+        .login-divider span {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            padding: 0 15px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        
+        .sidebar {
+            position: fixed; top: 0; right: -100%; width: 85%; max-width: 320px;
+            height: 100%; background: var(--sidebar-bg); z-index: 1000; transition: 0.3s;
+            box-shadow: -2px 0 20px rgba(0,0,0,0.2); padding: 20px; overflow-y: auto; direction: rtl;
+        }
+        .sidebar.open { right: 0; }
+        .sidebar h3 { color: var(--sidebar-text); margin: 15px 0 10px; font-size: 16px; border-bottom: 2px solid var(--btn-primary); padding-bottom: 5px; }
+        .sidebar button, .sidebar select {
+            width: 100%; padding: 10px; margin: 6px 0; border: none; border-radius: 25px;
+            background: var(--btn-primary); color: white; font-weight: bold; cursor: pointer;
+        }
+        .sidebar select { background: var(--search-bg); color: var(--sidebar-text); }
+        .close-sidebar { background: none !important; color: var(--sidebar-text); font-size: 24px; text-align: left; }
+        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; visibility: hidden; }
+        .overlay.show { visibility: visible; }
+        
+        .toolbar { display: flex; padding: 12px 16px; gap: 10px; background: var(--bg-body); position: sticky; top: 0; z-index: 15; }
+        .search-box { flex: 1; padding: 12px 16px; border: 1px solid var(--search-border); border-radius: 40px; font-size: 14px; background: var(--search-bg); color: var(--text-primary); }
+        .add-btn { background: var(--btn-primary); border: none; color: white; padding: 0 20px; border-radius: 40px; font-weight: bold; font-size: 22px; cursor: pointer; }
+        
+        .filters-row {
+            display: flex;
+            gap: 10px;
+            padding: 8px 16px;
+            overflow-x: auto;
+            background: var(--bg-body);
+        }
+        .filter-chip {
+            background: var(--search-bg);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            color: var(--text-primary);
+        }
+        .filter-chip.active {
+            background: var(--btn-primary);
+            color: white;
+            border-color: var(--btn-primary);
+        }
+        .color-filter-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid var(--border);
+        }
+        .color-filter-btn.active { border: 3px solid gold; transform: scale(1.1); }
+        
+        .guides-list { padding: 12px; display: flex; flex-direction: column; gap: 16px; position: relative; z-index: 1; }
+        .guide-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 14px;
+            box-shadow: var(--shadow);
+            border-right: 6px solid;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .guide-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .card-header { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+        .photos-area { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+        .guide-photo { width: 85px; height: 85px; border-radius: 20px; object-fit: cover; border: 2px solid var(--btn-primary); cursor: pointer; }
+        .bus-photo { width: 55px; height: 55px; border-radius: 14px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; }
+        .guide-info { flex: 1; }
+        .guide-name { font-size: 18px; font-weight: bold; color: var(--text-primary); margin-bottom: 8px; }
+        .phone-area { display: flex; align-items: center; gap: 8px; background: var(--search-bg); padding: 6px 12px; border-radius: 40px; direction: ltr; margin-top: 8px; }
+        .guide-phone { font-family: monospace; font-size: 14px; font-weight: bold; color: var(--btn-primary); flex: 1; }
+        .call-btn { background: #10b981; border: none; padding: 5px 12px; border-radius: 30px; color: white; cursor: pointer; }
+        .details-mini { background: var(--card-note-bg); padding: 8px; border-radius: 16px; margin: 8px 0; font-size: 12px; color: var(--text-secondary); }
+        .notes-color { padding: 8px; border-radius: 12px; margin-top: 8px; font-size: 12px; font-weight: 500; }
+        
+        .card-menu { position: absolute; top: 12px; left: 12px; }
+        .dots-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-secondary); padding: 4px 8px; }
+        .dropdown-menu {
+            position: absolute; left: 0; top: 30px; background: var(--modal-bg); border-radius: 16px;
+            box-shadow: var(--shadow); display: none; flex-direction: column; z-index: 50; min-width: 120px;
+        }
+        .dropdown-menu.show { display: flex; }
+        .dropdown-menu button { background: none; border: none; padding: 10px; text-align: right; cursor: pointer; color: var(--text-primary); font-size: 13px; }
+        .dropdown-menu button:active { background: var(--btn-primary); color: white; border-radius: 16px; }
+        
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1100; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal.show { visibility: visible; opacity: 1; }
+        .modal-content { background: var(--modal-bg); width: 92%; max-width: 500px; max-height: 85vh; overflow-y: auto; border-radius: 32px; padding: 20px; }
+        .modal-content input, .modal-content textarea { width: 100%; margin: 8px 0; padding: 12px; border: 1px solid var(--border); border-radius: 25px; background: var(--search-bg); color: var(--text-primary); }
+        .color-selector { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .color-option { width: 42px; height: 42px; border-radius: 12px; cursor: pointer; border: 2px solid transparent; }
+        .color-option.selected { border: 3px solid gold; transform: scale(1.05); }
+        .image-upload-area { border: 2px dashed var(--btn-primary); padding: 10px; border-radius: 20px; margin: 8px 0; text-align: center; }
+        .cloudinary-btn {
+            background: #3448c5;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 8px;
+            width: 100%;
+        }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+        .save-btn { background: #10b981; color: white; flex:1; padding:12px; border-radius:40px; border:none; }
+        .cancel-btn { background: #64748b; color: white; flex:1; padding:12px; border-radius:40px; border:none; }
+        .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+        
+        .toast {
+            position: fixed; top: 20px; left: 20px; right: 20px; background: var(--toast-bg);
+            backdrop-filter: blur(10px); color: var(--toast-text); padding: 10px 16px;
+            border-radius: 50px; text-align: center; z-index: 1200; font-size: 13px;
+            animation: slideDown 0.3s ease-out forwards;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <div class="logo-header">
+        <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="Logo">
+    </div>
+    <button class="menu-btn" id="menuBtn">☰</button>
+</div>
+
+<div class="login-screen" id="loginScreen">
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="Logo">
+        </div>
+        <div class="login-title">📱 F-Note Pro Work</div>
+        <input type="email" id="loginEmail" class="login-input" placeholder="fahmiajmi5@gmail.com" value="fahmiajmi5@gmail.com">
+        <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
+        <button class="login-btn" id="loginBtn">🔐 تسجيل الدخول</button>
+        <div class="login-divider"><span>أو</span></div>
+        <button class="login-btn guest-btn" id="guestBtn">👥 دخول كزائر (محلي)</button>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 16px;">⚠️ وضع الزائر: البيانات تحفظ على جهازك فقط</p>
+    </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="sidebar" id="sidebar">
+    <button class="close-sidebar" id="closeSidebar">✕</button>
+    <h3>👤 الحساب السحابي</h3>
+    <div id="userInfo" style="color:var(--sidebar-text-secondary); font-size:12px; margin:8px 0;"></div>
+    <button id="signOutBtn" class="danger-btn" style="display:none">🚪 تسجيل خروج</button>
+    <button id="exportLocalDataBtn" class="success-btn">💾 تصدير البيانات (جهازي)</button>
+    <button id="importLocalDataBtn" class="success-btn">📂 استيراد بيانات (جهازي)</button>
+    <input type="file" id="importFileInput" accept=".json" style="display:none">
+    
+    <h3>⚙️ الإعدادات</h3>
+    <select id="langSelect">
+        <option value="ar">🇹🇳 العربية (تونس)</option>
+        <option value="fr">🇫🇷 Français</option>
+    </select>
+    <button id="darkModeSidebar">🌙 وضع داكن / ☀️ فاتح</button>
+    <button id="syncNowBtn" class="success-btn">🔄 مزامنة مع السحاب</button>
+    <button id="exportDataBtn">📤 تصدير JSON</button>
+    <button id="exportPdfBtn">📄 تصدير PDF</button>
+    <button id="resetDataBtn" class="danger-btn">🗑️ مسح بياناتي</button>
+    
+    <h3>ℹ️ عن التطبيق</h3>
+    <p style="font-size:11px; color: var(--sidebar-text-secondary);">نسخة 11.0 - سحابي متكامل<br>مع رفع الصور على Cloudinary</p>
+</div>
+
+<div class="toolbar">
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث ذكي...">
+        <button class="voice-btn" id="voiceSearchBtn" title="بحث صوتي">🎤</button>
+    </div>
+    <button class="add-btn" id="openModalBtn">+</button>
+</div>
+
+<div class="filters-row" id="filtersRow">
+    <div class="filter-chip active" data-filter="all">🎨 الكل</div>
+    <div class="color-filter-btn" style="background:#2c7da0;" data-color="#2c7da0"></div>
+    <div class="color-filter-btn" style="background:#e76f51;" data-color="#e76f51"></div>
+    <div class="color-filter-btn" style="background:#2a9d8f;" data-color="#2a9d8f"></div>
+    <div class="color-filter-btn" style="background:#e9c46a;" data-color="#e9c46a"></div>
+    <div class="color-filter-btn" style="background:#f4a261;" data-color="#f4a261"></div>
+    <div class="color-filter-btn" style="background:#9b5de5;" data-color="#9b5de5"></div>
+    <div class="color-filter-btn" style="background:#ef233c;" data-color="#ef233c"></div>
+    <div class="color-filter-btn" style="background:#06d6a0;" data-color="#06d6a0"></div>
+    <div class="color-filter-btn" style="background:#118ab2;" data-color="#118ab2"></div>
+    <div class="color-filter-btn" style="background:#ff006e;" data-color="#ff006e"></div>
+    <div class="color-filter-btn" style="background:#8338ec;" data-color="#8338ec"></div>
+    <div class="color-filter-btn" style="background:#fb5607;" data-color="#fb5607"></div>
+</div>
+
+<div id="guidesContainer" class="guides-list"><div class="loading">⏳ جاري التحميل...</div></div>
+
+<div id="guideModal" class="modal"><div class="modal-content"><h3 id="modalTitle">➕ إضافة مرشد</h3>
+<input type="text" id="guideName" placeholder="الاسم الكامل *">
+<input type="tel" id="guidePhone" placeholder="رقم الهاتف">
+<div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ رقم الهاتف يجب أن يحتوي على أرقام فقط</div>
+<label>🎨 لون البطاقة</label>
+<div class="color-selector" id="colorSelector"></div>
+<label>📸 صورة المرشد (اختياري)</label>
+<div class="image-upload-area">
+    <input type="file" id="guidePhotoUpload" accept="image/*">
+    <button type="button" id="cloudinaryGuideBtn" class="cloudinary-btn">☁️ رفع على السحاب (Cloudinary)</button>
+    <img id="guidePhotoPreview" style="width:70px;height:70px;border-radius:16px;margin-top:5px;display:none;">
+</div>
+<label>🚌 صورة وسيلة النقل (اختياري)</label>
+<div class="image-upload-area">
+    <input type="file" id="busPhotoUpload" accept="image/*">
+    <button type="button" id="cloudinaryBusBtn" class="cloudinary-btn">☁️ رفع على السحاب (Cloudinary)</button>
+    <img id="busPhotoPreview" style="width:55px;height:55px;border-radius:12px;margin-top:5px;display:none;">
+</div>
+<input type="text" id="transportType" placeholder="🚌 وسيلة النقل">
+<input type="text" id="agency" placeholder="🏢 وكالة الأسفار">
+<textarea id="guideNotes" rows="2" placeholder="📝 ملاحظات"></textarea>
+<div class="modal-buttons"><button class="save-btn" id="saveGuideBtn">💾 حفظ</button><button class="cancel-btn" id="closeModalBtn">إلغاء</button></div></div></div>
+
+<div id="detailModal" class="modal"><div class="modal-content"><h3 id="detailName">📋 التفاصيل</h3><div id="detailContent"></div><button class="cancel-btn" id="closeDetailBtn">إغلاق</button></div></div>
+<div id="fullImageModal" class="modal"><div class="modal-content" style="text-align:center"><img id="fullImage" src="" style="max-width:100%;border-radius:20px;"><button class="cancel-btn" id="closeFullImageBtn" style="margin-top:16px;">إغلاق</button></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+    // ===== Firebase Configuration (NEW) =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyAJLpdRoKamaHHofnCh4qQk6mHKeI25Tgc",
+        authDomain: "f-notepro-work.firebaseapp.com",
+        projectId: "f-notepro-work",
+        storageBucket: "f-notepro-work.firebasestorage.app",
+        messagingSenderId: "645688115664",
+        appId: "1:645688115664:web:5dbfee1e28c41e0a1c79d5",
+        measurementId: "G-SS24M0LZN2"
+    };
+    
+    let db, auth;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+        console.log("✅ Firebase initialized");
+    } catch(e) { console.error("Firebase init error:", e); }
+    
+    // ===== Cloudinary Configuration =====
+    const cloudinaryConfig = {
+        cloudName: "dmhtx93nj",
+        uploadPreset: "ml_default"
+    };
+    
+    // ===== المتغيرات العامة =====
+    let currentUser = null, isGuest = true, guestUID = null, guides = [], currentLang = 'ar';
+    let currentEditId = null, selectedColor = "#2c7da0", currentColorFilter = "all";
+    let currentGuidePhoto = "", currentBusPhoto = "";
+    
+    // دوال مساعدة
+    function showToast(msg, isError = false) {
+        let toast = document.createElement("div");
+        toast.className = "toast";
+        toast.style.background = isError ? "rgba(220,38,38,0.9)" : "var(--toast-bg)";
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = "fadeOut 0.5s forwards";
+            setTimeout(() => toast.remove(), 500);
+        }, 2500);
+    }
+    
+    function validatePhone(phone) {
+        const cleaned = phone.replace(/[+\s-]/g, '');
+        return /^[0-9]{8,15}$/.test(cleaned);
+    }
+    
+    // رفع الصور على Cloudinary
+    function uploadToCloudinary(file, type, callback) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", cloudinaryConfig.uploadPreset);
+        formData.append("cloud_name", cloudinaryConfig.cloudName);
+        
+        fetch(`https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`, {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.secure_url) {
+                callback(data.secure_url);
+                showToast(`✅ تم رفع ${type === 'guide' ? 'صورة المرشد' : 'صورة وسيلة النقل'} بنجاح`);
+            } else {
+                showToast("❌ فشل رفع الصورة", true);
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            showToast("❌ خطأ في الاتصال بـ Cloudinary", true);
+        });
+    }
+    
+    // رفع عبر Cloudinary Widget
+    function openCloudinaryWidget(type) {
+        const widget = cloudinary.createUploadWidget(
+            {
+                cloudName: cloudinaryConfig.cloudName,
+                uploadPreset: cloudinaryConfig.uploadPreset,
+                multiple: false,
+                cropping: true,
+                croppingAspectRatio: 1,
+                sources: ['local', 'camera', 'url']
+            },
+            (error, result) => {
+                if (!error && result && result.event === "success") {
+                    const url = result.info.secure_url;
+                    if (type === 'guide') {
+                        currentGuidePhoto = url;
+                        document.getElementById("guidePhotoPreview").src = url;
+                        document.getElementById("guidePhotoPreview").style.display = "block";
+                    } else {
+                        currentBusPhoto = url;
+                        document.getElementById("busPhotoPreview").src = url;
+                        document.getElementById("busPhotoPreview").style.display = "block";
+                    }
+                    showToast("✅ تم رفع الصورة بنجاح");
+                }
+            }
+        );
+        widget.open();
+    }
+    
+    document.getElementById("cloudinaryGuideBtn").onclick = () => openCloudinaryWidget('guide');
+    document.getElementById("cloudinaryBusBtn").onclick = () => openCloudinaryWidget('bus');
+    
+    // رفع الملفات المحلية (مع ضغط)
+    document.getElementById("guidePhotoUpload").onchange = e => {
+        let file = e.target.files[0];
+        if(file) {
+            if(file.size > 500000) {
+                showToast("⚠️ الصورة كبيرة يتم ضغطها...");
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    currentGuidePhoto = ev.target.result;
+                    document.getElementById("guidePhotoPreview").src = ev.target.result;
+                    document.getElementById("guidePhotoPreview").style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    currentGuidePhoto = ev.target.result;
+                    document.getElementById("guidePhotoPreview").src = ev.target.result;
+                    document.getElementById("guidePhotoPreview").style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    };
+    document.getElementById("busPhotoUpload").onchange = e => {
+        let file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                currentBusPhoto = ev.target.result;
+                document.getElementById("busPhotoPreview").src = ev.target.result;
+                document.getElementById("busPhotoPreview").style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    // حفظ وتحميل البيانات مع دعم الملفات
+    function generateGuestUID() {
+        let guestId = localStorage.getItem("guestUID");
+        if(!guestId) {
+            guestId = "guest_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem("guestUID", guestId);
+        }
+        return guestId;
+    }
+    
+    function saveToLocal() {
+        if(isGuest) {
+            guestUID = generateGuestUID();
+            localStorage.setItem(`guest_${guestUID}`, JSON.stringify({ uid: guestUID, guides: guides, updatedAt: new Date().toISOString() }));
+        }
+        localStorage.setItem("guidesBackup", JSON.stringify(guides));
+        return true;
+    }
+    
+    function loadLocalGuest() {
+        if(isGuest) {
+            guestUID = generateGuestUID();
+            let stored = localStorage.getItem(`guest_${guestUID}`);
+            guides = stored ? JSON.parse(stored).guides || [] : [];
+        } else {
+            let stored = localStorage.getItem("guidesBackup");
+            guides = stored ? JSON.parse(stored) : [];
+        }
+        renderList();
+    }
+    
+    // تصدير بيانات إلى ملف باسم التطبيق
+    function exportToFile() {
+        const dataStr = JSON.stringify(guides, null, 2);
+        const blob = new Blob([dataStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `F-NotePro_Backup_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("✅ تم تصدير البيانات إلى ملف");
+    }
+    
+    // استيراد بيانات من ملف
+    function importFromFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if(Array.isArray(imported)) {
+                    guides = imported;
+                    if(!isGuest && currentUser) syncToCloud();
+                    else saveToLocal();
+                    renderList();
+                    showToast("✅ تم استيراد البيانات بنجاح");
+                } else {
+                    showToast("❌ ملف غير صالح", true);
+                }
+            } catch(err) {
+                showToast("❌ خطأ في قراءة الملف", true);
+            }
+        };
+        reader.readAsText(file);
+    }
+    
+    async function syncToCloud() {
+        if(!currentUser || isGuest) { showToast("الرجاء تسجيل الدخول أولاً", true); return false; }
+        try {
+            await db.collection("users").doc(currentUser.uid).set({ guides, email: currentUser.email, updatedAt: new Date().toISOString() });
+            showToast("✅ تمت المزامنة مع السحاب");
+            return true;
+        } catch(e) { showToast("❌ " + e.message, true); return false; }
+    }
+    
+    async function loadFromCloud() {
+        if(!currentUser || isGuest) return false;
+        try {
+            const doc = await db.collection("users").doc(currentUser.uid).get();
+            guides = doc.exists && doc.data().guides ? doc.data().guides : [];
+            saveToLocal();
+            renderList();
+            return true;
+        } catch(e) { showToast("❌ " + e.message, true); return false; }
+    }
+    
+    // البحث الصوتي
+    let recognition = null;
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+    }
+    
+    document.getElementById("voiceSearchBtn").onclick = () => {
+        if(!recognition) { showToast("البحث الصوتي غير مدعوم", true); return; }
+        recognition.lang = currentLang === 'ar' ? 'ar-TN' : 'fr-FR';
+        recognition.start();
+        document.getElementById("voiceSearchBtn").classList.add("listening");
+        showToast("🎤 تحدث الآن...");
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById("searchInput").value = transcript;
+            renderList();
+            document.getElementById("voiceSearchBtn").classList.remove("listening");
+        };
+        recognition.onerror = () => {
+            document.getElementById("voiceSearchBtn").classList.remove("listening");
+            showToast("لم يتم التعرف على الصوت", true);
+        };
+        recognition.onend = () => {
+            document.getElementById("voiceSearchBtn").classList.remove("listening");
+        };
+    };
+    
+    // البحث الذكي
+    function smartSearch(query, text) {
+        if(!query) return true;
+        let q = query.trim().toLowerCase(), t = (text || "").toLowerCase();
+        if(t.includes(q)) return true;
+        let convert = s => s.replace(/7/g,'h').replace(/3/g,'e').replace(/2/g,'a').replace(/[أإآ]/g,'ا').replace(/[ةه]/g,'h');
+        if(convert(t).includes(convert(q))) return true;
+        return false;
+    }
+    
+    function filterGuides() {
+        let search = document.getElementById("searchInput").value;
+        let filtered = guides.filter(g => 
+            smartSearch(search, g.name) || smartSearch(search, g.phone) || 
+            smartSearch(search, g.transportType) || smartSearch(search, g.agency)
+        );
+        if(currentColorFilter !== "all") filtered = filtered.filter(g => g.cardColor === currentColorFilter);
+        return filtered;
+    }
+    
+    function renderList() {
+        let filtered = filterGuides();
+        let container = document.getElementById("guidesContainer");
+        if(filtered.length===0) { container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-secondary)">🔍 لا توجد نتائج</div>`; return; }
+        
+        container.innerHTML = filtered.map(guide => `
+            <div class="guide-card" style="border-right-color: ${guide.cardColor||'#2c7da0'};">
+                <div class="card-menu"><button class="dots-btn" data-id="${guide.id}">⋯</button>
+                <div class="dropdown-menu" id="menu-${guide.id}"><button class="edit-item" data-id="${guide.id}">✏️ تعديل</button><button class="delete-item" data-id="${guide.id}">🗑️ حذف</button></div></div>
+                <div class="card-header"><div class="photos-area"><img class="guide-photo" src="${guide.guidePhoto || ''}" onclick="window.showImage('${guide.guidePhoto}')" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22gray%22%3E%3Cpath%20d=%22M12%2012c2.21%200%204-1.79%204-4s-1.79-4-4-4-4%201.79-4%204%201.79%204%204%204z%22/%3E%3C/svg%3E';">
+                <img class="bus-photo" src="${guide.busPhoto || ''}" onclick="window.showImage('${guide.busPhoto}')" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22gray%22%3E%3Cpath%20d=%22M5%2011h14v2H5z%22/%3E%3C/svg%3E';"></div>
+                <div class="guide-info"><div class="guide-name">${escapeHtml(guide.name)}</div><div class="phone-area"><span class="guide-phone">${guide.phone}</span><button class="call-btn" data-phone="${guide.phone}">📞 اتصل</button></div></div></div>
+                <div class="details-mini"><div>🚌 وسيلة النقل: <strong>${escapeHtml(guide.transportType||'—')}</strong></div><div>🏢 الوكالة: <strong>${escapeHtml(guide.agency||'—')}</strong></div></div>
+                <div class="notes-color" style="background:${guide.cardColor||'#2c7da0'}20; color:${guide.cardColor||'#2c7da0'}">📝 ${escapeHtml(guide.notes||'ملاحظات')}</div>
+            </div>
+        `).join("");
+        
+        document.querySelectorAll(".dots-btn").forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); let m=document.getElementById(`menu-${btn.dataset.id}`); document.querySelectorAll('.dropdown-menu').forEach(d=>{if(d!==m)d.classList.remove('show');}); m.classList.toggle('show'); }; });
+        document.querySelectorAll(".edit-item").forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); editGuideById(btn.dataset.id); }; });
+        document.querySelectorAll(".delete-item").forEach(btn => { btn.onclick = async (e) => { e.stopPropagation(); if(confirm("حذف هذا المرشد نهائياً؟")) { guides=guides.filter(g=>g.id!==btn.dataset.id); if(!isGuest && currentUser) await syncToCloud(); else saveToLocal(); renderList(); } }; });
+        document.querySelectorAll(".call-btn").forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); window.location.href=`tel:${btn.dataset.phone}`; }; });
+    }
+    
+    window.showImage = (url) => { if(url && url!="") { document.getElementById("fullImage").src=url; document.getElementById("fullImageModal").classList.add("show"); } };
+    function escapeHtml(s) { if(!s) return ""; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+    
+    function resetForm() {
+        currentEditId=null; document.getElementById("guideName").value=""; document.getElementById("guidePhone").value="";
+        document.getElementById("transportType").value=""; document.getElementById("agency").value=""; document.getElementById("guideNotes").value="";
+        document.getElementById("guidePhotoPreview").style.display="none"; document.getElementById("busPhotoPreview").style.display="none";
+        document.getElementById("phoneError").style.display="none";
+        currentGuidePhoto=""; currentBusPhoto=""; selectedColor="#2c7da0";
+        document.querySelectorAll(".color-option").forEach(o=>o.classList.remove("selected"));
+        if(document.querySelector(".color-option[data-color='#2c7da0']")) document.querySelector(".color-option[data-color='#2c7da0']").classList.add("selected");
+        document.getElementById("modalTitle").innerHTML = "➕ إضافة مرشد";
+    }
+    
+    async function editGuideById(id) {
+        let g = guides.find(g=>g.id===id);
+        if(g) {
+            currentEditId=id; document.getElementById("guideName").value=g.name; document.getElementById("guidePhone").value=g.phone;
+            document.getElementById("transportType").value=g.transportType||""; document.getElementById("agency").value=g.agency||"";
+            document.getElementById("guideNotes").value=g.notes||""; selectedColor=g.cardColor||"#2c7da0";
+            document.querySelectorAll(".color-option").forEach(opt=>{opt.classList.remove("selected"); if(opt.dataset.color===selectedColor) opt.classList.add("selected");});
+            currentGuidePhoto=g.guidePhoto||""; currentBusPhoto=g.busPhoto||"";
+            if(currentGuidePhoto) { document.getElementById("guidePhotoPreview").src=currentGuidePhoto; document.getElementById("guidePhotoPreview").style.display="block"; }
+            if(currentBusPhoto) { document.getElementById("busPhotoPreview").src=currentBusPhoto; document.getElementById("busPhotoPreview").style.display="block"; }
+            document.getElementById("modalTitle").innerHTML = "✏️ تعديل مرشد";
+            document.getElementById("guideModal").classList.add("show");
+        }
+    }
+    
+    document.getElementById("saveGuideBtn").onclick = async () => {
+        let name = document.getElementById("guideName").value.trim();
+        let phone = document.getElementById("guidePhone").value.trim();
+        if(!name || !phone) { showToast("الاسم والهاتف مطلوبان", true); return; }
+        if(!validatePhone(phone)) { document.getElementById("phoneError").style.display = "block"; return; }
+        document.getElementById("phoneError").style.display = "none";
+        
+        let newGuide = { id: currentEditId || Date.now().toString(), name, phone, guidePhoto: currentGuidePhoto, busPhoto: currentBusPhoto, cardColor: selectedColor, transportType: document.getElementById("transportType").value.trim(), agency: document.getElementById("agency").value.trim(), notes: document.getElementById("guideNotes").value.trim() };
+        if(currentEditId) guides = guides.map(g=>g.id===currentEditId ? newGuide : g);
+        else guides.push(newGuide);
+        
+        if(!isGuest && currentUser) await syncToCloud();
+        else saveToLocal();
+        renderList();
+        document.getElementById("guideModal").classList.remove("show");
+        resetForm();
+    };
+    
+    // تصدير PDF
+    document.getElementById("exportPdfBtn").onclick = () => {
+        let element = document.createElement("div");
+        element.innerHTML = `<h1 style="text-align:center;color:#0f3460;">F-Note Pro - قائمة المرشدين</h1><hr>`;
+        guides.forEach(g => {
+            element.innerHTML += `<div style="border:1px solid #ccc;border-radius:12px;padding:12px;margin:10px 0;">
+                <strong>${g.name}</strong><br>📞 ${g.phone}<br>🚌 ${g.transportType || '-'}<br>🏢 ${g.agency || '-'}<br>📝 ${g.notes || '-'}
+            </div>`;
+        });
+        html2pdf().from(element).set({ margin: 1, filename: `F-NotePro_${new Date().toISOString().slice(0,19)}.pdf` }).save();
+        showToast("✅ جاري إنشاء PDF...");
+    };
+    
+    // المصادقة
+    const loginScreen = document.getElementById("loginScreen");
+    async function handleLogin(email, password) {
+        try {
+            showToast("⏳ جاري تسجيل الدخول...");
+            let userCred = await auth.signInWithEmailAndPassword(email, password);
+            currentUser = userCred.user;
+            isGuest = false;
+            loginScreen.classList.add("hide");
+            document.getElementById("signOutBtn").style.display = "block";
+            document.getElementById("userInfo").innerHTML = `👤 ${currentUser.email}<br>☁️ وضع السحاب`;
+            await loadFromCloud();
+            showToast("✅ تم تسجيل الدخول بنجاح");
+        } catch(e) {
+            let errorMsg = e.code === "auth/wrong-password" ? "❌ كلمة المرور غير صحيحة" :
+                          e.code === "auth/user-not-found" ? "❌ المستخدم غير موجود" :
+                          e.code === "auth/network-request-failed" ? "❌ مشكلة في الاتصال بالإنترنت" :
+                          "❌ " + e.message;
+            showToast(errorMsg, true);
+        }
+    }
+    
+    function handleGuest() {
+        currentUser = null;
+        isGuest = true;
+        loginScreen.classList.add("hide");
+        document.getElementById("signOutBtn").style.display = "none";
+        document.getElementById("userInfo").innerHTML = `👥 وضع الزائر (محلي)<br>🆔 ${generateGuestUID().substr(0, 20)}...`;
+        loadLocalGuest();
+        showToast("👥 وضع الزائر - البيانات محلية فقط");
+    }
+    
+    function handleLogout() {
+        if(confirm("هل تريد تسجيل الخروج؟")) {
+            auth.signOut();
+            currentUser = null;
+            handleGuest();
+            showToast("✅ تم تسجيل الخروج");
+        }
+    }
+    
+    document.getElementById("loginBtn").onclick = () => handleLogin(loginEmail.value.trim(), loginPassword.value.trim());
+    document.getElementById("guestBtn").onclick = handleGuest;
+    document.getElementById("signOutBtn").onclick = handleLogout;
+    
+    auth.onAuthStateChanged(async (user) => {
+        if(user && loginScreen && !loginScreen.classList.contains("hide")) {
+            currentUser = user; isGuest = false;
+            loginScreen.classList.add("hide");
+            document.getElementById("signOutBtn").style.display = "block";
+            document.getElementById("userInfo").innerHTML = `👤 ${user.email}<br>☁️ وضع السحاب`;
+            await loadFromCloud();
+        }
+    });
+    
+    // أحداث الواجهة
+    document.getElementById("menuBtn").onclick = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); };
+    document.getElementById("closeSidebar").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
+    document.getElementById("overlay").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
+    document.getElementById("openModalBtn").onclick = () => { resetForm(); document.getElementById("guideModal").classList.add("show"); };
+    document.getElementById("closeModalBtn").onclick = () => document.getElementById("guideModal").classList.remove("show");
+    document.getElementById("closeDetailBtn").onclick = () => document.getElementById("detailModal").classList.remove("show");
+    document.getElementById("closeFullImageBtn").onclick = () => document.getElementById("fullImageModal").classList.remove("show");
+    document.getElementById("searchInput").oninput = () => renderList();
+    document.getElementById("syncNowBtn").onclick = async () => { if(!isGuest && currentUser) await syncToCloud(); else showToast("الرجاء تسجيل الدخول أولاً", true); };
+    document.getElementById("exportDataBtn").onclick = exportToFile;
+    document.getElementById("exportLocalDataBtn").onclick = exportToFile;
+    document.getElementById("importLocalDataBtn").onclick = () => document.getElementById("importFileInput").click();
+    document.getElementById("importFileInput").onchange = e => { if(e.target.files[0]) importFromFile(e.target.files[0]); };
+    document.getElementById("resetDataBtn").onclick = async () => { if(confirm("حذف كل البيانات نهائياً؟")){ guides=[]; if(!isGuest && currentUser) await syncToCloud(); else saveToLocal(); renderList(); showToast("✅ تم مسح البيانات"); } };
+    document.getElementById("darkModeSidebar").onclick = () => { document.body.classList.toggle("dark"); localStorage.setItem("darkMode",document.body.classList.contains("dark")); };
+    document.getElementById("langSelect").onchange = e => { currentLang=e.target.value; localStorage.setItem("lang",currentLang); document.querySelectorAll('[data-trans]').forEach(el=>{const key=el.getAttribute('data-trans');if(translations[currentLang]&&translations[currentLang][key]){if(el.tagName==='INPUT'&&el.placeholder)el.placeholder=translations[currentLang][key];else el.innerHTML=translations[currentLang][key];}}); renderList(); };
+    
+    document.querySelectorAll(".color-filter-btn").forEach(btn => {
+        btn.onclick = () => {
+            currentColorFilter = btn.getAttribute("data-color");
+            document.querySelectorAll(".color-filter-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            renderList();
+        };
+    });
+    
+    const colorSelectorDiv = document.getElementById("colorSelector");
+    if(colorSelectorDiv) {
+        colorSelectorDiv.innerHTML = `
+            <div class="color-option" style="background:#2c7da0;" data-color="#2c7da0"></div>
+            <div class="color-option" style="background:#e76f51;" data-color="#e76f51"></div>
+            <div class="color-option" style="background:#2a9d8f;" data-color="#2a9d8f"></div>
+            <div class="color-option" style="background:#e9c46a;" data-color="#e9c46a"></div>
+            <div class="color-option" style="background:#f4a261;" data-color="#f4a261"></div>
+            <div class="color-option" style="background:#9b5de5;" data-color="#9b5de5"></div>
+            <div class="color-option" style="background:#ef233c;" data-color="#ef233c"></div>
+            <div class="color-option" style="background:#06d6a0;" data-color="#06d6a0"></div>
+            <div class="color-option" style="background:#118ab2;" data-color="#118ab2"></div>
+            <div class="color-option" style="background:#ff006e;" data-color="#ff006e"></div>
+            <div class="color-option" style="background:#8338ec;" data-color="#8338ec"></div>
+            <div class="color-option" style="background:#fb5607;" data-color="#fb5607"></div>
+        `;
+        document.querySelectorAll("#colorSelector .color-option").forEach(opt=>{ opt.onclick=()=>{ document.querySelectorAll("#colorSelector .color-option").forEach(o=>o.classList.remove("selected")); opt.classList.add("selected"); selectedColor=opt.dataset.color; }; });
+        document.querySelector(".color-option[data-color='#2c7da0']").classList.add("selected");
+    }
+    
+    if(localStorage.getItem("darkMode")==="true") document.body.classList.add("dark");
+    if(localStorage.getItem("lang")){ currentLang=localStorage.getItem("lang"); document.getElementById("langSelect").value=currentLang; } else currentLang='ar';
+    
+    console.log("✅ F-Note Pro Work جاهز - النسخة النهائية");
+</script>
+</body>
+</html>
