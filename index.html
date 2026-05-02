@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>F-Note Pro - خزنة المرشدين</title>
+    <title>F-Note Pro - خزنة المرشدين النهائية</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -283,7 +283,7 @@
         }
         .loading { text-align: center; padding: 50px; color: var(--text-secondary); }
         .sync-badge { background: var(--success); color: white; padding: 4px 12px; border-radius: 40px; font-size: 10px; margin-right: 8px; }
-        .image-tip { font-size: 10px; color: var(--text-muted); margin-top: 5px; }
+        .local-badge { background: #f59e0b; color: white; padding: 4px 12px; border-radius: 40px; font-size: 10px; margin-right: 8px; }
     </style>
 </head>
 <body>
@@ -301,7 +301,7 @@
         <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
         <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
         <button class="login-btn" id="loginBtn">دخول</button>
-        <p style="font-size:12px; margin-top:20px; color:var(--text-muted);">🔐 حساب سحابي - الصور تخزن محلياً</p>
+        <p style="font-size:12px; margin-top:20px; color:var(--text-muted);">🔐 حساب سحابي - نسخة احتياطية محلية</p>
     </div>
 </div>
 
@@ -325,11 +325,11 @@
         <div class="sidebar-item" id="syncNowBtn"><span>🔄</span><span>مزامنة مع السحاب</span></div>
         <div class="sidebar-item" id="exportDataBtn"><span>💾</span><span>تصدير JSON</span></div>
         <div class="sidebar-item" id="exportPdfBtn"><span>📄</span><span>تصدير PDF</span></div>
-        <div class="sidebar-item" id="clearLocalBtn"><span>🗑️</span><span>مسح الصور المحلية</span></div>
+        <div class="sidebar-item" id="backupLocalBtn"><span>💿</span><span>نسخ احتياطي محلي</span></div>
     </div>
     <div class="sidebar-section">
         <h3>ℹ️ عن التطبيق</h3>
-        <p style="font-size:12px;">نسخة 24.0 - سحابي + تخزين محلي<br>📸 رفع صور فوري وسريع<br>💾 الصور تخزن في قاعدة البيانات</p>
+        <p style="font-size:12px;">نسخة 25.0 - نهائية<br>💾 تخزين محلي + سحابي<br>📸 رفع صور فوري</p>
     </div>
 </div>
 
@@ -369,8 +369,7 @@
     <div class="upload-card" id="guideUploadCard">
         <div class="upload-icon">📷</div>
         <div class="upload-title">اضغط لاختيار صورة المرشد</div>
-        <div class="upload-subtitle">من الألبوم أو الكاميرا - تخزن مباشرة</div>
-        <input type="file" id="guideFileInput" accept="image/*" style="display:none">
+        <div class="upload-subtitle">من الألبوم أو الكاميرا</div>
         <div class="upload-preview" id="guidePreviewContainer" style="display:none;"><img id="guidePhotoPreview" class="preview-img"></div>
         <div id="guideUploadStatus" class="upload-status"></div>
     </div>
@@ -381,8 +380,7 @@
     <div class="upload-card" id="busUploadCard">
         <div class="upload-icon">🚐</div>
         <div class="upload-title">اضغط لاختيار صورة الحافلة</div>
-        <div class="upload-subtitle">من الألبوم أو الكاميرا - تخزن مباشرة</div>
-        <input type="file" id="busFileInput" accept="image/*" style="display:none">
+        <div class="upload-subtitle">من الألبوم أو الكاميرا</div>
         <div class="upload-preview" id="busPreviewContainer" style="display:none;"><img id="busPhotoPreview" class="preview-img"></div>
         <div id="busUploadStatus" class="upload-status"></div>
     </div>
@@ -398,7 +396,7 @@
 <div id="fullImageModal" class="modal"><div class="modal-content" style="text-align:center"><img id="fullImage" style="max-width:100%;border-radius:28px;"><button class="cancel-btn" id="closeFullImageBtn">إغلاق</button></div></div>
 
 <script>
-    // ===== Firebase =====
+    // ===== Firebase Configuration =====
     const firebaseConfig = {
         apiKey: "AIzaSyAJLpdRoKamaHHofnCh4qQk6mHKeI25Tgc",
         authDomain: "f-notepro-work.firebaseapp.com",
@@ -407,9 +405,19 @@
         messagingSenderId: "645688115664",
         appId: "1:645688115664:web:5dbfee1e28c41e0a1c79d5"
     };
+    
     let db, auth;
-    try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); auth = firebase.auth(); } catch(e) { console.error(e); }
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+        console.log("✅ Firebase initialized successfully");
+    } catch(e) { 
+        console.error("Firebase init error:", e);
+        showToast("خطأ في اتصال Firebase", true);
+    }
 
+    // ===== المتغيرات =====
     let currentUser = null, guides = [], currentLang = 'ar';
     let currentEditId = null, selectedColor = "#e94560";
     let currentColorFilter = "all", currentGuideForDetail = null;
@@ -421,19 +429,19 @@
             searchPlaceholder: "🔍 بحث عن مرشد...", addGuide: "➕ إضافة مرشد", editGuide: "✏️ تعديل", save: "💾 حفظ", cancel: "❌ إلغاء",
             phoneRequired: "⚠️ الاسم والهاتف مطلوبان", phoneInvalid: "⚠️ أرقام فقط", noResults: "😕 لا توجد نتائج", loading: "⏳ جاري التحميل...",
             share: "📱 واتساب", close: "إغلاق", favorite: "⭐ مرشد نشط", noNotes: "لا توجد ملاحظات", call: "📞 اتصل", filter: "🎨 فلتر",
-            saved: "✅ تم الحفظ", sync: "مزامنة", uploading: "📤 جاري رفع الصورة...", uploadSuccess: "✅ تم رفع الصورة", uploadError: "❌ خطأ في الرفع", selectImage: "اختر صورة"
+            saved: "✅ تم الحفظ", sync: "مزامنة", uploading: "📤 جاري رفع الصورة...", uploadSuccess: "✅ تم رفع الصورة", uploadError: "❌ خطأ في الرفع"
         },
         tn: {
             searchPlaceholder: "🔍 فتش على مرشد...", addGuide: "➕ أضف مرشد", editGuide: "✏️ بدل", save: "💾 أحفظ", cancel: "❌ ألغى",
             phoneRequired: "⚠️ الاسم والهاتف مطلوبين", phoneInvalid: "⚠️ أرقام فقط", noResults: "😕 ماكاش نتائج", loading: "⏳ جاري التحميل...",
             share: "📱 واتساب", close: "إغلاق", favorite: "⭐ مرشد نشط", noNotes: "ماكاش ملاحظات", call: "📞 اتصل", filter: "🎨 فلتر",
-            saved: "✅ تم الحفظ", sync: "مزامنة", uploading: "📤 جاري الرفع...", uploadSuccess: "✅ تم الرفع", uploadError: "❌ خطأ في الرفع", selectImage: "اختر صورة"
+            saved: "✅ تم الحفظ", sync: "مزامنة", uploading: "📤 جاري الرفع...", uploadSuccess: "✅ تم الرفع", uploadError: "❌ خطأ في الرفع"
         },
         fr: {
             searchPlaceholder: "Rechercher...", addGuide: "➕ Ajouter", editGuide: "✏️ Modifier", save: "💾 Enregistrer", cancel: "❌ Annuler",
             phoneRequired: "⚠️ Nom requis", phoneInvalid: "⚠️ Chiffres", noResults: "😕 Aucun résultat", loading: "⏳ Chargement...",
             share: "📱 WhatsApp", close: "Fermer", favorite: "⭐ Actif", noNotes: "Aucune note", call: "📞 Appeler", filter: "🎨 Filtre",
-            saved: "✅ Enregistré", sync: "Sync", uploading: "📤 Upload...", uploadSuccess: "✅ Succès", uploadError: "❌ Erreur", selectImage: "Choisir"
+            saved: "✅ Enregistré", sync: "Sync", uploading: "📤 Upload...", uploadSuccess: "✅ Succès", uploadError: "❌ Erreur"
         }
     };
     function t(key) { return translations[currentLang]?.[key] || translations.ar[key] || key; }
@@ -447,7 +455,7 @@
         renderList();
     }
 
-    // ===== رفع الصور مباشرة (بدون سحاب خارجي) =====
+    // ===== رفع الصور محلياً (Base64) =====
     function handleImageUpload(file, type) {
         if (!file) return;
         
@@ -479,7 +487,6 @@
         reader.readAsDataURL(file);
     }
 
-    // تشغيل اختيار الملف
     function triggerFileUpload(type) {
         const input = document.createElement('input');
         input.type = 'file';
@@ -543,6 +550,7 @@
         let idx = guides.findIndex(g => g.id === id);
         if (idx !== -1) {
             guides[idx].favorite = !guides[idx].favorite;
+            saveToLocalBackup();
             if (currentUser) syncToCloud();
             renderList();
             showToast(guides[idx].favorite ? "⭐ تمت الإضافة" : "تمت الإزالة");
@@ -603,6 +611,7 @@
     }
 
     function validatePhone(p) { return /^[0-9]{8,15}$/.test(p.replace(/[+\s-]/g, '')); }
+    
     function showToast(msg, isErr = false) {
         let toast = document.createElement("div");
         toast.className = "toast";
@@ -612,6 +621,32 @@
         setTimeout(() => toast.remove(), 3000);
     }
 
+    // ===== التخزين المحلي (نسخة احتياطية) =====
+    function saveToLocalBackup() {
+        try {
+            localStorage.setItem("fnote_pro_backup", JSON.stringify(guides));
+            console.log("✅ Local backup saved:", guides.length, "guides");
+        } catch(e) {
+            console.error("Local backup error:", e);
+        }
+    }
+
+    function loadLocalBackup() {
+        try {
+            const backup = localStorage.getItem("fnote_pro_backup");
+            if (backup) {
+                guides = JSON.parse(backup);
+                console.log("✅ Local backup loaded:", guides.length, "guides");
+                renderList();
+                return true;
+            }
+        } catch(e) {
+            console.error("Load backup error:", e);
+        }
+        return false;
+    }
+
+    // ===== حفظ المرشد =====
     document.getElementById("saveGuideBtn").onclick = async () => {
         let name = document.getElementById("guideName").value.trim();
         let phone = document.getElementById("guidePhone").value.trim();
@@ -641,50 +676,107 @@
             guides.push(newGuide);
         }
         
-        if (currentUser) await syncToCloud();
+        // حفظ محلياً أولاً (لضمان عدم فقدان البيانات)
+        saveToLocalBackup();
+        
+        // ثم مزامنة مع السحاب إذا كان المستخدم مسجل
+        if (currentUser) {
+            await syncToCloud();
+        } else {
+            showToast(t('saved') + " (محلياً)");
+        }
+        
         renderList();
         document.getElementById("guideModal").classList.remove("show");
         resetForm();
-        showToast(t('saved'));
+        if (!currentUser) showToast(t('saved') + " - سجل دخولك للمزامنة السحابية");
+        else showToast(t('saved'));
     };
 
+    // ===== المزامنة مع Firebase =====
     async function syncToCloud() {
-        if (!currentUser) return;
+        if (!currentUser) {
+            showToast("الرجاء تسجيل الدخول أولاً", true);
+            return false;
+        }
         try {
-            await db.collection("guides").doc(currentUser.uid).set({ data: guides, email: currentUser.email, updatedAt: new Date().toISOString() });
-            showToast("✅ " + t('sync'));
-        } catch(e) { showToast("❌ " + e.message, true); }
+            await db.collection("guides").doc(currentUser.uid).set({ 
+                data: guides, 
+                email: currentUser.email, 
+                updatedAt: new Date().toISOString() 
+            });
+            showToast("✅ تمت المزامنة مع السحاب");
+            return true;
+        } catch(e) { 
+            console.error("Sync error:", e);
+            showToast("❌ خطأ في المزامنة: " + e.message, true); 
+            return false;
+        }
     }
 
     async function loadFromCloud() {
-        if (!currentUser) return;
+        if (!currentUser) return false;
         try {
-            let doc = await db.collection("guides").doc(currentUser.uid).get();
-            guides = (doc.exists && doc.data().data) ? doc.data().data : [];
-            renderList();
-            showToast(`✅ ${guides.length} مرشد`);
-        } catch(e) { showToast("❌ " + e.message, true); }
+            const doc = await db.collection("guides").doc(currentUser.uid).get();
+            if (doc.exists && doc.data().data) {
+                guides = doc.data().data;
+                saveToLocalBackup();
+                renderList();
+                showToast(`✅ تم تحميل ${guides.length} مرشد من السحاب`);
+                return true;
+            } else {
+                // المحاولة تحميل من النسخة المحلية
+                if (loadLocalBackup()) {
+                    showToast(`📱 تم التحميل من النسخة المحلية (${guides.length} مرشد)`);
+                } else {
+                    guides = [];
+                    renderList();
+                }
+                return true;
+            }
+        } catch(e) { 
+            console.error("Cloud load error:", e);
+            // في حالة فشل السحاب، نحمّل من النسخة المحلية
+            if (loadLocalBackup()) {
+                showToast(`📱 تم التحميل من النسخة المحلية (بدون اتصال بالسحاب)`, false);
+            } else {
+                showToast("❌ خطأ في التحميل من السحاب، والنسخة المحلية فارغة", true);
+            }
+            return false;
+        }
     }
 
     // ===== المصادقة =====
     async function handleLogin(email, password) {
         try {
             showToast("جاري تسجيل الدخول...");
-            await auth.signInWithEmailAndPassword(email, password);
-        } catch(e) { showToast(e.message, true); }
+            const userCred = await auth.signInWithEmailAndPassword(email, password);
+            currentUser = userCred.user;
+            document.getElementById("loginScreen").classList.add("hide");
+            document.getElementById("signOutBtn").style.display = "flex";
+            document.getElementById("userInfo").innerHTML = `${currentUser.email} <span class="sync-badge">📡 سحابي</span>`;
+            await loadFromCloud();
+            showToast(`أهلاً ${currentUser.email.split('@')[0]} 👋`);
+        } catch(e) { 
+            console.error("Login error:", e);
+            showToast(e.message, true); 
+        }
     }
+
     function handleLogout() {
         if (confirm("تسجيل الخروج؟")) {
             auth.signOut();
             currentUser = null;
-            guides = [];
-            renderList();
+            // نحمّل النسخة المحلية بعد الخروج
+            loadLocalBackup();
             document.getElementById("loginScreen").classList.remove("hide");
             document.getElementById("signOutBtn").style.display = "none";
-            showToast("تم تسجيل الخروج");
+            document.getElementById("userInfo").innerHTML = "";
+            showToast("تم تسجيل الخروج - البيانات لا تزال محفوظة محلياً");
         }
     }
 
+    // استماع لحالة المصادقة
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
@@ -692,13 +784,20 @@
             document.getElementById("signOutBtn").style.display = "flex";
             document.getElementById("userInfo").innerHTML = `${user.email} <span class="sync-badge">📡 سحابي</span>`;
             await loadFromCloud();
+        } else {
+            // المستخدم غير مسجل - نحمّل من النسخة المحلية
+            if (document.getElementById("loginScreen").classList.contains("hide")) {
+                document.getElementById("loginScreen").classList.remove("hide");
+                document.getElementById("signOutBtn").style.display = "none";
+            }
+            loadLocalBackup();
         }
     });
 
     document.getElementById("loginBtn").onclick = () => handleLogin(loginEmail.value.trim(), loginPassword.value.trim());
     document.getElementById("signOutBtn").onclick = handleLogout;
 
-    // ===== أحداث =====
+    // ===== أحداث الواجهة =====
     document.getElementById("menuBtn").onclick = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); };
     document.getElementById("closeSidebar").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
     document.getElementById("overlay").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
@@ -707,19 +806,34 @@
     document.getElementById("closeDetailBtn").onclick = () => document.getElementById("detailModal").classList.remove("show");
     document.getElementById("closeFullImageBtn").onclick = () => document.getElementById("fullImageModal").classList.remove("show");
     document.getElementById("searchInput").oninput = () => renderList();
-    document.getElementById("syncNowBtn").onclick = async () => { if (currentUser) await syncToCloud(); else showToast("الرجاء تسجيل الدخول", true); };
+    
+    document.getElementById("syncNowBtn").onclick = async () => { 
+        if (currentUser) {
+            await syncToCloud();
+        } else { 
+            showToast("الرجاء تسجيل الدخول أولاً للمزامنة", true); 
+        } 
+    };
+    
     document.getElementById("exportDataBtn").onclick = () => {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], {type: "application/json"}));
-        a.download = `F-NotePro_${Date.now()}.json`;
+        a.download = `F-NotePro_Backup_${new Date().toISOString().slice(0,19)}.json`;
         a.click();
-        showToast("تم التصدير");
+        showToast("تم تصدير البيانات");
     };
+    
+    document.getElementById("backupLocalBtn").onclick = () => {
+        saveToLocalBackup();
+        showToast("✅ تم حفظ نسخة احتياطية محلية");
+    };
+    
     document.getElementById("darkModeSidebar").onclick = () => {
         document.body.classList.toggle("dark");
         localStorage.setItem("darkMode", document.body.classList.contains("dark"));
         document.getElementById("darkModeText").innerHTML = document.body.classList.contains("dark") ? "الوضع المضيء" : "الوضع الداكن";
     };
+    
     document.getElementById("exportPdfBtn").onclick = () => {
         let el = document.createElement("div");
         el.dir = "rtl";
@@ -729,21 +843,14 @@
                 <strong>${g.name}</strong><br>📞 ${g.phone}<br>🚐 ${g.transportType || '-'}<br>🚍 ${g.plateNumber || '-'}<br>🏢 ${g.agency || '-'}<br>📝 ${g.notes || '-'}
             </div>`;
         });
-        html2pdf().from(el).set({ margin: 1, filename: `F-NotePro_${Date.now()}.pdf` }).save();
-    };
-    document.getElementById("clearLocalBtn").onclick = () => {
-        if (confirm("مسح الصور المحلية من قاعدة البيانات؟")) {
-            guides.forEach(g => { g.guidePhoto = ""; g.busPhoto = ""; });
-            if (currentUser) syncToCloud();
-            renderList();
-            showToast("تم مسح الصور المحلية");
-        }
+        html2pdf().from(el).set({ margin: 1, filename: `F-NotePro_${new Date().toISOString().slice(0,19)}.pdf` }).save();
     };
 
     document.getElementById("filterToggleBtn").onclick = () => {
         document.getElementById("colorsPanel").classList.toggle("show");
         document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ${document.getElementById("colorsPanel").classList.contains("show") ? "▲" : "▼"}`;
     };
+    
     document.querySelectorAll(".color-filter-btn").forEach(btn => {
         btn.onclick = () => {
             currentColorFilter = btn.dataset.color;
@@ -777,6 +884,7 @@
         document.querySelector(".color-option[data-color='#e94560']").classList.add("selected");
     }
 
+    // بحث صوتي
     let recognition;
     if ('webkitSpeechRecognition' in window) recognition = new webkitSpeechRecognition();
     document.getElementById("voiceSearchBtn").onclick = () => {
@@ -796,18 +904,36 @@
         };
         recognition.onend = () => document.getElementById("voiceSearchBtn").classList.remove("listening");
     };
+    
     document.getElementById("shareWhatsappBtn").onclick = () => {
         if (currentGuideForDetail) {
-            const msg = `*${currentGuideForDetail.name}*\n📞 ${currentGuideForDetail.phone}\n🚐 ${currentGuideForDetail.transportType || ''}\n🚍 لوحة: ${currentGuideForDetail.plateNumber || ''}`;
+            const msg = `*${currentGuideForDetail.name}*\n📞 ${currentGuideForDetail.phone}\n🚐 ${currentGuideForDetail.transportType || ''}\n🚍 لوحة: ${currentGuideForDetail.plateNumber || ''}\n🏢 ${currentGuideForDetail.agency || ''}`;
             window.open(`https://wa.me/${currentGuideForDetail.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
         }
     };
 
+    // الإعدادات الأولية
     if (localStorage.getItem("darkMode") === "true") document.body.classList.add("dark");
-    if (localStorage.getItem("lang")) { currentLang = localStorage.getItem("lang"); document.getElementById("langSelect").value = currentLang; } else { currentLang = 'ar'; document.getElementById("langSelect").value = 'ar'; }
-    document.getElementById("langSelect").onchange = e => { currentLang = e.target.value; localStorage.setItem("lang", currentLang); updateUI(); };
+    if (localStorage.getItem("lang")) { 
+        currentLang = localStorage.getItem("lang"); 
+        document.getElementById("langSelect").value = currentLang; 
+    } else { 
+        currentLang = 'ar'; 
+        document.getElementById("langSelect").value = 'ar'; 
+    }
+    
+    document.getElementById("langSelect").onchange = e => { 
+        currentLang = e.target.value; 
+        localStorage.setItem("lang", currentLang); 
+        updateUI(); 
+    };
+    
+    // تحميل البيانات من النسخة المحلية أولاً
+    loadLocalBackup();
     updateUI();
-    console.log("✅ F-Note Pro 24.0 - تخزين الصور محلياً (Base64) - سريع وفوري");
+    
+    console.log("✅ F-Note Pro 25.0 - تخزين محلي + سحابي | لن تفقد بياناتك أبداً");
+    console.log("📌 البيانات تحفظ في LocalStorage و Firebase معاً");
 </script>
 </body>
 </html>
