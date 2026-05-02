@@ -386,9 +386,8 @@
     <div class="sidebar-section">
         <h3>⚙️ الإعدادات</h3>
         <select id="langSelect">
-            <option value="ar">📖 العربية</option>
-            <option value="fr">🇫🇷 Français</option>
-            <option value="tn">🎤 تونسي</option>
+            <option value="tn">📖 العربية (تونس)</option>
+            <option value="fr">🇫🇷 Français (تونسية)</option>
         </select>
         <div class="sidebar-item" id="darkModeSidebar"><span>🌙</span><span id="darkModeText">الوضع الداكن</span></div>
         <div class="sidebar-item" id="syncNowBtn"><span>🔄</span><span>مزامنة الآن</span></div>
@@ -397,7 +396,7 @@
     </div>
     <div class="sidebar-section">
         <h3>ℹ️ عن التطبيق</h3>
-        <p style="font-size:12px;">نسخة 27.0 - عربية/فرنسية<br>💾 تخزين محلي + سحابي<br>📱 يعلم دون اتصال</p>
+        <p style="font-size:12px;">نسخة 28.0 - عربي/فرنسي (تونس)<br>💾 تخزين محلي + سحابي<br>📱 يعمل دون اتصال</p>
     </div>
 </div>
 
@@ -430,7 +429,7 @@
 <input type="text" id="guideName" placeholder="الاسم الكامل *">
 <input type="tel" id="guidePhone" placeholder="رقم الهاتف">
 <input type="text" id="plateNumber" placeholder="رقم اللوحة">
-<div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ رقم الهاتف يجب أن يتكون من أرقام فقط</div>
+<div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ رقم الهاتف يجب أن يتكون من أرقام فقط (قد يحتوي +)</div>
 
 <div class="upload-section">
     <div class="upload-label">📸 صورة المرشد</div>
@@ -464,7 +463,7 @@
 <div id="fullImageModal" class="modal"><div class="modal-content" style="text-align:center"><img id="fullImage" style="max-width:100%;border-radius:28px;"><button class="cancel-btn" id="closeFullImageBtn">إغلاق</button></div></div>
 
 <script>
-    // ===== Firebase =====
+    // ------------------- FIREBASE CONFIG ------------------
     const firebaseConfig = {
         apiKey: "AIzaSyAJLpdRoKamaHHofnCh4qQk6mHKeI25Tgc",
         authDomain: "f-notepro-work.firebaseapp.com",
@@ -478,55 +477,252 @@
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
         auth = firebase.auth();
-        // تفعيل التخزين المحلي (العمل دون اتصال)
-        db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
-        db.enablePersistence().catch((err) => {
-            if (err.code == 'failed-precondition') {
-                console.warn("التخزين المحلي يحتاج فتح تبويب واحد فقط.");
-            } else if (err.code == 'unimplemented') {
-                console.warn("المتصفح لا يدعم التخزين المحلي.");
-            }
+        // تفعيل التخزين المحلي الفعال (العمل دون اتصال)
+        db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+            if (err.code === 'failed-precondition') console.warn("تعدد الألسنة قد يسبب مشاكل مؤقتة");
+            else console.warn(err);
         });
     } catch(e) { console.error(e); }
 
-    let currentUser = null, guides = [], currentLang = 'ar';
+    // ------------------- GLOBALS -------------------------
+    let currentUser = null, guides = [], currentLang = 'tn';  // tn = عربي تونس
     let currentEditId = null, selectedColor = "#e94560";
     let currentColorFilter = "all", currentGuideForDetail = null;
     let currentGuidePhotoBase64 = "", currentBusPhotoBase64 = "";
 
-    // ===== الترجمة (عربية، فرنسية، تونسي) =====
+    // ------------------- ترجمة تونسية وفرنسية -------------------
     const translations = {
-        ar: {
-            searchPlaceholder: "🔍 بحث عن مرشد...", addGuide: "➕ إضافة مرشد", editGuide: "✏️ تعديل", save: "💾 حفظ", cancel: "❌ إلغاء",
-            phoneRequired: "⚠️ الاسم والهاتف مطلوبان", phoneInvalid: "⚠️ أرقام فقط", noResults: "😕 لا توجد نتائج", loading: "⏳ جاري التحميل...",
-            share: "📱 مشاركة", close: "إغلاق", favorite: "⭐ مرشد نشط", noNotes: "لا توجد ملاحظات", call: "📞 اتصل", filter: "🎨 فلتر",
-            saved: "✅ تم الحفظ", sync: "مزامنة", uploading: "📤 جاري رفع الصورة...", uploadSuccess: "✅ تم رفع الصورة", uploadError: "❌ خطأ", more: "المزيد ▼", less: "أقل ▲", deleteConfirm: "هل أنت متأكد من حذف هذا المرشد؟"
-        },
-        fr: {
-            searchPlaceholder: "🔍 Rechercher...", addGuide: "➕ Ajouter", editGuide: "✏️ Modifier", save: "💾 Enregistrer", cancel: "❌ Annuler",
-            phoneRequired: "⚠️ Nom et téléphone requis", phoneInvalid: "⚠️ Chiffres seulement", noResults: "😕 Aucun résultat", loading: "⏳ Chargement...",
-            share: "📱 Partager", close: "Fermer", favorite: "⭐ Guide actif", noNotes: "Aucune note", call: "📞 Appeler", filter: "🎨 Filtre",
-            saved: "✅ Enregistré", sync: "Synchroniser", uploading: "📤 Téléchargement...", uploadSuccess: "✅ Succès", uploadError: "❌ Erreur", more: "Plus ▼", less: "Moins ▲", deleteConfirm: "Supprimer ce guide ?"
-        },
         tn: {
             searchPlaceholder: "🔍 فتش على مرشد...", addGuide: "➕ أضف مرشد", editGuide: "✏️ بدل", save: "💾 أحفظ", cancel: "❌ ألغى",
             phoneRequired: "⚠️ الاسم والهاتف مطلوبين", phoneInvalid: "⚠️ أرقام فقط", noResults: "😕 ماكاش نتائج", loading: "⏳ جاري التحميل...",
-            share: "📱 شارك", close: "إغلاق", favorite: "⭐ مرشد نشط", noNotes: "ماكاش ملاحظات", call: "📞 أتصل", filter: "🎨 فلتر",
+            share: "📱 شارك", close: "إغلاق", favorite: "⭐ مرشد نشط", noNotes: "ماكاش ملاحظات", call: "📞 أتصل", filter: "فلتر",
             saved: "✅ تم الحفظ", sync: "مزامنة", uploading: "📤 جاري الرفع...", uploadSuccess: "✅ تم الرفع", uploadError: "❌ خطأ", more: "المزيد ▼", less: "أقل ▲", deleteConfirm: "تحذف هذا المرشد؟"
+        },
+        fr: {
+            searchPlaceholder: "🔍 Rechercher guide...", addGuide: "➕ Ajouter", editGuide: "✏️ Modifier", save: "💾 Sauvegarder", cancel: "❌ Annuler",
+            phoneRequired: "⚠️ Nom et téléphone requis", phoneInvalid: "⚠️ Chiffres seulement", noResults: "😕 Aucun résultat", loading: "⏳ Chargement...",
+            share: "📱 Partager", close: "Fermer", favorite: "⭐ Guide actif", noNotes: "Aucune note", call: "📞 Appeler", filter: "Filtre",
+            saved: "✅ Enregistré", sync: "Synchroniser", uploading: "📤 Téléchargement...", uploadSuccess: "✅ Succès", uploadError: "❌ Erreur", more: "Plus ▼", less: "Moins ▲", deleteConfirm: "Supprimer ce guide ?"
         }
     };
-    function t(key) { return translations[currentLang]?.[key] || translations.ar[key] || key; }
-    function updateUI() {
+    function t(key) { return translations[currentLang]?.[key] || translations.tn[key] || key; }
+    function updateUIText() {
         document.getElementById("searchInput").placeholder = t('searchPlaceholder');
         document.getElementById("modalTitle").innerHTML = currentEditId ? t('editGuide') : t('addGuide');
         document.getElementById("saveGuideBtn").innerHTML = t('save');
         document.getElementById("closeModalBtn").innerHTML = t('cancel');
-        document.getElementById("shareWhatsappBtn").innerHTML = t('share');
+        if(document.getElementById("shareWhatsappBtn")) document.getElementById("shareWhatsappBtn").innerHTML = `📱 ${t('share')}`;
         document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ▼`;
         renderList();
     }
 
-    // ===== رفع الصور (Base64 سريع) =====
+    // ------------------- تخزين محلي و مزامنة ------------------
+    function saveToLocal() { localStorage.setItem("fnote_pro_backup", JSON.stringify(guides)); }
+    function loadLocalBackup() {
+        const backup = localStorage.getItem("fnote_pro_backup");
+        if (backup) { guides = JSON.parse(backup); renderList(); return true; }
+        return false;
+    }
+    async function syncToCloudBackground() {
+        if (!currentUser || !guides) return;
+        try {
+            await db.collection("guides").doc(currentUser.uid).set({ 
+                data: guides, 
+                email: currentUser.email, 
+                updatedAt: new Date().toISOString() 
+            });
+            console.log("✅ مزامنة خلفية ناجحة");
+        } catch(e) { console.warn("فشل المزامنة (غير متصل)", e); }
+    }
+    async function loadFromCloud() {
+        if (!currentUser) return false;
+        try {
+            const doc = await db.collection("guides").doc(currentUser.uid).get();
+            if (doc.exists && doc.data().data) {
+                guides = doc.data().data;
+                saveToLocal();
+                renderList();
+                showToast(`✅ تم تحميل ${guides.length} مرشد`);
+            } else { loadLocalBackup(); }
+            return true;
+        } catch(e) { loadLocalBackup(); return false; }
+    }
+
+    // ------------------- أدوات مساعدة ---------------------
+    function validatePhone(p) { return /^[\+\d][\d\s\-]{7,15}$/.test(p.replace(/\s/g, '')); }
+    function showToast(msg, isErr = false) {
+        let toast = document.createElement("div");
+        toast.className = "toast";
+        toast.style.background = isErr ? "rgba(239,68,68,0.95)" : "rgba(0,0,0,0.9)";
+        toast.innerText = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    }
+    function resetForm() {
+        currentEditId = null; selectedColor = "#e94560";
+        currentGuidePhotoBase64 = ""; currentBusPhotoBase64 = "";
+        document.getElementById("guideName").value = "";
+        document.getElementById("guidePhone").value = "";
+        document.getElementById("plateNumber").value = "";
+        document.getElementById("transportType").value = "";
+        document.getElementById("agency").value = "";
+        document.getElementById("guideNotes").value = "";
+        document.getElementById("guidePreviewContainer").style.display = "none";
+        document.getElementById("busPreviewContainer").style.display = "none";
+        document.querySelectorAll("#colorSelector .color-option").forEach(o => o.classList.remove("selected"));
+        let def = document.querySelector(`#colorSelector .color-option[data-color='#e94560']`);
+        if (def) def.classList.add("selected");
+        document.getElementById("modalTitle").innerHTML = t('addGuide');
+        document.getElementById("phoneError").style.display = "none";
+    }
+
+    // ------------------- عرض القائمة + بحث + تصفية -----------------
+    function smartSearch(query, text) {
+        if (!query) return true;
+        let q = query.toLowerCase(), t = (text || "").toLowerCase();
+        if (t.includes(q)) return true;
+        const map = { '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9' };
+        let tn = t.replace(/[٠-٩]/g, m => map[m]), qn = q.replace(/[٠-٩]/g, m => map[m]);
+        return tn.includes(qn);
+    }
+    function filterGuides() {
+        let search = document.getElementById("searchInput").value;
+        let filtered = guides.filter(g => smartSearch(search, g.name) || smartSearch(search, g.phone) || smartSearch(search, g.transportType) || smartSearch(search, g.agency) || smartSearch(search, g.plateNumber));
+        if (currentColorFilter !== "all") filtered = filtered.filter(g => g.cardColor === currentColorFilter);
+        filtered.sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
+        return filtered;
+    }
+    function escapeHtml(s) { if (!s) return ""; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
+    function renderList() {
+        let filtered = filterGuides();
+        let container = document.getElementById("guidesContainer");
+        if (filtered.length === 0) { container.innerHTML = `<div class="loading">${t('noResults')}</div>`; return; }
+        container.innerHTML = filtered.map(guide => `
+            <div class="guide-card" style="border-right-color: ${guide.cardColor};">
+                <div class="card-row">
+                    <img class="card-photo" src="${guide.guidePhoto || ''}" onclick="event.stopPropagation(); window.showImage('${guide.guidePhoto}')" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20fill=%22gray%22%3E%3Cpath%20d=%22M12%2012c2.21%200%204-1.79%204-4s-1.79-4-4-4-4%201.79-4%204%201.79%204%204%204z%22/%3E%3C/svg%3E';">
+                    <div class="card-info">
+                        <div class="card-name">${guide.favorite ? '⭐ ' : ''}${escapeHtml(guide.name)}</div>
+                        <div class="card-phone">
+                            <span>${escapeHtml(guide.phone)}</span>
+                            <button onclick="event.stopPropagation(); window.location.href='tel:${guide.phone}'">${t('call')}</button>
+                        </div>
+                    </div>
+                    <button class="expand-btn" onclick="event.stopPropagation(); toggleDetails('${guide.id}', this)">▼</button>
+                </div>
+                <div id="details-${guide.id}" class="card-details">
+                    <div class="details-grid">
+                        ${guide.busPhoto ? `<img src="${guide.busPhoto}" class="bus-photo-small" onclick="event.stopPropagation(); window.showImage('${guide.busPhoto}')">` : ''}
+                        <p><strong>🚐 وسيلة النقل:</strong> ${escapeHtml(guide.transportType || '—')}</p>
+                        <p><strong>🚍 رقم اللوحة:</strong> <span class="plate-badge" style="background:${guide.cardColor}">${escapeHtml(guide.plateNumber || '—')}</span></p>
+                        <p><strong>🏢 الوكالة:</strong> ${escapeHtml(guide.agency || '—')}</p>
+                        <p><strong>📝 ملاحظات:</strong> ${escapeHtml((guide.notes || t('noNotes')).substring(0, 60))}${(guide.notes || '').length > 60 ? '...' : ''}</p>
+                        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                            <button class="save-btn" style="padding:6px 12px; font-size:12px;" onclick="event.stopPropagation(); editGuideById('${guide.id}')">✏️ ${t('editGuide')}</button>
+                            <button class="cancel-btn" style="padding:6px 12px; font-size:12px; background:#dc2626;" onclick="event.stopPropagation(); deleteGuide('${guide.id}')">🗑️ حذف</button>
+                            <button class="share-wa-btn" style="padding:6px 12px; font-size:12px; margin:0;" onclick="event.stopPropagation(); shareGuide('${guide.id}')">📱 ${t('share')}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    // ------------------- عمليات CRUD -------------------------
+    window.editGuideById = (id) => {
+        let g = guides.find(g => g.id === id);
+        if (g) {
+            currentEditId = id;
+            document.getElementById("guideName").value = g.name;
+            document.getElementById("guidePhone").value = g.phone;
+            document.getElementById("plateNumber").value = g.plateNumber || "";
+            document.getElementById("transportType").value = g.transportType || "";
+            document.getElementById("agency").value = g.agency || "";
+            document.getElementById("guideNotes").value = g.notes || "";
+            selectedColor = g.cardColor || "#e94560";
+            currentGuidePhotoBase64 = g.guidePhoto || "";
+            currentBusPhotoBase64 = g.busPhoto || "";
+            if (currentGuidePhotoBase64) {
+                document.getElementById("guidePhotoPreview").src = currentGuidePhotoBase64;
+                document.getElementById("guidePreviewContainer").style.display = "flex";
+            } else document.getElementById("guidePreviewContainer").style.display = "none";
+            if (currentBusPhotoBase64) {
+                document.getElementById("busPhotoPreview").src = currentBusPhotoBase64;
+                document.getElementById("busPreviewContainer").style.display = "flex";
+            } else document.getElementById("busPreviewContainer").style.display = "none";
+            document.querySelectorAll("#colorSelector .color-option").forEach(o => o.classList.remove("selected"));
+            let sel = document.querySelector(`#colorSelector .color-option[data-color='${selectedColor}']`);
+            if (sel) sel.classList.add("selected");
+            document.getElementById("modalTitle").innerHTML = t('editGuide');
+            document.getElementById("guideModal").classList.add("show");
+        }
+    };
+    window.deleteGuide = (id) => {
+        if (confirm(t('deleteConfirm'))) {
+            guides = guides.filter(g => g.id !== id);
+            saveToLocal();
+            if (currentUser) syncToCloudBackground();
+            renderList();
+            showToast("🗑️ تم الحذف");
+        }
+    };
+    window.shareGuide = (id) => {
+        const guide = guides.find(g => g.id === id);
+        if (guide) {
+            const msg = `*${guide.name}*\n📞 ${guide.phone}\n🚐 ${guide.transportType || ''}\n🚍 لوحة: ${guide.plateNumber || ''}\n🏢 ${guide.agency || ''}`;
+            window.open(`https://wa.me/${guide.phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+    };
+    window.toggleDetails = (id, btn) => {
+        const detailsDiv = document.getElementById(`details-${id}`);
+        if (detailsDiv) {
+            detailsDiv.classList.toggle('show');
+            btn.innerHTML = detailsDiv.classList.contains('show') ? '▲' : '▼';
+        }
+    };
+    window.showImage = (url) => { if (url) { document.getElementById("fullImage").src = url; document.getElementById("fullImageModal").classList.add("show"); } };
+    
+    // حفظ المرشد (الجزء الأهم)
+    document.getElementById("saveGuideBtn").onclick = async () => {
+        let name = document.getElementById("guideName").value.trim();
+        let phone = document.getElementById("guidePhone").value.trim();
+        if (!name || !phone) { showToast(t('phoneRequired'), true); return; }
+        if (!validatePhone(phone)) { document.getElementById("phoneError").style.display = "block"; return; }
+        document.getElementById("phoneError").style.display = "none";
+        
+        const newGuide = {
+            id: currentEditId || Date.now().toString(),
+            name, phone,
+            plateNumber: document.getElementById("plateNumber").value.trim(),
+            guidePhoto: currentGuidePhotoBase64,
+            busPhoto: currentBusPhotoBase64,
+            cardColor: selectedColor,
+            transportType: document.getElementById("transportType").value.trim(),
+            agency: document.getElementById("agency").value.trim(),
+            notes: document.getElementById("guideNotes").value.trim(),
+            favorite: currentEditId ? (guides.find(g => g.id === currentEditId)?.favorite || false) : false,
+            updatedAt: new Date().toISOString()
+        };
+        
+        // تحديث المصفوفة
+        if (currentEditId) {
+            let idx = guides.findIndex(g => g.id === currentEditId);
+            if (idx !== -1) guides[idx] = newGuide;
+            else guides.push(newGuide);
+        } else {
+            guides.push(newGuide);
+        }
+        // حفظ فوري محلياً
+        saveToLocal();
+        renderList();
+        document.getElementById("guideModal").classList.remove("show");
+        showToast(t('saved'));
+        resetForm();
+        // مزامنة خلفية إذا كان المتصل موجوداً
+        if (currentUser) syncToCloudBackground();
+    };
+
+    // ------------------- رفع الصور -------------------------
     function handleImageUpload(file, type) {
         if (!file) return;
         const statusDiv = document.getElementById(type === 'guide' ? 'guideUploadStatus' : 'busUploadStatus');
@@ -560,25 +756,20 @@
     document.getElementById("guideUploadCard").onclick = () => triggerFileUpload('guide');
     document.getElementById("busUploadCard").onclick = () => triggerFileUpload('bus');
 
-    // ===== البحث =====
-    function smartSearch(query, text) {
-        if (!query) return true;
-        let q = query.toLowerCase(), t = (text || "").toLowerCase();
-        if (t.includes(q)) return true;
-        const map = { '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9' };
-        let tn = t.replace(/[٠-٩]/g, m => map[m]), qn = q.replace(/[٠-٩]/g, m => map[m]);
-        return tn.includes(qn);
-    }
-    function filterGuides() {
-        let search = document.getElementById("searchInput").value;
-        let filtered = guides.filter(g => smartSearch(search, g.name) || smartSearch(search, g.phone) || smartSearch(search, g.transportType) || smartSearch(search, g.agency) || smartSearch(search, g.plateNumber));
-        if (currentColorFilter !== "all") filtered = filtered.filter(g => g.cardColor === currentColorFilter);
-        filtered.sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
-        return filtered;
-    }
-    function escapeHtml(s) { if (!s) return ""; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
-
-    // عرض التفاصيل الكاملة في مودال منفصل
+    // ------------------- أحداث واجهة و مودالات -----------------
+    document.getElementById("openModalBtn").onclick = () => { resetForm(); document.getElementById("guideModal").classList.add("show"); };
+    document.getElementById("closeModalBtn").onclick = () => document.getElementById("guideModal").classList.remove("show");
+    document.getElementById("closeDetailBtn").onclick = () => document.getElementById("detailModal").classList.remove("show");
+    document.getElementById("closeFullImageBtn").onclick = () => document.getElementById("fullImageModal").classList.remove("show");
+    document.getElementById("searchInput").oninput = () => renderList();
+    
+    // المشاركة التفصيلية
+    document.getElementById("shareWhatsappBtn").onclick = () => {
+        if (currentGuideForDetail) {
+            const msg = `*${currentGuideForDetail.name}*\n📞 ${currentGuideForDetail.phone}\n🚐 ${currentGuideForDetail.transportType || ''}\n🚍 لوحة: ${currentGuideForDetail.plateNumber || ''}`;
+            window.open(`https://wa.me/${currentGuideForDetail.phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+    };
     function showFullDetails(guide) {
         currentGuideForDetail = guide;
         document.getElementById("detailName").innerHTML = `<span style="color:${guide.cardColor}">⭐</span> ${escapeHtml(guide.name)}`;
@@ -598,233 +789,14 @@
         `;
         document.getElementById("detailModal").classList.add("show");
     }
-    window.showImage = (url) => { if (url) { document.getElementById("fullImage").src = url; document.getElementById("fullImageModal").classList.add("show"); } };
-    window.toggleFavorite = (id) => {
-        let idx = guides.findIndex(g => g.id === id);
-        if (idx !== -1) {
-            guides[idx].favorite = !guides[idx].favorite;
-            saveToLocal();
-            // مزامنة خلفية
-            if (currentUser) syncToCloudBackground();
-            renderList();
-        }
-    };
-    function deleteGuide(id) {
-        if (confirm(t('deleteConfirm'))) {
-            guides = guides.filter(g => g.id !== id);
-            saveToLocal();
-            if (currentUser) syncToCloudBackground();
-            renderList();
-        }
-    }
-    function shareGuide(id) {
-        const guide = guides.find(g => g.id === id);
-        if (guide) {
-            const msg = `*${guide.name}*\n📞 ${guide.phone}\n🚐 ${guide.transportType || ''}\n🚍 لوحة: ${guide.plateNumber || ''}\n🏢 ${guide.agency || ''}`;
-            window.open(`https://wa.me/${guide.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-    }
-    function toggleDetails(id, btnElement) {
-        const detailsDiv = document.getElementById(`details-${id}`);
-        if (detailsDiv) {
-            detailsDiv.classList.toggle('show');
-            btnElement.innerHTML = detailsDiv.classList.contains('show') ? '▲' : '▼';
-        }
-    }
-    function editGuideById(id) {
-        let g = guides.find(g => g.id === id);
-        if (g) {
-            currentEditId = id;
-            document.getElementById("guideName").value = g.name;
-            document.getElementById("guidePhone").value = g.phone;
-            document.getElementById("plateNumber").value = g.plateNumber || "";
-            document.getElementById("transportType").value = g.transportType || "";
-            document.getElementById("agency").value = g.agency || "";
-            document.getElementById("guideNotes").value = g.notes || "";
-            selectedColor = g.cardColor || "#e94560";
-            currentGuidePhotoBase64 = g.guidePhoto || "";
-            currentBusPhotoBase64 = g.busPhoto || "";
-            if (currentGuidePhotoBase64) {
-                document.getElementById("guidePhotoPreview").src = currentGuidePhotoBase64;
-                document.getElementById("guidePreviewContainer").style.display = "flex";
-            }
-            if (currentBusPhotoBase64) {
-                document.getElementById("busPhotoPreview").src = currentBusPhotoBase64;
-                document.getElementById("busPreviewContainer").style.display = "flex";
-            }
-            document.querySelectorAll(".color-option").forEach(o => o.classList.remove("selected"));
-            let sel = document.querySelector(`.color-option[data-color='${selectedColor}']`);
-            if (sel) sel.classList.add("selected");
-            document.getElementById("modalTitle").innerHTML = t('editGuide');
-            document.getElementById("guideModal").classList.add("show");
-        }
-    }
-    window.editGuideById = editGuideById;
-    window.deleteGuide = deleteGuide;
-    window.shareGuide = shareGuide;
-    window.toggleDetails = toggleDetails;
+    window.showFullDetails = showFullDetails;
 
-    function renderList() {
-        let filtered = filterGuides();
-        let container = document.getElementById("guidesContainer");
-        if (filtered.length === 0) { container.innerHTML = `<div class="loading">${t('noResults')}</div>`; return; }
-        container.innerHTML = filtered.map(guide => `
-            <div class="guide-card" style="border-right-color: ${guide.cardColor};">
-                <div class="card-row">
-                    <img class="card-photo" src="${guide.guidePhoto || ''}" onclick="event.stopPropagation(); window.showImage('${guide.guidePhoto}')" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20fill=%22gray%22%3E%3Cpath%20d=%22M12%2012c2.21%200%204-1.79%204-4s-1.79-4-4-4-4%201.79-4%204%201.79%204%204%204z%22/%3E%3C/svg%3E';">
-                    <div class="card-info">
-                        <div class="card-name">${guide.favorite ? '⭐ ' : ''}${escapeHtml(guide.name)}</div>
-                        <div class="card-phone">
-                            <span>${guide.phone}</span>
-                            <button onclick="event.stopPropagation(); window.location.href='tel:${guide.phone}'">${t('call')}</button>
-                        </div>
-                    </div>
-                    <button class="expand-btn" onclick="event.stopPropagation(); toggleDetails('${guide.id}', this)">▼</button>
-                </div>
-                <div id="details-${guide.id}" class="card-details">
-                    <div class="details-grid">
-                        ${guide.busPhoto ? `<img src="${guide.busPhoto}" class="bus-photo-small" onclick="event.stopPropagation(); window.showImage('${guide.busPhoto}')">` : ''}
-                        <p><strong>🚐 وسيلة النقل:</strong> ${escapeHtml(guide.transportType || '—')}</p>
-                        <p><strong>🚍 رقم اللوحة:</strong> <span class="plate-badge" style="background:${guide.cardColor}">${escapeHtml(guide.plateNumber || '—')}</span></p>
-                        <p><strong>🏢 الوكالة:</strong> ${escapeHtml(guide.agency || '—')}</p>
-                        <p><strong>📝 ملاحظات:</strong> ${escapeHtml((guide.notes || t('noNotes')).substring(0, 60))}${(guide.notes || '').length > 60 ? '...' : ''}</p>
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button class="save-btn" style="padding:6px 12px; font-size:12px;" onclick="event.stopPropagation(); editGuideById('${guide.id}')">✏️ ${t('editGuide')}</button>
-                            <button class="cancel-btn" style="padding:6px 12px; font-size:12px; background:#dc2626;" onclick="event.stopPropagation(); deleteGuide('${guide.id}')">🗑️ حذف</button>
-                            <button class="share-wa-btn" style="padding:6px 12px; font-size:12px; margin:0;" onclick="event.stopPropagation(); shareGuide('${guide.id}')">📱 ${t('share')}</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join("");
-    }
-
-    function resetForm() {
-        currentEditId = null; selectedColor = "#e94560";
-        currentGuidePhotoBase64 = ""; currentBusPhotoBase64 = "";
-        document.getElementById("guideName").value = "";
-        document.getElementById("guidePhone").value = "";
-        document.getElementById("plateNumber").value = "";
-        document.getElementById("transportType").value = "";
-        document.getElementById("agency").value = "";
-        document.getElementById("guideNotes").value = "";
-        document.getElementById("guidePreviewContainer").style.display = "none";
-        document.getElementById("busPreviewContainer").style.display = "none";
-        document.querySelectorAll(".color-option").forEach(o => o.classList.remove("selected"));
-        let def = document.querySelector(".color-option[data-color='#e94560']");
-        if (def) def.classList.add("selected");
-        document.getElementById("modalTitle").innerHTML = t('addGuide');
-        document.getElementById("phoneError").style.display = "none";
-    }
-    function validatePhone(p) { return /^[0-9]{8,15}$/.test(p.replace(/[+\s-]/g, '')); }
-    function showToast(msg, isErr = false) {
-        let toast = document.createElement("div");
-        toast.className = "toast";
-        toast.style.background = isErr ? "rgba(239,68,68,0.95)" : "rgba(0,0,0,0.9)";
-        toast.innerText = msg;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2500);
-    }
-
-    // الحفظ المحلي والمزامنة الخلفية المحسنة
-    function saveToLocal() { localStorage.setItem("fnote_pro_backup", JSON.stringify(guides)); }
-    function loadLocalBackup() {
-        const backup = localStorage.getItem("fnote_pro_backup");
-        if (backup) { guides = JSON.parse(backup); renderList(); return true; }
-        return false;
-    }
-    async function syncToCloudBackground() {
-        if (!currentUser) return;
-        try {
-            await db.collection("guides").doc(currentUser.uid).set({ 
-                data: guides, 
-                email: currentUser.email, 
-                updatedAt: new Date().toISOString() 
-            });
-            console.log("✅ مزامنة خلفية ناجحة");
-        } catch(e) { console.warn("فشل المزامنة الخلفية", e); }
-    }
-
-    document.getElementById("saveGuideBtn").onclick = async () => {
-        let name = document.getElementById("guideName").value.trim();
-        let phone = document.getElementById("guidePhone").value.trim();
-        if (!name || !phone) { showToast(t('phoneRequired'), true); return; }
-        if (!validatePhone(phone)) { document.getElementById("phoneError").style.display = "block"; return; }
-        document.getElementById("phoneError").style.display = "none";
-        
-        let newGuide = {
-            id: currentEditId || Date.now().toString(),
-            name, phone,
-            plateNumber: document.getElementById("plateNumber").value.trim(),
-            guidePhoto: currentGuidePhotoBase64,
-            busPhoto: currentBusPhotoBase64,
-            cardColor: selectedColor,
-            transportType: document.getElementById("transportType").value.trim(),
-            agency: document.getElementById("agency").value.trim(),
-            notes: document.getElementById("guideNotes").value.trim(),
-            favorite: currentEditId ? (guides.find(g => g.id === currentEditId)?.favorite || false) : false,
-            updatedAt: new Date().toISOString()
-        };
-        
-        // 1. تحديث المصفوفة محلياً
-        if (currentEditId) {
-            let idx = guides.findIndex(g => g.id === currentEditId);
-            if (idx !== -1) guides[idx] = newGuide;
-            else guides.push(newGuide);
-        } else {
-            guides.push(newGuide);
-        }
-        // 2. حفظ في localStorage فوراً
-        saveToLocal();
-        // 3. تحديث الواجهة
-        renderList();
-        document.getElementById("guideModal").classList.remove("show");
-        showToast(t('saved'));
-        resetForm();
-        // 4. مزامنة خلفية مع Firebase (لا ننتظر)
-        if (currentUser) {
-            syncToCloudBackground();
-        }
-    };
-
-    // المزامنة اليدوية
-    document.getElementById("syncNowBtn").onclick = async () => {
-        if (currentUser) {
-            await syncToCloudBackground();
-            showToast("✅ تمت المزامنة");
-        } else showToast("سجل دخولك أولاً", true);
-    };
-
-    // تحميل البيانات من السحاب عند تسجيل الدخول
-    async function loadFromCloud() {
-        if (!currentUser) return false;
-        try {
-            const doc = await db.collection("guides").doc(currentUser.uid).get();
-            if (doc.exists && doc.data().data) {
-                guides = doc.data().data;
-                saveToLocal();
-                renderList();
-                showToast(`✅ تم تحميل ${guides.length} مرشد`);
-            } else { loadLocalBackup(); }
-            return true;
-        } catch(e) { loadLocalBackup(); return false; }
-    }
-
-    // ===== المصادقة =====
+    // ------------------- مصادقة Firebase --------------------
     async function handleLogin(email, password) {
         try { showToast("جاري الدخول..."); await auth.signInWithEmailAndPassword(email, password); } 
         catch(e) { showToast(e.message, true); }
     }
-    function handleLogout() {
-        if (confirm("تسجيل الخروج؟")) {
-            auth.signOut();
-            currentUser = null;
-            loadLocalBackup();
-            document.getElementById("loginScreen").classList.remove("hide");
-            document.getElementById("signOutBtn").style.display = "none";
-            showToast("تم الخروج");
-        }
-    }
+    function handleLogout() { if (confirm("تسجيل الخروج؟")) { auth.signOut(); currentUser = null; loadLocalBackup(); document.getElementById("loginScreen").classList.remove("hide"); document.getElementById("signOutBtn").style.display = "none"; showToast("تم الخروج"); } }
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
@@ -832,60 +804,26 @@
             document.getElementById("signOutBtn").style.display = "flex";
             document.getElementById("userInfo").innerHTML = `${user.email} <span class="sync-badge">📡 سحابي</span>`;
             await loadFromCloud();
-        } else { loadLocalBackup(); }
+        } else { loadLocalBackup(); document.getElementById("loginScreen").classList.remove("hide"); document.getElementById("signOutBtn").style.display = "none"; }
     });
     document.getElementById("loginBtn").onclick = () => handleLogin(loginEmail.value.trim(), loginPassword.value.trim());
     document.getElementById("signOutBtn").onclick = handleLogout;
-
-    // باقي الأحداث
-    document.getElementById("menuBtn").onclick = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); };
-    document.getElementById("closeSidebar").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
-    document.getElementById("overlay").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
-    document.getElementById("openModalBtn").onclick = () => { resetForm(); document.getElementById("guideModal").classList.add("show"); };
-    document.getElementById("closeModalBtn").onclick = () => document.getElementById("guideModal").classList.remove("show");
-    document.getElementById("closeDetailBtn").onclick = () => document.getElementById("detailModal").classList.remove("show");
-    document.getElementById("closeFullImageBtn").onclick = () => document.getElementById("fullImageModal").classList.remove("show");
-    document.getElementById("searchInput").oninput = () => renderList();
-    document.getElementById("exportDataBtn").onclick = () => {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], {type: "application/json"}));
-        a.download = `F-NotePro_${Date.now()}.json`;
-        a.click();
-        showToast("تم التصدير");
-    };
-    document.getElementById("darkModeSidebar").onclick = () => {
-        document.body.classList.toggle("dark");
-        localStorage.setItem("darkMode", document.body.classList.contains("dark"));
-        document.getElementById("darkModeText").innerHTML = document.body.classList.contains("dark") ? "الوضع المضيء" : "الوضع الداكن";
-    };
-    document.getElementById("exportPdfBtn").onclick = () => {
-        let el = document.createElement("div");
-        el.dir = "rtl";
-        el.innerHTML = `<h1 style="text-align:center;color:#e94560;">F-Note Pro</h1><hr>`;
-        guides.forEach(g => { el.innerHTML += `<div style="border:1px solid #ccc;border-radius:16px;padding:16px;margin:12px 0;"><strong>${g.name}</strong><br>📞 ${g.phone}<br>🚐 ${g.transportType || '-'}<br>🚍 ${g.plateNumber || '-'}<br>🏢 ${g.agency || '-'}<br>📝 ${g.notes || '-'}</div>`; });
-        html2pdf().from(el).set({ margin: 1, filename: `F-NotePro_${Date.now()}.pdf` }).save();
-    };
-    document.getElementById("filterToggleBtn").onclick = () => {
-        document.getElementById("colorsPanel").classList.toggle("show");
-        document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ${document.getElementById("colorsPanel").classList.contains("show") ? "▲" : "▼"}`;
-    };
-    document.querySelectorAll(".color-filter-btn").forEach(btn => {
-        btn.onclick = () => {
-            currentColorFilter = btn.dataset.color;
-            document.querySelectorAll(".color-filter-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            renderList();
-            document.getElementById("colorsPanel").classList.remove("show");
-            document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ▼`;
-        };
-    });
+    document.getElementById("syncNowBtn").onclick = async () => { if (currentUser) { await syncToCloudBackground(); showToast("✅ تمت المزامنة"); } else showToast("سجل دخولك أولاً", true); };
+    document.getElementById("exportDataBtn").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], {type: "application/json"})); a.download = `F-NotePro_${Date.now()}.json`; a.click(); showToast("تم التصدير"); };
+    document.getElementById("exportPdfBtn").onclick = () => { let el = document.createElement("div"); el.dir = "rtl"; el.innerHTML = `<h1 style="text-align:center;color:#e94560;">F-Note Pro</h1><hr>`; guides.forEach(g => { el.innerHTML += `<div style="border:1px solid #ccc;border-radius:16px;padding:16px;margin:12px 0;"><strong>${g.name}</strong><br>📞 ${g.phone}<br>🚐 ${g.transportType || '-'}<br>🚍 ${g.plateNumber || '-'}<br>🏢 ${g.agency || '-'}<br>📝 ${g.notes || '-'}</div>`; }); html2pdf().from(el).set({ margin: 1, filename: `F-NotePro_${Date.now()}.pdf` }).save(); };
+    document.getElementById("darkModeSidebar").onclick = () => { document.body.classList.toggle("dark"); localStorage.setItem("darkMode", document.body.classList.contains("dark")); document.getElementById("darkModeText").innerHTML = document.body.classList.contains("dark") ? "الوضع المضيء" : "الوضع الداكن"; };
+    document.getElementById("filterToggleBtn").onclick = () => { document.getElementById("colorsPanel").classList.toggle("show"); document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ${document.getElementById("colorsPanel").classList.contains("show") ? "▲" : "▼"}`; };
+    document.querySelectorAll(".color-filter-btn").forEach(btn => { btn.onclick = () => { currentColorFilter = btn.dataset.color; document.querySelectorAll(".color-filter-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); renderList(); document.getElementById("colorsPanel").classList.remove("show"); document.getElementById("filterToggleBtn").innerHTML = `🎨 ${t('filter')} ▼`; }; });
+    
+    // منقي الألوان في المودال
     const colorSelectorDiv = document.getElementById("colorSelector");
     if (colorSelectorDiv) {
         colorSelectorDiv.innerHTML = `<div class="color-option" style="background:#e94560;" data-color="#e94560"></div><div class="color-option" style="background:#2c7da0;" data-color="#2c7da0"></div><div class="color-option" style="background:#e76f51;" data-color="#e76f51"></div><div class="color-option" style="background:#2a9d8f;" data-color="#2a9d8f"></div><div class="color-option" style="background:#e9c46a;" data-color="#e9c46a"></div><div class="color-option" style="background:#9b5de5;" data-color="#9b5de5"></div><div class="color-option" style="background:#06d6a0;" data-color="#06d6a0"></div><div class="color-option" style="background:#ff006e;" data-color="#ff006e"></div>`;
         document.querySelectorAll("#colorSelector .color-option").forEach(opt => { opt.onclick = () => { document.querySelectorAll("#colorSelector .color-option").forEach(o => o.classList.remove("selected")); opt.classList.add("selected"); selectedColor = opt.dataset.color; }; });
-        document.querySelector(".color-option[data-color='#e94560']").classList.add("selected");
+        document.querySelector("#colorSelector .color-option[data-color='#e94560']").classList.add("selected");
     }
 
+    // التعرف الصوتي
     let recognition;
     if ('webkitSpeechRecognition' in window) recognition = new webkitSpeechRecognition();
     document.getElementById("voiceSearchBtn").onclick = () => {
@@ -897,35 +835,28 @@
         recognition.onerror = () => { document.getElementById("voiceSearchBtn").classList.remove("listening"); showToast("❌ لم يتم التعرف", true); };
         recognition.onend = () => document.getElementById("voiceSearchBtn").classList.remove("listening");
     };
-    document.getElementById("shareWhatsappBtn").onclick = () => {
-        if (currentGuideForDetail) {
-            const msg = `*${currentGuideForDetail.name}*\n📞 ${currentGuideForDetail.phone}\n🚐 ${currentGuideForDetail.transportType || ''}\n🚍 لوحة: ${currentGuideForDetail.plateNumber || ''}`;
-            window.open(`https://wa.me/${currentGuideForDetail.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-    };
 
-    // تسجيل Service Worker (PWA)
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').catch(err => console.log("Service Worker registration failed", err));
-        });
-        // أو نضيف service worker بسيط
-        if (!document.querySelector('script[src*="serviceworker"]')) {
-            const swCode = `self.addEventListener('fetch', function(event) { event.respondWith(fetch(event.request)); });`;
-            const blob = new Blob([swCode], {type: 'application/javascript'});
-            const url = URL.createObjectURL(blob);
-            navigator.serviceWorker.register(url).catch(e => console.log("SW simple error", e));
-        }
-    }
-
+    // Sidebar logic
+    document.getElementById("menuBtn").onclick = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); };
+    document.getElementById("closeSidebar").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
+    document.getElementById("overlay").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
+    document.getElementById("langSelect").onchange = e => { currentLang = e.target.value; localStorage.setItem("lang", currentLang); updateUIText(); };
     if (localStorage.getItem("darkMode") === "true") document.body.classList.add("dark");
-    let savedLang = localStorage.getItem("lang");
-    if (savedLang) { currentLang = savedLang; document.getElementById("langSelect").value = savedLang; }
-    else { currentLang = 'ar'; document.getElementById("langSelect").value = 'ar'; }
-    document.getElementById("langSelect").onchange = e => { currentLang = e.target.value; localStorage.setItem("lang", currentLang); updateUI(); };
+    const savedLang = localStorage.getItem("lang");
+    if (savedLang === 'fr') currentLang = 'fr'; else currentLang = 'tn';
+    document.getElementById("langSelect").value = currentLang;
+    
     loadLocalBackup();
-    updateUI();
-    console.log("✅ F-Note Pro 27.0 - عربية افتراضية، تخزين محلي، مزامنة خلفية، وService Worker");
+    updateUIText();
+    // Service Worker (PWA)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+            const fakeSW = `self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));`;
+            const blob = new Blob([fakeSW], {type: 'application/javascript'});
+            navigator.serviceWorker.register(URL.createObjectURL(blob));
+        });
+    }
+    console.log("✅ F-Note Pro 28.0 - حفظ محلي فعال، مزامنة خلفية، تعدد اللغات");
 </script>
 </body>
 </html>
