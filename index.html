@@ -330,6 +330,13 @@
             background: #25D366; border: none; padding: 14px;
             border-radius: 60px; color: white; cursor: pointer;
             font-weight: 600; margin-top: 16px; width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .whatsapp-icon {
+            font-size: 22px;
         }
         .loading { text-align: center; padding: 50px; color: var(--text-secondary); }
         .sync-badge { background: var(--success); color: white; padding: 4px 12px; border-radius: 40px; font-size: 10px; margin-right: 8px; }
@@ -372,7 +379,7 @@
     </div>
     <div class="sidebar-section">
         <h3>ℹ️ عن التطبيق</h3>
-        <p style="font-size:12px;">نسخة 31.0 - عربي تونس<br>💾 تخزين متقدم IndexedDB (بدون إنترنت)<br>📸 صور في Firebase Storage</p>
+        <p style="font-size:12px;">نسخة 32.0 - عربي تونس<br>💾 تخزين متقدم IndexedDB (بدون إنترنت)<br>📸 صور في Firebase Storage + تخزين مؤقت أوفلاين</p>
     </div>
 </div>
 
@@ -435,7 +442,7 @@
 <div class="color-selector" id="colorSelector"></div>
 <div class="modal-buttons"><button class="save-btn" id="saveGuideBtn">💾 أحفظ</button><button class="cancel-btn" id="closeModalBtn">❌ ألغى</button></div></div></div>
 
-<div id="detailModal" class="modal"><div class="modal-content"><h3 id="detailName"></h3><div id="detailContent"></div><button class="share-wa-btn" id="shareWhatsappBtn">📱 مشاركة واتساب</button><button class="cancel-btn" id="closeDetailBtn">إغلاق</button></div></div>
+<div id="detailModal" class="modal"><div class="modal-content"><h3 id="detailName"></h3><div id="detailContent"></div><button class="share-wa-btn" id="shareWhatsappBtn"><span class="whatsapp-icon">💬</span> مشاركة واتساب</button><button class="cancel-btn" id="closeDetailBtn">إغلاق</button></div></div>
 <div id="fullImageModal" class="modal"><div class="modal-content" style="text-align:center"><img id="fullImage" style="max-width:100%;border-radius:28px;"><button class="cancel-btn" id="closeFullImageBtn">إغلاق</button></div></div>
 
 <script>
@@ -490,14 +497,13 @@
     function subscribeToGuides() {
         if (unsubscribe) unsubscribe();
         if (!currentUser) return;
-        // الاستماع إلى مجموعة المرشدين الخاصة بالمستخدم الحالي
         unsubscribe = db.collection("guides").where("userId", "==", currentUser.uid)
             .onSnapshot((snapshot) => {
                 guides = [];
                 snapshot.forEach(doc => {
                     guides.push({ id: doc.id, ...doc.data() });
                 });
-                renderList();  // إعادة عرض القائمة فور كل تغيير (محلي أو سحابي)
+                renderList();
                 console.log("تم تحديث القائمة من Firestore، العدد:", guides.length);
             }, (error) => {
                 console.error("خطأ في الاستماع:", error);
@@ -505,53 +511,151 @@
             });
     }
 
-    // ------------------- رفع الصورة إلى Firebase Storage ------------------
-    async function uploadImage(file, path) {
-        if (!file) return null;
-        const storageRef = storage.ref(path);
-        const snapshot = await storageRef.put(file);
-        const url = await snapshot.ref.getDownloadURL();
-        return url;
+    // ========== وظائف رفع الصور مع دعم عدم الاتصال (IndexedDB) ==========
+    async function storeImageOffline(docId, type, file) {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('FNoteOfflineImages', 1);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('pendingImages')) {
+                    db.createObjectStore('pendingImages', { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = (e) => {
+                const db = e.target.result;
+                const tx = db.transaction('pendingImages', 'readwrite');
+                const store = tx.objectStore('pendingImages');
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    store.put({
+                        id: `${docId}_${type}`,
+                        docId: docId,
+                        type: type,
+                        base64: event.target.result,
+                        fileName: file.name,
+                        timestamp: Date.now()
+                    });
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = (err) => reject(err);
+                };
+                reader.onerror = (err) => reject(err);
+                reader.readAsDataURL(file);
+            };
+            request.onerror = (err) => reject(err);
+        });
     }
 
-    // ------------------- حفظ أو تعديل مرشد (مع رفع الصور) ------------------
-    async function saveGuideToFirestore(guideData, guidePhotoFile, busPhotoFile) {
-        const batch = db.batch();
-        let guidePhotoURL = guideData.guidePhoto || null;
-        let busPhotoURL = guideData.busPhoto || null;
-
-        // رفع الصور الجديدة إن وجدت
-        if (guidePhotoFile) {
-            const ext = guidePhotoFile.name.split('.').pop();
-            const path = `guides/${currentUser.uid}/${Date.now()}_guide.${ext}`;
-            guidePhotoURL = await uploadImage(guidePhotoFile, path);
-        }
-        if (busPhotoFile) {
-            const ext = busPhotoFile.name.split('.').pop();
-            const path = `guides/${currentUser.uid}/${Date.now()}_bus.${ext}`;
-            busPhotoURL = await uploadImage(busPhotoFile, path);
-        }
-
-        const docRef = guideData.id ? db.collection("guides").doc(guideData.id) : db.collection("guides").doc();
-        const finalData = {
-            userId: currentUser.uid,
-            name: guideData.name,
-            phone: guideData.phone,
-            plateNumber: guideData.plateNumber,
-            guidePhoto: guidePhotoURL,
-            busPhoto: busPhotoURL,
-            cardColor: guideData.cardColor,
-            transportType: guideData.transportType,
-            agency: guideData.agency,
-            notes: guideData.notes,
-            favorite: guideData.favorite || false,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    async function schedulePendingImageUploads() {
+        if (!currentUser || !navigator.onLine) return;
+        const request = indexedDB.open('FNoteOfflineImages', 1);
+        request.onsuccess = async (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('pendingImages')) return;
+            const tx = db.transaction('pendingImages', 'readonly');
+            const store = tx.objectStore('pendingImages');
+            const allItems = await new Promise((resolve) => {
+                const items = [];
+                store.openCursor().onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        items.push(cursor.value);
+                        cursor.continue();
+                    } else {
+                        resolve(items);
+                    }
+                };
+            });
+            for (const item of allItems) {
+                try {
+                    const base64Response = await fetch(item.base64);
+                    const blob = await base64Response.blob();
+                    const file = new File([blob], item.fileName, { type: blob.type });
+                    const ext = file.name.split('.').pop();
+                    const path = `guides/${currentUser.uid}/${item.type === 'guide' ? 'profile' : 'bus'}_${item.docId}_${Date.now()}.${ext}`;
+                    const storageRef = storage.ref(path);
+                    const snapshot = await storageRef.put(file);
+                    const url = await snapshot.ref.getDownloadURL();
+                    const docRef = db.collection("guides").doc(item.docId);
+                    const updateField = item.type === 'guide' ? { guidePhoto: url } : { busPhoto: url };
+                    await docRef.update(updateField);
+                    // حذف العنصر من IndexedDB بعد الرفع
+                    const deleteTx = db.transaction('pendingImages', 'readwrite');
+                    deleteTx.objectStore('pendingImages').delete(item.id);
+                    deleteTx.oncomplete = () => console.log(`تم رفع الصورة ${item.id}`);
+                } catch (err) {
+                    console.error("فشل رفع الصورة المعلقة:", err);
+                }
+            }
         };
-        if (!guideData.id) finalData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        
-        batch.set(docRef, finalData, { merge: true });
-        await batch.commit();
-        return true;
+    }
+
+    // مراقبة عودة الاتصال
+    window.addEventListener('online', () => {
+        console.log("الاتصال عاد، محاولة رفع الصور المعلقة");
+        schedulePendingImageUploads();
+    });
+
+    // ------------------- وظيفة الحفظ المحدثة (مع دعم الرفع دون اتصال) ------------------
+    async function saveGuideToFirestore(guideData, guidePhotoFile, busPhotoFile) {
+        try {
+            let guidePhotoURL = guideData.guidePhoto || null;
+            let busPhotoURL = guideData.busPhoto || null;
+
+            // 1. محاولة رفع صورة المرشد
+            if (guidePhotoFile) {
+                try {
+                    const ext = guidePhotoFile.name.split('.').pop();
+                    const path = `guides/${currentUser.uid}/profile_${Date.now()}.${ext}`;
+                    const storageRef = storage.ref(path);
+                    const snapshot = await storageRef.put(guidePhotoFile);
+                    guidePhotoURL = await snapshot.ref.getDownloadURL();
+                } catch (uploadError) {
+                    console.warn("فشل رفع الصورة (غير متصل)، سيتم حفظها محلياً مؤقتاً");
+                    const tempId = guideData.id || `temp_${Date.now()}`;
+                    await storeImageOffline(tempId, 'guide', guidePhotoFile);
+                }
+            }
+
+            // 2. محاولة رفع صورة الوسيلة
+            if (busPhotoFile) {
+                try {
+                    const ext = busPhotoFile.name.split('.').pop();
+                    const path = `guides/${currentUser.uid}/bus_${Date.now()}.${ext}`;
+                    const storageRef = storage.ref(path);
+                    const snapshot = await storageRef.put(busPhotoFile);
+                    busPhotoURL = await snapshot.ref.getDownloadURL();
+                } catch (uploadError) {
+                    console.warn("فشل رفع صورة الوسيلة (غير متصل)، سيتم حفظها محلياً");
+                    const tempId = guideData.id || `temp_${Date.now()}`;
+                    await storeImageOffline(tempId, 'bus', busPhotoFile);
+                }
+            }
+
+            // 3. تجهيز الوثيقة للحفظ في Firestore
+            const docRef = guideData.id ? db.collection("guides").doc(guideData.id) : db.collection("guides").doc();
+            const finalData = {
+                userId: currentUser.uid,
+                name: guideData.name,
+                phone: guideData.phone,
+                plateNumber: guideData.plateNumber || "",
+                guidePhoto: guidePhotoURL,
+                busPhoto: busPhotoURL,
+                cardColor: guideData.cardColor,
+                transportType: guideData.transportType || "",
+                agency: guideData.agency || "",
+                notes: guideData.notes || "",
+                favorite: guideData.favorite || false,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            if (!guideData.id) finalData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+            await docRef.set(finalData, { merge: true });
+            schedulePendingImageUploads(); // محاولة رفع أي صور معلقة
+            return true;
+        } catch (error) {
+            console.error("خطأ في حفظ المرشد:", error);
+            throw error;
+        }
     }
 
     // ------------------- حذف مرشد ------------------
@@ -602,7 +706,7 @@
                         <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
                             <button class="save-btn" style="padding:6px 12px; font-size:12px;" onclick="event.stopPropagation(); editGuideById('${guide.id}')">✏️ بدل</button>
                             <button class="cancel-btn" style="padding:6px 12px; font-size:12px; background:#dc2626;" onclick="event.stopPropagation(); deleteGuideById('${guide.id}')">🗑️ حذف</button>
-                            <button class="share-wa-btn" style="padding:6px 12px; font-size:12px; margin:0;" onclick="event.stopPropagation(); shareGuideById('${guide.id}')">📱 شارك</button>
+                            <button class="share-wa-btn" style="padding:6px 12px; font-size:12px; margin:0;" onclick="event.stopPropagation(); shareGuideById('${guide.id}')"><span class="whatsapp-icon">💬</span> شارك</button>
                         </div>
                     </div>
                 </div>
@@ -610,7 +714,7 @@
         `).join("");
     }
 
-    // ------------------- عمليات CRUD (استدعاء Firebase) ------------------
+    // ------------------- عمليات CRUD ------------------
     window.editGuideById = async (id) => {
         let g = guides.find(g => g.id === id);
         if (g) {
@@ -622,7 +726,6 @@
             document.getElementById("agency").value = g.agency || "";
             document.getElementById("guideNotes").value = g.notes || "";
             selectedColor = g.cardColor || "#e94560";
-            // لا يمكن عرض الصور القديمة لأننا نخزن URL فقط، لكن يمكن عرضها من الرابط
             if (g.guidePhoto) {
                 document.getElementById("guidePhotoPreview").src = g.guidePhoto;
                 document.getElementById("guidePreviewContainer").style.display = "flex";
@@ -631,7 +734,6 @@
                 document.getElementById("busPhotoPreview").src = g.busPhoto;
                 document.getElementById("busPreviewContainer").style.display = "flex";
             } else document.getElementById("busPreviewContainer").style.display = "none";
-            // إعادة تعيين الملفات المؤقتة
             tempGuidePhotoFile = null;
             tempBusPhotoFile = null;
             document.querySelectorAll("#colorSelector .color-option").forEach(o => o.classList.remove("selected"));
@@ -663,7 +765,7 @@
     };
     window.showImage = (url) => { if (url) { document.getElementById("fullImage").src = url; document.getElementById("fullImageModal").classList.add("show"); } };
     
-    // زر الحفظ الرئيسي (يستخدم Firebase)
+    // زر الحفظ الرئيسي
     document.getElementById("saveGuideBtn").onclick = async () => {
         let name = document.getElementById("guideName").value.trim();
         let phone = document.getElementById("guidePhone").value.trim();
@@ -675,7 +777,7 @@
             id: currentEditId || null,
             name, phone,
             plateNumber: document.getElementById("plateNumber").value.trim(),
-            guidePhoto: null,  // سيتم تحديثه بعد رفع الصورة
+            guidePhoto: null,
             busPhoto: null,
             cardColor: selectedColor,
             transportType: document.getElementById("transportType").value.trim(),
@@ -788,7 +890,8 @@
             document.getElementById("loginScreen").classList.add("hide");
             document.getElementById("signOutBtn").style.display = "flex";
             document.getElementById("userInfo").innerHTML = `${user.email} <span class="sync-badge">📡 سحابي</span>`;
-            subscribeToGuides();  // بدء الاستماع المباشر (يعمل بدون إنترنت)
+            subscribeToGuides();
+            schedulePendingImageUploads(); // محاولة رفع أي صور معلقة عند تسجيل الدخول
         } else {
             if(unsubscribe) unsubscribe();
             guides = [];
@@ -799,7 +902,7 @@
     });
     document.getElementById("loginBtn").onclick = () => handleLogin(loginEmail.value.trim(), loginPassword.value.trim());
     document.getElementById("signOutBtn").onclick = handleLogout;
-    document.getElementById("syncNowBtn").onclick = () => { showToast("المزامنة تلقائية (Firebase)"); };
+    document.getElementById("syncNowBtn").onclick = () => { schedulePendingImageUploads(); showToast("تمت محاولة رفع الصور المعلقة"); };
     
     // ------------------- تصدير البيانات ------------------
     document.getElementById("exportDataBtn").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], {type: "application/json"})); a.download = `F-NotePro_${Date.now()}.json`; a.click(); showToast("تم التصدير"); };
@@ -851,7 +954,7 @@
             navigator.serviceWorker.register(URL.createObjectURL(blob));
         });
     }
-    console.log("✅ F-Note Pro 31.0 - Firebase Persistence + Storage, عربي تونس فقط");
+    console.log("✅ F-Note Pro 32.0 - Firebase Persistence + Storage + رفع الصور دون اتصال");
 </script>
 </body>
 </html>
