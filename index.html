@@ -357,7 +357,7 @@
         <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
         <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
         <button class="login-btn" id="loginBtn">دخول</button>
-        <p style="font-size:12px; margin-top:20px; color:var(--text-muted);">🔐 يعمل بدون إنترنت (Firebase Persistence)</p>
+        <p style="font-size:12px; margin-top:20px; color:var(--text-muted);">🔐 يعمل بدون إنترنت (Firebase Persistence) + ضغط ذكي للصور</p>
     </div>
 </div>
 
@@ -379,7 +379,7 @@
     </div>
     <div class="sidebar-section">
         <h3>ℹ️ عن التطبيق</h3>
-        <p style="font-size:12px;">نسخة 33.0 - عربي تونس<br>💾 تخزين سحابي + محلي (يعمل بدون إنترنت)<br>📸 صور في Firebase Storage</p>
+        <p style="font-size:12px;">نسخة 34.0 - عربي تونس<br>💾 تخزين سحابي + محلي (IndexedDB)<br>📸 ضغط تلقائي للصور (800px, 85% JPG)</p>
     </div>
 </div>
 
@@ -492,6 +492,35 @@
     }
     function escapeHtml(s) { if (!s) return ""; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
 
+    // ------------------- دالة ضغط الصور (لحفظ المساحة والسرعة) ------------------
+    async function compressImage(file) {
+        if (!file) return null;
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    // تحديد أبعاد مثالية لشاشة الهاتف (800 بكسل)
+                    const MAX_WIDTH = 800;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // تحويلها إلى JPEG بجودة 85% (توازن مثالي بين الحجم والوضوح)
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/jpeg', 0.85);
+                };
+            };
+        });
+    }
+
     // ------------------- مراقبة التغييرات من Firestore في الوقت الفعلي ------------------
     let unsubscribe = null;
     function subscribeToGuides() {
@@ -511,29 +540,30 @@
             });
     }
 
-    // ------------------- وظيفة الحفظ المحدثة (بسيطة وموثوقة) ------------------
+    // ------------------- وظيفة الحفظ المحسنة (مع ضغط الصور) ------------------
     async function saveGuideToFirestore(guideData, guidePhotoFile, busPhotoFile) {
+        showToast("جاري ضغط الصور وحفظ البيانات...");
         try {
             let guidePhotoURL = guideData.guidePhoto || null;
             let busPhotoURL = guideData.busPhoto || null;
 
-            // 1. رفع صورة المرشد
+            // 1. معالجة ورفع صورة المرشد
             if (guidePhotoFile) {
-                const path = `guides/${currentUser.uid}/profile_${Date.now()}`;
-                const storageRef = storage.ref(path);
-                const snapshot = await storageRef.put(guidePhotoFile);
+                const compressedGuide = await compressImage(guidePhotoFile);
+                const path = `guides/${currentUser.uid}/profile_${Date.now()}.jpg`;
+                const snapshot = await storage.ref(path).put(compressedGuide);
                 guidePhotoURL = await snapshot.ref.getDownloadURL();
             }
 
-            // 2. رفع صورة الحافلة
+            // 2. معالجة ورفع صورة الحافلة
             if (busPhotoFile) {
-                const path = `guides/${currentUser.uid}/bus_${Date.now()}`;
-                const storageRef = storage.ref(path);
-                const snapshot = await storageRef.put(busPhotoFile);
+                const compressedBus = await compressImage(busPhotoFile);
+                const path = `guides/${currentUser.uid}/bus_${Date.now()}.jpg`;
+                const snapshot = await storage.ref(path).put(compressedBus);
                 busPhotoURL = await snapshot.ref.getDownloadURL();
             }
 
-            // 3. الحفظ في Firestore
+            // 3. الحفظ في Firestore ببيانات المستخدم الحالية
             const docRef = guideData.id ? db.collection("guides").doc(guideData.id) : db.collection("guides").doc();
             const finalData = {
                 userId: currentUser.uid,
@@ -550,11 +580,11 @@
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             if (!guideData.id) finalData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            
+
             await docRef.set(finalData, { merge: true });
             return true;
         } catch (error) {
-            console.error("Error in save:", error);
+            console.error("Save Error:", error);
             throw error;
         }
     }
@@ -688,9 +718,8 @@
         };
         
         try {
-            showToast("📤 جاري الحفظ...");
             await saveGuideToFirestore(guideData, tempGuidePhotoFile, tempBusPhotoFile);
-            showToast("✅ تم الحفظ");
+            showToast("✅ تم الحفظ (الصور مضغوطة)");
             document.getElementById("guideModal").classList.remove("show");
             resetForm();
         } catch(e) {
@@ -719,11 +748,11 @@
         document.getElementById("phoneError").style.display = "none";
     }
     
-    // ------------------- رفع الصور (تخزين الملف مؤقتاً) ------------------
+    // ------------------- رفع الصور (تخزين الملف مؤقتاً وعرض معاينة) ------------------
     function handleImageSelection(file, type) {
         if (!file) return;
         const statusDiv = document.getElementById(type === 'guide' ? 'guideUploadStatus' : 'busUploadStatus');
-        statusDiv.innerText = "📤 جاري الرفع...";
+        statusDiv.innerText = "📤 جاري التجهيز...";
         statusDiv.classList.add('show');
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -736,7 +765,7 @@
                 document.getElementById("busPhotoPreview").src = e.target.result;
                 document.getElementById("busPreviewContainer").style.display = "flex";
             }
-            statusDiv.innerText = "✅ تم الرفع محلياً (سيُرفع عند الحفظ)";
+            statusDiv.innerText = "✅ تم الاختيار (سيتم ضغطه عند الحفظ)";
             setTimeout(() => statusDiv.classList.remove('show'), 2000);
         };
         reader.readAsDataURL(file);
@@ -790,7 +819,7 @@
             currentUser = user;
             document.getElementById("loginScreen").classList.add("hide");
             document.getElementById("signOutBtn").style.display = "flex";
-            document.getElementById("userInfo").innerHTML = `${user.email} <span class="sync-badge">📡 سحابي</span>`;
+            document.getElementById("userInfo").innerHTML = `${user.email} <span class="sync-badge">📡 سحابي + ضغط صور</span>`;
             subscribeToGuides();
         } else {
             if(unsubscribe) unsubscribe();
@@ -802,7 +831,7 @@
     });
     document.getElementById("loginBtn").onclick = () => handleLogin(loginEmail.value.trim(), loginPassword.value.trim());
     document.getElementById("signOutBtn").onclick = handleLogout;
-    document.getElementById("syncNowBtn").onclick = () => { showToast("المزامنة تلقائية (Firebase)"); };
+    document.getElementById("syncNowBtn").onclick = () => { showToast("المزامنة التلقائية مفعلة (Firebase)"); };
     
     // ------------------- تصدير البيانات ------------------
     document.getElementById("exportDataBtn").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], {type: "application/json"})); a.download = `F-NotePro_${Date.now()}.json`; a.click(); showToast("تم التصدير"); };
@@ -854,7 +883,7 @@
             navigator.serviceWorker.register(URL.createObjectURL(blob));
         });
     }
-    console.log("✅ F-Note Pro 33.0 - دالة الحفظ مبسطة وموثوقة مع أيقونة واتساب");
+    console.log("✅ F-Note Pro 34.0 - ضغط تلقائي للصور (800px/85%)، أيقونة واتساب، عربي تونس فقط");
 </script>
 </body>
 </html>
