@@ -10,6 +10,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Font Awesome 6 (أيقونات احترافية) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -39,9 +41,11 @@
             --accent-light: #fce4e8;
             --gray-bg: #f0f2f5;
             --walkie-bg: #25D366;
+            --walkie-active: #128C7E;
             --message-bg: #e4e6eb;
             --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
             --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
         }
         body.dark {
             --bg-body: #18191a;
@@ -72,7 +76,7 @@
             width: 90%;
             max-width: 380px;
             text-align: center;
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-lg);
         }
         .login-card img { width: 100px; margin-bottom: 20px; }
         .login-card h2 { color: var(--accent); margin-bottom: 8px; font-size: 24px; }
@@ -96,7 +100,9 @@
             font-weight: bold;
             margin-top: 16px;
             cursor: pointer;
+            transition: 0.1s;
         }
+        .login-btn:active { transform: scale(0.97); }
         .admin-note {
             background: var(--gray-bg);
             padding: 12px;
@@ -105,7 +111,7 @@
             font-size: 12px;
             color: var(--accent);
         }
-        /* التطبيق الرئيسي - ملء الشاشة */
+        /* التطبيق الرئيسي */
         .app-main {
             height: 100vh;
             width: 100%;
@@ -113,7 +119,6 @@
             flex-direction: column;
             overflow: hidden;
         }
-        /* الهيدر مع شعار كبير */
         .app-header {
             background: var(--card-bg);
             padding: 16px 16px;
@@ -143,7 +148,23 @@
             color: var(--accent);
             padding: 8px;
             border-radius: 50%;
+            transition: 0.1s;
         }
+        .menu-btn:active { background: var(--gray-bg); transform: scale(0.94); }
+        /* شريط التاريخ */
+        .history-bar {
+            background: var(--card-bg);
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            flex-shrink: 0;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .history-item { display: flex; align-items: center; gap: 4px; }
         /* شريط البحث */
         .toolbar {
             display: flex;
@@ -170,7 +191,9 @@
             color: white;
             font-size: 20px;
             cursor: pointer;
+            transition: 0.1s;
         }
+        .icon-btn:active { transform: scale(0.94); }
         /* فلتر الألوان */
         .filter-bar {
             padding: 8px 16px;
@@ -186,7 +209,9 @@
             border-radius: 60px;
             font-weight: 500;
             cursor: pointer;
+            transition: 0.1s;
         }
+        .filter-trigger:active { transform: scale(0.98); }
         .colors-row {
             display: none;
             flex-wrap: wrap;
@@ -203,6 +228,7 @@
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid transparent;
+            transition: 0.1s;
         }
         .color-chip.active { border-color: var(--accent); transform: scale(1.05); }
         /* حاوية الصفحات */
@@ -300,7 +326,9 @@
             font-weight: bold;
             cursor: pointer;
             font-size: 12px;
+            transition: 0.1s;
         }
+        .btn-sm:active { transform: scale(0.96); }
         .btn-edit { background: #2c7da0; color: white; }
         .btn-delete { background: #dc2626; color: white; }
         .btn-share { background: #25D366; color: white; }
@@ -330,7 +358,7 @@
             opacity: 0.7;
         }
         audio { width: 100%; border-radius: 30px; height: 38px; }
-        /* الشريط السفلي الثابت */
+        /* الشريط السفلي */
         .bottom-nav {
             background: var(--card-bg);
             border-top: 1px solid var(--border);
@@ -348,12 +376,13 @@
             color: var(--text-secondary);
             font-weight: 500;
             cursor: pointer;
+            transition: 0.1s;
         }
         .nav-item.active {
             color: var(--accent);
             background: var(--gray-bg);
         }
-        .nav-item i { font-size: 24px; display: block; }
+        .nav-item i { font-size: 24px; display: block; margin-bottom: 4px; }
         .nav-item span { font-size: 11px; }
         /* زر اللاسلكي العائم */
         .walkie-fab {
@@ -372,10 +401,12 @@
             justify-content: center;
             font-size: 38px;
             color: white;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            box-shadow: var(--shadow-lg);
             cursor: pointer;
             border: none;
+            transition: 0.05s linear;
         }
+        .walkie-btn:active { transform: scale(0.94); background: var(--walkie-active); }
         .walkie-btn.recording {
             background: #ef4444;
             animation: pulse 0.6s infinite;
@@ -385,18 +416,7 @@
             50% { transform: scale(1.08); }
             100% { transform: scale(1); }
         }
-        /* قسم التاريخ */
-        .history-bar {
-            background: var(--card-bg);
-            padding: 8px 16px;
-            border-bottom: 1px solid var(--border);
-            font-size: 11px;
-            color: var(--text-secondary);
-            display: flex;
-            justify-content: space-between;
-            flex-shrink: 0;
-        }
-        /* النوافذ المنبثقة المحسنة */
+        /* النوافذ المنبثقة */
         .modal {
             position: fixed;
             inset: 0;
@@ -419,7 +439,7 @@
             overflow-y: auto;
             border-radius: 48px;
             padding: 28px;
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-lg);
         }
         .modal-card h3 {
             color: var(--accent);
@@ -443,7 +463,9 @@
             border: 2px dashed var(--accent);
             cursor: pointer;
             margin: 12px 0;
+            transition: 0.1s;
         }
+        .upload-area:active { transform: scale(0.98); }
         .preview-img { width: 80px; height: 80px; border-radius: 20px; margin-top: 10px; object-fit: cover; }
         .color-palette {
             display: flex;
@@ -471,7 +493,9 @@
             border: none;
             font-weight: bold;
             cursor: pointer;
+            transition: 0.1s;
         }
+        .btn-save:active, .btn-cancel:active { transform: scale(0.97); }
         .btn-save { background: #10b981; color: white; }
         .btn-cancel { background: #64748b; color: white; }
         .toast {
@@ -486,6 +510,7 @@
             border-radius: 60px;
             z-index: 3000;
             font-weight: 500;
+            box-shadow: var(--shadow-md);
         }
         .sidebar {
             position: fixed;
@@ -514,8 +539,11 @@
             gap: 14px;
             cursor: pointer;
             border-bottom: 1px solid var(--border);
+            transition: 0.1s;
         }
+        .sidebar-item:active { background: var(--gray-bg); }
         .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
+        i { font-size: inherit; }
     </style>
 </head>
 <body>
@@ -528,9 +556,9 @@
         <p>خزنة المرشدين والمحادثات الصوتية</p>
         <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" autocomplete="off">
         <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
-        <button class="login-btn" id="doLoginBtn">تسجيل الدخول</button>
+        <button class="login-btn" id="doLoginBtn">تسجيل الدخول <i class="fas fa-arrow-left"></i></button>
         <div class="admin-note">
-            🔐 يتم إنشاء الحسابات بواسطة <strong>المدير FAHMI</strong> فقط<br>
+            <i class="fas fa-lock"></i> يتم إنشاء الحسابات بواسطة <strong>المدير FAHMI</strong> فقط<br>
             تواصل معه للحصول على بيانات الدخول
         </div>
         <div id="loginError" style="color:#dc2626; font-size:12px; margin-top:10px;"></div>
@@ -544,76 +572,76 @@
             <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
             <span>F-NOTEPRO-WORK</span>
         </div>
-        <button class="menu-btn" id="menuBtn">☰</button>
+        <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
     </div>
 
     <!-- شريط التاريخ -->
     <div class="history-bar" id="historyBar">
-        <span id="lastSearch">🔍 آخر بحث: --</span>
-        <span id="lastVoice">🎙️ آخر رسالة: --</span>
-        <span id="lastSync">🔄 آخر تحديث: --</span>
+        <div class="history-item"><i class="fas fa-search"></i> <span id="lastSearch">آخر بحث: --</span></div>
+        <div class="history-item"><i class="fas fa-microphone-alt"></i> <span id="lastVoice">آخر رسالة: --</span></div>
+        <div class="history-item"><i class="fas fa-sync-alt"></i> <span id="lastSync">آخر تحديث: --</span></div>
     </div>
 
     <div class="toolbar">
         <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث في جهات الاتصال...">
-        <button class="icon-btn" id="voiceSearchBtn">🎤</button>
-        <button class="icon-btn" id="openModalBtn">+</button>
+        <button class="icon-btn" id="voiceSearchBtn"><i class="fas fa-microphone"></i></button>
+        <button class="icon-btn" id="openModalBtn"><i class="fas fa-plus"></i></button>
     </div>
 
     <div class="filter-bar">
-        <button class="filter-trigger" id="filterTrigger">🎨 فلتر الألوان ▼</button>
+        <button class="filter-trigger" id="filterTrigger"><i class="fas fa-palette"></i> فلتر الألوان ▼</button>
         <div class="colors-row" id="colorsRow"></div>
     </div>
 
     <div class="pages-container">
         <div id="contactsPage" class="page active">
-            <div class="contacts-list" id="contactsListContainer"><div class="empty-state">⏳ جاري التحميل...</div></div>
+            <div class="contacts-list" id="contactsListContainer"><div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div></div>
         </div>
         <div id="voicePage" class="page">
-            <div class="voice-list" id="voiceMessagesList"><div class="empty-state">لا توجد رسائل صوتية</div></div>
+            <div class="voice-list" id="voiceMessagesList"><div class="empty-state"><i class="fas fa-comment-dots"></i> لا توجد رسائل صوتية</div></div>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <button class="nav-item active" data-page="contacts"><i>👥</i><span>المرشدين</span></button>
-        <button class="nav-item" data-page="voice"><i>🎙️</i><span>المحادثات</span></button>
-        <button class="nav-item" id="manualSyncBtn"><i>🔄</i><span>مزامنة</span></button>
+        <button class="nav-item active" data-page="contacts"><i class="fas fa-users"></i><span>المرشدين</span></button>
+        <button class="nav-item" data-page="voice"><i class="fas fa-headset"></i><span>المحادثات</span></button>
+        <button class="nav-item" id="manualSyncBtn"><i class="fas fa-sync-alt"></i><span>مزامنة</span></button>
     </div>
 
     <div class="walkie-fab">
-        <button id="walkieBtn" class="walkie-btn">🎙️</button>
+        <button id="walkieBtn" class="walkie-btn"><i class="fas fa-microphone-alt"></i></button>
     </div>
 </div>
 
 <!-- المودالات -->
-<div id="guideModal" class="modal"><div class="modal-card"><h3 id="modalTitle">➕ إضافة مرشد</h3>
+<div id="guideModal" class="modal"><div class="modal-card"><h3 id="modalTitle"><i class="fas fa-user-plus"></i> إضافة مرشد</h3>
 <input type="text" id="guideName" placeholder="الاسم الكامل *">
 <input type="tel" id="guidePhone" placeholder="رقم الهاتف *">
 <input type="text" id="plateNumber" placeholder="رقم اللوحة">
 <div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ أرقام فقط</div>
-<div class="upload-area" id="uploadGuideTrigger">📸 صورة المرشد</div>
+<div class="upload-area" id="uploadGuideTrigger"><i class="fas fa-camera"></i> 📸 صورة المرشد</div>
 <div id="guidePreviewArea" style="display:none;"><img id="guidePreviewImg" class="preview-img"></div>
-<div class="upload-area" id="uploadBusTrigger">🚌 صورة وسيلة النقل</div>
+<div class="upload-area" id="uploadBusTrigger"><i class="fas fa-truck"></i> 🚌 صورة وسيلة النقل</div>
 <div id="busPreviewArea" style="display:none;"><img id="busPreviewImg" class="preview-img"></div>
 <input type="text" id="transportType" placeholder="وسيلة النقل">
 <input type="text" id="agency" placeholder="الوكالة">
 <textarea id="guideNotes" rows="2" placeholder="ملاحظات"></textarea>
 <div class="color-palette" id="colorSelector"></div>
-<select id="guideVisibility"><option value="private">🔒 خاص (لي فقط)</option><option value="public">🌍 عام للجميع</option></select>
-<div class="modal-buttons"><button class="btn-save" id="saveGuideBtn">💾 حفظ</button><button class="btn-cancel" id="closeModalBtn">❌ إلغاء</button></div></div></div>
+<select id="guideVisibility"><option value="private"><i class="fas fa-lock"></i> خاص (لي فقط)</option><option value="public"><i class="fas fa-globe"></i> عام للجميع</option></select>
+<div class="modal-buttons"><button class="btn-save" id="saveGuideBtn"><i class="fas fa-save"></i> حفظ</button><button class="btn-cancel" id="closeModalBtn"><i class="fas fa-times"></i> إلغاء</button></div></div></div>
 
-<div id="detailModal" class="modal"><div class="modal-card"><h3 id="detailName"></h3><div id="detailContent"></div><div id="visibilityChangeDiv"></div><button id="shareDetailBtn" class="btn-sm btn-share" style="width:100%; margin-top:16px;">💬 مشاركة واتساب</button><button class="btn-cancel" id="closeDetailBtn">إغلاق</button></div></div>
-<div id="fullImageModal" class="modal"><div class="modal-card" style="text-align:center;"><img id="fullImageView" style="max-width:100%; border-radius:28px;"><button class="btn-cancel" id="closeFullImageBtn">إغلاق</button></div></div>
+<div id="detailModal" class="modal"><div class="modal-card"><h3 id="detailName"></h3><div id="detailContent"></div><div id="visibilityChangeDiv"></div><button id="shareDetailBtn" class="btn-sm btn-share" style="width:100%; margin-top:16px;"><i class="fab fa-whatsapp"></i> مشاركة واتساب</button><button class="btn-cancel" id="closeDetailBtn"><i class="fas fa-times"></i> إغلاق</button></div></div>
+<div id="fullImageModal" class="modal"><div class="modal-card" style="text-align:center;"><img id="fullImageView" style="max-width:100%; border-radius:28px;"><button class="btn-cancel" id="closeFullImageBtn"><i class="fas fa-times"></i> إغلاق</button></div></div>
 
 <div class="sidebar" id="sidebar">
-    <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h2 style="color:var(--accent);">⚙️ القائمة</h2><button id="closeSidebarBtn" style="background:none; border:none; font-size:24px;">✕</button></div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h2 style="color:var(--accent);"><i class="fas fa-cog"></i> القائمة</h2><button id="closeSidebarBtn" style="background:none; border:none; font-size:24px;"><i class="fas fa-times"></i></button></div>
     <div id="userInfoSide" style="margin-bottom:15px; font-size:13px;"></div>
-    <div class="sidebar-item" id="darkModeBtn">🌙 الوضع الداكن</div>
-    <div class="sidebar-item" id="muteNotificationsBtn">🔇 كتم الإشعارات الصوتية</div>
-    <div class="sidebar-item" id="exportJson">💾 تصدير JSON</div>
-    <div class="sidebar-item" id="exportPdf">📄 تصدير PDF</div>
-    <div class="sidebar-item" id="clearAllVoice">🗑️ مسح كل الرسائل الصوتية</div>
-    <div class="sidebar-item" id="logoutSidebarBtn">🚪 تسجيل الخروج</div>
+    <div class="sidebar-item" id="darkModeBtn"><i class="fas fa-moon"></i> الوضع الداكن</div>
+    <div class="sidebar-item" id="muteNotificationsBtn"><i class="fas fa-volume-mute"></i> كتم الإشعارات الصوتية</div>
+    <div class="sidebar-item" id="exportJson"><i class="fas fa-download"></i> تصدير JSON</div>
+    <div class="sidebar-item" id="exportPdf"><i class="fas fa-file-pdf"></i> تصدير PDF</div>
+    <div class="sidebar-item" id="clearAllVoice"><i class="fas fa-trash-alt"></i> مسح كل الرسائل الصوتية</div>
+    <div class="sidebar-item" id="logoutSidebarBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
 </div>
 <div class="overlay" id="overlay"></div>
 
@@ -634,7 +662,6 @@
     const storage = firebase.storage();
     db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn);
 
-    // Variables
     let currentUser = null;
     let guides = [];
     let currentEditId = null;
@@ -649,13 +676,30 @@
     let lastVoiceSender = "--";
     let lastSearchTerm = "--";
 
-    // Helpers
-    function toast(msg, isErr=false) { let t=document.createElement('div'); t.className='toast'; t.innerText=msg; t.style.background=isErr?'#dc2626':'#1e293b'; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+    function toast(msg, isErr=false) { 
+        let t=document.createElement('div'); t.className='toast'; t.innerHTML=msg; 
+        t.style.background=isErr?'#dc2626':'#1e293b'; 
+        document.body.appendChild(t); 
+        setTimeout(()=>t.remove(),2500); 
+    }
     function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
     function validatePhone(p) { return /^[\+]?[0-9]{8,15}$/.test(p.replace(/\s/g,'')); }
-    function playBeep(freq=880) { try { let ctx=new (AudioContext||webkitAudioContext)(); let osc=ctx.createOscillator(); let gain=ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value=freq; gain.gain.value=0.3; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5); osc.stop(ctx.currentTime+0.5); } catch(e){} }
+    function playBeep(freq=880) { 
+        try { 
+            let ctx=new (AudioContext||webkitAudioContext)(); 
+            let osc=ctx.createOscillator(); 
+            let gain=ctx.createGain(); 
+            osc.connect(gain); 
+            gain.connect(ctx.destination); 
+            osc.frequency.value=freq; 
+            gain.gain.value=0.3; 
+            osc.start(); 
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5); 
+            osc.stop(ctx.currentTime+0.5); 
+        } catch(e){} 
+    }
 
-    // Image compression
+    // ضغط الصور
     function compressImage(file, type) {
         if(!file) return;
         const reader = new FileReader();
@@ -681,7 +725,6 @@
     document.getElementById('uploadGuideTrigger').onclick = ()=>triggerUpload('guide');
     document.getElementById('uploadBusTrigger').onclick = ()=>triggerUpload('bus');
 
-    // Save guide
     async function saveGuide() {
         if(!currentUser) { toast("الرجاء تسجيل الدخول أولاً", true); return; }
         let name = document.getElementById('guideName').value.trim();
@@ -721,19 +764,19 @@
         selectedColor='#e94560';
         document.querySelectorAll('.color-dot').forEach(c=>c.classList.remove('selected'));
         document.querySelector('.color-dot[data-color="#e94560"]')?.classList.add('selected');
-        document.getElementById('modalTitle').innerHTML = '➕ إضافة مرشد';
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-plus"></i> إضافة مرشد';
     }
 
     function updateHistory(type, value) {
         const now = new Date().toLocaleTimeString();
         if(type === 'search') {
             lastSearchTerm = value;
-            document.getElementById('lastSearch').innerHTML = `🔍 آخر بحث: "${value.substring(0,20)}"`;
+            document.getElementById('lastSearch').innerHTML = `آخر بحث: "${value.substring(0,20)}"`;
         } else if(type === 'voice') {
             lastVoiceSender = value;
-            document.getElementById('lastVoice').innerHTML = `🎙️ آخر رسالة: ${value}`;
+            document.getElementById('lastVoice').innerHTML = `آخر رسالة: ${value}`;
         } else if(type === 'sync') {
-            document.getElementById('lastSync').innerHTML = `🔄 ${now}`;
+            document.getElementById('lastSync').innerHTML = `${now}`;
         }
     }
 
@@ -743,41 +786,40 @@
         let filtered = guides.filter(g => (g.name?.toLowerCase().includes(search) || g.phone?.includes(search)));
         if(currentColorFilter !== 'all') filtered = filtered.filter(g => g.cardColor === currentColorFilter);
         const container = document.getElementById('contactsListContainer');
-        if(!filtered.length) { container.innerHTML='<div class="empty-state">📭 لا توجد جهات اتصال</div>'; return; }
+        if(!filtered.length) { container.innerHTML='<div class="empty-state"><i class="fas fa-user-slash"></i> لا توجد جهات اتصال</div>'; return; }
         container.innerHTML = filtered.map(g => `
             <div class="contact-card" style="border-right-color:${g.cardColor||'#e94560'}">
                 <div class="contact-row">
                     <img class="contact-avatar" src="${g.guidePhoto||''}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22gray%22%3E%3C%2Fsvg%3E'" onclick="window.showFullImage('${g.guidePhoto}')">
                     <div class="contact-details">
-                        <div class="contact-name">${escapeHtml(g.name)} ${g.visibility==='public'?'<span class="badge-public">عام</span>':'<span class="badge-private">خاص</span>'}</div>
-                        <div class="contact-phone">📞 ${escapeHtml(g.phone)} <button onclick="event.stopPropagation(); window.location.href='tel:${g.phone}'">اتصل</button></div>
+                        <div class="contact-name">${escapeHtml(g.name)} ${g.visibility==='public'?'<span class="badge-public"><i class="fas fa-globe"></i> عام</span>':'<span class="badge-private"><i class="fas fa-lock"></i> خاص</span>'}</div>
+                        <div class="contact-phone"><i class="fas fa-phone-alt"></i> ${escapeHtml(g.phone)} <button onclick="event.stopPropagation(); window.location.href='tel:${g.phone}'"><i class="fas fa-phone"></i></button></div>
                     </div>
-                    <button class="expand-icon" data-id="${g.id}">▼</button>
+                    <button class="expand-icon" data-id="${g.id}"><i class="fas fa-chevron-down"></i></button>
                 </div>
                 <div id="exp-${g.id}" class="contact-expand"><div class="expand-inner">
                     ${g.busPhoto?`<img src="${g.busPhoto}" style="width:50px; border-radius:14px; cursor:pointer;" onclick="window.showFullImage('${g.busPhoto}')">`:''}
-                    <p><strong>🚐 وسيلة:</strong> ${escapeHtml(g.transportType||'-')}</p>
-                    <p><strong>🚍 لوحة:</strong> <span style="background:${g.cardColor}; padding:2px 12px; border-radius:40px;">${escapeHtml(g.plateNumber||'-')}</span></p>
-                    <p><strong>🏢 وكالة:</strong> ${escapeHtml(g.agency||'-')}</p>
-                    <p><strong>📝 ملاحظات:</strong> ${escapeHtml((g.notes||'').substring(0,60))}</p>
+                    <p><i class="fas fa-truck"></i> <strong>وسيلة النقل:</strong> ${escapeHtml(g.transportType||'-')}</p>
+                    <p><i class="fas fa-car"></i> <strong>رقم اللوحة:</strong> <span style="background:${g.cardColor}; padding:2px 12px; border-radius:40px;">${escapeHtml(g.plateNumber||'-')}</span></p>
+                    <p><i class="fas fa-building"></i> <strong>الوكالة:</strong> ${escapeHtml(g.agency||'-')}</p>
+                    <p><i class="fas fa-sticky-note"></i> <strong>ملاحظات:</strong> ${escapeHtml((g.notes||'').substring(0,60))}</p>
                     <div class="action-buttons">
-                        <button class="btn-sm btn-edit" data-edit="${g.id}">✏️ تعديل</button>
-                        <button class="btn-sm btn-delete" data-del="${g.id}">🗑️ حذف</button>
-                        <button class="btn-sm btn-share" data-share="${g.id}">💬 مشاركة</button>
+                        <button class="btn-sm btn-edit" data-edit="${g.id}"><i class="fas fa-edit"></i> تعديل</button>
+                        <button class="btn-sm btn-delete" data-del="${g.id}"><i class="fas fa-trash"></i> حذف</button>
+                        <button class="btn-sm btn-share" data-share="${g.id}"><i class="fab fa-whatsapp"></i> مشاركة</button>
                     </div>
                 </div></div>
             </div>
         `).join('');
-        document.querySelectorAll('.expand-icon').forEach(btn=>{ btn.onclick=()=>{ let div=document.getElementById(`exp-${btn.dataset.id}`); div.classList.toggle('show'); btn.innerHTML=div.classList.contains('show')?'▲':'▼'; }; });
+        document.querySelectorAll('.expand-icon').forEach(btn=>{ btn.onclick=()=>{ let div=document.getElementById(`exp-${btn.dataset.id}`); div.classList.toggle('show'); btn.innerHTML=div.classList.contains('show')?'<i class="fas fa-chevron-up"></i>':'<i class="fas fa-chevron-down"></i>'; }; });
         document.querySelectorAll('[data-edit]').forEach(btn=>{ btn.onclick=()=>editGuideById(btn.dataset.edit); });
         document.querySelectorAll('[data-del]').forEach(btn=>{ btn.onclick=()=>deleteGuideById(btn.dataset.del); });
         document.querySelectorAll('[data-share]').forEach(btn=>{ btn.onclick=()=>openWhatsAppChat(btn.dataset.share); });
     }
     window.showFullImage = (url)=>{ if(url){ document.getElementById('fullImageView').src=url; document.getElementById('fullImageModal').classList.add('show'); } };
-    async function editGuideById(id){ let g=guides.find(g=>g.id===id); if(g && g.userId===currentUser?.uid){ currentEditId=id; document.getElementById('guideName').value=g.name; document.getElementById('guidePhone').value=g.phone; document.getElementById('plateNumber').value=g.plateNumber||''; document.getElementById('transportType').value=g.transportType||''; document.getElementById('agency').value=g.agency||''; document.getElementById('guideNotes').value=g.notes||''; selectedColor=g.cardColor||'#e94560'; document.getElementById('guideVisibility').value=g.visibility||'private'; if(g.guidePhoto){ currentGuidePhoto=g.guidePhoto; document.getElementById('guidePreviewImg').src=g.guidePhoto; document.getElementById('guidePreviewArea').style.display='flex'; } if(g.busPhoto){ currentBusPhoto=g.busPhoto; document.getElementById('busPreviewImg').src=g.busPhoto; document.getElementById('busPreviewArea').style.display='flex'; } document.getElementById('modalTitle').innerHTML='✏️ تعديل مرشد'; document.getElementById('guideModal').classList.add('show'); } else toast('لا يمكنك التعديل',true); }
+    async function editGuideById(id){ let g=guides.find(g=>g.id===id); if(g && g.userId===currentUser?.uid){ currentEditId=id; document.getElementById('guideName').value=g.name; document.getElementById('guidePhone').value=g.phone; document.getElementById('plateNumber').value=g.plateNumber||''; document.getElementById('transportType').value=g.transportType||''; document.getElementById('agency').value=g.agency||''; document.getElementById('guideNotes').value=g.notes||''; selectedColor=g.cardColor||'#e94560'; document.getElementById('guideVisibility').value=g.visibility||'private'; if(g.guidePhoto){ currentGuidePhoto=g.guidePhoto; document.getElementById('guidePreviewImg').src=g.guidePhoto; document.getElementById('guidePreviewArea').style.display='flex'; } if(g.busPhoto){ currentBusPhoto=g.busPhoto; document.getElementById('busPreviewImg').src=g.busPhoto; document.getElementById('busPreviewArea').style.display='flex'; } document.getElementById('modalTitle').innerHTML='<i class="fas fa-user-edit"></i> تعديل مرشد'; document.getElementById('guideModal').classList.add('show'); } else toast('لا يمكنك التعديل',true); }
     async function deleteGuideById(id){ if(confirm('حذف المرشد نهائياً؟')) await db.collection('guides').doc(id).delete(); toast('تم الحذف'); }
 
-    // WhatsApp direct chat (بدون نافذة وسيطة)
     function openWhatsAppChat(guideId) {
         let guide = guides.find(g=>g.id===guideId);
         if(!guide) return;
@@ -805,15 +847,17 @@
         unsubscribeGuides = ()=>{};
     }
 
-    // Walkie-Talkie
+    // ------------------- اللاسلكي (Push-to-Talk مع تحسينات) -------------------
     async function startRecording() {
         if(isRecording) return;
+        if(!currentUser) { toast("الرجاء تسجيل الدخول أولاً", true); return; }
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
             mediaRecorder.onstop = async () => {
+                if(audioChunks.length === 0) return;
                 const blob = new Blob(audioChunks, { type: 'audio/webm' });
                 const fileName = `radio/${currentUser.uid}_${Date.now()}.webm`;
                 const snapshot = await storage.ref(fileName).put(blob);
@@ -823,38 +867,56 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 updateHistory('voice', currentUser.email || currentUser.uid);
-                toast("✅ تم إرسال الرسالة الصوتية");
+                toast("<i class='fas fa-check-circle'></i> تم إرسال الرسالة الصوتية");
+                playBeep(440);
                 stream.getTracks().forEach(t=>t.stop());
             };
             mediaRecorder.start();
             isRecording = true;
-            document.getElementById('walkieBtn').classList.add('recording');
+            const btn = document.getElementById('walkieBtn');
+            btn.classList.add('recording');
             playBeep(880);
+            toast("🎙️ جاري التسجيل... ارفع الإصبع للإرسال");
         } catch(e) { toast("الوصول للميكروفون مرفوض", true); }
     }
-    function stopRecording() { if(mediaRecorder && isRecording && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); isRecording=false; document.getElementById('walkieBtn').classList.remove('recording'); } }
-    document.getElementById('walkieBtn').addEventListener('pointerdown', startRecording);
-    document.getElementById('walkieBtn').addEventListener('pointerup', stopRecording);
-    document.getElementById('walkieBtn').addEventListener('pointerleave', stopRecording);
+    function stopRecording() { 
+        if(mediaRecorder && isRecording && mediaRecorder.state !== 'inactive') { 
+            mediaRecorder.stop(); 
+            isRecording=false; 
+            document.getElementById('walkieBtn').classList.remove('recording');
+        } 
+    }
+    const walkie = document.getElementById('walkieBtn');
+    walkie.addEventListener('pointerdown', startRecording);
+    walkie.addEventListener('pointerup', stopRecording);
+    walkie.addEventListener('pointerleave', stopRecording);
 
     async function loadVoiceMessages() {
         if(!currentUser) return;
         const snapshot = await db.collection('radio_messages').orderBy('timestamp', 'desc').get();
         const container = document.getElementById('voiceMessagesList');
-        if(snapshot.empty) { container.innerHTML = '<div class="empty-state">لا توجد رسائل صوتية</div>'; return; }
+        if(snapshot.empty) { container.innerHTML = '<div class="empty-state"><i class="fas fa-comment-slash"></i> لا توجد رسائل صوتية</div>'; return; }
         let html = '';
         snapshot.forEach(doc => {
             const data = doc.data();
             const date = data.timestamp ? data.timestamp.toDate().toLocaleString('ar') : 'غير محدد';
             const isOwn = (data.sender === (currentUser.email || currentUser.uid));
-            html += `<div class="voice-message ${isOwn ? 'own' : ''}"><div class="voice-meta"><span>🎙️ ${escapeHtml(data.sender)}</span><span>${date}</span></div><audio controls src="${data.url}"></audio></div>`;
+            html += `<div class="voice-message ${isOwn ? 'own' : ''}">
+                        <div class="voice-meta">
+                            <span><i class="fas fa-user-circle"></i> ${escapeHtml(data.sender)}</span>
+                            <span><i class="far fa-clock"></i> ${date}</span>
+                        </div>
+                        <audio controls src="${data.url}"></audio>
+                    </div>`;
         });
         container.innerHTML = html;
+        // التمرير إلى آخر رسالة
+        setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
     }
     function listenVoiceMessages() {
         if(voiceUnsub) voiceUnsub();
         if(!currentUser) return;
-        voiceUnsub = db.collection('radio_messages').orderBy('timestamp', 'desc').limit(30).onSnapshot(()=> loadVoiceMessages());
+        voiceUnsub = db.collection('radio_messages').orderBy('timestamp', 'desc').limit(50).onSnapshot(()=> loadVoiceMessages());
     }
 
     // Auth
@@ -876,7 +938,7 @@
             currentUser = user;
             document.getElementById('loginScreen').classList.add('hide');
             document.getElementById('mainApp').style.display = 'flex';
-            document.getElementById('userInfoSide').innerHTML = `✅ ${user.email}<br><span style="font-size:11px;">🟢 متصل</span>`;
+            document.getElementById('userInfoSide').innerHTML = `<i class="fas fa-user-check"></i> ${user.email}<br><span style="font-size:11px;"><i class="fas fa-circle" style="color:#10b981; font-size:8px;"></i> متصل</span>`;
             subscribeToGuides();
             listenVoiceMessages();
             loadVoiceMessages();
@@ -890,7 +952,7 @@
         }
     });
 
-    // UI switching
+    // تبديل الصفحات
     function switchPage(page) {
         document.getElementById('contactsPage').classList.toggle('active', page === 'contacts');
         document.getElementById('voicePage').classList.toggle('active', page === 'voice');
