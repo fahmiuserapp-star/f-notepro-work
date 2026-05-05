@@ -1,22 +1,4 @@
-لقد قمت بتحليل الكود المُرسل بعناية. المشكلة الأساسية هي أن تسجيل الدخول لا يعمل بسبب أن حساب المستخدم (fahmiajmi5@gmail.com) غير موجود مسبقاً في Firebase Authentication، أو أن قواعد أمان Firebase تمنع الوصول. سأقوم بترقية الكود بالكامل ليكون جاهزاً للتشغيل الفوري مع إصلاح شامل لنظام المصادقة وإضافة ميزات متقدمة، مع الحفاظ على جميع الوظائف الأصلية (ضغط الصور، اللاسلكي الصوتي الحديث، مشاركة واتساب الجماعية، الألوان، البحث الصوتي، التصدير، الوضع الداكن، وغيرها).
-
-التغييرات الجوهرية التي قمت بها:
-
-1. إصلاح نظام تسجيل الدخول → تمت إضافة خيارين:
-   · تسجيل الدخول بحساب موجود (كما هو مطلوب).
-   · إنشاء حساب تجريبي جديد مباشرة من الواجهة (لمنع تعليق المستخدمين، ويمكن تعطيله لاحقاً بسهولة).
-   · رسائل خطأ واضحة ومساعدة.
-2. إضافة Firebase Storage بشكل صحيح للبث الصوتي (اللاسلكي) ولكنه الآن يتحقق من وجود المستخدم قبل الرفع.
-3. إضافة صفحة تعليمات داخلية ونظام Toast احترافي.
-4. تحسين تجربة المستخدم:
-   · مؤشر تحميل عند تسجيل الدخول.
-   · تذكير بكلمة المرور عند فشل الدخول.
-   · إمكانية تغيير صورة المرشد وإزالتها.
-5. إضافة زر "مسح جميع الصور المؤقتة" في القائمة الجانبية لتنظيف Base64 المحلي.
-6. جعل زر اللاسلكي يعمل حتى لو كان المستخدم صامتاً (Mute) مع إشعار.
-7. إضافة فلتر البحث حسب الوكالة (موجود سابقاً لكن تم تحسينه).
-
-🚀 النسخة النهائية المرفقة أدناه تعمل فوراً، فقط قم بنسخ الكود كاملاً وحفظه كملف index.html أو F-Workhotel.html وافتحه في متصفح حديث. تأكد من أن اتصال الإنترنت متاح لأول مرة لتحميل Firebase، ثم يمكن العمل دون إنترنت بعد ذلك.
+لقد قمت بإعادة بناء التطبيق بالكامل باستخدام إعدادات Firebase الجديدة التي قدمتها، مع تحسين الواجهة بشكل كبير: إزالة الخلفيات الزرقاء من الأزرار، إضافة تأثير الضغط (scale down) عند النقر، وجعل قسم الرسائل الصوتية منفصلاً وأنيقاً. التطبيق الآن يعمل مباشرة بدون شاشة دخول (باستخدام مصادقة مجهولة مؤقتة) ويدعم جميع الميزات المطلوبة.
 
 ```html
 <!DOCTYPE html>
@@ -25,207 +7,571 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <title>F-Note Pro VIP · الخزنة المتكاملة</title>
-    <!-- Firebase SDKs (أحدث الإصدارات) -->
+    <!-- Firebase SDKs (الإصدار الجديد compat للمشروع 2d25b) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Tajawal', system-ui, sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Tajawal', system-ui, -apple-system, sans-serif;
+        }
 
         :root {
-            --bg-body: linear-gradient(135deg, #f8fafc 0%, #eef2f8 100%);
-            --bg-card: #ffffff;
+            --bg-body: linear-gradient(145deg, #f8fafc 0%, #eef2f8 100%);
+            --card-bg: #ffffff;
             --text-primary: #0f172a;
             --text-secondary: #334155;
             --border: #e2e8f0;
-            --gold: #e94560;
-            --success: #10b981;
-            --card-note-bg: #f8fafc;
-            --header-bg: #ffffff;
-            --search-bg: #f1f5f9;
-            --icon-color: #64748b;
+            --accent: #e94560;
+            --accent-light: #fde7eb;
+            --gray-bg: #f1f5f9;
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02);
+            --shadow-md: 0 12px 28px rgba(0, 0, 0, 0.08);
             --walkie-bg: #25D366;
         }
 
         body.dark {
-            --bg-body: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --bg-card: #1e293b;
+            --bg-body: linear-gradient(145deg, #111827 0%, #1f2937 100%);
+            --card-bg: #1e293b;
             --text-primary: #f1f5f9;
             --text-secondary: #cbd5e1;
             --border: #334155;
-            --card-note-bg: #0f172a;
-            --header-bg: #1e293b;
-            --search-bg: #334155;
+            --accent-light: #2d1b2a;
+            --gray-bg: #2d3a4e;
             --walkie-bg: #128C7E;
         }
 
-        body { background: var(--bg-body); min-height: 100vh; padding-bottom: 90px; }
-        .app-header { background: var(--header-bg); padding: 10px 16px; display: flex; justify-content: center; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.05); z-index: 20; }
-        .logo-header img { height: 55px; }
-        .menu-btn { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 28px; cursor: pointer; color: var(--gold); }
+        body {
+            background: var(--bg-body);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-bottom: 90px;
+        }
 
-        .toolbar { display: flex; gap: 10px; padding: 12px 16px; background: var(--bg-body); flex-wrap: wrap; }
-        .search-container { flex: 1; display: flex; gap: 8px; }
-        .search-box { flex: 1; border: none; background: var(--search-bg); padding: 12px 20px; border-radius: 60px; color: var(--text-primary); }
-        .voice-btn { background: var(--gold); border: none; padding: 0 20px; border-radius: 60px; color: white; cursor: pointer; font-size: 18px; }
-        .add-btn { background: var(--gold); border: none; width: 52px; border-radius: 60px; color: white; font-size: 28px; font-weight: bold; cursor: pointer; }
+        /* خلفية الشعار */
+        .bg-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-        .color-filter-wrapper { padding: 0 16px 12px; }
-        .filter-toggle-btn { width: 100%; padding: 10px; background: var(--gold); color: white; border: none; border-radius: 60px; cursor: pointer; display: flex; justify-content: center; gap: 8px; }
-        .colors-panel { display: none; flex-wrap: wrap; gap: 12px; margin-top: 12px; background: var(--bg-card); border-radius: 32px; padding: 16px; }
+        /* هيدر */
+        .app-header {
+            background: var(--card-bg);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 20;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-area img {
+            height: 45px;
+        }
+        .logo-area span {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--accent);
+        }
+        .menu-btn {
+            background: transparent;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--accent);
+            padding: 8px;
+            border-radius: 50%;
+            transition: transform 0.05s ease;
+        }
+        .menu-btn:active { transform: scale(0.92); background: var(--gray-bg); }
+
+        /* شريط الأدوات */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            flex-wrap: wrap;
+        }
+        .search-container {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+        }
+        .search-input {
+            flex: 1;
+            background: var(--gray-bg);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 60px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .icon-btn {
+            background: var(--accent);
+            border: none;
+            color: white;
+            border-radius: 60px;
+            padding: 0 20px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.05s ease;
+        }
+        .icon-btn:active { transform: scale(0.95); }
+        .add-btn {
+            background: var(--accent);
+            border: none;
+            width: 52px;
+            border-radius: 60px;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.05s ease;
+        }
+        .add-btn:active { transform: scale(0.95); }
+
+        /* فلتر الألوان */
+        .filter-wrapper {
+            padding: 0 16px 12px;
+        }
+        .filter-toggle {
+            width: 100%;
+            background: var(--gray-bg);
+            border: none;
+            padding: 10px;
+            border-radius: 60px;
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.05s ease;
+        }
+        .filter-toggle:active { transform: scale(0.98); background: var(--border); }
+        .colors-panel {
+            display: none;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 16px;
+            box-shadow: var(--shadow-md);
+        }
         .colors-panel.show { display: flex; }
-        .color-filter-btn { width: 44px; height: 44px; border-radius: 30px; cursor: pointer; border: 2px solid var(--border); }
-        .color-filter-btn.active { border: 3px solid var(--gold); transform: scale(1.05); }
+        .color-filter {
+            width: 44px;
+            height: 44px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            transition: transform 0.05s ease;
+        }
+        .color-filter:active { transform: scale(0.92); }
+        .color-filter.active { border: 3px solid var(--accent); transform: scale(1.05); }
 
-        .guides-list { padding: 12px; display: flex; flex-direction: column; gap: 14px; }
-        .guide-card { background: var(--bg-card); border-radius: 28px; padding: 16px; box-shadow: 0 6px 14px rgba(0,0,0,0.05); border-right: 5px solid var(--gold); }
-        .card-row { display: flex; gap: 12px; align-items: center; }
-        .card-photo { width: 60px; height: 60px; border-radius: 20px; object-fit: cover; border: 2px solid var(--gold); cursor: pointer; background: var(--search-bg); }
+        /* قائمة المرشدين */
+        .guides-list {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .guide-card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            border-right: 5px solid var(--accent);
+            transition: transform 0.05s ease;
+        }
+        .guide-card:active { transform: scale(0.99); }
+        .card-row {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+        .card-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+            cursor: pointer;
+            background: var(--gray-bg);
+        }
         .card-info { flex: 1; }
-        .card-name { font-weight: 800; font-size: 1rem; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-        .card-phone { background: var(--search-bg); display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 40px; font-size: 12px; }
-        .expand-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--icon-color); }
-        .card-details { display: none; margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+        .card-name {
+            font-weight: 800;
+            font-size: 1rem;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .badge-pub { background: #3b82f6; font-size: 10px; padding: 2px 10px; border-radius: 30px; color: white; }
+        .badge-priv { background: #64748b; font-size: 10px; padding: 2px 10px; border-radius: 30px; color: white; }
+        .phone-chip {
+            background: var(--gray-bg);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        .expand-btn {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--accent);
+            padding: 8px;
+            transition: transform 0.05s ease;
+        }
+        .expand-btn:active { transform: scale(0.9); }
+        .card-details {
+            display: none;
+            margin-top: 14px;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+        }
         .card-details.show { display: block; }
-        .details-grid { background: var(--card-note-bg); border-radius: 24px; padding: 12px; }
-        .plate-badge { background: var(--gold); color: white; padding: 3px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
-        .btn-sm { padding: 6px 12px; border-radius: 40px; border: none; font-weight: bold; cursor: pointer; margin: 4px; }
+        .details-inner {
+            background: var(--gray-bg);
+            border-radius: 24px;
+            padding: 12px;
+        }
+        .action-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            border-radius: 40px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.05s ease;
+        }
+        .btn-sm:active { transform: scale(0.95); }
         .btn-edit { background: #2c7da0; color: white; }
-        .btn-danger { background: #dc2626; color: white; }
-        .btn-wa { background: #25D366; color: white; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-del { background: #dc2626; color: white; }
+        .btn-share { background: #25D366; color: white; }
 
-        .walkie-btn { position: fixed; bottom: 25px; left: 25px; width: 70px; height: 70px; background: var(--walkie-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; box-shadow: 0 6px 16px rgba(0,0,0,0.25); z-index: 1000; cursor: pointer; transition: 0.05s; border: none; }
-        .walkie-btn.recording { background: #ef4444; animation: pulseAnim 0.8s infinite; }
-        @keyframes pulseAnim { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        /* اللاسلكي */
+        .walkie {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            width: 70px;
+            height: 70px;
+            background: var(--walkie-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            color: white;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+            z-index: 100;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.05s ease;
+        }
+        .walkie:active { transform: scale(0.94); }
+        .walkie.recording {
+            background: #ef4444;
+            animation: pulseAnim 0.8s infinite;
+        }
+        @keyframes pulseAnim {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
 
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; visibility: hidden; opacity: 0; transition: 0.2s; }
+        /* النوافذ المنبثقة */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
         .modal.show { visibility: visible; opacity: 1; }
-        .modal-content { background: var(--bg-card); width: 92%; max-width: 520px; max-height: 85vh; overflow-y: auto; border-radius: 48px; padding: 24px; }
-        input, textarea, select { width: 100%; margin: 8px 0; padding: 12px; border-radius: 60px; border: 1px solid var(--border); background: var(--search-bg); color: var(--text-primary); }
-        .upload-card { background: var(--card-note-bg); border-radius: 32px; padding: 16px; text-align: center; border: 2px dashed var(--gold); cursor: pointer; margin: 10px 0; }
-        .preview-img { width: 70px; height: 70px; border-radius: 20px; margin-top: 10px; object-fit: cover; }
-        .color-selector { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
-        .color-option { width: 48px; height: 48px; border-radius: 20px; cursor: pointer; border: 2px solid var(--border); }
-        .color-option.selected { border: 3px solid var(--gold); transform: scale(1.05); }
-        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
-        .save-btn, .cancel-btn { flex: 1; padding: 12px; border-radius: 60px; border: none; font-weight: bold; cursor: pointer; }
-        .save-btn { background: var(--success); color: white; }
+        .modal-card {
+            background: var(--card-bg);
+            width: 92%;
+            max-width: 520px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-radius: 48px;
+            padding: 24px;
+        }
+        input, textarea, select {
+            width: 100%;
+            margin: 8px 0;
+            padding: 12px 18px;
+            border-radius: 60px;
+            border: 1px solid var(--border);
+            background: var(--gray-bg);
+            color: var(--text-primary);
+        }
+        .upload-card {
+            background: var(--accent-light);
+            border-radius: 32px;
+            padding: 16px;
+            text-align: center;
+            border: 2px dashed var(--accent);
+            cursor: pointer;
+            margin: 12px 0;
+            transition: transform 0.05s ease;
+        }
+        .upload-card:active { transform: scale(0.98); }
+        .preview-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            margin-top: 10px;
+            object-fit: cover;
+        }
+        .color-selector {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+        .color-opt {
+            width: 48px;
+            height: 48px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            transition: transform 0.05s ease;
+        }
+        .color-opt:active { transform: scale(0.92); }
+        .color-opt.selected { border: 3px solid var(--accent); transform: scale(1.05); }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .save-btn, .cancel-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 60px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.05s ease;
+        }
+        .save-btn:active, .cancel-btn:active { transform: scale(0.97); }
+        .save-btn { background: #10b981; color: white; }
         .cancel-btn { background: #64748b; color: white; }
 
-        .toast { position: fixed; bottom: 100px; left: 20px; right: 20px; background: #1e293b; color: white; text-align: center; padding: 12px; border-radius: 60px; z-index: 2100; }
+        /* قسم الرسائل الصوتية */
+        .messages-section {
+            margin: 20px 16px;
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+        }
+        .messages-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .messages-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+        .messages-list {
+            max-height: 300px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message-item {
+            background: var(--gray-bg);
+            border-radius: 24px;
+            padding: 12px;
+        }
+        .message-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .message-audio {
+            width: 100%;
+        }
 
-        .sidebar { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: var(--bg-card); z-index: 1500; transition: 0.25s; padding: 20px; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            border-radius: 60px;
+            z-index: 3000;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -280px;
+            width: 280px;
+            height: 100%;
+            background: var(--card-bg);
+            z-index: 1500;
+            transition: 0.25s;
+            padding: 24px 16px;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+        }
         .sidebar.open { right: 0; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1400; display: none; }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1400;
+            display: none;
+        }
         .overlay.show { display: block; }
-        .sidebar-item { padding: 12px 0; display: flex; gap: 14px; cursor: pointer; color: var(--text-primary); border-bottom: 1px solid var(--border); }
-
-        .login-screen { position: fixed; inset: 0; background: var(--bg-body); z-index: 3000; display: flex; align-items: center; justify-content: center; }
-        .login-screen.hide { display: none; }
-        .login-card { background: var(--bg-card); border-radius: 64px; padding: 32px 24px; width: 90%; max-width: 380px; text-align: center; }
-        .login-logo img { width: 80px; }
-        .login-input { margin: 8px 0; }
-        .login-btn { width: 100%; background: var(--gold); color: white; border: none; padding: 14px; border-radius: 60px; font-weight: bold; margin-top: 16px; cursor: pointer; }
-        .demo-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); margin-top: 12px; }
-        .visibility-badge { font-size: 10px; padding: 2px 8px; border-radius: 30px; margin-right: 6px; }
-        .public-badge { background: #3b82f6; color: white; }
-        .private-badge { background: #64748b; color: white; }
+        .sidebar-item {
+            padding: 12px 0;
+            display: flex;
+            gap: 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: transform 0.05s ease;
+        }
+        .sidebar-item:active { transform: scale(0.98); background: var(--gray-bg); }
     </style>
 </head>
 <body>
 
+<div class="bg-watermark">
+    <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" style="width:100%;">
+</div>
+
 <div class="app-header">
-    <div class="logo-header"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-Note Pro"></div>
+    <div class="logo-area">
+        <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
+        <span>F-Note Pro VIP</span>
+    </div>
     <button class="menu-btn" id="menuBtn">☰</button>
 </div>
 
 <div class="toolbar">
     <div class="search-container">
-        <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث بالاسم أو الهاتف">
-        <button class="voice-btn" id="voiceSearchBtn">🎤</button>
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 بحث بالاسم أو الهاتف">
+        <button class="icon-btn" id="voiceSearchBtn">🎤</button>
     </div>
     <button class="add-btn" id="openModalBtn">+</button>
 </div>
 
-<div class="color-filter-wrapper">
-    <button class="filter-toggle-btn" id="filterToggleBtn">🎨 فلتر الألوان ▼</button>
+<div class="filter-wrapper">
+    <button class="filter-toggle" id="filterToggleBtn">🎨 فلتر الألوان ▼</button>
     <div class="colors-panel" id="colorsPanel">
-        <div class="color-filter-btn" data-color="all" style="background:linear-gradient(135deg, #e94560, #f59e0b);"></div>
-        <div class="color-filter-btn" style="background:#e94560;" data-color="#e94560"></div>
-        <div class="color-filter-btn" style="background:#2c7da0;" data-color="#2c7da0"></div>
-        <div class="color-filter-btn" style="background:#e76f51;" data-color="#e76f51"></div>
-        <div class="color-filter-btn" style="background:#2a9d8f;" data-color="#2a9d8f"></div>
-        <div class="color-filter-btn" style="background:#e9c46a;" data-color="#e9c46a"></div>
-        <div class="color-filter-btn" style="background:#9b5de5;" data-color="#9b5de5"></div>
-        <div class="color-filter-btn" style="background:#06d6a0;" data-color="#06d6a0"></div>
-        <div class="color-filter-btn" style="background:#ff006e;" data-color="#ff006e"></div>
+        <div class="color-filter" data-color="all" style="background:linear-gradient(135deg, #e94560, #f59e0b);"></div>
+        <div class="color-filter" style="background:#e94560;" data-color="#e94560"></div>
+        <div class="color-filter" style="background:#2c7da0;" data-color="#2c7da0"></div>
+        <div class="color-filter" style="background:#e76f51;" data-color="#e76f51"></div>
+        <div class="color-filter" style="background:#2a9d8f;" data-color="#2a9d8f"></div>
+        <div class="color-filter" style="background:#e9c46a;" data-color="#e9c46a"></div>
+        <div class="color-filter" style="background:#9b5de5;" data-color="#9b5de5"></div>
+        <div class="color-filter" style="background:#06d6a0;" data-color="#06d6a0"></div>
+        <div class="color-filter" style="background:#ff006e;" data-color="#ff006e"></div>
     </div>
 </div>
 
-<div id="guidesContainer" class="guides-list"><div class="loading" style="text-align:center; padding:40px;">✨ جاري التحميل... سجل دخولك أولاً</div></div>
+<div id="guidesContainer" class="guides-list"><div class="loading" style="text-align:center; padding:40px;">⏳ جاري التحميل...</div></div>
 
-<!-- أزرار اللاسلكي العائمة -->
-<div id="walkieTalkieBtn" class="walkie-btn">🎙️</div>
+<!-- قسم الرسائل الصوتية -->
+<div class="messages-section" id="messagesSection">
+    <div class="messages-header">
+        <div class="messages-title">📼 محادثات السلامة (اللاسلكي)</div>
+        <button id="refreshMessagesBtn" style="background:transparent; border:none; font-size:20px; cursor:pointer;">🔄</button>
+    </div>
+    <div id="messagesList" class="messages-list">
+        <div style="text-align:center; padding:20px;">لا توجد رسائل صوتية بعد</div>
+    </div>
+</div>
 
-<!-- نماذج التطبيق -->
-<div id="guideModal" class="modal"><div class="modal-content"><h3 id="modalTitle">➕ إضافة مرشد</h3>
+<div id="walkieBtn" class="walkie">🎙️</div>
+
+<!-- باقي النوافذ -->
+<div id="guideModal" class="modal"><div class="modal-card"><h3 id="modalTitle">➕ إضافة مرشد</h3>
 <input type="text" id="guideName" placeholder="الاسم الكامل *">
 <input type="tel" id="guidePhone" placeholder="رقم الهاتف *">
 <input type="text" id="plateNumber" placeholder="رقم اللوحة">
 <div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ أرقام فقط</div>
-<div class="upload-card" id="guideUploadCard">📸 رفع صورة المرشد</div>
-<div id="guidePreviewContainer" style="display:none;"><img id="guidePhotoPreview" class="preview-img"></div>
-<div class="upload-card" id="busUploadCard">🚌 رفع صورة وسيلة النقل</div>
-<div id="busPreviewContainer" style="display:none;"><img id="busPhotoPreview" class="preview-img"></div>
+<div class="upload-card" id="uploadGuideTrigger">📸 رفع صورة المرشد</div>
+<div id="guidePreviewArea" style="display:none;"><img id="guidePreviewImg" class="preview-img"></div>
+<div class="upload-card" id="uploadBusTrigger">🚌 رفع صورة وسيلة النقل</div>
+<div id="busPreviewArea" style="display:none;"><img id="busPreviewImg" class="preview-img"></div>
 <input type="text" id="transportType" placeholder="وسيلة النقل">
-<input type="text" id="agency" placeholder="الوكالة (فندق/شركة/مستقل)">
+<input type="text" id="agency" placeholder="الوكالة">
 <textarea id="guideNotes" rows="2" placeholder="ملاحظات إضافية"></textarea>
 <div class="color-selector" id="colorSelector"></div>
-<select id="guideVisibility"><option value="private">🔒 خاص (لي فقط)</option><option value="public">🌍 عام (يظهر للجميع)</option></select>
+<select id="guideVisibility"><option value="private">🔒 خاص (لي فقط)</option><option value="public">🌍 عام (للجميع)</option></select>
 <div class="modal-buttons"><button class="save-btn" id="saveGuideBtn">💾 حفظ</button><button class="cancel-btn" id="closeModalBtn">❌ إلغاء</button></div></div></div>
 
-<div id="detailModal" class="modal"><div class="modal-content"><h3 id="detailName"></h3><div id="detailContent"></div><div id="visibilityChangeDiv"></div><button class="btn-wa" id="shareWhatsappBtn" style="width:100%; margin-top:16px;">💬 مشاركة واتساب (مجموعة)</button><button class="cancel-btn" id="closeDetailBtn">إغلاق</button></div></div>
-<div id="multiShareModal" class="modal"><div class="modal-content"><h3>اختر المستلمين</h3><div id="contactsList" style="max-height:250px; overflow-y:auto;"></div><div class="modal-buttons"><button class="save-btn" id="confirmShareBtn">إرسال</button><button class="cancel-btn" id="closeMultiShareBtn">إلغاء</button></div></div></div>
-<div id="fullImageModal" class="modal"><div class="modal-content" style="text-align:center;"><img id="fullImage" style="max-width:100%; border-radius:28px;"><button class="cancel-btn" id="closeFullImageBtn">إغلاق</button></div></div>
+<div id="detailModal" class="modal"><div class="modal-card"><h3 id="detailName"></h3><div id="detailContent"></div><div id="visibilityChangeDiv"></div><button class="btn-sm btn-share" id="shareDetailBtn" style="width:100%; margin-top:16px;">💬 مشاركة واتساب</button><button class="cancel-btn" id="closeDetailBtn">إغلاق</button></div></div>
+<div id="multiShareModal" class="modal"><div class="modal-card"><h3>اختر المستلمين</h3><div id="contactsList" style="max-height:250px; overflow-y:auto;"></div><div class="modal-buttons"><button class="save-btn" id="confirmShareBtn">إرسال</button><button class="cancel-btn" id="closeMultiShareBtn">إلغاء</button></div></div></div>
+<div id="fullImageModal" class="modal"><div class="modal-card" style="text-align:center;"><img id="fullImageView" style="max-width:100%; border-radius:28px;"><button class="cancel-btn" id="closeFullImageBtn">إغلاق</button></div></div>
 
 <div class="sidebar" id="sidebar">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;"><h2 style="color:var(--gold);">✨ القائمة</h2><button id="closeSidebarBtn" style="background:none; border:none; font-size:24px;">✕</button></div>
-    <div id="userInfoSide" style="margin-bottom:15px; font-size:14px;"></div>
-    <div class="sidebar-item" id="signOutBtn">🚪 تسجيل الخروج</div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:24px;"><h2 style="color:var(--accent);">✨ القائمة</h2><button id="closeSidebarBtn" style="background:none; border:none; font-size:24px;">✕</button></div>
+    <div id="userInfoSide" style="margin-bottom:15px; font-size:13px;"></div>
     <div class="sidebar-item" id="darkModeBtn">🌙 الوضع الداكن</div>
-    <div class="sidebar-item" id="toggleMuteBtn">🔇 كتم اللاسلكي (صامت)</div>
+    <div class="sidebar-item" id="toggleMuteBtn">🔇 كتم اللاسلكي</div>
     <div class="sidebar-item" id="exportJsonBtn">💾 تصدير JSON</div>
     <div class="sidebar-item" id="exportPdfBtn">📄 تصدير PDF</div>
-    <div class="sidebar-item" id="clearBase64Btn">🗑️ مسح الصور المؤقتة (Base64)</div>
-    <div class="sidebar-item" id="syncNowBtn">🔄 مزامنة سريعة</div>
+    <div class="sidebar-item" id="clearVoiceBtn">🗑️ مسح كل الرسائل</div>
 </div>
 <div class="overlay" id="overlay"></div>
 
-<!-- شاشة تسجيل الدخول -->
-<div id="loginScreen" class="login-screen">
-    <div class="login-card">
-        <div class="login-logo"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png"></div>
-        <h2 style="color:var(--gold);">F-Note Pro VIP</h2>
-        <p style="margin:10px 0 8px;">🔐 نظام إدارة المرشدين المتكامل</p>
-        <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
-        <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
-        <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
-        <button class="login-btn demo-btn" id="createDemoAccountBtn">➕ إنشاء حساب تجريبي جديد (للاستخدام الفوري)</button>
-        <p style="font-size:12px; margin-top:15px; color:var(--text-secondary);">👈 إذا كنت تواجه مشكلة في الدخول، اضغط على "إنشاء حساب تجريبي جديد"</p>
-    </div>
-</div>
-
 <script>
-    // ---------- Firebase configuration ----------
+    // ------------------- إعدادات Firebase الجديدة (من المستخدم) -------------------
     const firebaseConfig = {
-        apiKey: "AIzaSyAJLpdRoKamaHHofnCh4qQk6mHKeI25Tgc",
-        authDomain: "f-notepro-work.firebaseapp.com",
-        projectId: "f-notepro-work",
-        storageBucket: "f-notepro-work.firebasestorage.app",
-        messagingSenderId: "645688115664",
-        appId: "1:645688115664:web:5dbfee1e28c41e0a1c79d5"
+        apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
+        authDomain: "f-notepro-work-2d25b.firebaseapp.com",
+        databaseURL: "https://f-notepro-work-2d25b-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "f-notepro-work-2d25b",
+        storageBucket: "f-notepro-work-2d25b.firebasestorage.app",
+        messagingSenderId: "221438380381",
+        appId: "1:221438380381:web:b46c35d0ec0944079480b4",
+        measurementId: "G-E4YBHXQE9B"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -233,25 +579,29 @@
     const storage = firebase.storage();
     db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn);
 
-    // ---------- Global variables ----------
+    // ------------------- المتغيرات العامة -------------------
     let currentUser = null;
     let guidesArray = [];
     let currentEditId = null;
     let selectedColor = "#e94560";
     let currentColorFilter = "all";
     let currentGuideForDetail = null;
-    let currentGuidePhotoBase64 = "";
-    let currentBusPhotoBase64 = "";
+    let currentGuidePhoto = "", currentBusPhoto = "";
     let isMuted = false;
     let unsubscribeGuides = null;
     let mediaRecorder, audioChunks, isRecording = false;
+    let radioUnsub = null;
+    let currentShareId = null;
 
-    // ---------- Helper functions ----------
-    function toast(msg, isErr=false) { let t=document.createElement('div'); t.className='toast'; t.style.background=isErr?'rgba(220,38,38,0.95)':'#1e293b'; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
+    // دوال مساعدة
+    function toast(msg, isErr=false) {
+        let t=document.createElement('div'); t.className='toast'; t.style.background=isErr?'#dc2626':'#1e293b';
+        t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800);
+    }
     function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
     function validatePhone(p) { return /^[\+]?[0-9]{8,15}$/.test(p.replace(/\s/g,'')); }
 
-    // Compress image to Base64 (max 400px)
+    // ضغط الصور
     function compressImage(file, type) {
         if(!file) return;
         const reader = new FileReader();
@@ -259,27 +609,27 @@
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                let width = img.width, height = img.height;
-                const maxW = 400;
-                if(width > maxW) { height *= maxW/width; width = maxW; }
-                canvas.width = width; canvas.height = height;
-                canvas.getContext('2d').drawImage(img,0,0,width,height);
+                let w=img.width, h=img.height;
+                const maxW=400;
+                if(w>maxW) { h*=maxW/w; w=maxW; }
+                canvas.width=w; canvas.height=h;
+                canvas.getContext('2d').drawImage(img,0,0,w,h);
                 const b64 = canvas.toDataURL('image/jpeg',0.6);
-                if(type==='guide') { currentGuidePhotoBase64 = b64; document.getElementById('guidePhotoPreview').src = b64; document.getElementById('guidePreviewContainer').style.display = 'flex'; }
-                else { currentBusPhotoBase64 = b64; document.getElementById('busPhotoPreview').src = b64; document.getElementById('busPreviewContainer').style.display = 'flex'; }
-                toast(`✓ تم ضغط الصورة وحفظها محلياً`);
+                if(type==='guide') { currentGuidePhoto=b64; document.getElementById('guidePreviewImg').src=b64; document.getElementById('guidePreviewArea').style.display='flex'; }
+                else { currentBusPhoto=b64; document.getElementById('busPreviewImg').src=b64; document.getElementById('busPreviewArea').style.display='flex'; }
+                toast("✓ تم ضغط الصورة");
             };
-            img.src = e.target.result;
+            img.src=e.target.result;
         };
         reader.readAsDataURL(file);
     }
     function triggerUpload(type) { let inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=e=>{ if(e.target.files[0]) compressImage(e.target.files[0], type); }; inp.click(); }
-    document.getElementById('guideUploadCard').onclick = ()=>triggerUpload('guide');
-    document.getElementById('busUploadCard').onclick = ()=>triggerUpload('bus');
+    document.getElementById('uploadGuideTrigger').onclick = ()=>triggerUpload('guide');
+    document.getElementById('uploadBusTrigger').onclick = ()=>triggerUpload('bus');
 
-    // Save guide to Firestore
+    // حفظ المرشد
     async function saveGuide() {
-        if(!currentUser) { toast("يجب تسجيل الدخول أولاً", true); return; }
+        if(!currentUser) { toast("الرجاء إعادة تحميل الصفحة", true); return; }
         let name = document.getElementById('guideName').value.trim();
         let phone = document.getElementById('guidePhone').value.trim();
         if(!name || !phone) { toast("الاسم والهاتف مطلوبان", true); return; }
@@ -292,8 +642,8 @@
             notes: document.getElementById('guideNotes').value.trim(),
             visibility: document.getElementById('guideVisibility').value,
             cardColor: selectedColor,
-            guidePhoto: currentGuidePhotoBase64 || null,
-            busPhoto: currentBusPhotoBase64 || null,
+            guidePhoto: currentGuidePhoto || null,
+            busPhoto: currentBusPhoto || null,
             userId: currentUser.uid,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -303,24 +653,24 @@
             toast(currentEditId ? "تم التعديل" : "تمت الإضافة");
             document.getElementById('guideModal').classList.remove('show');
             resetForm();
-        } catch(e) { toast("خطأ في الحفظ: "+e.message, true); }
+        } catch(e) { toast("خطأ: "+e.message, true); }
     }
     function resetForm() {
-        currentEditId=null; currentGuidePhotoBase64=""; currentBusPhotoBase64="";
-        document.getElementById('guidePreviewContainer').style.display='none';
-        document.getElementById('busPreviewContainer').style.display='none';
+        currentEditId=null; currentGuidePhoto=""; currentBusPhoto="";
+        document.getElementById('guidePreviewArea').style.display='none';
+        document.getElementById('busPreviewArea').style.display='none';
         document.getElementById('guideName').value=''; document.getElementById('guidePhone').value='';
         document.getElementById('plateNumber').value=''; document.getElementById('transportType').value='';
         document.getElementById('agency').value=''; document.getElementById('guideNotes').value='';
         document.getElementById('guideVisibility').value='private';
         selectedColor='#e94560';
-        document.querySelectorAll('.color-option').forEach(c=>c.classList.remove('selected'));
-        document.querySelector('.color-option[data-color="#e94560"]')?.classList.add('selected');
+        document.querySelectorAll('.color-opt').forEach(c=>c.classList.remove('selected'));
+        document.querySelector('.color-opt[data-color="#e94560"]')?.classList.add('selected');
         document.getElementById('modalTitle').innerHTML = '➕ إضافة مرشد';
     }
 
-    // Render guides list
-    function renderList() {
+    // عرض قائمة المرشدين
+    function renderGuides() {
         let search = document.getElementById('searchInput').value.toLowerCase();
         let filtered = guidesArray.filter(g => (g.name?.toLowerCase().includes(search) || g.phone?.includes(search)));
         if(currentColorFilter !== 'all') filtered = filtered.filter(g => g.cardColor === currentColorFilter);
@@ -331,20 +681,20 @@
                 <div class="card-row">
                     <img class="card-photo" src="${g.guidePhoto||''}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22gray%22%3E%3C%2Fsvg%3E'" onclick="window.showFullImage('${g.guidePhoto}')">
                     <div class="card-info">
-                        <div class="card-name">${escapeHtml(g.name)} ${g.visibility==='public'?'<span class="visibility-badge public-badge">عام</span>':'<span class="visibility-badge private-badge">خاص</span>'}</div>
-                        <div class="card-phone"><span>📞 ${escapeHtml(g.phone)}</span><button onclick="window.location.href='tel:${g.phone}'">اتصل</button></div>
+                        <div class="card-name">${escapeHtml(g.name)} ${g.visibility==='public'?'<span class="badge-pub">عام</span>':'<span class="badge-priv">خاص</span>'}</div>
+                        <div class="phone-chip"><span>📞 ${escapeHtml(g.phone)}</span><button onclick="window.location.href='tel:${g.phone}'" style="background:none; border:none;">اتصل</button></div>
                     </div>
                     <button class="expand-btn" data-id="${g.id}">▼</button>
                 </div>
-                <div id="det-${g.id}" class="card-details"><div class="details-grid">
+                <div id="det-${g.id}" class="card-details"><div class="details-inner">
                     ${g.busPhoto?`<img src="${g.busPhoto}" style="width:50px;border-radius:16px;cursor:pointer;" onclick="window.showFullImage('${g.busPhoto}')">`:''}
                     <p><strong>🚐 وسيلة النقل:</strong> ${escapeHtml(g.transportType||'-')}</p>
-                    <p><strong>🚍 اللوحة:</strong> <span class="plate-badge">${escapeHtml(g.plateNumber||'-')}</span></p>
+                    <p><strong>🚍 اللوحة:</strong> <span style="background:${g.cardColor}; padding:2px 12px; border-radius:40px;">${escapeHtml(g.plateNumber||'-')}</span></p>
                     <p><strong>🏢 الوكالة:</strong> ${escapeHtml(g.agency||'-')}</p>
-                    <p><strong>📝 ملاحظات:</strong> ${escapeHtml((g.notes||'').substring(0,60))}</p>
-                    <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-                        ${g.userId===currentUser?.uid ? `<button class="btn-sm btn-edit" data-edit="${g.id}">✏️ تعديل</button><button class="btn-sm btn-danger" data-del="${g.id}">🗑️ حذف</button>` : ''}
-                        <button class="btn-sm btn-wa" data-share="${g.id}">💬 مشاركة</button>
+                    <div class="action-group">
+                        <button class="btn-sm btn-edit" data-edit="${g.id}">✏️ تعديل</button>
+                        <button class="btn-sm btn-del" data-del="${g.id}">🗑️ حذف</button>
+                        <button class="btn-sm btn-share" data-share="${g.id}">💬 مشاركة</button>
                     </div>
                 </div></div>
             </div>
@@ -354,29 +704,29 @@
         document.querySelectorAll('[data-del]').forEach(btn=>{ btn.onclick=()=>deleteGuideById(btn.dataset.del); });
         document.querySelectorAll('[data-share]').forEach(btn=>{ btn.onclick=()=>openMultiShare(btn.dataset.share); });
     }
-    window.showFullImage = (url)=>{ if(url){ document.getElementById('fullImage').src=url; document.getElementById('fullImageModal').classList.add('show'); } };
-    async function editGuideById(id){ let g=guidesArray.find(g=>g.id===id); if(g?.userId===currentUser?.uid){ currentEditId=id; document.getElementById('guideName').value=g.name; document.getElementById('guidePhone').value=g.phone; document.getElementById('plateNumber').value=g.plateNumber||''; document.getElementById('transportType').value=g.transportType||''; document.getElementById('agency').value=g.agency||''; document.getElementById('guideNotes').value=g.notes||''; selectedColor=g.cardColor||'#e94560'; document.getElementById('guideVisibility').value=g.visibility||'private'; if(g.guidePhoto){ currentGuidePhotoBase64=g.guidePhoto; document.getElementById('guidePhotoPreview').src=g.guidePhoto; document.getElementById('guidePreviewContainer').style.display='flex'; } if(g.busPhoto){ currentBusPhotoBase64=g.busPhoto; document.getElementById('busPhotoPreview').src=g.busPhoto; document.getElementById('busPreviewContainer').style.display='flex'; } document.getElementById('modalTitle').innerHTML='✏️ تعديل مرشد'; document.getElementById('guideModal').classList.add('show'); } else toast('لا يمكنك التعديل',true); }
-    async function deleteGuideById(id){ if(confirm('حذف المرشد نهائياً؟')) await db.collection('guides').doc(id).delete(); }
+    window.showFullImage = (url)=>{ if(url){ document.getElementById('fullImageView').src=url; document.getElementById('fullImageModal').classList.add('show'); } };
+    async function editGuideById(id){ let g=guidesArray.find(g=>g.id===id); if(g && g.userId===currentUser?.uid){ currentEditId=id; document.getElementById('guideName').value=g.name; document.getElementById('guidePhone').value=g.phone; document.getElementById('plateNumber').value=g.plateNumber||''; document.getElementById('transportType').value=g.transportType||''; document.getElementById('agency').value=g.agency||''; document.getElementById('guideNotes').value=g.notes||''; selectedColor=g.cardColor||'#e94560'; document.getElementById('guideVisibility').value=g.visibility||'private'; if(g.guidePhoto){ currentGuidePhoto=g.guidePhoto; document.getElementById('guidePreviewImg').src=g.guidePhoto; document.getElementById('guidePreviewArea').style.display='flex'; } if(g.busPhoto){ currentBusPhoto=g.busPhoto; document.getElementById('busPreviewImg').src=g.busPhoto; document.getElementById('busPreviewArea').style.display='flex'; } document.getElementById('modalTitle').innerHTML='✏️ تعديل مرشد'; document.getElementById('guideModal').classList.add('show'); } else toast('لا يمكنك التعديل',true); }
+    async function deleteGuideById(id){ if(confirm('حذف المرشد نهائياً؟')) await db.collection('guides').doc(id).delete(); toast('تم الحذف'); }
 
-    // Firestore realtime subscriptions
+    // الاشتراك في تحديثات المرشدين
     function subscribeToGuides() {
         if(unsubscribeGuides) unsubscribeGuides();
         if(!currentUser) return;
-        const mineQuery = db.collection('guides').where('userId','==',currentUser.uid);
+        const mine = db.collection('guides').where('userId','==',currentUser.uid);
         const update = () => {
-            Promise.all([mineQuery.get(), db.collection('guides').where('visibility','==','public').get()]).then(([mineSnap,pubSnap])=>{
+            Promise.all([mine.get(), db.collection('guides').where('visibility','==','public').get()]).then(([mineSnap, pubSnap])=>{
                 let all=[]; mineSnap.forEach(d=>all.push({id:d.id,...d.data()}));
                 pubSnap.forEach(d=>{ if(d.data().userId !== currentUser.uid) all.push({id:d.id,...d.data()}); });
                 guidesArray = all.filter((v,i,a)=>a.findIndex(t=>t.id===v.id)===i);
-                renderList();
+                renderGuides();
             });
         };
-        mineQuery.onSnapshot(update);
+        mine.onSnapshot(update);
         db.collection('guides').where('visibility','==','public').onSnapshot(update);
         unsubscribeGuides = ()=>{};
     }
 
-    // ---------- Walkie-Talkie (Voice broadcast using Storage) ----------
+    // ------------------- اللاسلكي (تسجيل الصوت وعرضه في قسم الرسائل) -------------------
     async function startRecording() {
         if(isRecording) return;
         try {
@@ -389,47 +739,62 @@
                 const fileName = `radio/${currentUser.uid}_${Date.now()}.webm`;
                 const snapshot = await storage.ref(fileName).put(blob);
                 const url = await snapshot.ref.getDownloadURL();
-                await db.collection('radio_broadcasts').add({ url, sender: currentUser.uid, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                toast("✅ تم إرسال البث الصوتي");
+                await db.collection('radio_messages').add({
+                    url,
+                    sender: currentUser.email || currentUser.uid,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                toast("✅ تم إرسال الملاحظة الصوتية");
                 stream.getTracks().forEach(t=>t.stop());
             };
             mediaRecorder.start();
             isRecording = true;
-            document.getElementById('walkieTalkieBtn').classList.add('recording');
-            // Beep
+            document.getElementById('walkieBtn').classList.add('recording');
+            // صوت بيب
             try { let ctx = new (AudioContext||webkitAudioContext)(); let osc=ctx.createOscillator(), gain=ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value=880; gain.gain.value=0.2; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.4); osc.stop(ctx.currentTime+0.4); } catch(e) {}
         } catch(e) { toast("الوصول للميكروفون مرفوض", true); }
     }
-    function stopRecording() { if(mediaRecorder && isRecording && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); isRecording=false; document.getElementById('walkieTalkieBtn').classList.remove('recording'); } }
-    document.getElementById('walkieTalkieBtn').addEventListener('pointerdown', startRecording);
-    document.getElementById('walkieTalkieBtn').addEventListener('pointerup', stopRecording);
-    document.getElementById('walkieTalkieBtn').addEventListener('pointerleave', stopRecording);
+    function stopRecording() { if(mediaRecorder && isRecording && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); isRecording=false; document.getElementById('walkieBtn').classList.remove('recording'); } }
+    document.getElementById('walkieBtn').addEventListener('pointerdown', startRecording);
+    document.getElementById('walkieBtn').addEventListener('pointerup', stopRecording);
+    document.getElementById('walkieBtn').addEventListener('pointerleave', stopRecording);
 
-    let radioUnsub = null;
-    function listenRadio() {
+    // عرض الرسائل الصوتية في القسم المخصص
+    async function loadVoiceMessages() {
+        if(!currentUser) return;
+        const snapshot = await db.collection('radio_messages').orderBy('timestamp', 'desc').get();
+        const container = document.getElementById('messagesList');
+        if(snapshot.empty) { container.innerHTML = '<div style="text-align:center; padding:20px;">لا توجد رسائل صوتية بعد</div>'; return; }
+        let html = '';
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const date = data.timestamp ? data.timestamp.toDate().toLocaleTimeString('ar') : 'وقت غير محدد';
+            html += `
+                <div class="message-item">
+                    <div class="message-meta">🎙️ ${escapeHtml(data.sender)} - ${date}</div>
+                    <audio controls class="message-audio" src="${data.url}"></audio>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    // الاستماع للتحديثات المباشرة للرسائل الصوتية
+    function listenRadioMessages() {
         if(radioUnsub) radioUnsub();
         if(!currentUser) return;
-        radioUnsub = db.collection('radio_broadcasts').orderBy('timestamp','desc').limit(1).onSnapshot(snap=>{
-            snap.docChanges().forEach(change=>{
-                if(change.type==='added' && !isMuted){
-                    let data = change.doc.data();
-                    if(data.sender !== currentUser.uid){
-                        let audio = new Audio(data.url);
-                        audio.play().catch(e=>console.warn);
-                    }
-                }
-            });
+        radioUnsub = db.collection('radio_messages').orderBy('timestamp', 'desc').limit(20).onSnapshot(()=>{
+            loadVoiceMessages();
         });
     }
+    document.getElementById('refreshMessagesBtn').onclick = loadVoiceMessages;
 
-    // ---------- Multi-whatsapp share ----------
-    let currentShareId = null;
+    // ------------------- المشاركة الجماعية -------------------
     function openMultiShare(guideId) {
         currentShareId = guideId;
         let guide = guidesArray.find(g=>g.id===guideId);
         if(!guide) return;
         let contacts = [{name:"أحمد محمد",phone:"+21612345678"},{name:"سارة خالد",phone:"+21698765432"},{name:"ياسر منصور",phone:"+21655554444"},{name:"ليلى حسن",phone:"+21633332222"}];
-        document.getElementById('contactsList').innerHTML = contacts.map(c=>`<label style="display:flex; gap:12px; align-items:center; margin:8px 0;"><input type="checkbox" value="${c.phone}"> ${c.name} (${c.phone})</label>`).join('');
+        document.getElementById('contactsList').innerHTML = contacts.map(c=>`<label style="display:flex; gap:12px; margin:8px 0;"><input type="checkbox" value="${c.phone}"> ${c.name} (${c.phone})</label>`).join('');
         document.getElementById('multiShareModal').classList.add('show');
     }
     document.getElementById('confirmShareBtn').onclick = () => {
@@ -443,66 +808,49 @@
     };
     document.getElementById('closeMultiShareBtn').onclick = ()=>document.getElementById('multiShareModal').classList.remove('show');
 
-    // ---------- Authentication and UI handlers ----------
-    document.getElementById('loginBtn').onclick = () => {
-        let email = document.getElementById('loginEmail').value.trim();
-        let pass = document.getElementById('loginPassword').value;
-        if(!email || !pass){ toast("املأ البريد وكلمة المرور",true); return; }
-        auth.signInWithEmailAndPassword(email,pass).catch(err=> toast("فشل الدخول: "+err.message, true));
-    };
-    document.getElementById('createDemoAccountBtn').onclick = async () => {
-        let demoEmail = `demo_${Date.now()}@temp.com`;
-        let demoPass = "12345678";
-        try {
-            await auth.createUserWithEmailAndPassword(demoEmail, demoPass);
-            toast("تم إنشاء حساب تجريبي بنجاح, سيتم تسجيل الدخول تلقائياً", false);
-        } catch(e) { toast("حدث خطأ: "+e.message, true); }
-    };
+    // ------------------- المصادقة المجهولة (بدون شاشة دخول) -------------------
+    auth.signInAnonymously().catch(e=>toast("خطأ في الاتصال",true));
     auth.onAuthStateChanged(user => {
         if(user) {
             currentUser = user;
-            document.getElementById('loginScreen').classList.add('hide');
-            document.getElementById('userInfoSide').innerHTML = `✅ ${user.email}<br><span style="font-size:11px;">🟢 متصل بالسحابة + لاسلكي</span>`;
-            document.getElementById('signOutBtn').style.display = 'flex';
+            document.getElementById('userInfoSide').innerHTML = `✅ مستخدم مؤقت<br><span style="font-size:11px;">🟢 متصل بالسحابة</span>`;
             subscribeToGuides();
-            listenRadio();
+            listenRadioMessages();
+            loadVoiceMessages();
         } else {
-            currentUser = null; guidesArray = []; renderList();
-            document.getElementById('loginScreen').classList.remove('hide');
-            document.getElementById('signOutBtn').style.display = 'none';
+            currentUser = null;
+            guidesArray = [];
+            renderGuides();
             if(unsubscribeGuides) unsubscribeGuides();
             if(radioUnsub) radioUnsub();
         }
     });
-    document.getElementById('signOutBtn').onclick = () => { auth.signOut(); toast("تم تسجيل الخروج"); };
+
+    // ------------------- أحداث الواجهة -------------------
     document.getElementById('darkModeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('darkMode', document.body.classList.contains('dark')); };
     if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
-    document.getElementById('toggleMuteBtn').onclick = () => { isMuted=!isMuted; toast(isMuted?"تم كتم اللاسلكي":"تم إلغاء الكتم"); };
+    document.getElementById('toggleMuteBtn').onclick = () => { isMuted=!isMuted; toast(isMuted?"تم كتم تشغيل الصوت":"تم إلغاء الكتم"); };
     document.getElementById('exportJsonBtn').onclick = () => { let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(guidesArray,null,2)],{type:'application/json'})); a.download=`guides_${Date.now()}.json`; a.click(); toast("تم التصدير"); };
-    document.getElementById('exportPdfBtn').onclick = () => { let el=document.createElement('div'); el.dir='rtl'; el.innerHTML='<h2>F-Note Pro VIP</h2>'; guidesArray.forEach(g=>{ el.innerHTML+=`<div><b>${g.name}</b><br>📞 ${g.phone}<br>🚐 ${g.transportType||'-'}<br>🚍 ${g.plateNumber||'-'}<hr></div>`; }); html2pdf().from(el).set({margin:1,filename:`F-Note_${Date.now()}.pdf`}).save(); };
-    document.getElementById('clearBase64Btn').onclick = () => { localStorage.removeItem('guideTemp'); toast("تم مسح الصور المؤقتة"); };
-    document.getElementById('syncNowBtn').onclick = () => toast("المزامنة التلقائية نشطة");
+    document.getElementById('exportPdfBtn').onclick = () => { let el=document.createElement('div'); el.dir='rtl'; el.innerHTML='<h2>F-Note Pro</h2>'; guidesArray.forEach(g=>{ el.innerHTML+=`<div><b>${g.name}</b><br>📞 ${g.phone}<br>🚐 ${g.transportType||'-'}<br>🚍 ${g.plateNumber||'-'}<hr></div>`; }); html2pdf().from(el).set({margin:1,filename:`F-Note_${Date.now()}.pdf`}).save(); };
+    document.getElementById('clearVoiceBtn').onclick = async () => { if(confirm('مسح كل الرسائل الصوتية؟')) { const msgs = await db.collection('radio_messages').get(); msgs.forEach(async d=>await d.ref.delete()); toast("تم مسح كل الرسائل"); loadVoiceMessages(); } };
     document.getElementById('openModalBtn').onclick = () => { resetForm(); document.getElementById('guideModal').classList.add('show'); };
     document.getElementById('saveGuideBtn').onclick = saveGuide;
     document.getElementById('closeModalBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
     document.getElementById('closeDetailBtn').onclick = () => document.getElementById('detailModal').classList.remove('show');
     document.getElementById('closeFullImageBtn').onclick = () => document.getElementById('fullImageModal').classList.remove('show');
-    document.getElementById('shareWhatsappBtn').onclick = () => { if(currentGuideForDetail) openMultiShare(currentGuideForDetail.id); };
+    document.getElementById('shareDetailBtn').onclick = () => { if(currentGuideForDetail) openMultiShare(currentGuideForDetail.id); };
     document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
     document.getElementById('closeSidebarBtn').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
     document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
-    document.getElementById('searchInput').addEventListener('input', renderList);
-    document.getElementById('voiceSearchBtn').onclick = () => { let recog = new (window.webkitSpeechRecognition||window.SpeechRecognition)(); if(!recog){ toast("البحث الصوتي غير مدعوم",true); return; } recog.lang='ar'; recog.start(); recog.onresult=e=>{ document.getElementById('searchInput').value=e.results[0][0].transcript; renderList(); }; };
+    document.getElementById('searchInput').addEventListener('input', renderGuides);
+    document.getElementById('voiceSearchBtn').onclick = () => { let rec = new (window.webkitSpeechRecognition||window.SpeechRecognition)(); if(!rec){ toast("البحث الصوتي غير مدعوم",true); return; } rec.lang='ar'; rec.start(); rec.onresult=e=>{ document.getElementById('searchInput').value=e.results[0][0].transcript; renderGuides(); }; };
     document.getElementById('filterToggleBtn').onclick = () => document.getElementById('colorsPanel').classList.toggle('show');
-    document.querySelectorAll('.color-filter-btn').forEach(btn=>{ btn.onclick=()=>{ currentColorFilter=btn.dataset.color; document.querySelectorAll('.color-filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderList(); document.getElementById('colorsPanel').classList.remove('show'); }; });
-
-    // Color selector in modal
-    const colorPalette = ['#e94560','#2c7da0','#e76f51','#2a9d8f','#e9c46a','#9b5de5','#06d6a0','#ff006e'];
-    document.getElementById('colorSelector').innerHTML = colorPalette.map(c=>`<div class="color-option" style="background:${c};" data-color="${c}"></div>`).join('');
-    document.querySelectorAll('.color-option').forEach(opt=>{ opt.onclick=()=>{ document.querySelectorAll('.color-option').forEach(o=>o.classList.remove('selected')); opt.classList.add('selected'); selectedColor=opt.dataset.color; }; });
-    document.querySelector('.color-option[data-color="#e94560"]').classList.add('selected');
-
-    toast("🎤 النظام جاهز | سجل دخولك أو اضغط 'حساب تجريبي جديد'");
+    document.querySelectorAll('.color-filter').forEach(btn=>{ btn.onclick=()=>{ currentColorFilter=btn.dataset.color; document.querySelectorAll('.color-filter').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderGuides(); document.getElementById('colorsPanel').classList.remove('show'); }; });
+    const colorList = ['#e94560','#2c7da0','#e76f51','#2a9d8f','#e9c46a','#9b5de5','#06d6a0','#ff006e'];
+    document.getElementById('colorSelector').innerHTML = colorList.map(c=>`<div class="color-opt" style="background:${c};" data-color="${c}"></div>`).join('');
+    document.querySelectorAll('.color-opt').forEach(opt=>{ opt.onclick=()=>{ document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('selected')); opt.classList.add('selected'); selectedColor=opt.dataset.color; }; });
+    document.querySelector('.color-opt[data-color="#e94560"]').classList.add('selected');
+    toast("✨ النظام جاهز - استخدم زر اللاسلكي لإرسال رسائل صوتية");
 </script>
 </body>
 </html>
