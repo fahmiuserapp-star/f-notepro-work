@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>F-Note Messenger · حفظ دائم بعد الـ Refresh</title>
+    <title>F-Note Pro · المرشدين والمحادثات الصوتية</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -23,9 +23,13 @@
             background: var(--bg-body);
             color: var(--text-primary);
             height: 100vh;
-            display: flex;
-            flex-direction: column;
+            width: 100vw;
             overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
         :root {
             --bg-body: #f0f2f5;
@@ -47,6 +51,90 @@
             --gray-bg: #3a3b3c;
             --message-bg: #3a3b3c;
         }
+        /* شاشة تسجيل الدخول (ملء الشاشة) */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-body);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+        .login-screen.hide {
+            display: none;
+        }
+        .login-card {
+            background: var(--card-bg);
+            border-radius: 48px;
+            padding: 40px 28px;
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 20px 35px -8px rgba(0,0,0,0.1);
+        }
+        .login-card img {
+            width: 90px;
+            margin-bottom: 20px;
+        }
+        .login-card h2 {
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        .login-card p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 14px 18px;
+            margin: 8px 0;
+            border: 1px solid var(--border);
+            border-radius: 60px;
+            background: var(--gray-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+        }
+        .login-btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 60px;
+            font-weight: bold;
+            margin-top: 16px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .login-btn:active { transform: scale(0.97); }
+        .login-error {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+        .admin-note {
+            background: var(--gray-bg);
+            padding: 10px;
+            border-radius: 32px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: var(--accent);
+        }
+        /* باقي الأنماط الخاصة بالتطبيق */
+        .app-container {
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
         .app-header {
             background: var(--card-bg);
             padding: 12px 16px;
@@ -54,18 +142,19 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .logo-area img { height: 40px; }
         .logo-area span { font-weight: 800; font-size: 1.2rem; color: var(--accent); }
         .menu-btn { background: transparent; border: none; font-size: 26px; cursor: pointer; color: var(--accent); padding: 6px; border-radius: 50%; }
-        .menu-btn:active { background: var(--gray-bg); transform: scale(0.94); }
         .toolbar {
             display: flex;
             gap: 10px;
             padding: 10px 16px;
             background: var(--card-bg);
             border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
         .search-box {
             flex: 1;
@@ -73,7 +162,6 @@
             border: none;
             padding: 10px 16px;
             border-radius: 60px;
-            color: var(--text-primary);
             font-size: 14px;
             outline: none;
         }
@@ -86,8 +174,6 @@
             font-size: 18px;
             cursor: pointer;
         }
-        .voice-search.listening { animation: pulseMic 0.8s infinite; }
-        @keyframes pulseMic { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         .add-contact {
             background: var(--accent);
             border: none;
@@ -101,6 +187,7 @@
             padding: 8px 16px;
             background: var(--card-bg);
             border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
         .filter-trigger {
             width: 100%;
@@ -165,6 +252,7 @@
             display: flex;
             padding: 8px 20px 12px;
             justify-content: space-around;
+            flex-shrink: 0;
         }
         .nav-item {
             text-align: center;
@@ -203,6 +291,7 @@
         .walkie-btn:active { transform: scale(0.94); background: #128C7E; }
         .walkie-btn.recording { background: #ef4444; animation: pulseRecord 0.6s infinite; }
         @keyframes pulseRecord { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        /* مودالات */
         .modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.7);
             display: flex; align-items: center; justify-content: center;
@@ -243,49 +332,68 @@
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1400; display: none; }
         .overlay.show { display: block; }
         .sidebar-item { padding: 14px 0; display: flex; gap: 14px; cursor: pointer; border-bottom: 1px solid var(--border); }
-        .sync-status { font-size: 11px; color: #10b981; margin-top: 5px; }
     </style>
 </head>
 <body oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
 
-<div class="app-header">
-    <div class="logo-area">
+<!-- شاشة تسجيل الدخول (حصري للمدير FAHMI) -->
+<div id="loginScreen" class="login-screen">
+    <div class="login-card">
         <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
-        <span>F-Note Messenger</span>
-    </div>
-    <button class="menu-btn" id="menuBtn">☰</button>
-</div>
-
-<div id="contactsToolbar" class="toolbar">
-    <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث في جهات الاتصال...">
-    <button class="voice-search" id="voiceSearchBtn">🎤</button>
-    <button class="add-contact" id="openModalBtn">+</button>
-</div>
-<div id="contactsFilter" class="filter-bar">
-    <button class="filter-trigger" id="filterTrigger">🎨 فلتر الألوان ▼</button>
-    <div class="colors-row" id="colorsRow"></div>
-</div>
-
-<div class="page-container">
-    <div id="contactsPage" class="page active">
-        <div class="contacts-list" id="contactsListContainer"><div class="empty-state">⏳ جاري التحميل...</div></div>
-    </div>
-    <div id="voicePage" class="page">
-        <div class="voice-list" id="voiceMessagesList"><div class="empty-state">لا توجد رسائل صوتية</div></div>
+        <h2>F-Note Pro VIP</h2>
+        <p>خزنة المرشدين والمحادثات الصوتية</p>
+        <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" autocomplete="off">
+        <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
+        <button class="login-btn" id="doLoginBtn">تسجيل الدخول</button>
+        <div class="admin-note">
+            🔐 يتم إنشاء الحسابات بواسطة المدير <strong>FAHMI</strong> فقط<br>
+            تواصل معه للحصول على بيانات الدخول
+        </div>
+        <div id="loginError" class="login-error"></div>
     </div>
 </div>
 
-<div class="bottom-nav">
-    <button class="nav-item active" data-page="contacts"><i>👥</i><span>المرشدين</span></button>
-    <button class="nav-item" data-page="voice"><i>🎙️</i><span>المحادثات</span></button>
-    <button class="nav-item" id="manualSyncBtn"><i>🔄</i><span>مزامنة</span></button>
+<!-- واجهة التطبيق الرئيسية (تظهر بعد تسجيل الدخول) -->
+<div id="mainApp" style="display: none; height: 100vh; flex-direction: column;">
+    <div class="app-header">
+        <div class="logo-area">
+            <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
+            <span>F-Note Messenger</span>
+        </div>
+        <button class="menu-btn" id="menuBtn">☰</button>
+    </div>
+
+    <div id="contactsToolbar" class="toolbar">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث في جهات الاتصال...">
+        <button class="voice-search" id="voiceSearchBtn">🎤</button>
+        <button class="add-contact" id="openModalBtn">+</button>
+    </div>
+    <div id="contactsFilter" class="filter-bar">
+        <button class="filter-trigger" id="filterTrigger">🎨 فلتر الألوان ▼</button>
+        <div class="colors-row" id="colorsRow"></div>
+    </div>
+
+    <div class="page-container">
+        <div id="contactsPage" class="page active">
+            <div class="contacts-list" id="contactsListContainer"><div class="empty-state">⏳ جاري التحميل...</div></div>
+        </div>
+        <div id="voicePage" class="page">
+            <div class="voice-list" id="voiceMessagesList"><div class="empty-state">لا توجد رسائل صوتية</div></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" data-page="contacts"><i>👥</i><span>المرشدين</span></button>
+        <button class="nav-item" data-page="voice"><i>🎙️</i><span>المحادثات</span></button>
+        <button class="nav-item" id="manualSyncBtn"><i>🔄</i><span>مزامنة</span></button>
+    </div>
+
+    <div class="walkie-wrapper">
+        <button id="walkieBtn" class="walkie-btn">🎙️</button>
+    </div>
 </div>
 
-<div class="walkie-wrapper">
-    <button id="walkieBtn" class="walkie-btn">🎙️</button>
-</div>
-
-<!-- المودالات (نفس السابق) -->
+<!-- المودالات (كما هي) -->
 <div id="guideModal" class="modal"><div class="modal-card"><h3 id="modalTitle">➕ إضافة مرشد</h3>
 <input type="text" id="guideName" placeholder="الاسم الكامل *">
 <input type="tel" id="guidePhone" placeholder="رقم الهاتف *">
@@ -314,13 +422,12 @@
     <div class="sidebar-item" id="exportJson">💾 تصدير JSON</div>
     <div class="sidebar-item" id="exportPdf">📄 تصدير PDF</div>
     <div class="sidebar-item" id="clearAllVoice">🗑️ مسح كل الرسائل الصوتية</div>
-    <div class="sidebar-item" id="forceRefreshData">🔄 إعادة تحميل البيانات يدوياً</div>
-    <div id="syncStatus" class="sync-status" style="margin-top:10px;"></div>
+    <div class="sidebar-item" id="logoutSidebarBtn">🚪 تسجيل الخروج</div>
 </div>
 <div class="overlay" id="overlay"></div>
 
 <script>
-    // ------------------- Firebase Config (ثابت) -------------------
+    // ------------------- Firebase Settings -------------------
     const firebaseConfig = {
         apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
         authDomain: "f-notepro-work-2d25b.firebaseapp.com",
@@ -337,7 +444,7 @@
     const storage = firebase.storage();
     db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn);
 
-    // ------------------- متغيرات عامة -------------------
+    // ------------------- Variables -------------------
     let currentUser = null;
     let guides = [];
     let currentEditId = null;
@@ -352,13 +459,13 @@
     let currentShareId = null;
     let lastMsgCount = 0;
 
-    // دوال مساعدة
+    // Helper functions
     function toast(msg, isErr=false) { let t=document.createElement('div'); t.className='toast'; t.innerText=msg; t.style.background=isErr?'#dc2626':'#1e293b'; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
     function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
     function validatePhone(p) { return /^[\+]?[0-9]{8,15}$/.test(p.replace(/\s/g,'')); }
     function playBeep(freq=880) { try { let ctx=new (AudioContext||webkitAudioContext)(); let osc=ctx.createOscillator(); let gain=ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value=freq; gain.gain.value=0.3; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5); osc.stop(ctx.currentTime+0.5); } catch(e){} }
 
-    // ضغط الصور
+    // Compress image
     function compressImage(file, type) {
         if(!file) return;
         const reader = new FileReader();
@@ -384,8 +491,9 @@
     document.getElementById('uploadGuideTrigger').onclick = ()=>triggerUpload('guide');
     document.getElementById('uploadBusTrigger').onclick = ()=>triggerUpload('bus');
 
+    // Save guide
     async function saveGuide() {
-        if(!currentUser) { toast("الرجاء إعادة تحميل الصفحة", true); return; }
+        if(!currentUser) { toast("الرجاء تسجيل الدخول أولاً", true); return; }
         let name = document.getElementById('guideName').value.trim();
         let phone = document.getElementById('guidePhone').value.trim();
         if(!name || !phone) { toast("الاسم والهاتف مطلوبان", true); return; }
@@ -409,8 +517,6 @@
             toast(currentEditId ? "تم التعديل" : "تمت الإضافة");
             document.getElementById('guideModal').classList.remove('show');
             resetForm();
-            // تحديث القائمة فوراً
-            renderContacts();
         } catch(e) { toast("خطأ: "+e.message, true); }
     }
     function resetForm() {
@@ -476,16 +582,14 @@
                 pubSnap.forEach(d=>{ if(d.data().userId !== currentUser.uid) all.push({id:d.id,...d.data()}); });
                 guides = all.filter((v,i,a)=>a.findIndex(t=>t.id===v.id)===i);
                 renderContacts();
-                document.getElementById('syncStatus').innerHTML = `✅ آخر مزامنة: ${new Date().toLocaleTimeString()}`;
-                setTimeout(()=>{ if(document.getElementById('syncStatus')) document.getElementById('syncStatus').innerHTML = ''; }, 3000);
-            }).catch(e=>console.warn);
+            });
         };
         mine.onSnapshot(update);
         db.collection('guides').where('visibility','==','public').onSnapshot(update);
         unsubscribeGuides = ()=>{};
     }
 
-    // ------------------- اللاسلكي -------------------
+    // Walkie-Talkie
     async function startRecording() {
         if(isRecording) return;
         try {
@@ -538,7 +642,7 @@
         voiceUnsub = db.collection('radio_messages').orderBy('timestamp', 'desc').limit(30).onSnapshot(()=> loadVoiceMessages());
     }
 
-    // ------------------- مشاركة واتساب -------------------
+    // Multi-whatsapp share (same as before)
     function openMultiShare(guideId) {
         currentShareId = guideId;
         let guide = guides.find(g=>g.id===guideId);
@@ -558,84 +662,70 @@
     };
     document.getElementById('closeMultiShareBtn').onclick = ()=>document.getElementById('multiShareModal').classList.remove('show');
 
-    // ------------------- حل مشكلة REFRESH وضياع البيانات -------------------
-    // استراتيجية: تخزين uid في localStorage واسترجاعه، ثم تسجيل الدخول بهذا uid مباشرة (غير ممكن)
-    // الحل الأمثل: استخدام signInAnonymously() لكنه يُعيد نفس المستخدم إذا كان قد سجل من قبل بنفس الجهاز.
-    // لكن firebase قد ينشئ مستخدمين متعددين. نستخدم حل: إنشاء مستخدم مجهول واحد وتخزينه في localStorage.
-    let anonymousUserCreated = false;
-    async function initAnonymousAuth() {
-        const storedUid = localStorage.getItem('fnote_anonymous_uid');
-        if(storedUid) {
-            // نحاول استعادة الجلسة (لا يمكن مباشرة، لكن يمكننا الانتظار)
-            // بدلاً من ذلك، نترك onAuthStateChanged يعيد نفس المستخدم إذا كان موجوداً.
-            // ولكن firebase يحتفظ بالجلسة تلقائياً. فقط نضمن أن هناك مستخدم.
-            if(!auth.currentUser) {
-                await auth.signInAnonymously();
-            }
-        } else {
-            const userCred = await auth.signInAnonymously();
-            localStorage.setItem('fnote_anonymous_uid', userCred.user.uid);
+    // ------------------- AUTHENTICATION (Email/Password only) -------------------
+    document.getElementById('doLoginBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+        if(!email || !password) { errorDiv.innerText = 'يرجى إدخال البريد الإلكتروني وكلمة المرور'; return; }
+        errorDiv.innerText = '';
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+            // ستتم معالجة الانتقال عبر onAuthStateChanged
+        } catch(err) {
+            let msg = err.code === 'auth/user-not-found' ? 'الحساب غير موجود. تواصل مع المدير FAHMI لإنشاء حساب لك.' : 'كلمة المرور غير صحيحة أو خطأ في الاتصال';
+            errorDiv.innerText = msg;
         }
-    }
+    };
 
-    // ------------------- المصادقة المجهولة مع الحفظ -------------------
+    // Logout
+    document.getElementById('logoutSidebarBtn').onclick = () => {
+        auth.signOut().then(() => {
+            toast("تم تسجيل الخروج");
+            // إخفاء الواجهة وإظهار شاشة الدخول
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginScreen').classList.remove('hide');
+        });
+    };
+
+    // Monitor auth state
     auth.onAuthStateChanged(user => {
         if(user) {
             currentUser = user;
-            // تخزين uid لضمان عدم ضياعه بعد الـ Refresh
-            localStorage.setItem('fnote_anonymous_uid', user.uid);
-            document.getElementById('userInfoSide').innerHTML = `✅ مستخدم نشط (محفوظ)<br><span style="font-size:11px;">🟢 متصل</span>`;
+            // إظهار الواجهة الرئيسية وإخفاء شاشة الدخول
+            document.getElementById('loginScreen').classList.add('hide');
+            document.getElementById('mainApp').style.display = 'flex';
+            document.getElementById('userInfoSide').innerHTML = `✅ ${user.email}<br><span style="font-size:11px;">🟢 متصل</span>`;
+            // تحميل البيانات
             subscribeToGuides();
             listenVoiceMessages();
             loadVoiceMessages();
-            toast("تم استعادة البيانات بنجاح", false);
+            toast("تم تسجيل الدخول بنجاح");
         } else {
-            currentUser = null; guides = []; renderContacts();
+            currentUser = null;
+            guides = [];
             if(unsubscribeGuides) unsubscribeGuides();
             if(voiceUnsub) voiceUnsub();
-            // محاولة تسجيل الدخول مرة أخرى
-            initAnonymousAuth().catch(e=>toast("خطأ في الاتصال",true));
+            // إخفاء الواجهة وإظهار شاشة الدخول
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginScreen').classList.remove('hide');
         }
     });
-    // بدء التشغيل
-    initAnonymousAuth().catch(console.warn);
 
-    // ------------------- زر مزامنة يدوي -------------------
-    async function manualSync() {
-        if(!currentUser) { toast("لم يتم التعرف على المستخدم", true); return; }
-        document.getElementById('syncStatus').innerHTML = '🔄 جاري المزامنة...';
-        try {
-            await Promise.all([
-                db.collection('guides').where('userId','==',currentUser.uid).get(),
-                db.collection('guides').where('visibility','==','public').get()
-            ]);
-            toast("تمت المزامنة بنجاح");
-            document.getElementById('syncStatus').innerHTML = '✅ تم التحديث';
-            setTimeout(()=>{ 
-                if(document.getElementById('syncStatus')) document.getElementById('syncStatus').innerHTML = ''; 
-            }, 2000);
-        } catch(e) { toast("خطأ في المزامنة", true); }
-    }
-    document.getElementById('manualSyncBtn').onclick = manualSync;
-    document.getElementById('forceRefreshData').onclick = manualSync;
-
-    // ------------------- تبديل الصفحات -------------------
-    let currentPage = 'contacts';
+    // ------------------- UI Helpers -------------------
     function switchPage(page) {
-        currentPage = page;
         document.getElementById('contactsPage').classList.toggle('active', page === 'contacts');
         document.getElementById('voicePage').classList.toggle('active', page === 'voice');
         document.getElementById('contactsToolbar').style.display = page === 'contacts' ? 'flex' : 'none';
         document.getElementById('contactsFilter').style.display = page === 'contacts' ? 'block' : 'none';
         if(page === 'voice') loadVoiceMessages();
-        document.querySelectorAll('.nav-item').forEach(item => {
+        document.querySelectorAll('.nav-item[data-page]').forEach(item => {
             if(item.dataset.page === page) item.classList.add('active');
             else item.classList.remove('active');
         });
     }
     document.querySelectorAll('.nav-item[data-page]').forEach(item => { item.onclick = () => switchPage(item.dataset.page); });
-
-    // ------------------- واجهة المستخدم -------------------
+    document.getElementById('manualSyncBtn').onclick = () => { if(currentUser) { subscribeToGuides(); loadVoiceMessages(); toast("تمت المزامنة"); } };
     document.getElementById('darkModeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('darkMode', document.body.classList.contains('dark')); };
     if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
     document.getElementById('muteNotificationsBtn').onclick = () => { isMuted=!isMuted; toast(isMuted?"تم كتم الإشعارات الصوتية":"تم إلغاء الكتم"); };
@@ -662,7 +752,7 @@
     document.getElementById('colorSelector').innerHTML = colorArray.map(c=>`<div class="color-dot" style="background:${c};" data-color="${c}"></div>`).join('');
     document.querySelectorAll('.color-dot').forEach(dot=>{ dot.onclick=()=>{ document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected')); dot.classList.add('selected'); selectedColor=dot.dataset.color; }; });
     document.querySelector('.color-dot[data-color="#e94560"]').classList.add('selected');
-    toast("✨ البيانات محفوظة - يمكنك تحديث الصفحة دون فقدان المعلومات");
+    toast("✨ نظام إدارة المرشدين - يرجى تسجيل الدخول بحسابك");
 </script>
 </body>
 </html>
