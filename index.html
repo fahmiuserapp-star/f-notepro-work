@@ -50,7 +50,7 @@
             --gray-bg: #3a3b3c;
             --message-bg: #3a3b3c;
         }
-        /* شاشة تسجيل الدخول */
+        /* شاشة تسجيل الدخول مع الاسم */
         .login-screen {
             position: fixed;
             inset: 0;
@@ -77,7 +77,7 @@
         .login-input {
             width: 100%;
             padding: 12px 16px;
-            margin: 6px 0;
+            margin: 8px 0;
             border: 1px solid var(--border);
             border-radius: 60px;
             background: var(--gray-bg);
@@ -92,8 +92,15 @@
             padding: 12px;
             border-radius: 60px;
             font-weight: bold;
-            margin-top: 12px;
+            margin-top: 16px;
             cursor: pointer;
+            transition: 0.1s;
+        }
+        .login-btn:active { transform: scale(0.97); }
+        .login-btn.disabled {
+            background: #64748b;
+            cursor: not-allowed;
+            opacity: 0.6;
         }
         .admin-note {
             background: var(--gray-bg);
@@ -103,37 +110,10 @@
             font-size: 11px;
             color: var(--accent);
         }
-        /* نافذة تعيين الاسم لأول مرة */
-        .name-setup-screen {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            z-index: 2100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.3s;
-        }
-        .name-setup-screen.hide { display: none; }
-        .name-setup-card {
-            background: var(--card-bg);
-            border-radius: 48px;
-            padding: 32px 24px;
-            width: 90%;
-            max-width: 380px;
-            text-align: center;
-        }
-        .name-setup-card h3 { color: var(--accent); margin-bottom: 16px; }
-        .name-setup-input {
-            width: 100%;
-            padding: 14px;
-            border-radius: 60px;
-            border: 1px solid var(--border);
-            background: var(--gray-bg);
-            font-size: 16px;
-            margin: 15px 0;
-            text-align: center;
+        .login-error {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 10px;
         }
         /* التطبيق الرئيسي */
         .app-main {
@@ -244,7 +224,6 @@
             border-right: 4px solid var(--accent);
             box-shadow: var(--shadow-sm);
         }
-        .contact-card:active { transform: scale(0.99); }
         .contact-row { display: flex; gap: 12px; align-items: center; }
         .contact-avatar { width: 50px; height: 50px; border-radius: 18px; object-fit: cover; cursor: pointer; background: var(--gray-bg); }
         .contact-details { flex: 1; }
@@ -441,7 +420,7 @@
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول -->
+<!-- شاشة تسجيل الدخول (مع إضافة الاسم) -->
 <div id="loginScreen" class="login-screen">
     <div class="login-card">
         <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
@@ -449,36 +428,13 @@
         <p>خزنة المرشدين والمحادثات الصوتية</p>
         <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" autocomplete="off">
         <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
-        <button class="login-btn" id="doLoginBtn">تسجيل الدخول</button>
+        <input type="text" id="loginDisplayName" class="login-input" placeholder="اسم المستخدم (سيظهر للآخرين)">
+        <button class="login-btn disabled" id="doLoginBtn">تسجيل الدخول</button>
         <div class="admin-note">
             <i class="fas fa-lock"></i> يتم إنشاء الحسابات بواسطة <strong>المدير FAHMI</strong> فقط<br>
-            تواصل معه للحصول على بيانات الدخول
+            تواصل معه للحصول على البريد وكلمة المرور
         </div>
-        <div id="loginError" style="color:#dc2626; font-size:12px; margin-top:10px;"></div>
-    </div>
-</div>
-
-<!-- نافذة تعيين الاسم لأول مرة -->
-<div id="nameSetupScreen" class="name-setup-screen hide">
-    <div class="name-setup-card">
-        <i class="fas fa-user-circle" style="font-size: 60px; color: var(--accent); margin-bottom: 10px;"></i>
-        <h3>مرحباً بك!</h3>
-        <p style="margin-bottom: 15px;">يرجى إدخال الاسم الذي سيظهر للآخرين<br><span style="font-size: 12px;">(يمكنك تغييره مرة واحدة كل 30 يوماً)</span></p>
-        <input type="text" id="setupDisplayName" class="name-setup-input" placeholder="الاسم الكامل" maxlength="50">
-        <button class="login-btn" id="saveNameBtn">حفظ الاسم</button>
-    </div>
-</div>
-
-<!-- نافذة تغيير الاسم (المرة كل 30 يوم) -->
-<div id="changeNameModal" class="modal">
-    <div class="modal-card">
-        <h3><i class="fas fa-user-edit"></i> تغيير الاسم</h3>
-        <p id="changeNameMessage" style="margin-bottom: 15px; color: var(--accent);"></p>
-        <input type="text" id="changeNameInput" placeholder="الاسم الجديد" maxlength="50">
-        <div class="modal-buttons">
-            <button class="btn-save" id="confirmChangeNameBtn">تغيير</button>
-            <button class="btn-cancel" id="closeChangeNameBtn">إلغاء</button>
-        </div>
+        <div id="loginError" class="login-error"></div>
     </div>
 </div>
 
@@ -550,6 +506,10 @@
 
 <div id="detailModal" class="modal"><div class="modal-card"><h3 id="detailName"></h3><div id="detailContent"></div><button class="btn-cancel" id="closeDetailBtn">إغلاق</button></div></div>
 <div id="fullImageModal" class="modal"><div class="modal-card" style="text-align:center;"><img id="fullImageView" style="max-width:100%; border-radius:28px;"><button class="btn-cancel" id="closeFullImageBtn">إغلاق</button></div></div>
+<div id="changeNameModal" class="modal"><div class="modal-card"><h3><i class="fas fa-user-edit"></i> تغيير الاسم</h3>
+<p id="changeNameMessage" style="margin-bottom: 15px;"></p>
+<input type="text" id="changeNameInput" placeholder="الاسم الجديد" maxlength="50">
+<div class="modal-buttons"><button class="btn-save" id="confirmChangeNameBtn">تغيير</button><button class="btn-cancel" id="closeChangeNameBtn">إلغاء</button></div></div></div>
 
 <div class="sidebar" id="sidebar">
     <div style="display:flex; justify-content:space-between; margin-bottom:16px;"><h2 style="color:var(--accent);"><i class="fas fa-cog"></i> القائمة</h2><button id="closeSidebarBtn" style="background:none; border:none; font-size:22px;"><i class="fas fa-times"></i></button></div>
@@ -615,6 +575,24 @@
             osc.stop(ctx.currentTime+0.4); 
         } catch(e){} 
     }
+
+    // التحقق من ملء الحقول لتفعيل زر تسجيل الدخول
+    function checkLoginFields() {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        const displayName = document.getElementById('loginDisplayName').value.trim();
+        const btn = document.getElementById('doLoginBtn');
+        if(email && password && displayName) {
+            btn.classList.remove('disabled');
+            btn.disabled = false;
+        } else {
+            btn.classList.add('disabled');
+            btn.disabled = true;
+        }
+    }
+    document.getElementById('loginEmail').addEventListener('input', checkLoginFields);
+    document.getElementById('loginPassword').addEventListener('input', checkLoginFields);
+    document.getElementById('loginDisplayName').addEventListener('input', checkLoginFields);
 
     // ضغط الصور
     function compressImage(file, type) {
@@ -880,7 +858,7 @@
         });
     }
 
-    // إدارة الاسم (مرة كل 30 يوم)
+    // إدارة الاسم - مرة واحدة فقط عند أول تسجيل دخول، ثم مرة كل 30 يوماً
     async function saveUserDisplayName(name) {
         await db.collection('user_profiles').doc(currentUser.uid).set({
             displayName: name,
@@ -897,22 +875,14 @@
             currentDisplayName = doc.data().displayName;
             document.getElementById('displayNameSpan').innerText = currentDisplayName;
             document.getElementById('userInfoSide').innerHTML = `<i class="fas fa-user-check"></i> ${currentUser.email}<br><span style="font-size:11px;"><i class="fas fa-circle" style="color:#10b981; font-size:8px;"></i> متصل</span><br><i class="fas fa-user-tag"></i> ${currentDisplayName}`;
-            document.getElementById('nameSetupScreen').classList.add('hide');
         } else {
-            // أول مرة - يطلب إدخال الاسم
-            document.getElementById('nameSetupScreen').classList.remove('hide');
+            // أول مرة - الاسم تم إدخاله في شاشة تسجيل الدخول
+            const tempName = document.getElementById('loginDisplayName').value.trim();
+            if(tempName) {
+                await saveUserDisplayName(tempName);
+            }
         }
     }
-    
-    document.getElementById('saveNameBtn').onclick = async () => {
-        const newName = document.getElementById('setupDisplayName').value.trim();
-        if(!newName) { toast("الرجاء إدخال الاسم", true); return; }
-        await saveUserDisplayName(newName);
-        document.getElementById('nameSetupScreen').classList.add('hide');
-        toast("تم حفظ الاسم بنجاح");
-        subscribeToGuides();
-        loadChatMessages();
-    };
     
     // تغيير الاسم (مرة كل 30 يوم)
     document.getElementById('changeNameSidebarBtn').onclick = async () => {
@@ -922,11 +892,11 @@
         const daysDiff = lastChange ? Math.floor((now - lastChange) / (1000 * 60 * 60 * 24)) : 31;
         if(daysDiff < 30) {
             const remaining = 30 - daysDiff;
-            document.getElementById('changeNameMessage').innerHTML = `⚠️ لا يمكنك تغيير الاسم إلا بعد ${remaining} يوم`;
+            document.getElementById('changeNameMessage').innerHTML = `<i class="fas fa-clock"></i> لا يمكنك تغيير الاسم إلا بعد ${remaining} يوم`;
             document.getElementById('changeNameInput').disabled = true;
             document.getElementById('confirmChangeNameBtn').disabled = true;
         } else {
-            document.getElementById('changeNameMessage').innerHTML = `يمكنك تغيير اسمك مرة واحدة (${30 - daysDiff} يوم متبقي حتى التغيير التالي)`;
+            document.getElementById('changeNameMessage').innerHTML = `يمكنك تغيير اسمك (مرة واحدة كل 30 يوم)`;
             document.getElementById('changeNameInput').disabled = false;
             document.getElementById('confirmChangeNameBtn').disabled = false;
             document.getElementById('changeNameInput').value = currentDisplayName;
@@ -955,11 +925,13 @@
     document.getElementById('doLoginBtn').onclick = async () => {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
+        const displayName = document.getElementById('loginDisplayName').value.trim();
         const errorDiv = document.getElementById('loginError');
-        if(!email || !password) { errorDiv.innerText = 'يرجى إدخال البريد وكلمة المرور'; return; }
+        if(!email || !password || !displayName) { errorDiv.innerText = 'يرجى ملء جميع الحقول'; return; }
         errorDiv.innerText = '';
         try {
             await auth.signInWithEmailAndPassword(email, password);
+            // سيتم التعامل مع باقي الخطوات في onAuthStateChanged
         } catch(err) {
             errorDiv.innerText = err.code === 'auth/user-not-found' ? 'الحساب غير موجود. تواصل مع المدير FAHMI' : 'كلمة مرور خاطئة';
         }
@@ -970,8 +942,8 @@
     auth.onAuthStateChanged(async user => {
         if(user) {
             currentUser = user;
-            document.getElementById('loginScreen').classList.add('hide');
             await checkAndLoadUserProfile();
+            document.getElementById('loginScreen').classList.add('hide');
             document.getElementById('mainApp').style.display = 'flex';
             subscribeToGuides();
             loadChatMessages();
@@ -981,6 +953,11 @@
             if(unsubscribeGuides) unsubscribeGuides();
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('loginScreen').classList.remove('hide');
+            // إعادة تعيين حقول تسجيل الدخول
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginDisplayName').value = '';
+            checkLoginFields();
         }
     });
 
