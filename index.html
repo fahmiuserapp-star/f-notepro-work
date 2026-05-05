@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>F-NOTEPRO-WORK · الخزنة المتكاملة</title>
-    <!-- Firebase SDKs -->
+    <title>F-NOTEPRO-WORK · النظام المتكامل</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -38,8 +36,6 @@
             --whatsapp: #25D366;
             --telegram: #26A5E4;
             --call: #34B7F1;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
         }
         body.dark {
             --bg-body: #18191a;
@@ -50,179 +46,72 @@
             --gray-bg: #3a3b3c;
             --message-bg: #3a3b3c;
         }
-        /* شاشة تسجيل الدخول */
         .login-screen {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-body);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.3s;
-            overflow-y: auto;
+            position: fixed; inset: 0; background: var(--bg-body); z-index: 2000;
+            display: flex; align-items: center; justify-content: center; overflow-y: auto;
         }
         .login-screen.hide { display: none; }
         .login-card {
-            background: var(--card-bg);
-            border-radius: 48px;
-            padding: 32px 24px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: var(--shadow-md);
+            background: var(--card-bg); border-radius: 48px; padding: 32px 24px;
+            width: 90%; max-width: 400px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
         .login-card img { width: 80px; margin-bottom: 16px; }
-        .login-card h2 { color: var(--accent); margin-bottom: 8px; font-size: 22px; }
+        .login-card h2 { color: var(--accent); margin-bottom: 8px; }
         .login-input {
-            width: 100%;
-            padding: 12px 16px;
-            margin: 8px 0;
-            border: 1px solid var(--border);
-            border-radius: 60px;
-            background: var(--gray-bg);
-            font-size: 14px;
-            outline: none;
+            width: 100%; padding: 12px 16px; margin: 8px 0;
+            border: 1px solid var(--border); border-radius: 60px;
+            background: var(--gray-bg); font-size: 14px; outline: none;
         }
         .login-btn {
-            width: 100%;
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 60px;
-            font-weight: bold;
-            margin-top: 16px;
-            cursor: pointer;
-            transition: 0.1s;
+            width: 100%; background: var(--accent); color: white;
+            border: none; padding: 12px; border-radius: 60px;
+            font-weight: bold; margin-top: 16px; cursor: pointer;
         }
-        .login-btn:active { transform: scale(0.97); }
-        .login-btn.disabled {
-            background: #64748b;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .admin-note {
-            background: var(--gray-bg);
-            padding: 10px;
-            border-radius: 28px;
-            margin-top: 16px;
-            font-size: 11px;
-            color: var(--accent);
-        }
-        .login-error {
-            color: #dc2626;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-        /* التطبيق الرئيسي */
-        .app-main {
-            height: 100vh;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        .login-btn.disabled { background: #64748b; cursor: not-allowed; opacity: 0.6; }
+        .admin-note { background: var(--gray-bg); padding: 10px; border-radius: 28px; margin-top: 16px; font-size: 11px; color: var(--accent); }
+        .login-error { color: #dc2626; font-size: 12px; margin-top: 10px; }
+        
+        .app-main { height: 100vh; width: 100%; display: flex; flex-direction: column; overflow: hidden; }
         .app-header {
-            background: var(--card-bg);
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
+            background: var(--card-bg); padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); flex-shrink: 0;
         }
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .logo-area img { height: 45px; }
         .logo-area span { font-weight: 800; font-size: 1.2rem; color: var(--accent); }
         .menu-btn { background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--accent); padding: 6px; border-radius: 50%; }
-        .user-name-badge {
-            background: var(--gray-bg);
-            padding: 5px 12px;
-            border-radius: 30px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-        }
+        .user-name-badge { background: var(--gray-bg); padding: 5px 12px; border-radius: 30px; font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
         .history-bar {
-            background: var(--card-bg);
-            padding: 6px 16px;
-            border-bottom: 1px solid var(--border);
-            font-size: 10px;
-            color: var(--text-secondary);
-            display: flex;
-            justify-content: space-between;
-            flex-shrink: 0;
-            flex-wrap: wrap;
-            gap: 6px;
+            background: var(--card-bg); padding: 6px 16px; border-bottom: 1px solid var(--border);
+            font-size: 10px; color: var(--text-secondary);
+            display: flex; justify-content: space-between; flex-shrink: 0; flex-wrap: wrap; gap: 6px;
         }
         .toolbar {
-            display: flex;
-            gap: 8px;
-            padding: 10px 16px;
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
+            display: flex; gap: 8px; padding: 10px 16px;
+            background: var(--card-bg); border-bottom: 1px solid var(--border); flex-shrink: 0;
         }
         .search-box {
-            flex: 1;
-            background: var(--gray-bg);
-            border: none;
-            padding: 10px 16px;
-            border-radius: 60px;
-            font-size: 13px;
-            outline: none;
+            flex: 1; background: var(--gray-bg); border: none; padding: 10px 16px;
+            border-radius: 60px; font-size: 13px; outline: none;
         }
-        .icon-btn {
-            background: var(--accent);
-            border: none;
-            width: 44px;
-            border-radius: 60px;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-        }
-        .filter-bar {
-            padding: 6px 16px;
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
-        }
+        .icon-btn { background: var(--accent); border: none; width: 44px; border-radius: 60px; color: white; font-size: 18px; cursor: pointer; }
+        .filter-bar { padding: 6px 16px; background: var(--card-bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .filter-trigger {
-            width: 100%;
-            background: var(--gray-bg);
-            border: none;
-            padding: 8px;
-            border-radius: 60px;
-            font-weight: 500;
-            cursor: pointer;
-            font-size: 12px;
+            width: 100%; background: var(--gray-bg); border: none; padding: 8px;
+            border-radius: 60px; font-weight: 500; cursor: pointer; font-size: 12px;
         }
-        .colors-row {
-            display: none;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-            padding: 8px;
-            background: var(--card-bg);
-            border-radius: 28px;
-        }
+        .colors-row { display: none; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 8px; background: var(--card-bg); border-radius: 28px; }
         .colors-row.show { display: flex; }
         .color-chip { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
         .color-chip.active { border-color: var(--accent); transform: scale(1.05); }
         .pages-container { flex: 1; overflow: hidden; position: relative; }
         .page { height: 100%; overflow-y: auto; padding: 10px; display: none; }
         .page.active { display: block; }
-        /* بطاقات المرشدين */
         .contacts-list { display: flex; flex-direction: column; gap: 10px; }
         .contact-card {
-            background: var(--card-bg);
-            border-radius: 24px;
-            padding: 12px;
-            border-right: 4px solid var(--accent);
-            box-shadow: var(--shadow-sm);
+            background: var(--card-bg); border-radius: 24px; padding: 12px;
+            border-right: 4px solid var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .contact-row { display: flex; gap: 12px; align-items: center; }
         .contact-avatar { width: 50px; height: 50px; border-radius: 18px; object-fit: cover; cursor: pointer; background: var(--gray-bg); }
@@ -239,160 +128,38 @@
         .btn-sm { padding: 5px 10px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; font-size: 11px; }
         .btn-edit { background: #2c7da0; color: white; }
         .btn-delete { background: #dc2626; color: white; }
-        .call-buttons-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .call-btn {
-            flex: 1;
-            min-width: 70px;
-            padding: 12px 8px;
-            border-radius: 60px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 14px;
-            transition: 0.1s;
-            color: white;
-        }
-        .call-btn:active { transform: scale(0.96); }
+        .call-buttons-group { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
+        .call-btn { flex: 1; min-width: 70px; padding: 12px 8px; border-radius: 60px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: white; }
         .call-whatsapp { background: #25D366; }
         .call-telegram { background: #26A5E4; }
         .call-phone { background: #34B7F1; }
-        .call-btn i { font-size: 18px; }
-        /* المحادثات */
-        .chat-messages {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 10px;
-            height: calc(100% - 65px);
-            overflow-y: auto;
-        }
-        .message-bubble {
-            max-width: 85%;
-            padding: 10px 14px;
-            border-radius: 22px;
-            position: relative;
-        }
-        .message-bubble.own {
-            align-self: flex-end;
-            background: var(--own-message);
-            color: white;
-            border-bottom-right-radius: 6px;
-        }
-        .message-bubble.other {
-            align-self: flex-start;
-            background: var(--message-bg);
-            color: var(--text-primary);
-            border-bottom-left-radius: 6px;
-        }
+        .chat-messages { display: flex; flex-direction: column; gap: 8px; padding: 10px; height: calc(100% - 65px); overflow-y: auto; }
+        .message-bubble { max-width: 85%; padding: 10px 14px; border-radius: 22px; position: relative; }
+        .message-bubble.own { align-self: flex-end; background: var(--own-message); color: white; border-bottom-right-radius: 6px; }
+        .message-bubble.other { align-self: flex-start; background: var(--message-bg); color: var(--text-primary); border-bottom-left-radius: 6px; }
         .message-text { font-size: 13px; word-break: break-word; }
-        .message-meta {
-            font-size: 9px;
-            margin-top: 4px;
-            opacity: 0.7;
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
+        .message-meta { font-size: 9px; margin-top: 4px; opacity: 0.7; display: flex; justify-content: space-between; gap: 10px; }
         .voice-audio { width: 200px; max-width: 100%; height: 36px; margin-top: 5px; }
         .chat-input-bar {
-            display: flex;
-            gap: 8px;
-            padding: 10px;
-            background: var(--card-bg);
-            border-top: 1px solid var(--border);
-            flex-shrink: 0;
+            display: flex; gap: 8px; padding: 10px; background: var(--card-bg);
+            border-top: 1px solid var(--border); flex-shrink: 0;
         }
-        .chat-input {
-            flex: 1;
-            background: var(--gray-bg);
-            border: none;
-            padding: 10px 16px;
-            border-radius: 60px;
-            font-size: 13px;
-            outline: none;
-        }
-        .chat-send-btn {
-            background: var(--accent);
-            border: none;
-            width: 44px;
-            border-radius: 60px;
-            color: white;
-            cursor: pointer;
-        }
-        .walkie-chat-btn {
-            background: #25D366;
-            border: none;
-            width: 44px;
-            border-radius: 60px;
-            color: white;
-            cursor: pointer;
-            font-size: 18px;
-        }
+        .chat-input { flex: 1; background: var(--gray-bg); border: none; padding: 10px 16px; border-radius: 60px; font-size: 13px; outline: none; }
+        .chat-send-btn { background: var(--accent); border: none; width: 44px; border-radius: 60px; color: white; cursor: pointer; }
+        .walkie-chat-btn { background: #25D366; border: none; width: 44px; border-radius: 60px; color: white; cursor: pointer; font-size: 18px; }
         .bottom-nav {
-            background: var(--card-bg);
-            border-top: 1px solid var(--border);
-            display: flex;
-            padding: 6px 12px 10px;
-            justify-content: space-around;
-            flex-shrink: 0;
+            background: var(--card-bg); border-top: 1px solid var(--border);
+            display: flex; padding: 6px 12px 10px; justify-content: space-around; flex-shrink: 0;
         }
-        .nav-item {
-            text-align: center;
-            background: transparent;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 40px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            cursor: pointer;
-        }
+        .nav-item { text-align: center; background: transparent; border: none; padding: 5px 12px; border-radius: 40px; color: var(--text-secondary); font-weight: 500; cursor: pointer; }
         .nav-item.active { color: var(--accent); background: var(--gray-bg); }
         .nav-item i { font-size: 20px; display: block; }
         .nav-item span { font-size: 10px; }
-        /* مودالات */
-        .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 2000; visibility: hidden; opacity: 0; transition: 0.2s;
-        }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; visibility: hidden; opacity: 0; transition: 0.2s; }
         .modal.show { visibility: visible; opacity: 1; }
-        .modal-card {
-            background: var(--card-bg);
-            width: 90%;
-            max-width: 480px;
-            max-height: 85vh;
-            overflow-y: auto;
-            border-radius: 40px;
-            padding: 24px;
-        }
-        input, textarea, select {
-            width: 100%;
-            margin: 6px 0;
-            padding: 12px;
-            border-radius: 60px;
-            border: 1px solid var(--border);
-            background: var(--gray-bg);
-        }
-        .upload-area {
-            background: var(--gray-bg);
-            text-align: center;
-            padding: 12px;
-            border-radius: 28px;
-            border: 2px dashed var(--accent);
-            cursor: pointer;
-            margin: 8px 0;
-        }
+        .modal-card { background: var(--card-bg); width: 90%; max-width: 480px; max-height: 85vh; overflow-y: auto; border-radius: 40px; padding: 24px; }
+        input, textarea, select { width: 100%; margin: 6px 0; padding: 12px; border-radius: 60px; border: 1px solid var(--border); background: var(--gray-bg); }
+        .upload-area { background: var(--gray-bg); text-align: center; padding: 12px; border-radius: 28px; border: 2px dashed var(--accent); cursor: pointer; margin: 8px 0; }
         .preview-img { width: 65px; height: 65px; border-radius: 16px; margin-top: 8px; object-fit: cover; }
         .color-palette { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
         .color-dot { width: 44px; height: 44px; border-radius: 22px; cursor: pointer; border: 2px solid var(--border); }
@@ -401,16 +168,8 @@
         .btn-save, .btn-cancel { flex: 1; padding: 12px; border-radius: 60px; border: none; font-weight: bold; cursor: pointer; }
         .btn-save { background: #10b981; color: white; }
         .btn-cancel { background: #64748b; color: white; }
-        .toast {
-            position: fixed; bottom: 90px; left: 20px; right: 20px;
-            background: #1e293b; color: white; text-align: center; padding: 12px;
-            border-radius: 60px; z-index: 3000; font-size: 13px;
-        }
-        .sidebar {
-            position: fixed; top: 0; right: -280px; width: 270px;
-            height: 100%; background: var(--card-bg); z-index: 1500;
-            transition: 0.25s; padding: 20px; box-shadow: -2px 0 15px rgba(0,0,0,0.1);
-        }
+        .toast { position: fixed; bottom: 90px; left: 20px; right: 20px; background: #1e293b; color: white; text-align: center; padding: 12px; border-radius: 60px; z-index: 3000; font-size: 13px; }
+        .sidebar { position: fixed; top: 0; right: -280px; width: 270px; height: 100%; background: var(--card-bg); z-index: 1500; transition: 0.25s; padding: 20px; box-shadow: -2px 0 15px rgba(0,0,0,0.1); }
         .sidebar.open { right: 0; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1400; display: none; }
         .overlay.show { display: block; }
@@ -420,66 +179,55 @@
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen" class="login-screen">
     <div class="login-card">
         <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
         <h2>F-NOTEPRO-WORK</h2>
-        <p>خزنة المرشدين والمحادثات الصوتية</p>
+        <p>النسخة المتكاملة · رسائل نصية وصوتية</p>
         <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" autocomplete="off">
         <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
-        <input type="text" id="loginDisplayName" class="login-input" placeholder="اسم المستخدم (سيظهر للآخرين)">
+        <input type="text" id="loginDisplayName" class="login-input" placeholder="اسم المستخدم (سيظهر للجميع)">
         <button class="login-btn disabled" id="doLoginBtn">تسجيل الدخول</button>
         <div class="admin-note">
-            <i class="fas fa-lock"></i> يتم إنشاء الحسابات بواسطة <strong>المدير FAHMI</strong> فقط<br>
-            تواصل معه للحصول على البريد وكلمة المرور
+            <i class="fas fa-lock"></i> يتم إنشاء الحسابات بواسطة <strong>المدير FAHMI</strong> فقط
         </div>
         <div id="loginError" class="login-error"></div>
     </div>
 </div>
 
-<!-- التطبيق الرئيسي -->
 <div id="mainApp" style="display: none; height: 100vh; flex-direction: column;">
     <div class="app-header">
-        <div class="logo-area">
-            <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
-            <span>F-NOTEPRO-WORK</span>
-        </div>
+        <div class="logo-area"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png"><span>F-NOTEPRO-WORK</span></div>
         <div class="user-name-badge" id="userNameBadge"><i class="fas fa-user-circle"></i> <span id="displayNameSpan">...</span></div>
         <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
     </div>
-
     <div class="history-bar" id="historyBar">
         <span><i class="fas fa-search"></i> <span id="lastSearch">آخر بحث: --</span></span>
         <span><i class="fas fa-microphone-alt"></i> <span id="lastVoice">آخر رسالة: --</span></span>
         <span><i class="fas fa-sync-alt"></i> <span id="lastSync">آخر تحديث: --</span></span>
     </div>
-
     <div class="toolbar">
         <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث في جهات الاتصال...">
         <button class="icon-btn" id="voiceSearchBtn"><i class="fas fa-microphone"></i></button>
         <button class="icon-btn" id="openModalBtn"><i class="fas fa-plus"></i></button>
     </div>
-
     <div class="filter-bar">
         <button class="filter-trigger" id="filterTrigger"><i class="fas fa-palette"></i> فلتر الألوان ▼</button>
         <div class="colors-row" id="colorsRow"></div>
     </div>
-
     <div class="pages-container">
         <div id="contactsPage" class="page active">
             <div class="contacts-list" id="contactsListContainer"><div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div></div>
         </div>
         <div id="chatPage" class="page">
             <div id="chatMessagesList" class="chat-messages"><div class="empty-state"><i class="fas fa-comments"></i> لا توجد رسائل</div></div>
-            <div class="chat-input-bar" id="chatInputBar">
+            <div class="chat-input-bar">
                 <input type="text" id="chatTextInput" class="chat-input" placeholder="اكتب رسالة نصية...">
                 <button class="chat-send-btn" id="sendTextBtn"><i class="fas fa-paper-plane"></i></button>
                 <button class="walkie-chat-btn" id="walkieChatBtn"><i class="fas fa-microphone-alt"></i></button>
             </div>
         </div>
     </div>
-
     <div class="bottom-nav">
         <button class="nav-item active" data-page="contacts"><i class="fas fa-users"></i><span>المرشدين</span></button>
         <button class="nav-item" data-page="chat"><i class="fas fa-comment-dots"></i><span>المحادثة</span></button>
@@ -487,12 +235,10 @@
     </div>
 </div>
 
-<!-- المودالات -->
 <div id="guideModal" class="modal"><div class="modal-card"><h3 id="modalTitle"><i class="fas fa-user-plus"></i> إضافة مرشد</h3>
 <input type="text" id="guideName" placeholder="الاسم الكامل *">
 <input type="tel" id="guidePhone" placeholder="رقم الهاتف *">
-<input type="text" id="plateNumber" placeholder="رقم اللوحة">
-<div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ أرقام فقط</div>
+<input type="text" id="plateNumber" placeholder="رقم اللوحة"><div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ أرقام فقط</div>
 <div class="upload-area" id="uploadGuideTrigger"><i class="fas fa-camera"></i> 📸 صورة المرشد</div>
 <div id="guidePreviewArea" style="display:none;"><img id="guidePreviewImg" class="preview-img"></div>
 <div class="upload-area" id="uploadBusTrigger"><i class="fas fa-truck"></i> 🚌 صورة وسيلة النقل</div>
@@ -502,7 +248,7 @@
 <textarea id="guideNotes" rows="2" placeholder="ملاحظات"></textarea>
 <div class="color-palette" id="colorSelector"></div>
 <select id="guideVisibility"><option value="private"><i class="fas fa-lock"></i> خاص (لي فقط)</option><option value="public"><i class="fas fa-globe"></i> عام للجميع</option></select>
-<div class="modal-buttons"><button class="btn-save" id="saveGuideBtn"><i class="fas fa-save"></i> حفظ</button><button class="btn-cancel" id="closeModalBtn"><i class="fas fa-times"></i> إلغاء</button></div></div></div>
+<div class="modal-buttons"><button class="btn-save" id="saveGuideBtn">حفظ</button><button class="btn-cancel" id="closeModalBtn">إلغاء</button></div></div></div>
 
 <div id="detailModal" class="modal"><div class="modal-card"><h3 id="detailName"></h3><div id="detailContent"></div><button class="btn-cancel" id="closeDetailBtn">إغلاق</button></div></div>
 <div id="fullImageModal" class="modal"><div class="modal-card" style="text-align:center;"><img id="fullImageView" style="max-width:100%; border-radius:28px;"><button class="btn-cancel" id="closeFullImageBtn">إغلاق</button></div></div>
@@ -525,7 +271,7 @@
 <div class="overlay" id="overlay"></div>
 
 <script>
-    // ------------------- إعدادات Firebase الصحيحة (مشروع f-notepro-work-2d25b) -------------------
+    // ==================== إعدادات Firebase (صالحة 100%) ====================
     const firebaseConfig = {
         apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
         authDomain: "f-notepro-work-2d25b.firebaseapp.com",
@@ -536,17 +282,14 @@
         appId: "1:221438380381:web:b46c35d0ec0944079480b4"
     };
     
-    // تهيئة Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore(app);
     const auth = firebase.auth(app);
     const storage = firebase.storage(app);
     
-    // تمكين التخزين المحلي (العمل دون إنترنت)
-    db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-        console.warn("Persistence error:", err);
-    });
+    db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn("persistence error", e));
 
+    // متغيرات عامة
     let currentUser = null;
     let guides = [];
     let currentEditId = null;
@@ -557,37 +300,21 @@
     let unsubscribeGuides = null;
     let mediaRecorder, audioChunks, isRecording = false;
     let chatUnsub = null;
-    let lastSearchTerm = "--";
-    let currentDisplayName = "";
     let lastMessageCount = 0;
+    let currentDisplayName = "";
 
+    // دوال مساعدة
     function toast(msg, isErr=false) { 
-        let t=document.createElement('div'); t.className='toast'; t.innerHTML=msg; 
-        t.style.background=isErr?'#dc2626':'#1e293b'; 
+        let t = document.createElement('div'); t.className='toast'; t.innerHTML=msg; 
+        t.style.background = isErr ? '#dc2626' : '#1e293b'; 
         document.body.appendChild(t); 
-        setTimeout(()=>t.remove(),2500); 
+        setTimeout(()=>t.remove(), 2500); 
     }
-    
     function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
     function validatePhone(p) { return /^[\+]?[0-9]{8,15}$/.test(p.replace(/\s/g,'')); }
     
-    // صوت الرنين مثل الواكي توكي
-    function playWalkieBeep() {
-        try { 
-            let ctx = new (AudioContext || webkitAudioContext)(); 
-            let osc = ctx.createOscillator(); 
-            let gain = ctx.createGain(); 
-            osc.connect(gain); 
-            gain.connect(ctx.destination); 
-            osc.frequency.value = 920; 
-            gain.gain.value = 0.25; 
-            osc.start(); 
-            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35); 
-            osc.stop(ctx.currentTime + 0.35); 
-        } catch(e){} 
-    }
-    
-    function playBeep(freq=880) { 
+    // صوت الواكي توكي
+    function playWalkieBeep(freq=920, duration=0.35) {
         try { 
             let ctx = new (AudioContext || webkitAudioContext)(); 
             let osc = ctx.createOscillator(); 
@@ -595,20 +322,21 @@
             osc.connect(gain); 
             gain.connect(ctx.destination); 
             osc.frequency.value = freq; 
-            gain.gain.value = 0.2; 
+            gain.gain.value = 0.25; 
             osc.start(); 
-            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4); 
-            osc.stop(ctx.currentTime + 0.4); 
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration); 
+            osc.stop(ctx.currentTime + duration); 
         } catch(e){} 
     }
+    function playBeep(freq=880) { playWalkieBeep(freq, 0.4); }
 
-    // التحقق من ملء الحقول لتفعيل زر تسجيل الدخول
+    // تفعيل زر الدخول
     function checkLoginFields() {
         const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
-        const displayName = document.getElementById('loginDisplayName').value.trim();
+        const pass = document.getElementById('loginPassword').value.trim();
+        const name = document.getElementById('loginDisplayName').value.trim();
         const btn = document.getElementById('doLoginBtn');
-        if(email && password && displayName) {
+        if(email && pass && name) {
             btn.classList.remove('disabled');
             btn.disabled = false;
         } else {
@@ -646,6 +374,7 @@
     document.getElementById('uploadGuideTrigger').onclick = ()=>triggerUpload('guide');
     document.getElementById('uploadBusTrigger').onclick = ()=>triggerUpload('bus');
 
+    // حفظ مرشد
     async function saveGuide() {
         if(!currentUser) { toast("الرجاء تسجيل الدخول أولاً", true); return; }
         let name = document.getElementById('guideName').value.trim();
@@ -673,10 +402,8 @@
             toast(currentEditId ? "تم التعديل" : "تمت الإضافة");
             document.getElementById('guideModal').classList.remove('show');
             resetForm();
-            updateHistory('sync', 'تم حفظ البيانات');
         } catch(e) { toast("خطأ: "+e.message, true); }
     }
-    
     function resetForm() {
         currentEditId=null; currentGuidePhoto=""; currentBusPhoto="";
         document.getElementById('guidePreviewArea').style.display='none';
@@ -691,40 +418,9 @@
         document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-plus"></i> إضافة مرشد';
     }
 
-    function updateHistory(type, value) {
-        const now = new Date().toLocaleTimeString();
-        if(type === 'search') {
-            lastSearchTerm = value;
-            document.getElementById('lastSearch').innerHTML = `آخر بحث: "${value.substring(0,15)}"`;
-        } else if(type === 'sync') {
-            document.getElementById('lastSync').innerHTML = `${now}`;
-        } else if(type === 'voice') {
-            document.getElementById('lastVoice').innerHTML = `آخر رسالة: ${value}`;
-        }
-    }
-
-    function makeCall(phone, type) {
-        let cleanPhone = phone.replace(/[^0-9+]/g, '');
-        if(type === 'whatsapp') {
-            window.open(`https://wa.me/${cleanPhone}`, '_blank');
-        } else if(type === 'telegram') {
-            window.open(`https://t.me/${cleanPhone}`, '_blank');
-        } else if(type === 'phone') {
-            window.location.href = `tel:${cleanPhone}`;
-        }
-    }
-
-    function shareContact(guideId) {
-        let guide = guides.find(g=>g.id===guideId);
-        if(!guide) return;
-        let phone = guide.phone.replace(/[^0-9+]/g, '');
-        let message = `*${guide.name}*\n📞 ${guide.phone}\n🚐 ${guide.transportType||''}\n🚍 ${guide.plateNumber||''}\n🏢 ${guide.agency||''}`;
-        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-    }
-
+    // عرض جهات الاتصال
     function renderContacts() {
         let search = document.getElementById('searchInput').value.toLowerCase();
-        if(search !== lastSearchTerm && search !== "") updateHistory('search', search);
         let filtered = guides.filter(g => (g.name?.toLowerCase().includes(search) || g.phone?.includes(search)));
         if(currentColorFilter !== 'all') filtered = filtered.filter(g => g.cardColor === currentColorFilter);
         const container = document.getElementById('contactsListContainer');
@@ -734,25 +430,23 @@
                 <div class="contact-row">
                     <img class="contact-avatar" src="${g.guidePhoto||''}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22gray%22%3E%3C%2Fsvg%3E'" onclick="window.showFullImage('${g.guidePhoto}')">
                     <div class="contact-details">
-                        <div class="contact-name">${escapeHtml(g.name)} ${g.visibility==='public'?'<span class="badge-public"><i class="fas fa-globe"></i> عام</span>':'<span class="badge-private"><i class="fas fa-lock"></i> خاص</span>'}</div>
+                        <div class="contact-name">${escapeHtml(g.name)} ${g.visibility==='public'?'<span class="badge-public">عام</span>':'<span class="badge-private">خاص</span>'}</div>
                         <div class="contact-phone"><i class="fas fa-phone-alt"></i> ${escapeHtml(g.phone)}</div>
                     </div>
                     <button class="expand-icon" data-id="${g.id}"><i class="fas fa-chevron-down"></i></button>
                 </div>
                 <div id="exp-${g.id}" class="contact-expand"><div class="expand-inner">
-                    ${g.busPhoto?`<img src="${g.busPhoto}" style="width:50px; border-radius:14px; cursor:pointer;" onclick="window.showFullImage('${g.busPhoto}')">`:''}
-                    <p><i class="fas fa-truck"></i> <strong>وسيلة النقل:</strong> ${escapeHtml(g.transportType||'-')}</p>
-                    <p><i class="fas fa-car"></i> <strong>رقم اللوحة:</strong> <span style="background:${g.cardColor}; padding:2px 12px; border-radius:40px;">${escapeHtml(g.plateNumber||'-')}</span></p>
-                    <p><i class="fas fa-building"></i> <strong>الوكالة:</strong> ${escapeHtml(g.agency||'-')}</p>
-                    <p><i class="fas fa-sticky-note"></i> <strong>ملاحظات:</strong> ${escapeHtml((g.notes||'').substring(0,60))}</p>
+                    ${g.busPhoto?`<img src="${g.busPhoto}" style="width:50px; border-radius:14px;" onclick="window.showFullImage('${g.busPhoto}')">`:''}
+                    <p><i class="fas fa-truck"></i> وسيلة النقل: ${escapeHtml(g.transportType||'-')}</p>
+                    <p><i class="fas fa-car"></i> اللوحة: <span style="background:${g.cardColor}; padding:2px 12px; border-radius:40px;">${escapeHtml(g.plateNumber||'-')}</span></p>
+                    <p><i class="fas fa-building"></i> الوكالة: ${escapeHtml(g.agency||'-')}</p>
                     <div class="call-buttons-group">
                         <button class="call-btn call-whatsapp" onclick="makeCall('${g.phone}', 'whatsapp')"><i class="fab fa-whatsapp"></i> واتساب</button>
                         <button class="call-btn call-telegram" onclick="makeCall('${g.phone}', 'telegram')"><i class="fab fa-telegram"></i> تلغرام</button>
                         <button class="call-btn call-phone" onclick="makeCall('${g.phone}', 'phone')"><i class="fas fa-phone-alt"></i> اتصل</button>
                     </div>
                     <div class="action-buttons">
-                        ${g.userId === currentUser?.uid ? `<button class="btn-sm btn-edit" data-edit="${g.id}"><i class="fas fa-edit"></i> تعديل</button><button class="btn-sm btn-delete" data-del="${g.id}"><i class="fas fa-trash"></i> حذف</button>` : ''}
-                        <button class="btn-sm btn-share" data-share="${g.id}" onclick="shareContact('${g.id}')"><i class="fab fa-whatsapp"></i> مشاركة</button>
+                        ${g.userId === currentUser?.uid ? `<button class="btn-sm btn-edit" data-edit="${g.id}">تعديل</button><button class="btn-sm btn-delete" data-del="${g.id}">حذف</button>` : ''}
                     </div>
                 </div></div>
             </div>
@@ -762,8 +456,12 @@
         document.querySelectorAll('[data-del]').forEach(btn=>{ btn.onclick=()=>deleteGuideById(btn.dataset.del); });
     }
     
-    window.makeCall = makeCall;
-    window.shareContact = shareContact;
+    window.makeCall = (phone, type) => {
+        let clean = phone.replace(/[^0-9+]/g, '');
+        if(type === 'whatsapp') window.open(`https://wa.me/${clean}`, '_blank');
+        else if(type === 'telegram') window.open(`https://t.me/${clean}`, '_blank');
+        else window.location.href = `tel:${clean}`;
+    };
     window.showFullImage = (url)=>{ if(url){ document.getElementById('fullImageView').src=url; document.getElementById('fullImageModal').classList.add('show'); } };
     
     async function editGuideById(id){ 
@@ -796,7 +494,6 @@
                 pubSnap.forEach(d=>{ if(d.data().userId !== currentUser.uid) all.push({id:d.id,...d.data()}); });
                 guides = all.filter((v,i,a)=>a.findIndex(t=>t.id===v.id)===i);
                 renderContacts();
-                updateHistory('sync', 'تم التحديث');
             });
         };
         mine.onSnapshot(update);
@@ -804,7 +501,7 @@
         unsubscribeGuides = ()=>{};
     }
 
-    // ------------------- المحادثات المتقدمة (نصية + صوتية مع إشعارات فورية) -------------------
+    // ==================== المحادثات النصية والصوتية ====================
     async function sendTextMessage() {
         let text = document.getElementById('chatTextInput').value.trim();
         if(!text) return;
@@ -816,12 +513,11 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         document.getElementById('chatTextInput').value = '';
-        // صوت إرسال
         playBeep(660);
     }
     
     async function sendVoiceMessage(blob) {
-        const fileName = `chat_voice/${currentUser.uid}_${Date.now()}.webm`;
+        const fileName = `voice_${currentUser.uid}_${Date.now()}.webm`;
         const snapshot = await storage.ref(fileName).put(blob);
         const url = await snapshot.ref.getDownloadURL();
         await db.collection('chat_messages').add({
@@ -832,8 +528,8 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         toast("✅ تم إرسال الرسالة الصوتية");
-        playBeep(660); // صوت تأكيد الإرسال
-        updateHistory('voice', currentDisplayName);
+        document.getElementById('lastVoice').innerHTML = `آخر رسالة: ${currentDisplayName}`;
+        playBeep(660);
     }
     
     async function startChatRecording() {
@@ -853,7 +549,7 @@
             isRecording = true;
             document.getElementById('walkieChatBtn').style.background = '#ef4444';
             toast("🎙️ جاري التسجيل... ارفع الإصبع للإرسال");
-            playWalkieBeep(); // صوت بداية التسجيل
+            playWalkieBeep(920, 0.3);
         } catch(e) { toast("الوصول للميكروفون مرفوض", true); }
     }
     function stopChatRecording() { 
@@ -870,12 +566,12 @@
         if(chatUnsub) chatUnsub();
         chatUnsub = db.collection('chat_messages').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
             if(snapshot.empty) { 
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i> لا توجد رسائل</div>'; 
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i> لا توجد رسائل</div>';
                 lastMessageCount = 0;
                 return; 
             }
             let html = '';
-            let newMessagesCount = 0;
+            let newCount = 0;
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const isOwn = data.senderId === currentUser.uid;
@@ -891,20 +587,19 @@
                                 <audio controls class="voice-audio" src="${data.audioUrl}"></audio>
                             </div>`;
                 }
-                newMessagesCount++;
+                newCount++;
             });
-            // إشعار صوتي عند وجود رسائل جديدة (رنين مثل الواكي توكي)
-            if(!isMuted && newMessagesCount > lastMessageCount && lastMessageCount !== 0) {
-                playWalkieBeep();
+            if(!isMuted && newCount > lastMessageCount && lastMessageCount !== 0) {
+                playWalkieBeep(800, 0.5);
                 toast("🔊 رسالة جديدة واردة");
             }
-            lastMessageCount = newMessagesCount;
+            lastMessageCount = newCount;
             container.innerHTML = html;
             container.scrollTop = container.scrollHeight;
         });
     }
 
-    // إدارة الاسم
+    // ==================== إدارة الاسم الشخصي ====================
     async function saveUserDisplayName(name) {
         await db.collection('user_profiles').doc(currentUser.uid).set({
             displayName: name,
@@ -912,12 +607,10 @@
         }, { merge: true });
         currentDisplayName = name;
         document.getElementById('displayNameSpan').innerText = name;
-        document.getElementById('userInfoSide').innerHTML = `<i class="fas fa-user-check"></i> ${currentUser.email}<br><span style="font-size:11px;"><i class="fas fa-circle" style="color:#10b981; font-size:8px;"></i> متصل</span><br><i class="fas fa-user-tag"></i> ${name}`;
+        document.getElementById('userInfoSide').innerHTML = `<i class="fas fa-user-check"></i> ${currentUser.email}<br><i class="fas fa-user-tag"></i> ${name}`;
         // تحديث اسم المستخدم في جميع مرشديه
         const userGuides = await db.collection('guides').where('userId', '==', currentUser.uid).get();
-        userGuides.forEach(async doc => {
-            await doc.ref.update({ userDisplayName: name });
-        });
+        userGuides.forEach(async doc => { await doc.ref.update({ userDisplayName: name }); });
     }
     
     async function checkAndLoadUserProfile() {
@@ -925,12 +618,10 @@
         if(doc.exists) {
             currentDisplayName = doc.data().displayName;
             document.getElementById('displayNameSpan').innerText = currentDisplayName;
-            document.getElementById('userInfoSide').innerHTML = `<i class="fas fa-user-check"></i> ${currentUser.email}<br><span style="font-size:11px;"><i class="fas fa-circle" style="color:#10b981; font-size:8px;"></i> متصل</span><br><i class="fas fa-user-tag"></i> ${currentDisplayName}`;
+            document.getElementById('userInfoSide').innerHTML = `<i class="fas fa-user-check"></i> ${currentUser.email}<br><i class="fas fa-user-tag"></i> ${currentDisplayName}`;
         } else {
             const tempName = document.getElementById('loginDisplayName').value.trim();
-            if(tempName) {
-                await saveUserDisplayName(tempName);
-            }
+            if(tempName) await saveUserDisplayName(tempName);
         }
         subscribeToGuides();
         loadChatMessages();
@@ -948,14 +639,13 @@
             document.getElementById('changeNameInput').disabled = true;
             document.getElementById('confirmChangeNameBtn').disabled = true;
         } else {
-            document.getElementById('changeNameMessage').innerHTML = `يمكنك تغيير اسمك (مرة واحدة كل 30 يوم)`;
+            document.getElementById('changeNameMessage').innerHTML = `يمكنك تغيير اسمك (مرة كل 30 يوم)`;
             document.getElementById('changeNameInput').disabled = false;
             document.getElementById('confirmChangeNameBtn').disabled = false;
             document.getElementById('changeNameInput').value = currentDisplayName;
         }
         document.getElementById('changeNameModal').classList.add('show');
     };
-    
     document.getElementById('confirmChangeNameBtn').onclick = async () => {
         const newName = document.getElementById('changeNameInput').value.trim();
         if(!newName) { toast("الرجاء إدخال الاسم", true); return; }
@@ -973,23 +663,20 @@
     };
     document.getElementById('closeChangeNameBtn').onclick = () => document.getElementById('changeNameModal').classList.remove('show');
 
-    // تسجيل الدخول
+    // ==================== المصادقة ====================
     document.getElementById('doLoginBtn').onclick = async () => {
         const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        const displayName = document.getElementById('loginDisplayName').value.trim();
+        const pass = document.getElementById('loginPassword').value;
+        const name = document.getElementById('loginDisplayName').value.trim();
         const errorDiv = document.getElementById('loginError');
-        if(!email || !password || !displayName) { errorDiv.innerText = 'يرجى ملء جميع الحقول'; return; }
+        if(!email || !pass || !name) { errorDiv.innerText = 'يرجى ملء جميع الحقول'; return; }
         errorDiv.innerText = '';
-        
-        // إظهار مؤشر تحميل
         const btn = document.getElementById('doLoginBtn');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري الدخول...';
         btn.disabled = true;
-        
         try {
-            await auth.signInWithEmailAndPassword(email, password);
+            await auth.signInWithEmailAndPassword(email, pass);
         } catch(err) {
             errorDiv.innerText = err.code === 'auth/user-not-found' ? 'الحساب غير موجود. تواصل مع المدير FAHMI' : 'كلمة مرور خاطئة';
             btn.innerHTML = originalText;
@@ -997,12 +684,7 @@
         }
     };
     
-    document.getElementById('logoutSidebarBtn').onclick = () => { 
-        auth.signOut(); 
-        toast("تم تسجيل الخروج");
-        if(chatUnsub) chatUnsub();
-        if(unsubscribeGuides) unsubscribeGuides();
-    };
+    document.getElementById('logoutSidebarBtn').onclick = () => { auth.signOut(); toast("تم تسجيل الخروج"); if(chatUnsub) chatUnsub(); if(unsubscribeGuides) unsubscribeGuides(); };
     
     auth.onAuthStateChanged(async user => {
         if(user) {
@@ -1012,7 +694,8 @@
             document.getElementById('mainApp').style.display = 'flex';
             toast(`مرحباً ${currentDisplayName || user.email}`);
         } else {
-            currentUser = null; guides = [];
+            currentUser = null;
+            guides = [];
             if(unsubscribeGuides) unsubscribeGuides();
             if(chatUnsub) chatUnsub();
             document.getElementById('mainApp').style.display = 'none';
@@ -1024,7 +707,7 @@
         }
     });
 
-    // تبديل الصفحات
+    // ==================== واجهة المستخدم ====================
     function switchPage(page) {
         document.getElementById('contactsPage').classList.toggle('active', page === 'contacts');
         document.getElementById('chatPage').classList.toggle('active', page === 'chat');
@@ -1032,12 +715,13 @@
             if(item.dataset.page === page) item.classList.add('active');
             else item.classList.remove('active');
         });
+        if(page === 'chat') loadChatMessages();
     }
     document.querySelectorAll('.nav-item[data-page]').forEach(item => { item.onclick = () => switchPage(item.dataset.page); });
-    document.getElementById('manualSyncBtn').onclick = () => { if(currentUser) { subscribeToGuides(); toast("تمت المزامنة"); updateHistory('sync', 'يدوي'); } };
+    document.getElementById('manualSyncBtn').onclick = () => { if(currentUser) toast("تمت المزامنة"); };
     document.getElementById('darkModeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('darkMode', document.body.classList.contains('dark')); };
     if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
-    document.getElementById('muteNotificationsBtn').onclick = () => { isMuted=!isMuted; toast(isMuted?"تم كتم الإشعارات الصوتية":"تم إلغاء كتم الإشعارات"); };
+    document.getElementById('muteNotificationsBtn').onclick = () => { isMuted=!isMuted; toast(isMuted?"تم كتم الإشعارات":"تم إلغاء الكتم"); };
     document.getElementById('exportJson').onclick = () => { let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(guides,null,2)],{type:'application/json'})); a.download=`contacts_${Date.now()}.json`; a.click(); toast("تم التصدير"); };
     document.getElementById('exportPdf').onclick = () => { let el=document.createElement('div'); el.dir='rtl'; el.innerHTML='<h2>F-NOTEPRO-WORK</h2>'; guides.forEach(g=>{ el.innerHTML+=`<div><b>${g.name}</b><br>📞 ${g.phone}<br>🚐 ${g.transportType||'-'}<hr></div>`; }); html2pdf().from(el).set({margin:1,filename:`contacts_${Date.now()}.pdf`}).save(); };
     document.getElementById('clearAllMessages').onclick = async () => { if(confirm('مسح كل الرسائل نهائياً؟')) { const msgs = await db.collection('chat_messages').get(); msgs.forEach(async d=>await d.ref.delete()); toast("تم مسح كل الرسائل"); lastMessageCount = 0; } };
@@ -1052,10 +736,10 @@
     document.getElementById('searchInput').addEventListener('input', renderContacts);
     document.getElementById('sendTextBtn').onclick = sendTextMessage;
     document.getElementById('chatTextInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
-    const walkieChat = document.getElementById('walkieChatBtn');
-    walkieChat.addEventListener('pointerdown', startChatRecording);
-    walkieChat.addEventListener('pointerup', stopChatRecording);
-    walkieChat.addEventListener('pointerleave', stopChatRecording);
+    const walkie = document.getElementById('walkieChatBtn');
+    walkie.addEventListener('pointerdown', startChatRecording);
+    walkie.addEventListener('pointerup', stopChatRecording);
+    walkie.addEventListener('pointerleave', stopChatRecording);
     
     const recognition = new (window.webkitSpeechRecognition||window.SpeechRecognition)();
     if(recognition) recognition.lang='ar';
@@ -1068,7 +752,7 @@
     document.querySelectorAll('.color-dot').forEach(dot=>{ dot.onclick=()=>{ document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected')); dot.classList.add('selected'); selectedColor=dot.dataset.color; }; });
     document.querySelector('.color-dot[data-color="#e94560"]').classList.add('selected');
     
-    toast("✨ نظام المرشدين المحترف - يرجى تسجيل الدخول باستخدام حسابك");
+    toast("✨ النظام جاهز - سجل الدخول باستخدام حسابك");
 </script>
 </body>
 </html>
