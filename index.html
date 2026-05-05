@@ -50,7 +50,7 @@
             --gray-bg: #3a3b3c;
             --message-bg: #3a3b3c;
         }
-        /* شاشة تسجيل الدخول مع الاسم */
+        /* شاشة تسجيل الدخول */
         .login-screen {
             position: fixed;
             inset: 0;
@@ -420,7 +420,7 @@
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول (مع إضافة الاسم) -->
+<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen" class="login-screen">
     <div class="login-card">
         <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
@@ -525,7 +525,7 @@
 <div class="overlay" id="overlay"></div>
 
 <script>
-    // Firebase Config
+    // ------------------- إعدادات Firebase الصحيحة (مشروع f-notepro-work-2d25b) -------------------
     const firebaseConfig = {
         apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
         authDomain: "f-notepro-work-2d25b.firebaseapp.com",
@@ -535,11 +535,17 @@
         messagingSenderId: "221438380381",
         appId: "1:221438380381:web:b46c35d0ec0944079480b4"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const storage = firebase.storage();
-    db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn);
+    
+    // تهيئة Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(app);
+    const auth = firebase.auth(app);
+    const storage = firebase.storage(app);
+    
+    // تمكين التخزين المحلي (العمل دون إنترنت)
+    db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+        console.warn("Persistence error:", err);
+    });
 
     let currentUser = null;
     let guides = [];
@@ -550,8 +556,10 @@
     let isMuted = false;
     let unsubscribeGuides = null;
     let mediaRecorder, audioChunks, isRecording = false;
+    let chatUnsub = null;
     let lastSearchTerm = "--";
     let currentDisplayName = "";
+    let lastMessageCount = 0;
 
     function toast(msg, isErr=false) { 
         let t=document.createElement('div'); t.className='toast'; t.innerHTML=msg; 
@@ -559,20 +567,38 @@
         document.body.appendChild(t); 
         setTimeout(()=>t.remove(),2500); 
     }
+    
     function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
     function validatePhone(p) { return /^[\+]?[0-9]{8,15}$/.test(p.replace(/\s/g,'')); }
-    function playBeep(freq=880) { 
+    
+    // صوت الرنين مثل الواكي توكي
+    function playWalkieBeep() {
         try { 
-            let ctx=new (AudioContext||webkitAudioContext)(); 
-            let osc=ctx.createOscillator(); 
-            let gain=ctx.createGain(); 
+            let ctx = new (AudioContext || webkitAudioContext)(); 
+            let osc = ctx.createOscillator(); 
+            let gain = ctx.createGain(); 
             osc.connect(gain); 
             gain.connect(ctx.destination); 
-            osc.frequency.value=freq; 
-            gain.gain.value=0.2; 
+            osc.frequency.value = 920; 
+            gain.gain.value = 0.25; 
             osc.start(); 
-            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.4); 
-            osc.stop(ctx.currentTime+0.4); 
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35); 
+            osc.stop(ctx.currentTime + 0.35); 
+        } catch(e){} 
+    }
+    
+    function playBeep(freq=880) { 
+        try { 
+            let ctx = new (AudioContext || webkitAudioContext)(); 
+            let osc = ctx.createOscillator(); 
+            let gain = ctx.createGain(); 
+            osc.connect(gain); 
+            gain.connect(ctx.destination); 
+            osc.frequency.value = freq; 
+            gain.gain.value = 0.2; 
+            osc.start(); 
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4); 
+            osc.stop(ctx.currentTime + 0.4); 
         } catch(e){} 
     }
 
@@ -650,6 +676,7 @@
             updateHistory('sync', 'تم حفظ البيانات');
         } catch(e) { toast("خطأ: "+e.message, true); }
     }
+    
     function resetForm() {
         currentEditId=null; currentGuidePhoto=""; currentBusPhoto="";
         document.getElementById('guidePreviewArea').style.display='none';
@@ -671,6 +698,8 @@
             document.getElementById('lastSearch').innerHTML = `آخر بحث: "${value.substring(0,15)}"`;
         } else if(type === 'sync') {
             document.getElementById('lastSync').innerHTML = `${now}`;
+        } else if(type === 'voice') {
+            document.getElementById('lastVoice').innerHTML = `آخر رسالة: ${value}`;
         }
     }
 
@@ -775,7 +804,7 @@
         unsubscribeGuides = ()=>{};
     }
 
-    // المحادثات
+    // ------------------- المحادثات المتقدمة (نصية + صوتية مع إشعارات فورية) -------------------
     async function sendTextMessage() {
         let text = document.getElementById('chatTextInput').value.trim();
         if(!text) return;
@@ -787,6 +816,8 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         document.getElementById('chatTextInput').value = '';
+        // صوت إرسال
+        playBeep(660);
     }
     
     async function sendVoiceMessage(blob) {
@@ -801,6 +832,8 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         toast("✅ تم إرسال الرسالة الصوتية");
+        playBeep(660); // صوت تأكيد الإرسال
+        updateHistory('voice', currentDisplayName);
     }
     
     async function startChatRecording() {
@@ -814,13 +847,13 @@
                 if(audioChunks.length === 0) return;
                 const blob = new Blob(audioChunks, { type: 'audio/webm' });
                 await sendVoiceMessage(blob);
-                playBeep(440);
                 stream.getTracks().forEach(t=>t.stop());
             };
             mediaRecorder.start();
             isRecording = true;
             document.getElementById('walkieChatBtn').style.background = '#ef4444';
             toast("🎙️ جاري التسجيل... ارفع الإصبع للإرسال");
+            playWalkieBeep(); // صوت بداية التسجيل
         } catch(e) { toast("الوصول للميكروفون مرفوض", true); }
     }
     function stopChatRecording() { 
@@ -834,9 +867,15 @@
     function loadChatMessages() {
         if(!currentUser) return;
         const container = document.getElementById('chatMessagesList');
-        db.collection('chat_messages').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
-            if(snapshot.empty) { container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i> لا توجد رسائل</div>'; return; }
+        if(chatUnsub) chatUnsub();
+        chatUnsub = db.collection('chat_messages').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
+            if(snapshot.empty) { 
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i> لا توجد رسائل</div>'; 
+                lastMessageCount = 0;
+                return; 
+            }
             let html = '';
+            let newMessagesCount = 0;
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const isOwn = data.senderId === currentUser.uid;
@@ -852,13 +891,20 @@
                                 <audio controls class="voice-audio" src="${data.audioUrl}"></audio>
                             </div>`;
                 }
+                newMessagesCount++;
             });
+            // إشعار صوتي عند وجود رسائل جديدة (رنين مثل الواكي توكي)
+            if(!isMuted && newMessagesCount > lastMessageCount && lastMessageCount !== 0) {
+                playWalkieBeep();
+                toast("🔊 رسالة جديدة واردة");
+            }
+            lastMessageCount = newMessagesCount;
             container.innerHTML = html;
             container.scrollTop = container.scrollHeight;
         });
     }
 
-    // إدارة الاسم - مرة واحدة فقط عند أول تسجيل دخول، ثم مرة كل 30 يوماً
+    // إدارة الاسم
     async function saveUserDisplayName(name) {
         await db.collection('user_profiles').doc(currentUser.uid).set({
             displayName: name,
@@ -867,6 +913,11 @@
         currentDisplayName = name;
         document.getElementById('displayNameSpan').innerText = name;
         document.getElementById('userInfoSide').innerHTML = `<i class="fas fa-user-check"></i> ${currentUser.email}<br><span style="font-size:11px;"><i class="fas fa-circle" style="color:#10b981; font-size:8px;"></i> متصل</span><br><i class="fas fa-user-tag"></i> ${name}`;
+        // تحديث اسم المستخدم في جميع مرشديه
+        const userGuides = await db.collection('guides').where('userId', '==', currentUser.uid).get();
+        userGuides.forEach(async doc => {
+            await doc.ref.update({ userDisplayName: name });
+        });
     }
     
     async function checkAndLoadUserProfile() {
@@ -876,12 +927,13 @@
             document.getElementById('displayNameSpan').innerText = currentDisplayName;
             document.getElementById('userInfoSide').innerHTML = `<i class="fas fa-user-check"></i> ${currentUser.email}<br><span style="font-size:11px;"><i class="fas fa-circle" style="color:#10b981; font-size:8px;"></i> متصل</span><br><i class="fas fa-user-tag"></i> ${currentDisplayName}`;
         } else {
-            // أول مرة - الاسم تم إدخاله في شاشة تسجيل الدخول
             const tempName = document.getElementById('loginDisplayName').value.trim();
             if(tempName) {
                 await saveUserDisplayName(tempName);
             }
         }
+        subscribeToGuides();
+        loadChatMessages();
     }
     
     // تغيير الاسم (مرة كل 30 يوم)
@@ -929,15 +981,28 @@
         const errorDiv = document.getElementById('loginError');
         if(!email || !password || !displayName) { errorDiv.innerText = 'يرجى ملء جميع الحقول'; return; }
         errorDiv.innerText = '';
+        
+        // إظهار مؤشر تحميل
+        const btn = document.getElementById('doLoginBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري الدخول...';
+        btn.disabled = true;
+        
         try {
             await auth.signInWithEmailAndPassword(email, password);
-            // سيتم التعامل مع باقي الخطوات في onAuthStateChanged
         } catch(err) {
             errorDiv.innerText = err.code === 'auth/user-not-found' ? 'الحساب غير موجود. تواصل مع المدير FAHMI' : 'كلمة مرور خاطئة';
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
     };
     
-    document.getElementById('logoutSidebarBtn').onclick = () => { auth.signOut(); toast("تم تسجيل الخروج"); };
+    document.getElementById('logoutSidebarBtn').onclick = () => { 
+        auth.signOut(); 
+        toast("تم تسجيل الخروج");
+        if(chatUnsub) chatUnsub();
+        if(unsubscribeGuides) unsubscribeGuides();
+    };
     
     auth.onAuthStateChanged(async user => {
         if(user) {
@@ -945,15 +1010,13 @@
             await checkAndLoadUserProfile();
             document.getElementById('loginScreen').classList.add('hide');
             document.getElementById('mainApp').style.display = 'flex';
-            subscribeToGuides();
-            loadChatMessages();
             toast(`مرحباً ${currentDisplayName || user.email}`);
         } else {
             currentUser = null; guides = [];
             if(unsubscribeGuides) unsubscribeGuides();
+            if(chatUnsub) chatUnsub();
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('loginScreen').classList.remove('hide');
-            // إعادة تعيين حقول تسجيل الدخول
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginPassword').value = '';
             document.getElementById('loginDisplayName').value = '';
@@ -974,10 +1037,10 @@
     document.getElementById('manualSyncBtn').onclick = () => { if(currentUser) { subscribeToGuides(); toast("تمت المزامنة"); updateHistory('sync', 'يدوي'); } };
     document.getElementById('darkModeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('darkMode', document.body.classList.contains('dark')); };
     if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
-    document.getElementById('muteNotificationsBtn').onclick = () => { isMuted=!isMuted; toast(isMuted?"تم كتم الإشعارات":"تم إلغاء الكتم"); };
+    document.getElementById('muteNotificationsBtn').onclick = () => { isMuted=!isMuted; toast(isMuted?"تم كتم الإشعارات الصوتية":"تم إلغاء كتم الإشعارات"); };
     document.getElementById('exportJson').onclick = () => { let a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(guides,null,2)],{type:'application/json'})); a.download=`contacts_${Date.now()}.json`; a.click(); toast("تم التصدير"); };
     document.getElementById('exportPdf').onclick = () => { let el=document.createElement('div'); el.dir='rtl'; el.innerHTML='<h2>F-NOTEPRO-WORK</h2>'; guides.forEach(g=>{ el.innerHTML+=`<div><b>${g.name}</b><br>📞 ${g.phone}<br>🚐 ${g.transportType||'-'}<hr></div>`; }); html2pdf().from(el).set({margin:1,filename:`contacts_${Date.now()}.pdf`}).save(); };
-    document.getElementById('clearAllMessages').onclick = async () => { if(confirm('مسح كل الرسائل نهائياً؟')) { const msgs = await db.collection('chat_messages').get(); msgs.forEach(async d=>await d.ref.delete()); toast("تم مسح كل الرسائل"); } };
+    document.getElementById('clearAllMessages').onclick = async () => { if(confirm('مسح كل الرسائل نهائياً؟')) { const msgs = await db.collection('chat_messages').get(); msgs.forEach(async d=>await d.ref.delete()); toast("تم مسح كل الرسائل"); lastMessageCount = 0; } };
     document.getElementById('openModalBtn').onclick = () => { resetForm(); document.getElementById('guideModal').classList.add('show'); };
     document.getElementById('saveGuideBtn').onclick = saveGuide;
     document.getElementById('closeModalBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
@@ -1005,7 +1068,7 @@
     document.querySelectorAll('.color-dot').forEach(dot=>{ dot.onclick=()=>{ document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected')); dot.classList.add('selected'); selectedColor=dot.dataset.color; }; });
     document.querySelector('.color-dot[data-color="#e94560"]').classList.add('selected');
     
-    toast("✨ نظام المرشدين المحترف - يرجى تسجيل الدخول");
+    toast("✨ نظام المرشدين المحترف - يرجى تسجيل الدخول باستخدام حسابك");
 </script>
 </body>
 </html>
