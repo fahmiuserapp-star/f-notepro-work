@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <title>F-NOTEPRO-WORK 2026 · النظام المتكامل</title>
+    
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#e94560">
@@ -12,7 +13,7 @@
     <meta name="apple-mobile-web-app-title" content="F-NOTE PRO">
     <link rel="apple-touch-icon" href="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png">
     
-    <!-- External libraries -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -21,7 +22,7 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- البرامج الخاصة بنا -->
+    <!-- ملفات التطبيق المرتبة حسب الهيكل الحالي (بدون مجلدات فرعية) -->
     <script src="assets/js/firebase-config.js"></script>
     <script src="assets/js/cloudinary-config.js"></script>
     <script src="assets/js/utils.js"></script>
@@ -31,11 +32,500 @@
     <script src="assets/js/notes-events.js"></script>
     <script src="assets/js/chat.js"></script>
     <script src="assets/js/app.js"></script>
-    <!-- الأنماط الرئيسية -->
-    <style>/* نفس الأنماط السابقة مع بعض التعديلات */</style>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Segoe UI', 'Tajawal', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100dvh;
+            width: 100dvw;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        :root {
+            --bg-primary: linear-gradient(145deg, #f5f7fb 0%, #eef2f8 100%);
+            --card-bg: rgba(255,255,255,0.96);
+            --glass-bg: rgba(255,255,255,0.7);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: rgba(0,0,0,0.05);
+            --accent: #e94560;
+            --accent-light: #ffe4e8;
+            --accent-glow: rgba(233,69,96,0.3);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --shadow-lg: 0 20px 35px -8px rgba(0,0,0,0.15);
+            --blur: blur(12px);
+        }
+        body.dark {
+            --bg-primary: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: rgba(30,41,59,0.95);
+            --glass-bg: rgba(30,41,59,0.8);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: rgba(255,255,255,0.05);
+            --accent-light: #2d1b2a;
+        }
+        
+        /* شاشة تسجيل الدخول */
+        .login-screen {
+            position: fixed; inset: 0; background: var(--bg-primary); z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-screen.hide { display: none; }
+        .login-card {
+            background: var(--card-bg); backdrop-filter: var(--blur);
+            border-radius: 48px; padding: 40px 28px; width: 90%; max-width: 400px;
+            text-align: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border);
+        }
+        
+        /* شعار دائري بنبض - بدون حواف */
+        .pulse-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            outline: none;
+            animation: pulse 1.8s ease-in-out infinite;
+        }
+        .pulse-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 50%;
+            border: none;
+            outline: none;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.5);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 12px rgba(233, 69, 96, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(233, 69, 96, 0);
+            }
+        }
+        
+        .login-card h2 {
+            color: var(--accent);
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+        .login-subtitle {
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .login-input {
+            width: 100%; padding: 14px 18px; margin: 8px 0;
+            border: 1px solid var(--border); border-radius: 60px;
+            background: var(--glass-bg); font-size: 14px; outline: none;
+            transition: all 0.2s;
+        }
+        .login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .login-btn {
+            width: 100%; background: linear-gradient(135deg, var(--accent), #c0314a);
+            color: white; border: none; padding: 14px; border-radius: 60px;
+            font-weight: bold; margin-top: 20px; cursor: pointer; transition: transform 0.1s;
+        }
+        .login-btn:active { transform: scale(0.97); }
+        .admin-note {
+            background: var(--accent-light); padding: 12px; border-radius: 28px;
+            margin-top: 20px; font-size: 12px; color: var(--text-secondary);
+        }
+        .login-error { color: #dc2626; font-size: 12px; margin-top: 12px; }
+        
+        /* بقية الأنماط العامة */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .app-main {
+            height: 100dvh; width: 100dvw;
+            display: none; flex-direction: column; overflow: hidden;
+            background: var(--bg-primary);
+        }
+        .app-main.show { display: flex; }
+        
+        .app-header {
+            background: var(--glass-bg); backdrop-filter: var(--blur);
+            padding: 12px 16px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid var(--border);
+        }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-area img { height: 45px; border-radius: 50%; object-fit: cover; }
+        .logo-area span { font-weight: 800; font-size: 1.2rem; color: var(--accent); }
+        .user-status {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--accent-light); padding: 4px 12px 4px 16px;
+            border-radius: 60px; cursor: pointer;
+        }
+        .user-avatar-small { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+        .user-name-small { font-size: 13px; font-weight: 500; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .status-dot.online { background: #10b981; box-shadow: 0 0 6px #10b981; }
+        .menu-btn { background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--accent); padding: 8px; border-radius: 50%; }
+        
+        .search-bar {
+            padding: 12px 16px; display: flex; gap: 10px;
+            background: transparent;
+        }
+        .search-input {
+            flex: 1; background: var(--glass-bg); border: 1px solid var(--border);
+            padding: 12px 18px; border-radius: 60px; font-size: 13px;
+            outline: none; color: var(--text-primary);
+        }
+        .search-input:focus { border-color: var(--accent); }
+        .search-btn, .color-filter-btn {
+            background: var(--accent); border: none; width: 48px;
+            border-radius: 60px; color: white; cursor: pointer; font-size: 18px;
+        }
+        
+        .color-strip {
+            padding: 8px 16px; overflow-x: auto; white-space: nowrap;
+            display: none; background: transparent;
+        }
+        .color-strip.show { display: block; }
+        .color-chip {
+            width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
+            border: 2px solid var(--border); display: inline-block; margin: 0 6px;
+        }
+        .color-chip.active { border-color: var(--accent); transform: scale(1.08); }
+        
+        .pages-container { flex: 1; overflow: hidden; position: relative; }
+        .page { height: 100%; overflow-y: auto; padding: 12px; display: none; }
+        .page.active { display: block; }
+        
+        .contacts-list { display: flex; flex-direction: column; gap: 12px; }
+        .contact-card, .task-item {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 14px;
+            border-right: 4px solid var(--accent);
+            box-shadow: var(--shadow-sm);
+        }
+        .contact-row { display: flex; gap: 14px; align-items: center; }
+        .contact-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2px solid var(--accent); }
+        .contact-details { flex: 1; }
+        .contact-name { font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .expand-icon { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--accent); padding: 6px; }
+        .contact-expand { display: none; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .contact-expand.show { display: block; }
+        .call-buttons { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+        .call-btn { flex: 1; padding: 8px; border-radius: 40px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: white; }
+        .btn-whatsapp { background: #25D366; }
+        .btn-telegram { background: #26A5E4; }
+        .btn-call { background: #34B7F1; }
+        .action-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .action-btn { padding: 5px 12px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; font-size: 11px; }
+        .btn-edit { background: #2c7da0; color: white; }
+        .btn-delete { background: #dc2626; color: white; }
+        .btn-share { background: #3b82f6; color: white; }
+        .btn-reminder { background: #f59e0b; color: white; }
+        
+        .task-status { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .task-status.pending { background: #f59e0b; color: white; }
+        .task-status.completed { background: #10b981; color: white; }
+        
+        .bottom-nav {
+            background: var(--glass-bg); backdrop-filter: var(--blur);
+            border-top: 1px solid var(--border); display: flex;
+            padding: 8px 20px 12px; justify-content: space-around;
+        }
+        .nav-item {
+            text-align: center; background: transparent; border: none;
+            padding: 6px 12px; border-radius: 40px; color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .nav-item.active { color: var(--accent); background: var(--accent-light); }
+        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
+        .nav-item span { font-size: 11px; }
+        
+        .sidebar-new {
+            position: fixed; top: 0; right: -320px; width: 300px;
+            height: 100%; background: var(--glass-bg); backdrop-filter: var(--blur);
+            z-index: 1500; transition: 0.3s ease-out;
+            padding: 24px 20px; box-shadow: -4px 0 30px rgba(0,0,0,0.1);
+            border-left: 1px solid var(--border);
+        }
+        .sidebar-new.open { right: 0; }
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            z-index: 1400; display: none;
+        }
+        
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px); display: flex; align-items: center;
+            justify-content: center; z-index: 2000; visibility: hidden;
+            opacity: 0; transition: 0.2s;
+        }
+        .modal.show { visibility: visible; opacity: 1; }
+        .modal-card {
+            background: var(--card-bg);
+            width: 92%; max-width: 480px; max-height: 85vh;
+            overflow-y: auto; border-radius: 48px; padding: 28px;
+            box-shadow: var(--shadow-lg);
+        }
+        .toast {
+            position: fixed; bottom: 100px; left: 20px; right: 20px;
+            background: #1e293b; color: white; text-align: center;
+            padding: 14px; border-radius: 60px; z-index: 3000;
+            font-size: 13px;
+        }
+        .empty-state { text-align: center; padding: 50px; color: var(--text-secondary); }
+        
+        .add-fab {
+            position: fixed; bottom: 90px; right: 20px;
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--accent); border: none; color: white;
+            font-size: 24px; cursor: pointer; box-shadow: var(--shadow-md);
+        }
+        
+        /* صفحة المحادثة */
+        #chatPageScreen {
+            display: none; height: 100dvh; flex-direction: column;
+            background: var(--bg-primary);
+        }
+        .chat-header {
+            background: var(--glass-bg); backdrop-filter: var(--blur);
+            padding: 12px 16px; display: flex; align-items: center; gap: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        .chat-messages {
+            flex: 1; overflow-y: auto; padding: 16px;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .message-bubble {
+            max-width: 80%; padding: 10px 14px; border-radius: 24px;
+            display: flex; gap: 10px; align-items: flex-start;
+        }
+        .message-bubble.own { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 6px; flex-direction: row-reverse; }
+        .message-bubble.other { align-self: flex-start; background: var(--glass-bg); border-bottom-left-radius: 6px; }
+        .message-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+        .message-image { max-width: 200px; max-height: 150px; border-radius: 16px; margin-top: 6px; cursor: pointer; }
+        
+        .chat-input-bar {
+            padding: 12px 16px; background: var(--glass-bg);
+            border-top: 1px solid var(--border); display: flex; gap: 10px;
+        }
+        .chat-input {
+            flex: 1; background: var(--glass-bg); border: 1px solid var(--border);
+            padding: 12px 18px; border-radius: 60px; font-size: 13px; outline: none;
+        }
+        .chat-action-btn {
+            background: var(--accent); border: none; width: 48px;
+            border-radius: 60px; color: white; cursor: pointer; font-size: 18px;
+        }
+        .recorder-panel {
+            position: fixed; bottom: 80px; left: 20px; right: 20px;
+            background: var(--card-bg); backdrop-filter: var(--blur);
+            border-radius: 60px; padding: 12px 20px;
+            display: none; align-items: center; gap: 15px;
+            z-index: 200;
+        }
+        .recorder-panel.show { display: flex; }
+    </style>
 </head>
 <body>
-    <!-- سيكون نفس هيكل HTML السابق لكن مع أضافات جديدة (مثل مؤشرات التحميل) -->
-    <!-- ... (سنقوم بكتابة هيكل HTML كامل لكن تجنباً للتكرار نذكر التغييرات) -->
+
+<!-- شاشة تسجيل الدخول -->
+<div id="loginScreen" class="login-screen">
+    <div class="login-card">
+        <div class="pulse-logo">
+            <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-NOTE PRO">
+        </div>
+        <h2>F-NOTE PRO 2026</h2>
+        <p class="login-subtitle">نظام إدارة المرشدين المتكامل</p>
+        <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني">
+        <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
+        <div id="nameSetupContainer">
+            <input type="text" id="loginDisplayName" class="login-input" placeholder="اسم المستخدم (سيظهر للجميع)">
+        </div>
+        <button class="login-btn" id="doLoginBtn">تسجيل الدخول <i class="fas fa-arrow-left"></i></button>
+        <div class="admin-note">
+            <i class="fas fa-lock"></i> يتم إنشاء الحسابات بواسطة <strong>المدير FAHMI</strong> فقط
+        </div>
+        <div id="loginError" class="login-error"></div>
+    </div>
+</div>
+
+<!-- Banner تثبيت PWA -->
+<div id="installBanner" class="install-banner" style="display:none; position:fixed; bottom:80px; left:20px; right:20px; background:var(--accent); color:white; padding:12px 20px; border-radius:60px; justify-content:space-between; z-index:1600;">
+    <span><i class="fas fa-download"></i> ثبّت التطبيق على شاشتك الرئيسية</span>
+    <button id="closeInstallBanner" style="background:none;border:none;color:white;font-size:20px;">✕</button>
+</div>
+
+<!-- التطبيق الرئيسي -->
+<div id="mainApp" class="app-main">
+    <div class="app-header">
+        <div class="logo-area">
+            <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png">
+            <span>F-NOTE PRO</span>
+        </div>
+        <div class="user-status" id="openProfileBtn">
+            <img id="headerAvatar" class="user-avatar-small" src="">
+            <span id="displayNameSpan" class="user-name-small"></span>
+            <span id="statusDot" class="status-dot online"></span>
+        </div>
+        <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
+    </div>
+    
+    <div class="search-bar">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 بحث بالاسم أو الهاتف أو الوكالة...">
+        <button class="search-btn" id="voiceSearchBtn"><i class="fas fa-microphone"></i></button>
+        <button class="color-filter-btn" id="colorToggleBtn"><i class="fas fa-palette"></i></button>
+    </div>
+    
+    <div class="color-strip" id="colorStrip"></div>
+    
+    <div class="pages-container">
+        <div id="contactsPage" class="page active">
+            <div class="contacts-list" id="contactsListContainer"><div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div></div>
+        </div>
+        <div id="tasksPage" class="page">
+            <div id="tasksListContainer" class="contacts-list"><div class="empty-state"><i class="fas fa-tasks"></i> لا توجد مهام</div></div>
+            <button class="add-fab" id="addTaskBtn"><i class="fas fa-plus"></i></button>
+        </div>
+        <div id="notesPage" class="page">
+            <div id="notesListContainer" class="contacts-list"><div class="empty-state"><i class="fas fa-sticky-note"></i> لا توجد ملاحظات</div></div>
+            <button class="add-fab" id="addNoteBtn"><i class="fas fa-plus"></i></button>
+        </div>
+        <div id="eventsPage" class="page">
+            <div id="eventsListContainer" class="contacts-list"><div class="empty-state"><i class="fas fa-calendar-alt"></i> لا توجد أحداث</div></div>
+            <button class="add-fab" id="addEventBtn"><i class="fas fa-plus"></i></button>
+        </div>
+    </div>
+    
+    <div class="bottom-nav">
+        <button class="nav-item active" data-page="contacts"><i class="fas fa-users"></i><span>المرشدين</span></button>
+        <button class="nav-item" data-page="tasks"><i class="fas fa-list-check"></i><span>المهام</span></button>
+        <button class="nav-item" data-page="notes"><i class="fas fa-sticky-note"></i><span>ملاحظات</span></button>
+        <button class="nav-item" id="openChatBtn"><i class="fas fa-comment-dots"></i><span>المحادثة</span></button>
+        <button class="nav-item" data-page="events"><i class="fas fa-calendar-alt"></i><span>الأرشيف</span></button>
+    </div>
+</div>
+
+<!-- صفحة المحادثة -->
+<div id="chatPageScreen">
+    <div class="chat-header">
+        <button class="chat-back-btn" id="chatBackBtn"><i class="fas fa-arrow-right"></i></button>
+        <div class="chat-title" id="chatTitle">المحادثة العامة</div>
+        <button class="chat-settings-btn" id="chatSettingsBtn"><i class="fas fa-fill-drip"></i></button>
+    </div>
+    <div id="chatMessagesList" class="chat-messages"><div class="empty-state">لا توجد رسائل</div></div>
+    <div id="chatLoadMoreBtn" class="load-more-btn" style="display:none; text-align:center; padding:10px; background:var(--accent-light); border-radius:40px; margin:10px; cursor:pointer;">📥 تحميل المزيد</div>
+    <div class="chat-input-bar">
+        <button class="chat-action-btn btn-attach" id="attachFileBtn"><i class="fas fa-paperclip"></i></button>
+        <button class="chat-action-btn btn-location" id="sendLocationBtn"><i class="fas fa-location-dot"></i></button>
+        <input type="text" id="chatTextInput" class="chat-input" placeholder="اكتب رسالة...">
+        <button class="chat-action-btn btn-walkie" id="walkieTalkieBtn"><i class="fas fa-microphone-alt"></i></button>
+        <button class="chat-action-btn" id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<!-- لوحة التسجيل الصوتي -->
+<div id="recorderPanel" class="recorder-panel">
+    <button id="recorderCancelBtn" class="recorder-cancel" style="background:none;border:none;font-size:28px;cursor:pointer;color:#dc2626;"><i class="fas fa-times"></i></button>
+    <div class="recorder-waveform" id="recorderWaveform" style="flex:1;height:50px;display:flex;align-items:center;justify-content:center;gap:4px;"></div>
+    <span class="recorder-time" id="recorderTime" style="font-size:16px;font-weight:bold;min-width:50px;">0:00</span>
+    <button id="recorderSendBtn" class="recorder-send" style="background:none;border:none;font-size:28px;cursor:pointer;color:#10b981;"><i class="fas fa-check-circle"></i></button>
+</div>
+
+<!-- إعدادات الدردشة -->
+<div id="chatSettingsPanel" style="position:fixed; bottom:80px; right:20px; background:var(--card-bg); border-radius:28px; padding:12px; z-index:150; display:none; flex-direction:column; gap:8px; box-shadow:var(--shadow-md);">
+    <div class="bg-option" data-bg="#f8fafc" style="padding:8px 16px; cursor:pointer;"><div style="width:30px;height:30px;border-radius:50%;background:#f8fafc;display:inline-block;vertical-align:middle;margin-left:10px;"></div> فاتح</div>
+    <div class="bg-option" data-bg="#0f172a" style="padding:8px 16px; cursor:pointer;"><div style="width:30px;height:30px;border-radius:50%;background:#0f172a;display:inline-block;vertical-align:middle;margin-left:10px;"></div> داكن</div>
+</div>
+
+<!-- القائمة الجانبية -->
+<div id="sidebarNew" class="sidebar-new">
+    <div class="sidebar-header">
+        <h3><i class="fas fa-cog"></i> الإعدادات</h3>
+        <button id="closeSidebarNew" class="sidebar-close" style="background:none;border:none;font-size:24px;cursor:pointer;"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="profile-section" style="text-align:center;margin-bottom:24px;">
+        <img id="profileAvatarLarge" class="profile-avatar-large" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto 16px;border:3px solid var(--accent);cursor:pointer;">
+        <input type="text" id="profileNameInput" class="profile-name-input" style="width:100%;text-align:center;font-size:18px;font-weight:bold;background:transparent;border:none;border-bottom:2px solid var(--border);padding:8px;margin-bottom:12px;">
+        <button class="save-profile-btn" id="saveProfileChangesBtn" style="background:var(--success);border:none;padding:10px 20px;border-radius:40px;color:white;font-weight:bold;cursor:pointer;width:100%;margin-bottom:20px;"><i class="fas fa-save"></i> حفظ التغييرات</button>
+    </div>
+    <div class="sidebar-menu-item" id="changeAvatarMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-camera"></i> تغيير الصورة الشخصية</div>
+    <div class="sidebar-menu-item" id="darkModeMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-moon"></i> الوضع الداكن</div>
+    <div class="sidebar-menu-item" id="muteNotificationsMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-volume-mute"></i> كتم الإشعارات</div>
+    <div class="sidebar-menu-item" id="exportChatMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-file-pdf"></i> تصدير المحادثة PDF</div>
+    <div class="sidebar-menu-item" id="exportTasksMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-file-pdf"></i> تصدير المهام PDF</div>
+    <div class="sidebar-menu-item" id="exportNotesMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-file-pdf"></i> تصدير الملاحظات PDF</div>
+    <div class="sidebar-menu-item" id="clearMessagesMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-trash-alt"></i> مسح جميع الرسائل</div>
+    <div class="sidebar-menu-item" id="logoutMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
+</div>
+<div id="overlayNew" class="overlay"></div>
+
+<!-- المودالات -->
+<div id="guideModal" class="modal"><div class="modal-card"><h3 id="modalTitle"><i class="fas fa-user-plus"></i> إضافة مرشد</h3>
+<input type="text" id="guideName" placeholder="الاسم الكامل *">
+<input type="tel" id="guidePhone" placeholder="رقم الهاتف *">
+<input type="text" id="guideAgency" placeholder="وكالة السفر *">
+<input type="text" id="guideVehicle" placeholder="رقم وسيلة النقل *">
+<input type="text" id="guidePlate" placeholder="رقم اللوحة">
+<div class="upload-area" id="uploadGuidePhotoTrigger" style="background:var(--accent-light);text-align:center;padding:16px;border-radius:32px;border:2px dashed var(--accent);cursor:pointer;margin:12px 0;"><i class="fas fa-camera"></i> صورة المرشد</div>
+<div id="guidePhotoPreview" style="display:none;"><img id="guidePhotoImg" style="width:70px;height:70px;border-radius:50%;margin-top:10px;object-fit:cover;"></div>
+<div class="upload-area" id="uploadBusPhotoTrigger" style="background:var(--accent-light);text-align:center;padding:16px;border-radius:32px;border:2px dashed var(--accent);cursor:pointer;margin:12px 0;"><i class="fas fa-truck"></i> صورة وسيلة النقل</div>
+<div id="busPhotoPreview" style="display:none;"><img id="busPhotoImg" style="width:70px;height:70px;border-radius:50%;margin-top:10px;object-fit:cover;"></div>
+<textarea id="guideNotes" rows="2" placeholder="ملاحظات إضافية" style="width:100%;margin:8px 0;padding:14px;border-radius:24px;"></textarea>
+<div class="color-palette" id="guideColorSelector" style="display:flex;gap:12px;overflow-x:auto;margin:15px 0;"></div>
+<select id="guideVisibilitySelect" style="width:100%;margin:8px 0;padding:14px;border-radius:60px;"><option value="private">🔒 خاص</option><option value="public">🌍 عام</option></select>
+<div class="modal-buttons" style="display:flex;gap:12px;margin-top:20px;"><button class="modal-save" id="saveGuideBtn" style="flex:1;padding:14px;border-radius:60px;background:var(--success);color:white;border:none;font-weight:bold;">💾 حفظ</button><button class="modal-cancel" id="closeGuideModalBtn" style="flex:1;padding:14px;border-radius:60px;background:#64748b;color:white;border:none;font-weight:bold;">❌ إلغاء</button></div></div></div>
+
+<div id="taskModal" class="modal"><div class="modal-card"><h3><i class="fas fa-tasks"></i> إضافة مهمة</h3>
+<input type="text" id="taskTitleInput" placeholder="عنوان المهمة *">
+<input type="date" id="taskDateInput">
+<input type="time" id="taskTimeInput">
+<textarea id="taskDescInput" rows="2" placeholder="تفاصيل المهمة"></textarea>
+<select id="taskReminderSelect"><option value="none">بدون تذكير</option><option value="5">تذكير قبل 5 دقائق</option><option value="15">قبل 15 دقيقة</option><option value="30">قبل 30 دقيقة</option><option value="60">قبل ساعة</option></select>
+<div class="upload-area" id="taskFileUploadTrigger" style="background:var(--accent-light);text-align:center;padding:16px;border-radius:32px;border:2px dashed var(--accent);cursor:pointer;margin:12px 0;"><i class="fas fa-paperclip"></i> إرفاق ملف</div>
+<div id="taskFileNameDisplay" style="font-size:11px; margin-top:5px;"></div>
+<div class="modal-buttons"><button class="modal-save" id="saveTaskModalBtn" style="flex:1;padding:14px;border-radius:60px;background:var(--success);color:white;border:none;">إضافة</button><button class="modal-cancel" id="closeTaskModalBtn" style="flex:1;padding:14px;border-radius:60px;background:#64748b;color:white;border:none;">إلغاء</button></div></div></div>
+
+<div id="noteModal" class="modal"><div class="modal-card"><h3><i class="fas fa-sticky-note"></i> إضافة ملاحظة</h3>
+<input type="text" id="noteTitleInput" placeholder="عنوان الملاحظة *">
+<textarea id="noteContentInput" rows="3" placeholder="محتوى الملاحظة"></textarea>
+<div class="upload-area" id="noteFileUploadTrigger" style="background:var(--accent-light);text-align:center;padding:16px;border-radius:32px;border:2px dashed var(--accent);cursor:pointer;margin:12px 0;"><i class="fas fa-paperclip"></i> إرفاق ملف</div>
+<div id="noteFileNameDisplay" style="font-size:11px; margin-top:5px;"></div>
+<div class="modal-buttons"><button class="modal-save" id="saveNoteModalBtn" style="flex:1;padding:14px;border-radius:60px;background:var(--success);color:white;border:none;">إضافة</button><button class="modal-cancel" id="closeNoteModalBtn" style="flex:1;padding:14px;border-radius:60px;background:#64748b;color:white;border:none;">إلغاء</button></div></div></div>
+
+<div id="eventModal" class="modal"><div class="modal-card"><h3><i class="fas fa-calendar-alt"></i> تسجيل حدث يومي</h3>
+<input type="text" id="eventTitleInput" placeholder="عنوان الحدث *">
+<textarea id="eventDescInput" rows="3" placeholder="وصف الحدث"></textarea>
+<div class="modal-buttons"><button class="modal-save" id="saveEventModalBtn" style="flex:1;padding:14px;border-radius:60px;background:var(--success);color:white;border:none;">إضافة</button><button class="modal-cancel" id="closeEventModalBtn" style="flex:1;padding:14px;border-radius:60px;background:#64748b;color:white;border:none;">إلغاء</button></div></div></div>
+
+<div id="avatarUploadModal" class="modal"><div class="modal-card"><h3><i class="fas fa-camera"></i> الصورة الشخصية</h3>
+<img id="avatarPreviewImg" style="width:100px;height:100px;border-radius:50%;margin:0 auto 20px;display:block;object-fit:cover;">
+<div class="upload-area" id="selectAvatarTrigger" style="background:var(--accent-light);text-align:center;padding:16px;border-radius:32px;border:2px dashed var(--accent);cursor:pointer;margin:12px 0;"><i class="fas fa-cloud-upload-alt"></i> اختيار صورة</div>
+<div class="modal-buttons"><button class="modal-cancel" id="closeAvatarModalBtn" style="flex:1;padding:14px;border-radius:60px;background:#64748b;color:white;border:none;">إغلاق</button></div></div></div>
+
+<div id="fullImageModal" class="modal"><div class="modal-card" style="text-align:center;"><img id="fullImageView" style="max-width:100%; border-radius:28px;"><button class="modal-cancel" id="closeFullImageBtn" style="margin-top:16px;padding:8px 24px;border-radius:40px;background:#64748b;color:white;border:none;">إغلاق</button></div></div>
+
 </body>
 </html>
