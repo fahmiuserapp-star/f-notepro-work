@@ -1,4 +1,5 @@
 // Chat Module
+
 let chatUnsub = null;
 let lastMsgCount = 0;
 let currentChatRoom = "general";
@@ -39,32 +40,35 @@ async function sendLocation() {
     });
 }
 
-async function startRecording() {
+async function startVoiceRecording() {
     if (isRecording) return;
-    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-    mediaRecorder.onstop = async () => {
-        if (audioChunks.length === 0) return;
-        let blob = new Blob(audioChunks, { type: 'audio/webm' });
-        currentVoiceBlob = blob;
-        document.getElementById('recorderPanel').classList.add('show');
-        startWaveform();
-        stream.getTracks().forEach(t => t.stop());
-    };
-    mediaRecorder.start();
-    isRecording = true;
-    document.getElementById('walkieTalkieBtn').style.background = '#ef4444';
-    let startTime = Date.now();
-    let interval = setInterval(() => {
-        let elapsed = Math.floor((Date.now() - startTime) / 1000);
-        if (elapsed >= 30) { clearInterval(interval); stopRecording(); }
-    }, 1000);
-    window.recInterval = interval;
+    try {
+        let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+            if (audioChunks.length === 0) return;
+            let blob = new Blob(audioChunks, { type: 'audio/webm' });
+            currentVoiceBlob = blob;
+            document.getElementById('voiceRecorderPanel').classList.add('show');
+            startWaveformAnimation();
+            stream.getTracks().forEach(t => t.stop());
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        document.getElementById('walkieTalkieBtn').style.background = '#ef4444';
+        let startTime = Date.now();
+        let interval = setInterval(() => {
+            let elapsed = Math.floor((Date.now() - startTime) / 1000);
+            if (elapsed >= 30) { clearInterval(interval); stopVoiceRecording(); }
+        }, 1000);
+        window.recInterval = interval;
+        showToast("🎙️ جاري التسجيل... ارفع الإصبع للإرسال", false);
+    } catch (e) { showToast("الوصول للميكروفون مرفوض", true); }
 }
 
-function stopRecording() {
+function stopVoiceRecording() {
     if (mediaRecorder && isRecording && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
         isRecording = false;
@@ -73,7 +77,7 @@ function stopRecording() {
     }
 }
 
-function startWaveform() {
+function startWaveformAnimation() {
     let container = document.getElementById('recorderWaveform');
     container.innerHTML = '';
     for (let i = 0; i < 40; i++) {
@@ -104,14 +108,14 @@ async function sendRecordedVoice() {
             senderName: currentDisplayName, senderAvatar: userAvatarUrl,
             type: 'voice', timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        showToast("تم إرسال الرسالة الصوتية");
+        showToast("✅ تم إرسال الرسالة الصوتية");
         playBeep(660);
     }
-    closeRecorder();
+    closeRecorderPanel();
 }
 
-function closeRecorder() {
-    document.getElementById('recorderPanel').classList.remove('show');
+function closeRecorderPanel() {
+    document.getElementById('voiceRecorderPanel').classList.remove('show');
     if (waveformAnim) cancelAnimationFrame(waveformAnim);
     if (window.recTimer) clearInterval(window.recTimer);
     currentVoiceBlob = null;
@@ -146,10 +150,10 @@ function loadChatMessages() {
                             <div class="message-content">
                                 <div class="message-meta"><span>${escapeHtml(data.senderName)}</span><span>${time}</span></div>
                                 <div class="voice-wrapper">
-                                    <button class="voice-play" onclick="playVoice('${data.audioUrl}', this)"><i class="fas fa-play"></i></button>
+                                    <button class="voice-play" onclick="window.playVoice('${data.audioUrl}', this)"><i class="fas fa-play"></i></button>
                                     <div class="voice-waveform"><div class="voice-progress" style="width:0%"></div><div class="voice-bars">${Array(25).fill().map(() => '<span style="height:' + (8 + Math.random() * 20) + 'px"></span>').join('')}</div></div>
                                     <span class="voice-duration">0:30</span>
-                                    ${isOwn ? `<button class="voice-delete" onclick="deleteMessage('${doc.id}')" style="background:none;border:none;cursor:pointer;"><i class="fas fa-trash-alt"></i></button>` : ''}
+                                    ${isOwn ? `<button class="voice-delete" onclick="window.deleteMessage('${doc.id}')" style="background:none;border:none;cursor:pointer;"><i class="fas fa-trash-alt"></i></button>` : ''}
                                 </div>
                             </div>
                         </div>`;
@@ -204,7 +208,7 @@ async function clearChat() {
     }
 }
 
-// Event listeners for chat
+// Attach chat UI events
 document.getElementById('sendMessageBtn').onclick = sendTextMessage;
 document.getElementById('attachFileBtn').onclick = () => {
     let inp = document.createElement('input');
@@ -214,8 +218,10 @@ document.getElementById('attachFileBtn').onclick = () => {
     inp.click();
 };
 document.getElementById('sendLocationBtn').onclick = sendLocation;
-document.getElementById('walkieTalkieBtn').onclick = () => { if (!isRecording) startRecording(); else stopRecording(); };
-document.getElementById('recorderCancelBtn').onclick = closeRecorder;
+document.getElementById('walkieTalkieBtn').addEventListener('pointerdown', startVoiceRecording);
+document.getElementById('walkieTalkieBtn').addEventListener('pointerup', stopVoiceRecording);
+document.getElementById('walkieTalkieBtn').addEventListener('pointerleave', stopVoiceRecording);
+document.getElementById('recorderCancelBtn').onclick = closeRecorderPanel;
 document.getElementById('recorderSendBtn').onclick = sendRecordedVoice;
 document.getElementById('chatSettingsBtn').onclick = () => document.getElementById('chatSettingsPanel').classList.toggle('show');
 document.querySelectorAll('.bg-option').forEach(opt => {
