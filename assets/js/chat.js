@@ -1,543 +1,377 @@
-// ==================== chat.js ====================
-// يعتمد على وجود Firebase و currentUser وغيرها في النطاق العام
-// إذا لم تكن موجودة، يتم تعريف دوال افتراضية
+// متغيرات الدردشة
+let chatLastDoc = null;
+let chatLoadingMore = false;
+let chatHasMore = true;
+let recordingMediaRecorder = null;
+let audioChunks = [];
+let isRecordingVoice = false;
+let recordingStartTime = 0;
+let recordingTimerInterval = null;
+let currentAudioPlayer = null;
 
-(function() {
-    // التأكد من وجود التوابع الأساسية
-    if (typeof showToast !== 'function') {
-        window.showToast = function(msg, isErr) {
-            alert(msg);
+// تهيئة عناصر الدردشة
+function initChatElements() {
+    const attachBtn = document.getElementById('attachFileBtn');
+    const locationBtn = document.getElementById('sendLocationBtn');
+    const walkieBtn = document.getElementById('walkieTalkieBtn');
+    const sendBtn = document.getElementById('sendMessageBtn');
+    const chatInput = document.getElementById('chatTextInput');
+    const backBtn = document.getElementById('chatBackBtn');
+    const settingsBtn = document.getElementById('chatSettingsBtn');
+    const clearBtn = document.getElementById('clearMessagesMenuItem'); // من القائمة الجانبية
+
+    if(attachBtn) attachBtn.onclick = () => selectFileAndSend();
+    if(locationBtn) locationBtn.onclick = () => sendLocationMessage();
+    if(walkieBtn) walkieBtn.onclick = () => toggleVoiceRecording();
+    if(sendBtn) sendBtn.onclick = () => sendTextMessage();
+    if(chatInput) chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
+    if(backBtn) backBtn.onclick = () => { document.getElementById('chatPageScreen').style.display = 'none'; document.getElementById('mainApp').style.display = 'flex'; };
+    if(settingsBtn) settingsBtn.onclick = () => document.getElementById('chatSettingsPanel').classList.toggle('show');
+    if(clearBtn) clearBtn.onclick = () => clearAllMessages();
+}
+
+// إرسال رسالة نصية
+async function sendTextMessage() {
+    let text = document.getElementById('chatTextInput').value.trim();
+    if(!text) return;
+    await db.collection(`chat_${window.currentChatRoom}`).add({
+        text, senderId: window.currentUser.uid, senderName: window.currentDisplayName,
+        senderAvatar: window.userAvatarUrl, type: 'text',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('chatTextInput').value = '';
+    playNotificationBeep(660); // تأكيد الإرسال
+}
+
+// اختيار ملف وإرساله مع مؤشر تحميل
+async function selectFileAndSend() {
+    let inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*,video/*,application/pdf,application/msword,text/plain';
+    inp.onchange = async e => {
+        if(e.target.files[0]) {
+            let file = e.target.files[0];
+            window.showToast("جاري رفع الملف...");
+            try {
+                let url = await window.uploadToCloudinary(file, 'chat');
+                await db.collection(`chat_${window.currentChatRoom}`).add({
+                    mediaUrl: url, mediaType: file.type.startsWith('image/') ? 'image' : (file.type.startsWith('video/') ? 'video' : 'file'),
+                    fileName: file.name, senderId: window.currentUser.uid, senderName: window.currentDisplayName,
+                    senderAvatar: window.userAvatarUrl, type: 'media',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                window.showToast("تم إرسال الملف ✅");
+            } catch(err) { window.showToast("فشل الرفع: " + err.message, true); }
+        }
+    };
+    inp.click();
+}
+
+// إرسال الموقع
+async function sendLocationMessage() {
+    if (!navigator.geolocation) return window.showToast("الموقع غير مدعوم", true);
+    window.showToast("جاري الحصول على الموقع...");
+    navigator.geolocation.getCurrentPosition(async pos => {
+        let mapsUrl = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+        await db.collection(`chat_${window.currentChatRoom}`).add({
+            locationUrl: mapsUrl, lat: pos.coords.latitude, lng: pos.coords.longitude,
+            senderId: window.currentUser.uid, senderName: window.currentDisplayName,
+            senderAvatar: window.userAvatarUrl, type: 'location',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        window.showToast("📍 تم إرسال الموقع");
+    }, () => window.showToast("تعذر الحصول على الموقع", true));
+}
+
+// ========== التسجيل الصوتي مع عداد ثواني ==========
+async function toggleVoiceRecording() {
+    if(isRecordingVoice) {
+        stopVoiceRecording();
+        return;
+    }
+    try {
+        let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordingMediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        recordingMediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        recordingMediaRecorder.onstop = async () => {
+            if(audioChunks.length === 0) return;
+            let blob = new Blob(audioChunks, { type: 'audio/webm' });
+            // إظهار لوحة المعاينة مع عداد الثواني
+            showVoicePreviewPanel(blob);
+            stream.getTracks().forEach(t => t.stop());
+            isRecordingVoice = false;
+            recordingMediaRecorder = null;
+            document.getElementById('walkieTalkieBtn').style.background = '#25D366';
+            if(recordingTimerInterval) clearInterval(recordingTimerInterval);
         };
+        recordingMediaRecorder.start();
+        isRecordingVoice = true;
+        recordingStartTime = Date.now();
+        // تغيير لون الزر إلى الأحمر
+        document.getElementById('walkieTalkieBtn').style.background = '#ef4444';
+        // بدء عداد الثواني يعرض في واجهة المسجل
+        startRecordingTimer();
+    } catch(e) {
+        window.showToast("الوصول للميكروفون مرفوض", true);
     }
-    if (typeof escapeHtml !== 'function') {
-        window.escapeHtml = function(s) {
-            if (!s) return '';
-            return s.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        };
-    }
-    if (typeof playNotificationBeep !== 'function') {
-        window.playNotificationBeep = function() {};
-    }
-    if (typeof uploadToCloudinary !== 'function') {
-        window.uploadToCloudinary = async function(file, folder) {
-            // عليك تعريف هذه الدالة في الـ HTML الرئيسي
-            console.warn("uploadToCloudinary غير معرفة");
-            return "#";
-        };
-    }
-    if (typeof uploadAudioToCloudinary !== 'function') {
-        window.uploadAudioToCloudinary = async function(blob) {
-            console.warn("uploadAudioToCloudinary غير معرفة");
-            return "#";
-        };
-    }
+}
 
-    // متغيرات خاصة بالدردشة
-    let currentChatRoom = "general";       // اسم الغرفة الحالية (عامة أو خاصة)
-    let chatUnsub = null;                  // لإلغاء الاستماع للرسائل
-    let lastMsgCount = 0;
-    let chatLastDoc = null;                // آخر وثيقة للـ pagination
-    let chatLoadingMore = false;
-    let chatHasMore = true;
-    let typingTimeout = null;
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let isRecording = false;
-    let currentVoiceBlob = null;
-    let waveformAnimation = null;
-    let recordingInterval = null;
-    let recorderTimer = null;
+function startRecordingTimer() {
+    if(recordingTimerInterval) clearInterval(recordingTimerInterval);
+    recordingTimerInterval = setInterval(() => {
+        let elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+        if(elapsed >= 120) {
+            // حد أقصى دقيقتين
+            stopVoiceRecording();
+            window.showToast("تم الوصول للحد الأقصى (دقيقتين)", true);
+        } else {
+            // تحديث عداد في لوحة التسجيل (سنظهر لوحة تسجيل منبثقة)
+            let timerSpan = document.getElementById('recordingTimerDisplay');
+            if(timerSpan) timerSpan.innerText = formatTime(elapsed);
+        }
+    }, 1000);
+}
 
-    // عناصر DOM
-    let chatPageScreen, mainApp, chatMessagesList, chatLoadMoreBtn, chatTextInput, sendMessageBtn, attachFileBtn, sendLocationBtn, walkieTalkieBtn, chatBackBtn, chatTitle, chatSettingsBtn;
-
-    // تهيئة المراجع بعد تحميل الصفحة
-    function initElements() {
-        chatPageScreen = document.getElementById('chatPageScreen');
-        mainApp = document.getElementById('mainApp');
-        chatMessagesList = document.getElementById('chatMessagesList');
-        chatLoadMoreBtn = document.getElementById('chatLoadMoreBtn');
-        chatTextInput = document.getElementById('chatTextInput');
-        sendMessageBtn = document.getElementById('sendMessageBtn');
-        attachFileBtn = document.getElementById('attachFileBtn');
-        sendLocationBtn = document.getElementById('sendLocationBtn');
-        walkieTalkieBtn = document.getElementById('walkieTalkieBtn');
-        chatBackBtn = document.getElementById('chatBackBtn');
-        chatTitle = document.getElementById('chatTitle');
-        chatSettingsBtn = document.getElementById('chatSettingsBtn');
+function stopVoiceRecording() {
+    if(recordingMediaRecorder && recordingMediaRecorder.state !== 'inactive') {
+        recordingMediaRecorder.stop();
     }
+}
 
-    // ========== دوال الصوت المتقدم ==========
-    async function startVoiceRecording() {
-        if (isRecording) return;
+function showVoicePreviewPanel(blob) {
+    // إخفاء لوحة التسجيل القديمة إن وجدت، ثم إنشاء لوحة جديدة
+    let existing = document.getElementById('dynamicVoicePreview');
+    if(existing) existing.remove();
+    let panel = document.createElement('div');
+    panel.id = 'dynamicVoicePreview';
+    panel.className = 'recorder-panel show';
+    panel.style.position = 'fixed'; panel.style.bottom = '80px'; panel.style.left = '20px'; panel.style.right = '20px';
+    panel.style.background = 'var(--card-bg)'; panel.style.borderRadius = '60px'; panel.style.padding = '12px 20px';
+    panel.style.display = 'flex'; panel.style.alignItems = 'center'; panel.style.gap = '15px';
+    panel.style.zIndex = '200'; panel.style.backdropFilter = 'blur(12px)';
+    
+    // أيقونة تشغيل مؤقتة
+    const playBtn = document.createElement('button');
+    playBtn.className = 'voice-play-btn';
+    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+    playBtn.style.background = 'none'; playBtn.style.border = 'none'; playBtn.style.fontSize = '24px'; playBtn.style.cursor = 'pointer';
+    let audio = new Audio(URL.createObjectURL(blob));
+    playBtn.onclick = () => {
+        if(audio.paused) { audio.play(); playBtn.innerHTML = '<i class="fas fa-pause"></i>'; }
+        else { audio.pause(); playBtn.innerHTML = '<i class="fas fa-play"></i>'; }
+    };
+    audio.onended = () => { playBtn.innerHTML = '<i class="fas fa-play"></i>'; };
+    
+    const timerSpan = document.createElement('span');
+    timerSpan.id = 'previewTimer';
+    timerSpan.style.fontSize = '16px'; timerSpan.style.fontWeight = 'bold';
+    timerSpan.style.minWidth = '50px';
+    timerSpan.innerText = '0:00';
+    // تحديث الوقت أثناء التشغيل
+    audio.ontimeupdate = () => { timerSpan.innerText = formatTime(Math.floor(audio.currentTime)); };
+    audio.onloadedmetadata = () => { timerSpan.innerText = formatTime(Math.floor(audio.duration)); };
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+    cancelBtn.style.background = 'none'; cancelBtn.style.border = 'none'; cancelBtn.style.fontSize = '28px'; cancelBtn.style.cursor = 'pointer'; cancelBtn.style.color = '#dc2626';
+    cancelBtn.onclick = () => panel.remove();
+    
+    const sendBtn = document.createElement('button');
+    sendBtn.innerHTML = '<i class="fas fa-check-circle"></i>';
+    sendBtn.style.background = 'none'; sendBtn.style.border = 'none'; sendBtn.style.fontSize = '28px'; sendBtn.style.cursor = 'pointer'; sendBtn.style.color = '#10b981';
+    sendBtn.onclick = async () => {
+        panel.remove();
+        window.showToast("جاري رفع الرسالة الصوتية...");
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-                if (audioChunks.length === 0) return;
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                currentVoiceBlob = blob;
-                // إظهار لوحة المعاينة
-                const recorderPanel = document.getElementById('recorderPanel');
-                if (recorderPanel) recorderPanel.classList.add('show');
-                startWaveformAnimation();
-                stream.getTracks().forEach(t => t.stop());
-            };
-            mediaRecorder.start();
-            isRecording = true;
-            if (walkieTalkieBtn) walkieTalkieBtn.style.background = '#ef4444';
-            // حد أقصى 120 ثانية (دقيقتين)
-            const startTime = Date.now();
-            recordingInterval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                if (elapsed >= 120) {
-                    clearInterval(recordingInterval);
-                    stopVoiceRecording();
-                    showToast("تم الوصول للحد الأقصى (دقيقتين)", true);
-                }
-            }, 1000);
-        } catch (e) {
-            showToast("الوصول للميكروفون مرفوض", true);
-        }
-    }
-
-    function stopVoiceRecording() {
-        if (mediaRecorder && isRecording && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
-            isRecording = false;
-            if (recordingInterval) clearInterval(recordingInterval);
-            if (walkieTalkieBtn) walkieTalkieBtn.style.background = '#25D366';
-        }
-    }
-
-    function startWaveformAnimation() {
-        const container = document.getElementById('recorderWaveform');
-        if (!container) return;
-        container.innerHTML = '';
-        for (let i = 0; i < 40; i++) {
-            const bar = document.createElement('div');
-            bar.className = 'recorder-bar';
-            container.appendChild(bar);
-        }
-        if (waveformAnimation) cancelAnimationFrame(waveformAnimation);
-        function animate() {
-            const bars = document.querySelectorAll('.recorder-bar');
-            bars.forEach(bar => {
-                bar.style.height = (8 + Math.random() * 40) + 'px';
-            });
-            waveformAnimation = requestAnimationFrame(animate);
-        }
-        animate();
-        const startTime = Date.now();
-        recorderTimer = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const timeEl = document.getElementById('recorderTime');
-            if (timeEl) timeEl.innerText = `${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')}`;
-            if (elapsed >= 120) {
-                clearInterval(recorderTimer);
-                const sendBtn = document.getElementById('recorderSendBtn');
-                if (sendBtn) sendBtn.click();
-            }
-        }, 1000);
-    }
-
-    async function sendRecordedVoice() {
-        if (currentVoiceBlob) {
-            const url = await uploadAudioToCloudinary(currentVoiceBlob);
-            if (!url) {
-                showToast("فشل رفع الصوت", true);
-                return;
-            }
-            await db.collection(`chat_${currentChatRoom}`).add({
-                audioUrl: url,
-                duration: 120,
-                senderId: currentUser.uid,
-                senderName: currentDisplayName,
-                senderAvatar: userAvatarUrl,
+            let url = await window.uploadAudioToCloudinary(blob);
+            let duration = Math.floor(audio.duration || 0);
+            await db.collection(`chat_${window.currentChatRoom}`).add({
+                audioUrl: url, duration: duration, senderId: window.currentUser.uid,
+                senderName: window.currentDisplayName, senderAvatar: window.userAvatarUrl,
                 type: 'voice',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            showToast("تم إرسال الرسالة الصوتية");
+            window.showToast("تم إرسال الرسالة الصوتية");
             playNotificationBeep(660);
-        }
-        closeRecorderPanel();
-    }
+        } catch(e) { window.showToast("فشل رفع الصوت", true); }
+    };
+    
+    panel.appendChild(playBtn);
+    panel.appendChild(timerSpan);
+    panel.appendChild(cancelBtn);
+    panel.appendChild(sendBtn);
+    document.body.appendChild(panel);
+}
 
-    function closeRecorderPanel() {
-        const panel = document.getElementById('recorderPanel');
-        if (panel) panel.classList.remove('show');
-        if (waveformAnimation) cancelAnimationFrame(waveformAnimation);
-        if (recorderTimer) clearInterval(recorderTimer);
-        currentVoiceBlob = null;
-    }
+function formatTime(sec) {
+    let minutes = Math.floor(sec / 60);
+    let seconds = sec % 60;
+    return `${minutes}:${seconds.toString().padStart(2,'0')}`;
+}
 
-    // ========== دوال إرسال الرسائل ==========
-    async function sendTextMessage() {
-        const text = chatTextInput ? chatTextInput.value.trim() : '';
-        if (!text) return;
-        // إزالة مؤشر الكتابة
-        if (currentUser && currentChatRoom) {
-            rtdb.ref(`/typing/${currentChatRoom}/${currentUser.uid}`).remove();
-        }
-        await db.collection(`chat_${currentChatRoom}`).add({
-            text: text,
-            senderId: currentUser.uid,
-            senderName: currentDisplayName,
-            senderAvatar: userAvatarUrl,
-            type: 'text',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+// ========== تحميل وعرض الرسائل مع Pagination صحيحة ==========
+function loadChatMessages() {
+    if(!window.currentUser) return;
+    const container = document.getElementById('chatMessagesList');
+    const loadMoreBtn = document.getElementById('chatLoadMoreBtn');
+    if(!container) return;
+    
+    let isLoading = false;
+    let lastDoc = null;
+    let hasMore = true;
+    
+    const fetchMore = async () => {
+        if(isLoading || !hasMore) return;
+        isLoading = true;
+        let query = db.collection(`chat_${window.currentChatRoom}`).orderBy('timestamp', 'desc').limit(20);
+        if(lastDoc) query = query.startAfter(lastDoc);
+        const snapshot = await query.get();
+        if(snapshot.empty) { hasMore = false; loadMoreBtn.style.display = 'none'; isLoading=false; return; }
+        lastDoc = snapshot.docs[snapshot.docs.length-1];
+        if(snapshot.docs.length < 20) hasMore = false;
+        const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).reverse();
+        appendMessages(messages);
+        if(hasMore) loadMoreBtn.style.display = 'block';
+        else loadMoreBtn.style.display = 'none';
+        isLoading = false;
+    };
+    
+    const appendMessages = (messages) => {
+        let html = '';
+        messages.forEach(msg => {
+            html += renderMessageHtml(msg);
         });
-        if (chatTextInput) chatTextInput.value = '';
-    }
-
-    async function sendFileMessage(file) {
-        try {
-            const url = await uploadToCloudinary(file, 'chat');
-            if (!url) throw new Error("رفع فاشل");
-            await db.collection(`chat_${currentChatRoom}`).add({
-                mediaUrl: url,
-                mediaType: file.type.startsWith('image/') ? 'image' : (file.type.startsWith('video/') ? 'video' : 'file'),
-                fileName: file.name,
-                senderId: currentUser.uid,
-                senderName: currentDisplayName,
-                senderAvatar: userAvatarUrl,
-                type: 'media',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            showToast("تم إرسال الملف");
-        } catch (e) {
-            showToast("فشل الرفع: " + e.message, true);
+        if(container.querySelector('.empty-state')) container.innerHTML = html;
+        else container.innerHTML = html + container.innerHTML;
+        container.scrollTop = container.scrollHeight;
+    };
+    
+    // الاستماع للرسائل الجديدة فقط (real-time)
+    if(window.chatUnsub) window.chatUnsub();
+    window.chatUnsub = db.collection(`chat_${window.currentChatRoom}`).orderBy('timestamp', 'desc').limit(1).onSnapshot(snapshot => {
+        if(!snapshot.empty && (!lastDoc || snapshot.docs[0].id !== lastDoc.id)) {
+            // رسالة جديدة: نضيفها في الأسفل بدون إعادة تحميل كل شيء
+            const newMsg = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            const msgHtml = renderMessageHtml(newMsg);
+            // إضافة إلى الأسفل (الحاوية تعرض الأقدم أولاً)
+            container.insertAdjacentHTML('beforeend', msgHtml);
+            container.scrollTop = container.scrollHeight;
+            if(!window.isSoundMuted) window.playNotificationBeep(800);
+        } else if(snapshot.empty && container.innerHTML === '') {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i> لا توجد رسائل</div>';
         }
-    }
+    });
+    
+    loadMoreBtn.onclick = fetchMore;
+    // التحميل الأولي
+    fetchMore();
+}
 
-    async function sendLocation() {
-        if (!navigator.geolocation) {
-            showToast("الموقع غير مدعوم في هذا المتصفح", true);
-            return;
-        }
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            const mapsUrl = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-            await db.collection(`chat_${currentChatRoom}`).add({
-                locationUrl: mapsUrl,
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude,
-                senderId: currentUser.uid,
-                senderName: currentDisplayName,
-                senderAvatar: userAvatarUrl,
-                type: 'location',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            showToast("📍 تم إرسال الموقع");
-        }, () => showToast("تعذر الحصول على الموقع", true));
-    }
-
-    // ========== عرض الرسائل مع Pagination ==========
-    function loadChatMessages() {
-        if (!currentUser || !currentChatRoom) return;
-        if (chatUnsub) chatUnsub();
-        // إعادة تعيين حالة التحميل
-        chatLastDoc = null;
-        chatHasMore = true;
-        chatLoadingMore = false;
-
-        // دالة تحميل الدفعات (oldest first)
-        const loadMore = async (append = false) => {
-            if (chatLoadingMore || !chatHasMore) return;
-            chatLoadingMore = true;
-            let query = db.collection(`chat_${currentChatRoom}`)
-                          .orderBy('timestamp', 'desc')
-                          .limit(20);
-            if (chatLastDoc) query = query.startAfter(chatLastDoc);
-            
-            try {
-                const snapshot = await query.get();
-                if (snapshot.empty) {
-                    chatHasMore = false;
-                    if (chatLoadMoreBtn) chatLoadMoreBtn.style.display = 'none';
-                } else {
-                    chatLastDoc = snapshot.docs[snapshot.docs.length - 1];
-                    const messages = [];
-                    snapshot.forEach(doc => messages.unshift({ id: doc.id, ...doc.data() }));
-                    
-                    let html = '';
-                    for (const data of messages) {
-                        html += renderMessageHtml(data);
-                    }
-                    
-                    if (append) {
-                        if (chatMessagesList) {
-                            chatMessagesList.innerHTML = html + chatMessagesList.innerHTML;
-                        }
-                    } else {
-                        if (chatMessagesList) chatMessagesList.innerHTML = html;
-                    }
-                    
-                    if (snapshot.docs.length < 20) chatHasMore = false;
-                    if (chatLoadMoreBtn) {
-                        chatLoadMoreBtn.style.display = chatHasMore ? 'block' : 'none';
-                        if (chatHasMore) {
-                            chatLoadMoreBtn.onclick = () => loadMore(true);
-                        }
-                    }
-                    // التمرير إلى الأسفل عند التحميل الأول أو عند إضافة رسائل جديدة
-                    if (!append && chatMessagesList) chatMessagesList.scrollTop = chatMessagesList.scrollHeight;
-                }
-            } catch (err) {
-                console.error(err);
-                showToast("خطأ في تحميل الرسائل", true);
-            } finally {
-                chatLoadingMore = false;
-            }
-        };
-
-        // الاستماع للرسائل الجديدة فقط (آخر رسالة)
-        chatUnsub = db.collection(`chat_${currentChatRoom}`)
-                     .orderBy('timestamp', 'desc')
-                     .limit(1)
-                     .onSnapshot(snapshot => {
-                         if (snapshot.empty) {
-                             if (chatMessagesList) chatMessagesList.innerHTML = '<div class="empty-state">لا توجد رسائل</div>';
-                             return;
-                         }
-                         const newDoc = snapshot.docs[0];
-                         if (chatLastDoc && newDoc.id !== chatLastDoc.id) {
-                             // توجد رسالة جديدة نضيفها أعلى القائمة
-                             const newData = newDoc.data();
-                             const newHtml = renderMessageHtml(newData);
-                             if (chatMessagesList) {
-                                 chatMessagesList.innerHTML = newHtml + chatMessagesList.innerHTML;
-                             }
-                             if (!isSoundMuted && window.playNotificationBeep) {
-                                 playNotificationBeep(800);
-                                 showToast("🔊 رسالة جديدة");
-                             }
-                         } else if (!chatLastDoc) {
-                             // أول تحميل
-                             loadMore();
-                         }
-                     }, err => {
-                         console.error(err);
-                         showToast("خطأ في الاستماع للرسائل", true);
-                     });
-
-        // تحميل أول دفعة
-        loadMore();
-
-        // إعداد مؤشر الكتابة
-        setupTypingIndicator();
-    }
-
-    // دالة مساعدة لإنشاء HTML للرسالة حسب نوعها
-    function renderMessageHtml(data) {
-        const isOwn = data.senderId === currentUser.uid;
-        const time = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : '';
-        const avatar = data.senderAvatar || '';
-        const senderName = escapeHtml(data.senderName || 'مجهول');
-        const bubbleClass = isOwn ? 'own' : 'other';
-        
-        if (data.type === 'text') {
-            return `<div class="message-bubble ${bubbleClass}">
-                        <img class="message-avatar" src="${avatar}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e94560'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23e94560'/%3E%3Ctext x='16' y='22' text-anchor='middle' fill='white' font-size='16'%3E${senderName.charAt(0)}%3C/text%3E%3C/svg%3E'">
-                        <div class="message-content">
-                            <div class="message-text">${escapeHtml(data.text)}</div>
-                            <div class="message-meta"><span>${senderName}</span><span>${time}</span></div>
-                        </div>
-                    </div>`;
-        } 
-        else if (data.type === 'voice') {
-            return `<div class="message-bubble ${bubbleClass}">
-                        <img class="message-avatar" src="${avatar}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e94560'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23e94560'/%3E%3Ctext x='16' y='22' text-anchor='middle' fill='white' font-size='16'%3E${senderName.charAt(0)}%3C/text%3E%3C/svg%3E'">
-                        <div class="message-content">
-                            <div class="message-meta"><span>${senderName}</span><span>${time}</span></div>
-                            <div class="voice-message-wrapper">
-                                <button class="voice-play-btn" onclick="window.playVoiceMessage('${data.audioUrl}', this)"><i class="fas fa-play"></i></button>
-                                <div class="voice-waveform-container">
-                                    <div class="voice-waveform-progress" style="width:0%"></div>
-                                    <div class="voice-waveform-bars">${Array(20).fill().map(() => '<span style="height:' + (8 + Math.random() * 20) + 'px"></span>').join('')}</div>
-                                </div>
-                                <span class="voice-duration">${Math.floor(data.duration/60)}:${(data.duration%60).toString().padStart(2,'0')}</span>
+function renderMessageHtml(data) {
+    let isOwn = data.senderId === window.currentUser.uid;
+    let time = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : '';
+    let avatar = data.senderAvatar || '';
+    let senderName = window.escapeHtml(data.senderName);
+    if(data.type === 'text') {
+        return `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
+                    <img class="message-avatar" src="${avatar}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22%23e94560%22%3E%3Ccircle%20cx%3D%2217%22%20cy%3D%2217%22%20r%3D%2217%22%20fill%3D%22%23e94560%22%2F%3E%3Ctext%20x%3D%2217%22%20y%3D%2222%22%20text-anchor%3D%22middle%22%20fill%3D%22white%22%20font-size%3D%2216%22%3E${senderName.charAt(0)}%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                    <div class="message-content">
+                        <div class="message-text">${window.escapeHtml(data.text)}</div>
+                        <div class="message-meta"><span>${senderName}</span><span>${time}</span></div>
+                    </div>
+                </div>`;
+    } else if(data.type === 'voice') {
+        return `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
+                    <img class="message-avatar" src="${avatar}">
+                    <div class="message-content">
+                        <div class="message-meta"><span>${senderName}</span><span>${time}</span></div>
+                        <div class="voice-message-wrapper" data-url="${data.audioUrl}">
+                            <button class="voice-play-btn" onclick="window.playVoiceMessage(this)"><i class="fas fa-play"></i></button>
+                            <div class="voice-waveform-container">
+                                <div class="voice-waveform-progress" style="width:0%"></div>
+                                <div class="voice-waveform-bars">${Array(25).fill().map(() => '<span style="height:' + (8 + Math.random() * 25) + 'px"></span>').join('')}</div>
                             </div>
+                            <span class="voice-duration">${formatTime(data.duration || 0)}</span>
                         </div>
-                    </div>`;
-        }
-        else if (data.type === 'media') {
-            let mediaHtml = '';
-            if (data.mediaType === 'image') {
-                mediaHtml = `<img class="message-image" src="${data.mediaUrl}" onclick="window.showFullImage('${data.mediaUrl}')">`;
-            } else if (data.mediaType === 'video') {
-                mediaHtml = `<video controls class="message-image" src="${data.mediaUrl}"></video>`;
-            } else {
-                mediaHtml = `<div class="message-file"><i class="fas fa-file"></i> <a href="${data.mediaUrl}" download="${escapeHtml(data.fileName)}">${escapeHtml(data.fileName)}</a></div>`;
-            }
-            return `<div class="message-bubble ${bubbleClass}">
-                        <img class="message-avatar" src="${avatar}">
-                        <div class="message-content">
-                            <div class="message-meta"><span>${senderName}</span><span>${time}</span></div>
-                            ${mediaHtml}
-                        </div>
-                    </div>`;
-        }
-        else if (data.type === 'location') {
-            return `<div class="message-bubble ${bubbleClass}">
-                        <img class="message-avatar" src="${avatar}">
-                        <div class="message-content">
-                            <div class="message-meta"><span>${senderName}</span><span>${time}</span></div>
-                            <a href="${data.locationUrl}" target="_blank" style="color:inherit;"><i class="fas fa-map-marker-alt"></i> عرض الموقع على الخريطة</a>
-                        </div>
-                    </div>`;
-        }
-        return '';
+                    </div>
+                </div>`;
+    } else if(data.type === 'media') {
+        let mediaHtml = '';
+        if(data.mediaType === 'image') mediaHtml = `<img class="message-image" src="${data.mediaUrl}" onclick="window.showFullImage('${data.mediaUrl}')">`;
+        else if(data.mediaType === 'video') mediaHtml = `<video controls class="message-image" src="${data.mediaUrl}"></video>`;
+        else mediaHtml = `<div class="message-file"><i class="fas fa-file"></i> <a href="${data.mediaUrl}" download="${data.fileName}" style="color:inherit;">${window.escapeHtml(data.fileName)}</a></div>`;
+        return `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
+                    <img class="message-avatar" src="${avatar}">
+                    <div class="message-content">
+                        <div class="message-meta"><span>${senderName}</span><span>${time}</span></div>
+                        ${mediaHtml}
+                    </div>
+                </div>`;
+    } else if(data.type === 'location') {
+        return `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
+                    <img class="message-avatar" src="${avatar}">
+                    <div class="message-content">
+                        <div class="message-meta"><span>${senderName}</span><span>${time}</span></div>
+                        <a href="${data.locationUrl}" target="_blank" style="color:inherit;"><i class="fas fa-map-marker-alt"></i> 📍 عرض الموقع على الخريطة</a>
+                    </div>
+                </div>`;
     }
+    return '';
+}
 
-    // إعداد مؤشر الكتابة
-    function setupTypingIndicator() {
-        if (!currentChatRoom || !rtdb) return;
-        const typingRef = rtdb.ref(`/typing/${currentChatRoom}`);
-        typingRef.off();
-        typingRef.on('value', (snap) => {
-            const typingUsers = snap.val() || {};
-            const typingList = Object.keys(typingUsers)
-                .filter(uid => uid !== currentUser.uid)
-                .map(uid => typingUsers[uid]?.name);
-            let indicator = document.getElementById('typingIndicator');
-            if (!indicator && chatMessagesList && chatMessagesList.parentNode) {
-                const div = document.createElement('div');
-                div.id = 'typingIndicator';
-                div.className = 'typing-indicator';
-                chatMessagesList.parentNode.insertBefore(div, chatMessagesList.nextSibling);
-                indicator = div;
-            }
-            if (indicator) {
-                if (typingList.length) {
-                    indicator.innerText = `${typingList.join('، ')} يكتب...`;
-                } else {
-                    indicator.innerText = '';
-                }
-            }
-        });
-
-        // إرسال حدث الكتابة عند الكتابة في حقل الإدخال
-        if (chatTextInput) {
-            chatTextInput.addEventListener('input', () => {
-                if (typingTimeout) clearTimeout(typingTimeout);
-                rtdb.ref(`/typing/${currentChatRoom}/${currentUser.uid}`).set({ name: currentDisplayName });
-                typingTimeout = setTimeout(() => {
-                    rtdb.ref(`/typing/${currentChatRoom}/${currentUser.uid}`).remove();
-                }, 1500);
-            });
-        }
+window.playVoiceMessage = function(btn) {
+    const wrapper = btn.closest('.voice-message-wrapper');
+    const audioUrl = wrapper.dataset.url;
+    const progress = wrapper.querySelector('.voice-waveform-progress');
+    if(window.currentAudioPlayer && !window.currentAudioPlayer.paused) {
+        window.currentAudioPlayer.pause();
+        window.currentAudioPlayer = null;
     }
-
-    // تبديل الغرفة (عامة / خاصة)
-    function switchChatRoom(roomId, roomTitle) {
-        if (chatUnsub) chatUnsub();
-        currentChatRoom = roomId;
-        if (chatTitle) chatTitle.innerHTML = roomTitle;
-        // إعادة تعيين التحميل
-        chatLastDoc = null;
-        chatHasMore = true;
-        chatLoadingMore = false;
-        if (chatMessagesList) chatMessagesList.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div>';
-        loadChatMessages();
-    }
-
-    // فتح محادثة خاصة
-    function openPrivateChat(otherUserId, otherUserName) {
-        const roomId = `private_${[currentUser.uid, otherUserId].sort().join('_')}`;
-        const title = `<i class="fas fa-lock"></i> محادثة خاصة مع ${escapeHtml(otherUserName)}`;
-        if (mainApp && chatPageScreen) {
-            mainApp.style.display = 'none';
-            chatPageScreen.style.display = 'flex';
-        }
-        switchChatRoom(roomId, title);
-    }
-
-    // العودة للصفحة الرئيسية
-    function backToMain() {
-        if (mainApp && chatPageScreen) {
-            mainApp.style.display = 'flex';
-            chatPageScreen.style.display = 'none';
-        }
-        if (chatUnsub) chatUnsub();
-    }
-
-    // دالة تشغيل الرسالة الصوتية (تعريف عام)
-    window.playVoiceMessage = function(url, btn) {
-        const audio = new Audio(url);
-        const wrapper = btn.closest('.voice-message-wrapper');
-        if (!wrapper) return;
-        const progress = wrapper.querySelector('.voice-waveform-progress');
-        audio.play();
-        audio.ontimeupdate = () => {
-            if (audio.duration) {
-                const percent = (audio.currentTime / audio.duration) * 100;
-                if (progress) progress.style.width = percent + '%';
-            }
-        };
-        btn.innerHTML = '<i class="fas fa-pause"></i>';
-        audio.onended = () => {
+    let audio = new Audio(audioUrl);
+    window.currentAudioPlayer = audio;
+    audio.play();
+    audio.ontimeupdate = () => {
+        if(audio.duration) progress.style.width = (audio.currentTime / audio.duration * 100) + '%';
+    };
+    btn.innerHTML = '<i class="fas fa-pause"></i>';
+    audio.onended = () => {
+        btn.innerHTML = '<i class="fas fa-play"></i>';
+        progress.style.width = '0%';
+        window.currentAudioPlayer = null;
+    };
+    btn.onclick = () => {
+        if(audio.paused) {
+            audio.play();
+            btn.innerHTML = '<i class="fas fa-pause"></i>';
+        } else {
+            audio.pause();
             btn.innerHTML = '<i class="fas fa-play"></i>';
-            if (progress) progress.style.width = '0%';
-        };
+        }
     };
+};
 
-    // ربط الأحداث
-    function bindEvents() {
-        if (sendMessageBtn) sendMessageBtn.onclick = sendTextMessage;
-        if (attachFileBtn) {
-            attachFileBtn.onclick = () => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*,video/*,application/pdf,application/msword,text/plain';
-                input.onchange = async (e) => {
-                    if (e.target.files[0]) await sendFileMessage(e.target.files[0]);
-                };
-                input.click();
-            };
-        }
-        if (sendLocationBtn) sendLocationBtn.onclick = sendLocation;
-        if (walkieTalkieBtn) {
-            walkieTalkieBtn.onclick = () => {
-                if (!isRecording) startVoiceRecording();
-                else stopVoiceRecording();
-            };
-        }
-        if (chatBackBtn) chatBackBtn.onclick = backToMain;
-        
-        // أزرار لوحة التسجيل الصوتي
-        const recorderCancel = document.getElementById('recorderCancelBtn');
-        if (recorderCancel) recorderCancel.onclick = closeRecorderPanel;
-        const recorderSend = document.getElementById('recorderSendBtn');
-        if (recorderSend) recorderSend.onclick = sendRecordedVoice;
+async function clearAllMessages() {
+    const isAdmin = window.currentUser.uid === "ADMIN_UID_HERE"; // ضع uid المدير
+    if(!isAdmin && !confirm("أنت لست المدير! هل تريد مسح رسائلك فقط؟")) return;
+    if(confirm("⚠️ تحذير: سيتم مسح جميع الرسائل بشكل نهائي. هل أنت متأكد؟")) {
+        let snapshot = await db.collection(`chat_${window.currentChatRoom}`).get();
+        let batch = db.batch();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        window.showToast("تم مسح جميع الرسائل");
+        document.getElementById('chatMessagesList').innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i> تم مسح المحادثة</div>';
     }
+}
 
-    // التهيئة العلنية
-    window.initChat = function() {
-        initElements();
-        bindEvents();
-        // استماع لفتح المحادثة العامة من الـ bottom nav
-        const openChatBtn = document.getElementById('openChatBtn');
-        if (openChatBtn) {
-            openChatBtn.onclick = () => {
-                if (mainApp && chatPageScreen) {
-                    mainApp.style.display = 'none';
-                    chatPageScreen.style.display = 'flex';
-                }
-                switchChatRoom('general', 'المحادثة العامة');
-            };
-        }
-        // إذا كانت الصفحة معروضة أصلاً (مثلاً بعد تسجيل الدخول) يمكن تفعيلها لاحقاً
+// تصدير الدوال العامة
+window.initChat = function() {
+    initChatElements();
+    document.getElementById('openChatBtn').onclick = () => {
+        window.currentChatRoom = "general";
+        document.getElementById('chatTitle').innerHTML = "المحادثة العامة";
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('chatPageScreen').style.display = 'flex';
+        loadChatMessages();
     };
-
-    // تصدير دوال للمكالمات الخارجية (مثل فتح محادثة خاصة)
-    window.openPrivateChat = openPrivateChat;
-    window.switchChatRoom = switchChatRoom;
-    window.loadChatMessages = loadChatMessages;
-})();
+};
