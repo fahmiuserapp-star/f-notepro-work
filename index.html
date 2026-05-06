@@ -4,15 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <title>F-NOTEPRO-WORK 2026 · النظام المتكامل</title>
-    <!-- Firebase SDKs -->
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="F-NOTE PRO">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png">
+    
+    <!-- Firebase SDKs (إصدارات مستقرة) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -53,7 +62,6 @@
             --border: rgba(255,255,255,0.05);
             --accent-light: #2d1b2a;
         }
-        /* ========== GLASSMORPHISM COMPONENTS ========== */
         .glass-card {
             background: var(--glass-bg);
             backdrop-filter: var(--blur);
@@ -61,7 +69,6 @@
             border-radius: 28px;
             box-shadow: var(--shadow-sm);
         }
-        /* ========== شاشة تسجيل الدخول ========== */
         .login-screen {
             position: fixed; inset: 0; background: var(--bg-primary); z-index: 2000;
             display: flex; align-items: center; justify-content: center;
@@ -72,7 +79,6 @@
             border-radius: 48px; padding: 40px 28px; width: 90%; max-width: 400px;
             text-align: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border);
         }
-        .login-card img { width: 90px; margin-bottom: 20px; }
         .login-card h2 { color: var(--accent); font-size: 26px; margin-bottom: 8px; }
         .login-input {
             width: 100%; padding: 14px 18px; margin: 8px 0;
@@ -90,7 +96,6 @@
         .admin-note { background: var(--accent-light); padding: 12px; border-radius: 28px; margin-top: 20px; font-size: 12px; }
         .login-error { color: #dc2626; font-size: 12px; margin-top: 12px; }
         
-        /* ========== التطبيق الرئيسي ========== */
         .app-main {
             height: 100dvh; width: 100dvw;
             display: none; flex-direction: column; overflow: hidden;
@@ -98,7 +103,6 @@
         }
         .app-main.show { display: flex; }
         
-        /* ========== الهيدر ========== */
         .app-header {
             background: var(--glass-bg); backdrop-filter: var(--blur);
             padding: 12px 16px; display: flex; justify-content: space-between;
@@ -119,7 +123,6 @@
         .status-dot.online { background: #10b981; box-shadow: 0 0 6px #10b981; }
         .menu-btn { background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--accent); padding: 8px; border-radius: 50%; }
         
-        /* ========== شريط البحث ========== */
         .search-bar {
             padding: 12px 16px; display: flex; gap: 10px;
             background: transparent;
@@ -137,7 +140,6 @@
         }
         .search-btn:active, .color-filter-btn:active { transform: scale(0.94); }
         
-        /* ========== فلتر الألوان ========== */
         .color-strip {
             padding: 8px 16px; overflow-x: auto; white-space: nowrap;
             display: none; background: transparent;
@@ -150,12 +152,10 @@
         }
         .color-chip.active { border-color: var(--accent); transform: scale(1.08); box-shadow: 0 0 0 3px var(--accent-glow); }
         
-        /* ========== الصفحات ========== */
         .pages-container { flex: 1; overflow: hidden; position: relative; }
         .page { height: 100%; overflow-y: auto; padding: 12px; display: none; }
         .page.active { display: block; }
         
-        /* ========== بطاقات المرشدين ========== */
         .contacts-list { display: flex; flex-direction: column; gap: 12px; }
         .contact-card {
             background: var(--card-bg); backdrop-filter: var(--blur);
@@ -184,8 +184,41 @@
         .btn-edit { background: #2c7da0; color: white; }
         .btn-delete { background: #dc2626; color: white; }
         .btn-share { background: #3b82f6; color: white; }
+        .btn-reminder { background: #f59e0b; color: white; }
         
-        /* ========== صفحة المحادثة ========== */
+        /* مكونات التذكير */
+        .reminder-badge {
+            background: #f59e0b;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 10px;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .task-item {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border-right: 4px solid var(--accent);
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .task-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .task-status.pending { background: #f59e0b; color: white; }
+        .task-status.completed { background: #10b981; color: white; }
+        
         .chat-header {
             background: var(--glass-bg); backdrop-filter: var(--blur);
             padding: 12px 16px; display: flex; align-items: center; gap: 15px;
@@ -207,7 +240,6 @@
         .message-image { max-width: 200px; max-height: 150px; border-radius: 16px; margin-top: 6px; cursor: pointer; }
         .message-file { background: rgba(0,0,0,0.08); padding: 8px 14px; border-radius: 16px; display: inline-flex; align-items: center; gap: 10px; margin-top: 6px; font-size: 11px; }
         
-        /* ========== زر الصوت المتقدم ========== */
         .voice-message-wrapper { display: flex; align-items: center; gap: 12px; width: 100%; }
         .voice-play-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; color: inherit; width: 36px; }
         .voice-waveform-container { flex: 1; height: 40px; position: relative; background: rgba(0,0,0,0.1); border-radius: 24px; overflow: hidden; cursor: pointer; }
@@ -216,7 +248,6 @@
         .voice-waveform-bars span { width: 3px; background: currentColor; border-radius: 2px; transition: height 0.05s; }
         .voice-duration { font-size: 11px; min-width: 40px; text-align: center; }
         
-        /* ========== شريط الإدخال ========== */
         .chat-input-bar {
             padding: 12px 16px; background: var(--glass-bg); backdrop-filter: var(--blur);
             border-top: 1px solid var(--border); display: flex; gap: 10px;
@@ -236,7 +267,6 @@
         .btn-attach { background: #64748b; }
         .btn-location { background: #3b82f6; }
         
-        /* ========== شريط التسجيل المتقدم ========== */
         .recorder-panel {
             position: fixed; bottom: 80px; left: 20px; right: 20px;
             background: var(--card-bg); backdrop-filter: var(--blur);
@@ -253,7 +283,6 @@
         .recorder-cancel { color: #dc2626; }
         .recorder-send { color: #10b981; }
         
-        /* ========== الشريط السفلي ========== */
         .bottom-nav {
             background: var(--glass-bg); backdrop-filter: var(--blur);
             border-top: 1px solid var(--border); display: flex;
@@ -268,7 +297,6 @@
         .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
         .nav-item span { font-size: 11px; }
         
-        /* ========== القائمة الجانبية الحديثة ========== */
         .sidebar-new {
             position: fixed; top: 0; right: -320px; width: 300px;
             height: 100%; background: var(--glass-bg); backdrop-filter: var(--blur);
@@ -303,7 +331,6 @@
         .sidebar-menu-item:active { opacity: 0.7; }
         .sidebar-menu-item i { width: 28px; color: var(--accent); }
         
-        /* ========== مودالات محسنة ========== */
         .modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.7);
             backdrop-filter: blur(8px); display: flex; align-items: center;
@@ -344,23 +371,30 @@
         }
         .empty-state { text-align: center; padding: 50px; color: var(--text-secondary); }
         
-        /* خلفيات الدردشة */
         .chat-bg-gradient { background: linear-gradient(145deg, var(--bg-primary), var(--card-bg)); }
         .chat-bg-pattern { background-image: radial-gradient(circle at 10% 20%, rgba(233,69,96,0.05) 2%, transparent 2.5%); background-size: 30px 30px; }
+        .load-more-btn { text-align: center; padding: 10px; background: var(--accent-light); border-radius: 40px; margin: 10px; cursor: pointer; }
+        .install-banner {
+            position: fixed; bottom: 80px; left: 20px; right: 20px;
+            background: var(--accent); color: white; padding: 12px 20px;
+            border-radius: 60px; display: none; justify-content: space-between;
+            align-items: center; z-index: 1600; font-weight: bold;
+        }
+        .install-banner.show { display: flex; }
     </style>
 </head>
 <body>
 
-<!-- ========== شاشة تسجيل الدخول ========== -->
+<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen" class="login-screen">
     <div class="login-card">
         <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png">
         <h2>F-NOTE PRO 2026</h2>
         <p style="margin-bottom: 16px;">نظام إدارة المرشدين المتكامل</p>
-        <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" autocomplete="off">
-        <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور" autocomplete="off">
+        <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني">
+        <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
         <div id="nameSetupContainer">
-            <input type="text" id="loginDisplayName" class="login-input" placeholder="اسم المستخدم (سيظهر للجميع)" autocomplete="off">
+            <input type="text" id="loginDisplayName" class="login-input" placeholder="اسم المستخدم (سيظهر للجميع)">
         </div>
         <button class="login-btn" id="doLoginBtn">تسجيل الدخول <i class="fas fa-arrow-left"></i></button>
         <div class="admin-note">
@@ -370,7 +404,13 @@
     </div>
 </div>
 
-<!-- ========== التطبيق الرئيسي ========== -->
+<!-- Banner تثبيت PWA -->
+<div id="installBanner" class="install-banner">
+    <span><i class="fas fa-download"></i> ثبّت التطبيق على شاشتك الرئيسية</span>
+    <button id="closeInstallBanner" style="background:none;border:none;color:white;font-size:20px;">✕</button>
+</div>
+
+<!-- التطبيق الرئيسي -->
 <div id="mainApp" class="app-main">
     <div class="app-header">
         <div class="logo-area">
@@ -399,6 +439,7 @@
         </div>
         <div id="tasksPage" class="page">
             <div id="tasksListContainer" class="contacts-list"><div class="empty-state"><i class="fas fa-tasks"></i> لا توجد مهام</div></div>
+            <button class="add-fab" id="addTaskBtn" style="position:fixed; bottom:90px; right:20px; width:56px; height:56px; border-radius:50%; background:var(--accent); border:none; color:white; font-size:24px; cursor:pointer; box-shadow:var(--shadow-md);"><i class="fas fa-plus"></i></button>
         </div>
         <div id="notesPage" class="page">
             <div id="notesListContainer" class="contacts-list"><div class="empty-state"><i class="fas fa-sticky-note"></i> لا توجد ملاحظات</div></div>
@@ -419,7 +460,7 @@
     </div>
 </div>
 
-<!-- ========== صفحة المحادثة ========== -->
+<!-- صفحة المحادثة -->
 <div id="chatPageScreen" style="display: none; height: 100dvh; flex-direction: column; background: var(--bg-primary);">
     <div class="chat-header">
         <button class="chat-back-btn" id="chatBackBtn"><i class="fas fa-arrow-right"></i></button>
@@ -427,6 +468,7 @@
         <button class="chat-settings-btn" id="chatSettingsBtn"><i class="fas fa-fill-drip"></i></button>
     </div>
     <div id="chatMessagesList" class="chat-messages"><div class="empty-state">لا توجد رسائل</div></div>
+    <div id="chatLoadMoreBtn" class="load-more-btn" style="display:none;">📥 تحميل المزيد</div>
     <div class="chat-input-bar">
         <button class="chat-action-btn btn-attach" id="attachFileBtn"><i class="fas fa-paperclip"></i></button>
         <button class="chat-action-btn btn-location" id="sendLocationBtn"><i class="fas fa-location-dot"></i></button>
@@ -436,7 +478,7 @@
     </div>
 </div>
 
-<!-- ========== لوحة التسجيل الصوتي ========== -->
+<!-- لوحة التسجيل الصوتي -->
 <div id="recorderPanel" class="recorder-panel">
     <button id="recorderCancelBtn" class="recorder-cancel"><i class="fas fa-times"></i></button>
     <div class="recorder-waveform" id="recorderWaveform"></div>
@@ -444,21 +486,20 @@
     <button id="recorderSendBtn" class="recorder-send"><i class="fas fa-check-circle"></i></button>
 </div>
 
-<!-- ========== إعدادات الدردشة ========== -->
+<!-- إعدادات الدردشة -->
 <div id="chatSettingsPanel" style="position:fixed; bottom:80px; right:20px; background:var(--card-bg); border-radius:28px; padding:12px; z-index:150; display:none; flex-direction:column; gap:8px; box-shadow:var(--shadow-md);">
-    <div class="bg-option" data-bg="#f8fafc" data-pattern=""><div style="width:30px;height:30px;border-radius:50%;background:#f8fafc;display:inline-block;vertical-align:middle;margin-left:10px;"></div> فاتح</div>
-    <div class="bg-option" data-bg="#0f172a" data-pattern=""><div style="width:30px;height:30px;border-radius:50%;background:#0f172a;display:inline-block;vertical-align:middle;margin-left:10px;"></div> داكن</div>
-    <div class="bg-option" data-bg="#f8fafc" data-pattern="chat-bg-pattern"><div style="width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 20% 30%, #eee 2%, transparent 2.5%);display:inline-block;vertical-align:middle;margin-left:10px;"></div> نقش</div>
+    <div class="bg-option" data-bg="#f8fafc"><div style="width:30px;height:30px;border-radius:50%;background:#f8fafc;display:inline-block;vertical-align:middle;margin-left:10px;"></div> فاتح</div>
+    <div class="bg-option" data-bg="#0f172a"><div style="width:30px;height:30px;border-radius:50%;background:#0f172a;display:inline-block;vertical-align:middle;margin-left:10px;"></div> داكن</div>
 </div>
 
-<!-- ========== القائمة الجانبية الحديثة ========== -->
+<!-- القائمة الجانبية -->
 <div id="sidebarNew" class="sidebar-new">
     <div class="sidebar-header">
         <h3><i class="fas fa-cog"></i> الإعدادات</h3>
         <button id="closeSidebarNew" class="sidebar-close"><i class="fas fa-times"></i></button>
     </div>
     <div class="profile-section">
-        <img id="profileAvatarLarge" class="profile-avatar-large" src="" onclick="document.getElementById('avatarUploadModal').classList.add('show')">
+        <img id="profileAvatarLarge" class="profile-avatar-large" src="">
         <input type="text" id="profileNameInput" class="profile-name-input" placeholder="اسم المستخدم">
         <button class="save-profile-btn" id="saveProfileChangesBtn"><i class="fas fa-save"></i> حفظ التغييرات</button>
     </div>
@@ -473,21 +514,20 @@
 </div>
 <div id="overlayNew" class="overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1400; display:none;"></div>
 
-<!-- ========== المودالات ========== -->
+<!-- المودالات -->
 <div id="guideModal" class="modal"><div class="modal-card"><h3 id="modalTitle"><i class="fas fa-user-plus"></i> إضافة مرشد</h3>
 <input type="text" id="guideName" placeholder="الاسم الكامل *">
 <input type="tel" id="guidePhone" placeholder="رقم الهاتف *">
 <input type="text" id="guideAgency" placeholder="وكالة السفر *">
 <input type="text" id="guideVehicle" placeholder="رقم وسيلة النقل *">
 <input type="text" id="guidePlate" placeholder="رقم اللوحة">
-<div id="phoneError" style="color:#ef4444; font-size:12px; display:none;">⚠️ أرقام فقط</div>
 <div class="upload-area" id="uploadGuidePhotoTrigger"><i class="fas fa-camera"></i> صورة المرشد</div>
 <div id="guidePhotoPreview" style="display:none;"><img id="guidePhotoImg" class="preview-img"></div>
 <div class="upload-area" id="uploadBusPhotoTrigger"><i class="fas fa-truck"></i> صورة وسيلة النقل</div>
 <div id="busPhotoPreview" style="display:none;"><img id="busPhotoImg" class="preview-img"></div>
 <textarea id="guideNotes" rows="2" placeholder="ملاحظات إضافية"></textarea>
 <div class="color-palette" id="guideColorSelector"></div>
-<select id="guideVisibilitySelect"><option value="private"><i class="fas fa-lock"></i> خاص</option><option value="public"><i class="fas fa-globe"></i> عام</option></select>
+<select id="guideVisibilitySelect"><option value="private">🔒 خاص</option><option value="public">🌍 عام</option></select>
 <div class="modal-buttons"><button class="modal-save" id="saveGuideBtn">💾 حفظ</button><button class="modal-cancel" id="closeGuideModalBtn">❌ إلغاء</button></div></div></div>
 
 <div id="taskModal" class="modal"><div class="modal-card"><h3><i class="fas fa-tasks"></i> إضافة مهمة</h3>
@@ -495,6 +535,13 @@
 <input type="date" id="taskDateInput">
 <input type="time" id="taskTimeInput">
 <textarea id="taskDescInput" rows="2" placeholder="تفاصيل المهمة"></textarea>
+<select id="taskReminderSelect">
+    <option value="none">بدون تذكير</option>
+    <option value="5">تذكير قبل 5 دقائق</option>
+    <option value="15">تذكير قبل 15 دقيقة</option>
+    <option value="30">تذكير قبل 30 دقيقة</option>
+    <option value="60">تذكير قبل ساعة</option>
+</select>
 <div class="upload-area" id="taskFileUploadTrigger"><i class="fas fa-paperclip"></i> إرفاق ملف</div>
 <div id="taskFileNameDisplay" style="font-size:11px; margin-top:5px;"></div>
 <div class="modal-buttons"><button class="modal-save" id="saveTaskModalBtn">إضافة</button><button class="modal-cancel" id="closeTaskModalBtn">إلغاء</button></div></div></div>
@@ -517,13 +564,13 @@
 <div class="modal-buttons"><button class="modal-cancel" id="closeAvatarModalBtn">إغلاق</button></div></div></div>
 
 <div id="fullImageModal" class="modal"><div class="modal-card" style="text-align:center;"><img id="fullImageView" style="max-width:100%; border-radius:28px;"><button class="modal-cancel" id="closeFullImageBtn" style="margin-top:16px;">إغلاق</button></div></div>
-<div id="privateChatModal" class="modal"><div class="modal-card"><h3><i class="fas fa-lock"></i> محادثة خاصة</h3><select id="privateChatSelect" style="margin:15px 0;"></select><div class="modal-buttons"><button class="modal-save" id="startPrivateChatBtn">بدء المحادثة</button><button class="modal-cancel" id="closePrivateChatModalBtn">إلغاء</button></div></div></div>
 
 <script>
-    // ========== إعدادات Firebase و Cloudinary ==========
+    // ========== تكوين Cloudinary ==========
     const CLOUDINARY_CLOUD_NAME = "dmhtx93nj";
     const CLOUDINARY_UPLOAD_PRESET = "fcloud_preset";
     
+    // ========== تكوين Firebase ==========
     const firebaseConfig = {
         apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
         authDomain: "f-notepro-work-2d25b.firebaseapp.com",
@@ -546,6 +593,8 @@
     let mediaRecorder, audioChunks, isRecording = false, currentVoiceBlob = null, waveformAnimation = null;
     let currentChatRoom = "general", currentPrivateChatWith = null;
     let pendingTaskFile = null, pendingNoteFile = null, pendingAvatarFile = null;
+    let chatLastDoc = null, chatLoadingMore = false, chatHasMore = true;
+    let deferredPrompt = null; // لـ PWA
     
     // ========== دوال مساعدة ==========
     function showToast(msg, isErr=false) { 
@@ -560,6 +609,7 @@
     function validatePhone(p) { return /^[\+]?[0-9]{8,15}$/.test(p.replace(/\s/g, '')); }
     
     function playNotificationBeep(freq=880) { 
+        if(isSoundMuted) return;
         try { 
             let ctx = new (AudioContext || webkitAudioContext)(); 
             let osc = ctx.createOscillator(); 
@@ -574,13 +624,28 @@
         } catch(e){} 
     }
     
-    // ========== رفع الملفات إلى Cloudinary ==========
+    // ========== رفع الملفات إلى Cloudinary (مباشر بدون Base64) ==========
     async function uploadToCloudinary(file, folder = "general") {
         let fd = new FormData();
         fd.append("file", file);
         fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-        fd.append("folder", folder);
-        let res = await axios.post(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, fd);
+        if(folder) fd.append("folder", folder);
+        
+        let res = await axios.post(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
+        });
+        return res.data.secure_url;
+    }
+    
+    async function uploadAudioToCloudinary(blob) {
+        let fd = new FormData();
+        fd.append("file", blob, "voice.webm");
+        fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+        fd.append("folder", "voice_messages");
+        fd.append("resource_type", "video"); // الصوت يعامل كفيديو في Cloudinary
+        let res = await axios.post(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`, fd);
         return res.data.secure_url;
     }
     
@@ -618,23 +683,27 @@
         inp.click();
     }
     
-    document.getElementById('uploadGuidePhotoTrigger').onclick = () => triggerImageUpload('guide');
-    document.getElementById('uploadBusPhotoTrigger').onclick = () => triggerImageUpload('bus');
-    document.getElementById('selectAvatarTrigger').onclick = () => {
-        let inp = document.createElement('input');
-        inp.type = 'file';
-        inp.accept = 'image/*';
-        inp.onchange = async e => {
-            if(e.target.files[0]) {
-                await compressAndUploadImage(e.target.files[0], 'avatar');
-                await db.collection('user_profiles').doc(currentUser.uid).update({ avatarUrl: userAvatarUrl });
-                updateProfileUI();
-                showToast("تم تحديث الصورة الشخصية");
-                document.getElementById('avatarUploadModal').classList.remove('show');
-            }
-        };
-        inp.click();
-    };
+    // ========== إصلاح مشكلة البيانات القديمة (المشكلة الأساسية) ==========
+    function subscribeToGuides() {
+        if (unsubscribeGuides) unsubscribeGuides();
+        if (!currentUser) return;
+
+        // الحل: استخدام استعلام واحد مع فلترة في الذاكرة بدلاً من دمج get() داخل onSnapshot
+        const query = db.collection('guides');
+        
+        unsubscribeGuides = query.onSnapshot(snapshot => {
+            let allGuides = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                // عرض العام للجميع، وعرض الخاص فقط لصاحبه
+                if (data.visibility === 'public' || data.userId === currentUser.uid) {
+                    allGuides.push({ id: doc.id, ...data });
+                }
+            });
+            guidesList = allGuides;
+            renderContactsList();
+        }, err => showToast("خطأ في المزامنة: " + err.message, true));
+    }
     
     // ========== إدارة المرشدين ==========
     async function saveGuideToDB() {
@@ -644,8 +713,7 @@
         let vehicle = document.getElementById('guideVehicle').value.trim();
         
         if(!name || !phone || !agency || !vehicle) return showToast("جميع الحقول المطلوبة", true);
-        if(!validatePhone(phone)) { document.getElementById('phoneError').style.display = 'block'; return showToast("رقم هاتف غير صالح", true); }
-        document.getElementById('phoneError').style.display = 'none';
+        if(!validatePhone(phone)) return showToast("رقم هاتف غير صالح", true);
         
         let data = {
             name, phone, agency, vehicle,
@@ -725,7 +793,7 @@
                         <div class="action-buttons">
                             ${g.userId === currentUser?.uid ? `<button class="action-btn btn-edit" data-edit="${g.id}">تعديل</button><button class="action-btn btn-delete" data-del="${g.id}">حذف</button>` : ''}
                             <button class="action-btn btn-share" data-share="${g.id}"><i class="fas fa-share-alt"></i> نشر</button>
-                            <button class="action-btn" data-private="${g.userId}" data-name="${escapeHtml(g.name)}" style="background:#8b5cf6;color:white;"><i class="fas fa-lock"></i> خاص</button>
+                            <button class="action-btn btn-reminder" data-reminder="${g.id}"><i class="fas fa-bell"></i> تذكير</button>
                         </div>
                     </div>
                 </div>
@@ -743,7 +811,42 @@
         document.querySelectorAll('[data-edit]').forEach(btn => { btn.onclick = () => editGuideById(btn.dataset.edit); });
         document.querySelectorAll('[data-del]').forEach(btn => { btn.onclick = () => deleteGuideById(btn.dataset.del); });
         document.querySelectorAll('[data-share]').forEach(btn => { btn.onclick = () => shareGuideOnWhatsApp(btn.dataset.share); });
-        document.querySelectorAll('[data-private]').forEach(btn => { btn.onclick = () => openPrivateChat(btn.dataset.private, btn.dataset.name); });
+        document.querySelectorAll('[data-reminder]').forEach(btn => { btn.onclick = () => setReminderForGuide(btn.dataset.reminder); });
+    }
+    
+    function setReminderForGuide(guideId) {
+        let guide = guidesList.find(g => g.id === guideId);
+        if(guide) {
+            let msg = prompt(`تذكير بمرشد: ${guide.name}\nأدخل نص التذكير (اختياري):`, `اتصال مع ${guide.name}`);
+            if(msg !== null) {
+                let reminderTime = new Date();
+                reminderTime.setMinutes(reminderTime.getMinutes() + 5);
+                localStorage.setItem(`reminder_${Date.now()}`, JSON.stringify({
+                    guideId, guideName: guide.name, text: msg, time: reminderTime.getTime()
+                }));
+                showToast(`✓ تم تعيين تذكير بعد 5 دقائق لـ ${guide.name}`);
+                checkReminders();
+            }
+        }
+    }
+    
+    function checkReminders() {
+        setInterval(() => {
+            let now = Date.now();
+            for(let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                if(key && key.startsWith('reminder_')) {
+                    try {
+                        let rem = JSON.parse(localStorage.getItem(key));
+                        if(rem.time <= now) {
+                            showToast(`🔔 تذكير: ${rem.guideName}\n${rem.text || 'حان وقت التواصل'}`);
+                            playNotificationBeep(880);
+                            localStorage.removeItem(key);
+                        }
+                    } catch(e) {}
+                }
+            }
+        }, 10000);
     }
     
     window.makeCall = (phone, type) => {
@@ -784,33 +887,76 @@
     
     async function deleteGuideById(id) { if(confirm('حذف المرشد نهائياً؟')) await db.collection('guides').doc(id).delete(); showToast('تم الحذف'); }
     
-    function subscribeToGuides() {
-        if(unsubscribeGuides) unsubscribeGuides();
-        if(!currentUser) return;
-        let mine = db.collection('guides').where('userId', '==', currentUser.uid);
-        let update = () => {
-            Promise.all([mine.get(), db.collection('guides').where('visibility', '==', 'public').get()]).then(([mineSnap, pubSnap]) => {
-                let all = [];
-                mineSnap.forEach(d => all.push({ id: d.id, ...d.data() }));
-                pubSnap.forEach(d => { if(d.data().userId !== currentUser.uid) all.push({ id: d.id, ...d.data() }); });
-                guidesList = all;
-                renderContactsList();
-            });
-        };
-        mine.onSnapshot(update);
-        db.collection('guides').where('visibility', '==', 'public').onSnapshot(update);
-        unsubscribeGuides = () => {};
+    // ========== المهام مع التذكير ==========
+    async function loadTasks() { 
+        let snap = await db.collection('tasks').where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc').get(); 
+        tasksList = []; 
+        snap.forEach(d => tasksList.push({ id: d.id, ...d.data() })); 
+        renderTasksList(); 
+        checkTaskReminders();
     }
-    
-    // ========== المهام والملاحظات والأحداث ==========
-    async function loadTasks() { let snap = await db.collection('tasks').where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc').get(); tasksList = []; snap.forEach(d => tasksList.push({ id: d.id, ...d.data() })); renderTasksList(); }
-    async function loadNotes() { let snap = await db.collection('notes').where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc').get(); notesList = []; snap.forEach(d => notesList.push({ id: d.id, ...d.data() })); renderNotesList(); }
-    async function loadEvents() { let snap = await db.collection('events').where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc').get(); eventsList = []; snap.forEach(d => eventsList.push({ id: d.id, ...d.data() })); renderEventsList(); }
     
     function renderTasksList() {
         let container = document.getElementById('tasksListContainer');
         if(!tasksList.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-tasks"></i> لا توجد مهام</div>'; return; }
-        container.innerHTML = tasksList.map(t => `<div class="contact-card"><div><strong>${escapeHtml(t.title)}</strong> <span style="font-size:10px;color:var(--text-secondary);">${t.date || ''} ${t.time || ''}</span></div><div>${t.details || ''}</div>${t.fileUrl ? `<div class="message-file"><i class="fas fa-file"></i> <a href="${t.fileUrl}" download="${t.fileName}" style="color:inherit;">${escapeHtml(t.fileName)}</a></div>` : ''}<div class="action-buttons" style="margin-top:8px;"><button class="action-btn btn-delete" onclick="deleteTask('${t.id}')">حذف</button><button class="action-btn btn-share" onclick="shareTask('${t.id}')"><i class="fas fa-share-alt"></i> نشر</button></div></div>`).join('');
+        container.innerHTML = tasksList.map(t => `<div class="task-item">
+            <div class="task-header">
+                <strong>${escapeHtml(t.title)}</strong>
+                <span class="task-status ${t.completed ? 'completed' : 'pending'}">${t.completed ? '✓ مكتملة' : '⏳ قيد الانتظار'}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text-secondary);margin:5px 0;">
+                📅 ${t.date || 'غير محدد'} ${t.time || ''}
+                ${t.reminderMinutes ? `<span class="reminder-badge"><i class="fas fa-bell"></i> تذكير قبل ${t.reminderMinutes} دقيقة</span>` : ''}
+            </div>
+            <div>${t.details || ''}</div>
+            ${t.fileUrl ? `<div class="message-file"><i class="fas fa-file"></i> <a href="${t.fileUrl}" download="${t.fileName}" style="color:inherit;">${escapeHtml(t.fileName)}</a></div>` : ''}
+            <div class="action-buttons" style="margin-top:8px;">
+                <button class="action-btn" onclick="toggleTaskComplete('${t.id}', ${!t.completed})" style="background:#10b981;">${t.completed ? '↺ إعادة فتح' : '✓ إكمال'}</button>
+                <button class="action-btn btn-delete" onclick="deleteTask('${t.id}')">حذف</button>
+                <button class="action-btn btn-share" onclick="shareTask('${t.id}')"><i class="fas fa-share-alt"></i> نشر</button>
+            </div>
+        </div>`).join('');
+    }
+    
+    window.toggleTaskComplete = async (id, completed) => {
+        await db.collection('tasks').doc(id).update({ completed });
+        loadTasks();
+        showToast(completed ? "تم إكمال المهمة 🎉" : "تم إعادة فتح المهمة");
+    };
+    
+    function checkTaskReminders() {
+        setInterval(() => {
+            tasksList.forEach(task => {
+                if(task.date && task.time && task.reminderMinutes && !task.reminded) {
+                    let taskDateTime = new Date(`${task.date}T${task.time}`);
+                    let now = new Date();
+                    let diffMinutes = (taskDateTime - now) / 1000 / 60;
+                    if(diffMinutes <= task.reminderMinutes && diffMinutes > 0) {
+                        showToast(`🔔 تذكير بالمهمة: ${task.title}\n${task.details || ''}`);
+                        playNotificationBeep(880);
+                        db.collection('tasks').doc(task.id).update({ reminded: true });
+                    }
+                }
+            });
+        }, 30000);
+    }
+    
+    async function addNewTask(title, date, time, details, file, reminderMinutes) {
+        let fileData = file ? { url: await uploadToCloudinary(file, 'tasks'), name: file.name } : null;
+        await db.collection('tasks').add({ 
+            title, date, time, details, reminderMinutes,
+            fileUrl: fileData?.url, fileName: fileData?.name, 
+            userId: currentUser.uid, completed: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+        });
+        loadTasks(); showToast("تم إضافة المهمة");
+    }
+    
+    async function loadNotes() { 
+        let snap = await db.collection('notes').where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc').get(); 
+        notesList = []; 
+        snap.forEach(d => notesList.push({ id: d.id, ...d.data() })); 
+        renderNotesList(); 
     }
     
     function renderNotesList() {
@@ -819,22 +965,23 @@
         container.innerHTML = notesList.map(n => `<div class="contact-card"><div><strong>${escapeHtml(n.title)}</strong></div><div>${n.content || ''}</div>${n.fileUrl ? `<div class="message-file"><i class="fas fa-file"></i> <a href="${n.fileUrl}" download="${n.fileName}" style="color:inherit;">${escapeHtml(n.fileName)}</a></div>` : ''}<div class="action-buttons" style="margin-top:8px;"><button class="action-btn btn-delete" onclick="deleteNote('${n.id}')">حذف</button><button class="action-btn btn-share" onclick="shareNote('${n.id}')"><i class="fas fa-share-alt"></i> نشر</button></div></div>`).join('');
     }
     
-    function renderEventsList() {
-        let container = document.getElementById('eventsListContainer');
-        if(!eventsList.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-alt"></i> لا توجد أحداث</div>'; return; }
-        container.innerHTML = eventsList.map(e => `<div class="contact-card"><div><strong>${escapeHtml(e.title)}</strong></div><div>${e.description || ''}</div><div style="font-size:10px;color:var(--text-secondary);margin-top:5px;">${e.createdAt ? new Date(e.createdAt.toDate()).toLocaleString() : ''}</div></div>`).join('');
-    }
-    
-    async function addNewTask(title, date, time, details, file) {
-        let fileData = file ? { url: await uploadToCloudinary(file, 'tasks'), name: file.name } : null;
-        await db.collection('tasks').add({ title, date, time, details, fileUrl: fileData?.url, fileName: fileData?.name, userId: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-        loadTasks(); showToast("تم إضافة المهمة");
-    }
-    
     async function addNewNote(title, content, file) {
         let fileData = file ? { url: await uploadToCloudinary(file, 'notes'), name: file.name } : null;
         await db.collection('notes').add({ title, content, fileUrl: fileData?.url, fileName: fileData?.name, userId: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         loadNotes(); showToast("تم إضافة الملاحظة");
+    }
+    
+    async function loadEvents() { 
+        let snap = await db.collection('events').where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc').get(); 
+        eventsList = []; 
+        snap.forEach(d => eventsList.push({ id: d.id, ...d.data() })); 
+        renderEventsList(); 
+    }
+    
+    function renderEventsList() {
+        let container = document.getElementById('eventsListContainer');
+        if(!eventsList.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-alt"></i> لا توجد أحداث</div>'; return; }
+        container.innerHTML = eventsList.map(e => `<div class="contact-card"><div><strong>${escapeHtml(e.title)}</strong></div><div>${e.description || ''}</div><div style="font-size:10px;color:var(--text-secondary);margin-top:5px;">${e.createdAt ? new Date(e.createdAt.toDate()).toLocaleString() : ''}</div></div>`).join('');
     }
     
     async function addNewEvent(title, description) {
@@ -847,7 +994,7 @@
     window.shareTask = (id) => { let t = tasksList.find(t => t.id === id); if(t) window.open(`https://wa.me/?text=${encodeURIComponent(`*مهمة:* ${t.title}\n${t.details || ''}`)}`, '_blank'); };
     window.shareNote = (id) => { let n = notesList.find(n => n.id === id); if(n) window.open(`https://wa.me/?text=${encodeURIComponent(`*ملاحظة:* ${n.title}\n${n.content || ''}`)}`, '_blank'); };
     
-    // ========== المحادثات ==========
+    // ========== المحادثات مع Pagination ==========
     async function sendTextMessage() {
         let text = document.getElementById('chatTextInput').value.trim();
         if(!text) return;
@@ -869,22 +1016,29 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             showToast("تم إرسال الملف");
-        } catch(e) { showToast("فشل الرفع", true); }
+        } catch(e) { showToast("فشل الرفع: " + e.message, true); }
     }
     
+    // إصلاح زر الموقع - خريطة تعمل
     async function sendLocation() {
+        if (!navigator.geolocation) return showToast("الموقع غير مدعوم في هذا المتصفح", true);
         navigator.geolocation.getCurrentPosition(async pos => {
+            let mapsUrl = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
             await db.collection(`chat_${currentChatRoom}`).add({
-                location: { lat: pos.coords.latitude, lng: pos.coords.longitude },
-                senderId: currentUser.uid, senderName: currentDisplayName,
-                senderAvatar: userAvatarUrl, type: 'location',
+                locationUrl: mapsUrl,
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                senderId: currentUser.uid,
+                senderName: currentDisplayName,
+                senderAvatar: userAvatarUrl,
+                type: 'location',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            showToast("تم إرسال الموقع");
-        });
+            showToast("📍 تم إرسال الموقع");
+        }, () => showToast("تعذر الحصول على الموقع", true));
     }
     
-    // ========== التسجيل الصوتي المتقدم (30 ثانية مع تأكيد الإرسال) ==========
+    // التسجيل الصوتي (حد 2 دقيقة)
     async function startVoiceRecording() {
         if(isRecording) return;
         try {
@@ -906,7 +1060,7 @@
             let startTime = Date.now();
             let interval = setInterval(() => {
                 let elapsed = Math.floor((Date.now() - startTime) / 1000);
-                if(elapsed >= 30) { clearInterval(interval); stopVoiceRecording(); }
+                if(elapsed >= 120) { clearInterval(interval); stopVoiceRecording(); showToast("تم الوصول للحد الأقصى (دقيقتين)", true); }
             }, 1000);
             window.recordingInterval = interval;
         } catch(e) { showToast("الوصول للميكروفون مرفوض", true); }
@@ -935,16 +1089,16 @@
         let timerInterval = setInterval(() => {
             let elapsed = Math.floor((Date.now() - startTime) / 1000);
             document.getElementById('recorderTime').innerText = `${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')}`;
-            if(elapsed >= 30) { clearInterval(timerInterval); document.getElementById('recorderSendBtn').click(); }
+            if(elapsed >= 120) { clearInterval(timerInterval); document.getElementById('recorderSendBtn').click(); }
         }, 1000);
         window.recorderTimer = timerInterval;
     }
     
     async function sendRecordedVoice() {
         if(currentVoiceBlob) {
-            let url = await uploadToCloudinary(currentVoiceBlob, 'voice');
+            let url = await uploadAudioToCloudinary(currentVoiceBlob);
             await db.collection(`chat_${currentChatRoom}`).add({
-                audioUrl: url, duration: 30, senderId: currentUser.uid,
+                audioUrl: url, duration: 120, senderId: currentUser.uid,
                 senderName: currentDisplayName, senderAvatar: userAvatarUrl,
                 type: 'voice',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -962,71 +1116,105 @@
         currentVoiceBlob = null;
     }
     
-    // ========== عرض الرسائل ==========
+    // تحميل الرسائل مع Pagination
     function loadChatMessages() {
         if(!currentUser) return;
         let container = document.getElementById('chatMessagesList');
-        if(chatUnsub) chatUnsub();
-        chatUnsub = db.collection(`chat_${currentChatRoom}`).orderBy('timestamp', 'asc').onSnapshot(snapshot => {
-            if(snapshot.empty) { container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i> لا توجد رسائل</div>'; return; }
-            let html = '';
-            snapshot.forEach(doc => {
-                let data = doc.data();
-                let isOwn = data.senderId === currentUser.uid;
-                let time = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : '';
-                let avatar = data.senderAvatar || '';
-                
-                if(data.type === 'text') {
-                    html += `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
-                                <img class="message-avatar" src="${avatar}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22%23e94560%22%3E%3Ccircle%20cx%3D%2217%22%20cy%3D%2217%22%20r%3D%2217%22%20fill%3D%22%23e94560%22%2F%3E%3Ctext%20x%3D%2217%22%20y%3D%2222%22%20text-anchor%3D%22middle%22%20fill%3D%22white%22%20font-size%3D%2216%22%3E${data.senderName?.charAt(0) || '?'}%3C%2Ftext%3E%3C%2Fsvg%3E'">
-                                <div class="message-content">
-                                    <div class="message-text">${escapeHtml(data.text)}</div>
-                                    <div class="message-meta"><span>${escapeHtml(data.senderName)}</span><span>${time}</span></div>
-                                </div>
-                            </div>`;
-                } else if(data.type === 'voice') {
-                    html += `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
-                                <img class="message-avatar" src="${avatar}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22%23e94560%22%3E%3Ccircle%20cx%3D%2217%22%20cy%3D%2217%22%20r%3D%2217%22%20fill%3D%22%23e94560%22%2F%3E%3Ctext%20x%3D%2217%22%20y%3D%2222%22%20text-anchor%3D%22middle%22%20fill%3D%22white%22%20font-size%3D%2216%22%3E${data.senderName?.charAt(0) || '?'}%3C%2Ftext%3E%3C%2Fsvg%3E'">
-                                <div class="message-content">
-                                    <div class="message-meta"><span>${escapeHtml(data.senderName)}</span><span>${time}</span></div>
-                                    <div class="voice-message-wrapper">
-                                        <button class="voice-play-btn" onclick="playVoiceMessage('${data.audioUrl}', this)"><i class="fas fa-play"></i></button>
-                                        <div class="voice-waveform-container">
-                                            <div class="voice-waveform-progress" style="width:0%"></div>
-                                            <div class="voice-waveform-bars">${Array(25).fill().map(() => '<span style="height:' + (8 + Math.random() * 25) + 'px"></span>').join('')}</div>
+        let loadMoreBtn = document.getElementById('chatLoadMoreBtn');
+        chatLastDoc = null;
+        chatHasMore = true;
+        
+        function loadMore() {
+            if(chatLoadingMore || !chatHasMore) return;
+            chatLoadingMore = true;
+            let query = db.collection(`chat_${currentChatRoom}`).orderBy('timestamp', 'desc').limit(20);
+            if(chatLastDoc) query = query.startAfter(chatLastDoc);
+            
+            query.get().then(snapshot => {
+                if(snapshot.empty) { chatHasMore = false; loadMoreBtn.style.display = 'none'; }
+                else {
+                    chatLastDoc = snapshot.docs[snapshot.docs.length-1];
+                    let messages = [];
+                    snapshot.forEach(doc => messages.unshift({ id: doc.id, ...doc.data() }));
+                    
+                    let html = '';
+                    messages.forEach(data => {
+                        let isOwn = data.senderId === currentUser.uid;
+                        let time = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : '';
+                        let avatar = data.senderAvatar || '';
+                        
+                        if(data.type === 'text') {
+                            html += `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
+                                        <img class="message-avatar" src="${avatar}" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22%23e94560%22%3E%3Ccircle%20cx%3D%2217%22%20cy%3D%2217%22%20r%3D%2217%22%20fill%3D%22%23e94560%22%2F%3E%3Ctext%20x%3D%2217%22%20y%3D%2222%22%20text-anchor%3D%22middle%22%20fill%3D%22white%22%20font-size%3D%2216%22%3E${data.senderName?.charAt(0) || '?'}%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                                        <div class="message-content">
+                                            <div class="message-text">${escapeHtml(data.text)}</div>
+                                            <div class="message-meta"><span>${escapeHtml(data.senderName)}</span><span>${time}</span></div>
                                         </div>
-                                        <span class="voice-duration">0:30</span>
-                                        ${isOwn ? `<button class="voice-delete-btn" onclick="deleteChatMessage('${doc.id}')" style="background:none;border:none;cursor:pointer;"><i class="fas fa-trash-alt"></i></button>` : ''}
-                                    </div>
-                                </div>
-                            </div>`;
-                } else if(data.type === 'media') {
-                    let mediaHtml = data.mediaType === 'image' ? `<img class="message-image" src="${data.mediaUrl}" onclick="window.showFullImage('${data.mediaUrl}')">` : (data.mediaType === 'video' ? `<video controls class="message-image" src="${data.mediaUrl}"></video>` : `<div class="message-file"><i class="fas fa-file"></i> <a href="${data.mediaUrl}" download="${data.fileName}" style="color:inherit;">${escapeHtml(data.fileName)}</a></div>`);
-                    html += `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
-                                <img class="message-avatar" src="${avatar}">
-                                <div class="message-content">
-                                    <div class="message-meta"><span>${escapeHtml(data.senderName)}</span><span>${time}</span></div>
-                                    ${mediaHtml}
-                                </div>
-                            </div>`;
-                } else if(data.type === 'location') {
-                    html += `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
-                                <img class="message-avatar" src="${avatar}">
-                                <div class="message-content">
-                                    <div class="message-meta"><span>${escapeHtml(data.senderName)}</span><span>${time}</span></div>
-                                    <a href="https://www.google.com/maps?q=${data.location.lat},${data.location.lng}" target="_blank" style="color:inherit;"><i class="fas fa-map-marker-alt"></i> عرض الموقع على الخريطة</a>
-                                </div>
-                            </div>`;
+                                    </div>`;
+                        } else if(data.type === 'voice') {
+                            html += `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
+                                        <img class="message-avatar" src="${avatar}">
+                                        <div class="message-content">
+                                            <div class="message-meta"><span>${escapeHtml(data.senderName)}</span><span>${time}</span></div>
+                                            <div class="voice-message-wrapper">
+                                                <button class="voice-play-btn" onclick="playVoiceMessage('${data.audioUrl}', this)"><i class="fas fa-play"></i></button>
+                                                <div class="voice-waveform-container">
+                                                    <div class="voice-waveform-progress" style="width:0%"></div>
+                                                    <div class="voice-waveform-bars">${Array(25).fill().map(() => '<span style="height:' + (8 + Math.random() * 25) + 'px"></span>').join('')}</div>
+                                                </div>
+                                                <span class="voice-duration">${Math.floor(data.duration/60)}:${(data.duration%60).toString().padStart(2,'0')}</span>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                        } else if(data.type === 'media') {
+                            let mediaHtml = data.mediaType === 'image' ? `<img class="message-image" src="${data.mediaUrl}" onclick="window.showFullImage('${data.mediaUrl}')">` : (data.mediaType === 'video' ? `<video controls class="message-image" src="${data.mediaUrl}"></video>` : `<div class="message-file"><i class="fas fa-file"></i> <a href="${data.mediaUrl}" download="${data.fileName}" style="color:inherit;">${escapeHtml(data.fileName)}</a></div>`);
+                            html += `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
+                                        <img class="message-avatar" src="${avatar}">
+                                        <div class="message-content">
+                                            <div class="message-meta"><span>${escapeHtml(data.senderName)}</span><span>${time}</span></div>
+                                            ${mediaHtml}
+                                        </div>
+                                    </div>`;
+                        } else if(data.type === 'location') {
+                            html += `<div class="message-bubble ${isOwn ? 'own' : 'other'}">
+                                        <img class="message-avatar" src="${avatar}">
+                                        <div class="message-content">
+                                            <div class="message-meta"><span>${escapeHtml(data.senderName)}</span><span>${time}</span></div>
+                                            <a href="${data.locationUrl}" target="_blank" style="color:inherit;"><i class="fas fa-map-marker-alt"></i> 📍 عرض الموقع على الخريطة</a>
+                                        </div>
+                                    </div>`;
+                        }
+                    });
+                    
+                    if(snapshot.docs.length < 20) chatHasMore = false;
+                    if(chatHasMore) loadMoreBtn.style.display = 'block';
+                    else loadMoreBtn.style.display = 'none';
+                    
+                    if(chatLastDoc === snapshot.docs[snapshot.docs.length-1] && snapshot.docs.length === 20) {
+                        loadMoreBtn.onclick = () => { loadMore(); };
+                    }
+                    
+                    let existingHtml = container.innerHTML;
+                    if(container.querySelector('.empty-state')) container.innerHTML = html;
+                    else container.innerHTML = html + existingHtml;
+                    container.scrollTop = container.scrollHeight;
                 }
-            });
-            container.innerHTML = html;
-            if(snapshot.size > lastMsgCount && lastMsgCount !== 0 && !isSoundMuted) {
-                playNotificationBeep(800);
-                showToast("🔊 رسالة جديدة واردة");
+                chatLoadingMore = false;
+            }).catch(e => { console.error(e); chatLoadingMore = false; });
+        }
+        
+        // استماع للرسائل الجديدة فقط
+        if(chatUnsub) chatUnsub();
+        chatUnsub = db.collection(`chat_${currentChatRoom}`).orderBy('timestamp', 'desc').limit(1).onSnapshot(snapshot => {
+            if(!snapshot.empty && chatLastDoc && snapshot.docs[0].id !== chatLastDoc.id) {
+                loadMore();
+                if(!isSoundMuted) { playNotificationBeep(800); showToast("🔊 رسالة جديدة"); }
+            } else if(snapshot.empty) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i> لا توجد رسائل</div>';
             }
-            lastMsgCount = snapshot.size;
-            container.scrollTop = container.scrollHeight;
         });
+        
+        loadMore();
     }
     
     window.playVoiceMessage = (url, btn) => {
@@ -1034,58 +1222,12 @@
         let wrapper = btn.closest('.voice-message-wrapper');
         let progress = wrapper.querySelector('.voice-waveform-progress');
         audio.play();
-        audio.ontimeupdate = () => { progress.style.width = (audio.currentTime / 30 * 100) + '%'; };
+        audio.ontimeupdate = () => { if(audio.duration) progress.style.width = (audio.currentTime / audio.duration * 100) + '%'; };
         btn.innerHTML = '<i class="fas fa-pause"></i>';
         audio.onended = () => { btn.innerHTML = '<i class="fas fa-play"></i>'; progress.style.width = '0%'; };
     };
     
-    window.deleteChatMessage = async (id) => { if(confirm("حذف الرسالة؟")) await db.collection(`chat_${currentChatRoom}`).doc(id).delete(); };
-    
-    function openPrivateChat(userId, userName) {
-        document.getElementById('privateChatSelect').innerHTML = `<option value="${userId}" selected>${userName}</option>`;
-        document.getElementById('privateChatModal').classList.add('show');
-    }
-    
-    document.getElementById('startPrivateChatBtn').onclick = () => {
-        let userId = document.getElementById('privateChatSelect').value;
-        let userName = document.getElementById('privateChatSelect').options[0]?.text;
-        if(userId) {
-            currentPrivateChatWith = userId;
-            currentChatRoom = `private_${[currentUser.uid, userId].sort().join('_')}`;
-            document.getElementById('chatTitle').innerHTML = `<i class="fas fa-lock"></i> محادثة خاصة مع ${userName}`;
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('chatPageScreen').style.display = 'flex';
-            loadChatMessages();
-            document.getElementById('privateChatModal').classList.remove('show');
-        }
-    };
-    
-    // ========== تصدير PDF ==========
-    async function exportChatToPDF() {
-        let snap = await db.collection(`chat_${currentChatRoom}`).orderBy('timestamp', 'asc').get();
-        let el = document.createElement('div'); el.dir = 'rtl'; el.innerHTML = '<h2 style="text-align:center;">تقرير المحادثة</h2><hr>';
-        snap.forEach(d => {
-            let data = d.data();
-            let time = data.timestamp ? data.timestamp.toDate().toLocaleString() : '';
-            if(data.type === 'text') el.innerHTML += `<div><strong>${escapeHtml(data.senderName)}</strong> (${time}):<br>${escapeHtml(data.text)}</div><hr>`;
-            else if(data.type === 'voice') el.innerHTML += `<div><strong>${escapeHtml(data.senderName)}</strong> (${time}): [رسالة صوتية]</div><hr>`;
-        });
-        html2pdf().from(el).set({ margin: 1, filename: `chat_export_${Date.now()}.pdf` }).save();
-    }
-    
-    async function exportTasksToPDF() {
-        let el = document.createElement('div'); el.dir = 'rtl'; el.innerHTML = '<h2 style="text-align:center;">تقرير المهام</h2><hr>';
-        tasksList.forEach(t => { el.innerHTML += `<div><strong>${escapeHtml(t.title)}</strong><br>📅 ${t.date || ''} ${t.time || ''}<br>${t.details || ''}</div><hr>`; });
-        html2pdf().from(el).set({ margin: 1, filename: `tasks_${Date.now()}.pdf` }).save();
-    }
-    
-    async function exportNotesToPDF() {
-        let el = document.createElement('div'); el.dir = 'rtl'; el.innerHTML = '<h2 style="text-align:center;">تقرير الملاحظات</h2><hr>';
-        notesList.forEach(n => { el.innerHTML += `<div><strong>${escapeHtml(n.title)}</strong><br>${n.content || ''}</div><hr>`; });
-        html2pdf().from(el).set({ margin: 1, filename: `notes_${Date.now()}.pdf` }).save();
-    }
-    
-    // ========== إدارة الملف الشخصي ==========
+    // ========== الملف الشخصي ==========
     async function saveProfileChanges() {
         let newName = document.getElementById('profileNameInput').value.trim();
         if(newName && newName !== currentDisplayName) {
@@ -1117,7 +1259,6 @@
         }
         updateProfileUI();
         subscribeToGuides();
-        loadChatMessages();
         loadTasks();
         loadNotes();
         loadEvents();
@@ -1152,6 +1293,28 @@
     
     auth.onAuthStateChanged(user => { if(user && !currentUser) { currentUser = user; checkUserProfile(); } });
     
+    // ========== PWA التثبيت ==========
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installBanner').classList.add('show');
+    });
+    
+    document.getElementById('closeInstallBanner').onclick = () => {
+        document.getElementById('installBanner').classList.remove('show');
+    };
+    
+    document.getElementById('installBanner')?.addEventListener('click', async (e) => {
+        if(e.target.id === 'closeInstallBanner') return;
+        if(deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if(outcome === 'accepted') showToast("شكراً لتثبيت التطبيق 🎉");
+            deferredPrompt = null;
+            document.getElementById('installBanner').classList.remove('show');
+        }
+    });
+    
     // ========== واجهة المستخدم ==========
     function switchPage(page) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1169,7 +1332,7 @@
     document.getElementById('openChatBtn').onclick = () => { currentChatRoom = "general"; currentPrivateChatWith = null; document.getElementById('chatTitle').innerHTML = "المحادثة العامة"; document.getElementById('mainApp').style.display = 'none'; document.getElementById('chatPageScreen').style.display = 'flex'; loadChatMessages(); };
     document.getElementById('chatBackBtn').onclick = () => { document.getElementById('chatPageScreen').style.display = 'none'; document.getElementById('mainApp').style.display = 'flex'; };
     document.getElementById('sendMessageBtn').onclick = sendTextMessage;
-    document.getElementById('attachFileBtn').onclick = () => { let inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*,video/*,application/pdf,application/msword,text/plain,application/json'; inp.onchange = async e => { if(e.target.files[0]) await sendFileMessage(e.target.files[0]); }; inp.click(); };
+    document.getElementById('attachFileBtn').onclick = () => { let inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*,video/*,application/pdf,application/msword,text/plain'; inp.onchange = async e => { if(e.target.files[0]) await sendFileMessage(e.target.files[0]); }; inp.click(); };
     document.getElementById('sendLocationBtn').onclick = sendLocation;
     document.getElementById('walkieTalkieBtn').onclick = () => { if(!isRecording) startVoiceRecording(); else stopVoiceRecording(); };
     document.getElementById('recorderCancelBtn').onclick = closeRecorderPanel;
@@ -1178,10 +1341,7 @@
     document.querySelectorAll('.bg-option').forEach(opt => {
         opt.onclick = () => {
             let bg = opt.dataset.bg;
-            let pattern = opt.dataset.pattern;
             document.getElementById('chatMessagesList').style.background = bg;
-            if(pattern) document.getElementById('chatMessagesList').classList.add(pattern);
-            else document.getElementById('chatMessagesList').className = 'chat-messages';
             document.getElementById('chatSettingsPanel').classList.remove('show');
         };
     });
@@ -1194,23 +1354,60 @@
     document.getElementById('darkModeMenuItem').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('darkMode', document.body.classList.contains('dark')); };
     if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
     document.getElementById('muteNotificationsMenuItem').onclick = () => { isSoundMuted = !isSoundMuted; showToast(isSoundMuted ? "تم كتم الإشعارات" : "تم إلغاء الكتم"); };
-    document.getElementById('exportChatMenuItem').onclick = exportChatToPDF;
-    document.getElementById('exportTasksMenuItem').onclick = exportTasksToPDF;
-    document.getElementById('exportNotesMenuItem').onclick = exportNotesToPDF;
+    document.getElementById('exportChatMenuItem').onclick = async () => {
+        let snap = await db.collection(`chat_${currentChatRoom}`).orderBy('timestamp', 'asc').get();
+        let el = document.createElement('div'); el.dir = 'rtl'; el.innerHTML = '<h2 style="text-align:center;">تقرير المحادثة</h2><hr>';
+        snap.forEach(d => {
+            let data = d.data();
+            let time = data.timestamp ? data.timestamp.toDate().toLocaleString() : '';
+            if(data.type === 'text') el.innerHTML += `<div><strong>${escapeHtml(data.senderName)}</strong> (${time}):<br>${escapeHtml(data.text)}</div><hr>`;
+            else if(data.type === 'voice') el.innerHTML += `<div><strong>${escapeHtml(data.senderName)}</strong> (${time}): [رسالة صوتية]</div><hr>`;
+        });
+        html2pdf().from(el).set({ margin: 1, filename: `chat_export_${Date.now()}.pdf` }).save();
+    };
+    document.getElementById('exportTasksMenuItem').onclick = async () => {
+        let el = document.createElement('div'); el.dir = 'rtl'; el.innerHTML = '<h2 style="text-align:center;">تقرير المهام</h2><hr>';
+        tasksList.forEach(t => { el.innerHTML += `<div><strong>${escapeHtml(t.title)}</strong><br>📅 ${t.date || ''} ${t.time || ''}<br>${t.details || ''}<br>الحالة: ${t.completed ? 'مكتملة' : 'قيد الانتظار'}</div><hr>`; });
+        html2pdf().from(el).set({ margin: 1, filename: `tasks_${Date.now()}.pdf` }).save();
+    };
+    document.getElementById('exportNotesMenuItem').onclick = async () => {
+        let el = document.createElement('div'); el.dir = 'rtl'; el.innerHTML = '<h2 style="text-align:center;">تقرير الملاحظات</h2><hr>';
+        notesList.forEach(n => { el.innerHTML += `<div><strong>${escapeHtml(n.title)}</strong><br>${n.content || ''}</div><hr>`; });
+        html2pdf().from(el).set({ margin: 1, filename: `notes_${Date.now()}.pdf` }).save();
+    };
     document.getElementById('clearMessagesMenuItem').onclick = async () => { if(confirm('مسح كل الرسائل؟')) { let msgs = await db.collection(`chat_${currentChatRoom}`).get(); msgs.forEach(async d => await d.ref.delete()); showToast("تم مسح الرسائل"); } };
     document.getElementById('openProfileBtn').onclick = () => { document.getElementById('sidebarNew').classList.add('open'); document.getElementById('overlayNew').style.display = 'block'; };
-    document.getElementById('closePrivateChatModalBtn').onclick = () => document.getElementById('privateChatModal').classList.remove('show');
     
     // أزرار الإضافة السريعة
+    document.getElementById('addTaskBtn')?.addEventListener('click', () => document.getElementById('taskModal').classList.add('show'));
     document.getElementById('addNoteBtn')?.addEventListener('click', () => document.getElementById('noteModal').classList.add('show'));
     document.getElementById('addEventBtn')?.addEventListener('click', () => document.getElementById('eventModal').classList.add('show'));
-    document.getElementById('openModalBtn')?.addEventListener('click', () => { resetGuideForm(); document.getElementById('guideModal').classList.add('show'); });
+    
+    document.getElementById('uploadGuidePhotoTrigger').onclick = () => triggerImageUpload('guide');
+    document.getElementById('uploadBusPhotoTrigger').onclick = () => triggerImageUpload('bus');
+    document.getElementById('selectAvatarTrigger').onclick = () => {
+        let inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'image/*';
+        inp.onchange = async e => {
+            if(e.target.files[0]) {
+                await compressAndUploadImage(e.target.files[0], 'avatar');
+                await db.collection('user_profiles').doc(currentUser.uid).update({ avatarUrl: userAvatarUrl });
+                updateProfileUI();
+                showToast("تم تحديث الصورة الشخصية");
+                document.getElementById('avatarUploadModal').classList.remove('show');
+            }
+        };
+        inp.click();
+    };
     
     // حفظ المهام والملاحظات والأحداث
     document.getElementById('saveTaskModalBtn').onclick = async () => {
         let title = document.getElementById('taskTitleInput').value.trim();
         if(!title) return showToast("عنوان المهمة مطلوب", true);
-        await addNewTask(title, document.getElementById('taskDateInput').value, document.getElementById('taskTimeInput').value, document.getElementById('taskDescInput').value, pendingTaskFile);
+        let reminderVal = document.getElementById('taskReminderSelect').value;
+        let reminderMinutes = reminderVal !== 'none' ? parseInt(reminderVal) : null;
+        await addNewTask(title, document.getElementById('taskDateInput').value, document.getElementById('taskTimeInput').value, document.getElementById('taskDescInput').value, pendingTaskFile, reminderMinutes);
         document.getElementById('taskModal').classList.remove('show');
         document.getElementById('taskTitleInput').value = '';
         document.getElementById('taskDateInput').value = '';
@@ -1264,10 +1461,17 @@
     document.getElementById('closeAvatarModalBtn').onclick = () => document.getElementById('avatarUploadModal').classList.remove('show');
     
     document.getElementById('searchInput').addEventListener('input', renderContactsList);
-    let speechRecog = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
-    if(speechRecog) speechRecog.lang = 'ar';
+    let speechRecog = null;
+    try {
+        speechRecog = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+        if(speechRecog) speechRecog.lang = 'ar';
+    } catch(e) { console.warn("التعرف الصوتي غير مدعوم"); }
     document.getElementById('voiceSearchBtn').onclick = () => {
-        if(speechRecog) { speechRecog.start(); speechRecog.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderContactsList(); }; }
+        if(speechRecog) { 
+            speechRecog.start(); 
+            speechRecog.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderContactsList(); };
+            speechRecog.onerror = () => showToast("لم يتم التعرف على الصوت", true);
+        } else showToast("البحث الصوتي غير مدعوم في هذا المتصفح", true);
     };
     
     // منتقي الألوان
@@ -1293,6 +1497,9 @@
     }
     buildColorPicker('colorStrip', true);
     buildColorPicker('guideColorSelector', false);
+    
+    // تشغيل فحص التذكيرات
+    checkReminders();
     
     showToast("✨ النظام جاهز - يرجى تسجيل الدخول");
 </script>
