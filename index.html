@@ -21,22 +21,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- ملفات التطبيق المرتبة حسب الهيكل الحالي (بدون مجلدات فرعية) -->
-    <script src="assets/js/firebase-config.js"></script>
-    <script src="assets/js/cloudinary-config.js"></script>
-    <script src="assets/js/utils.js"></script>
-    <script src="assets/js/auth.js"></script>
-    <script src="assets/js/guides.js"></script>
-    <script src="assets/js/tasks.js"></script>
-    <script src="assets/js/notes-events.js"></script>
-    <script src="assets/js/chat.js"></script>
-    <script src="assets/js/app.js"></script>
+    <!-- ملفات التطبيق حسب الهيكل الجديد -->
+    <script src="assets/js/config/firebase-config.js"></script>
+    <script src="assets/js/config/cloudinary-config.js"></script>
+    <script src="assets/js/utils/utils.js"></script>
+    <script src="assets/js/modules/auth.js"></script>
+    <script src="assets/js/modules/guides.js"></script>
+    <script src="assets/js/modules/tasks.js"></script>
+    <script src="assets/js/modules/notes-events.js"></script>
+    <script src="assets/js/modules/chat.js"></script>
+    <script src="assets/js/core/app.js"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: 'Segoe UI', 'Tajawal', system-ui, sans-serif;
+            font-family: 'Cairo', 'Segoe UI', 'Tajawal', system-ui, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             height: 100dvh;
@@ -86,42 +87,47 @@
             text-align: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border);
         }
         
-        /* شعار دائري بنبض - بدون حواف */
-        .pulse-logo {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: transparent;
-            box-shadow: none;
-            border: none;
-            outline: none;
-            animation: pulse 1.8s ease-in-out infinite;
-        }
-        .pulse-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        /* شعار كامل بدون دائرة وبدون خلفية */
+        .full-logo {
+            width: 140px;
+            height: auto;
+            margin: 0 auto 15px;
             display: block;
-            border-radius: 50%;
-            border: none;
-            outline: none;
+            background: transparent;
+        }
+        .full-logo img {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: transparent;
         }
         
-        @keyframes pulse {
-            0% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.5);
-            }
-            70% {
-                transform: scale(1);
-                box-shadow: 0 0 0 12px rgba(233, 69, 96, 0);
-            }
-            100% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(233, 69, 96, 0);
-            }
+        /* عنوان جميل ومبهر */
+        .brand-title {
+            font-family: 'Cairo', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #e94560, #c0314a, #e94560);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            animation: shimmer 3s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        .brand-subtitle {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
         }
         
         .login-card h2 {
@@ -139,12 +145,15 @@
             border: 1px solid var(--border); border-radius: 60px;
             background: var(--glass-bg); font-size: 14px; outline: none;
             transition: all 0.2s;
+            font-family: 'Cairo', sans-serif;
         }
         .login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
         .login-btn {
             width: 100%; background: linear-gradient(135deg, var(--accent), #c0314a);
             color: white; border: none; padding: 14px; border-radius: 60px;
             font-weight: bold; margin-top: 20px; cursor: pointer; transition: transform 0.1s;
+            font-family: 'Cairo', sans-serif;
+            font-size: 16px;
         }
         .login-btn:active { transform: scale(0.97); }
         .admin-note {
@@ -176,7 +185,7 @@
         }
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .logo-area img { height: 45px; border-radius: 50%; object-fit: cover; }
-        .logo-area span { font-weight: 800; font-size: 1.2rem; color: var(--accent); }
+        .logo-area span { font-weight: 800; font-size: 1.2rem; color: var(--accent); font-family: 'Cairo', sans-serif; }
         .user-status {
             display: flex; align-items: center; gap: 10px;
             background: var(--accent-light); padding: 4px 12px 4px 16px;
@@ -196,6 +205,7 @@
             flex: 1; background: var(--glass-bg); border: 1px solid var(--border);
             padding: 12px 18px; border-radius: 60px; font-size: 13px;
             outline: none; color: var(--text-primary);
+            font-family: 'Cairo', sans-serif;
         }
         .search-input:focus { border-color: var(--accent); }
         .search-btn, .color-filter-btn {
@@ -229,17 +239,17 @@
         .contact-row { display: flex; gap: 14px; align-items: center; }
         .contact-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2px solid var(--accent); }
         .contact-details { flex: 1; }
-        .contact-name { font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .contact-name { font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: 'Cairo', sans-serif; }
         .expand-icon { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--accent); padding: 6px; }
         .contact-expand { display: none; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
         .contact-expand.show { display: block; }
         .call-buttons { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-        .call-btn { flex: 1; padding: 8px; border-radius: 40px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: white; }
+        .call-btn { flex: 1; padding: 8px; border-radius: 40px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: white; font-family: 'Cairo', sans-serif; }
         .btn-whatsapp { background: #25D366; }
         .btn-telegram { background: #26A5E4; }
         .btn-call { background: #34B7F1; }
         .action-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-        .action-btn { padding: 5px 12px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; font-size: 11px; }
+        .action-btn { padding: 5px 12px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; font-size: 11px; font-family: 'Cairo', sans-serif; }
         .btn-edit { background: #2c7da0; color: white; }
         .btn-delete { background: #dc2626; color: white; }
         .btn-share { background: #3b82f6; color: white; }
@@ -258,6 +268,7 @@
             text-align: center; background: transparent; border: none;
             padding: 6px 12px; border-radius: 40px; color: var(--text-secondary);
             cursor: pointer;
+            font-family: 'Cairo', sans-serif;
         }
         .nav-item.active { color: var(--accent); background: var(--accent-light); }
         .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
@@ -294,6 +305,7 @@
             background: #1e293b; color: white; text-align: center;
             padding: 14px; border-radius: 60px; z-index: 3000;
             font-size: 13px;
+            font-family: 'Cairo', sans-serif;
         }
         .empty-state { text-align: center; padding: 50px; color: var(--text-secondary); }
         
@@ -334,6 +346,7 @@
         .chat-input {
             flex: 1; background: var(--glass-bg); border: 1px solid var(--border);
             padding: 12px 18px; border-radius: 60px; font-size: 13px; outline: none;
+            font-family: 'Cairo', sans-serif;
         }
         .chat-action-btn {
             background: var(--accent); border: none; width: 48px;
@@ -354,15 +367,16 @@
 <!-- شاشة تسجيل الدخول -->
 <div id="loginScreen" class="login-screen">
     <div class="login-card">
-        <div class="pulse-logo">
+        <div class="full-logo">
             <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-NOTE PRO">
         </div>
-        <h2>F-NOTE PRO 2026</h2>
-        <p class="login-subtitle">نظام إدارة المرشدين المتكامل</p>
-        <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني">
-        <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
+        <div class="brand-title">F-NOTEPRO-WORK</div>
+        <div class="brand-subtitle">نظام إدارة المرشدين المتكامل</div>
+        
+        <input type="email" id="loginEmail" class="login-input" placeholder="📧 البريد الإلكتروني">
+        <input type="password" id="loginPassword" class="login-input" placeholder="🔒 كلمة المرور">
         <div id="nameSetupContainer">
-            <input type="text" id="loginDisplayName" class="login-input" placeholder="اسم المستخدم (سيظهر للجميع)">
+            <input type="text" id="loginDisplayName" class="login-input" placeholder="👤 اسم المستخدم (سيظهر للجميع)">
         </div>
         <button class="login-btn" id="doLoginBtn">تسجيل الدخول <i class="fas fa-arrow-left"></i></button>
         <div class="admin-note">
@@ -468,17 +482,17 @@
     </div>
     <div class="profile-section" style="text-align:center;margin-bottom:24px;">
         <img id="profileAvatarLarge" class="profile-avatar-large" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto 16px;border:3px solid var(--accent);cursor:pointer;">
-        <input type="text" id="profileNameInput" class="profile-name-input" style="width:100%;text-align:center;font-size:18px;font-weight:bold;background:transparent;border:none;border-bottom:2px solid var(--border);padding:8px;margin-bottom:12px;">
-        <button class="save-profile-btn" id="saveProfileChangesBtn" style="background:var(--success);border:none;padding:10px 20px;border-radius:40px;color:white;font-weight:bold;cursor:pointer;width:100%;margin-bottom:20px;"><i class="fas fa-save"></i> حفظ التغييرات</button>
+        <input type="text" id="profileNameInput" class="profile-name-input" style="width:100%;text-align:center;font-size:18px;font-weight:bold;background:transparent;border:none;border-bottom:2px solid var(--border);padding:8px;margin-bottom:12px;font-family:'Cairo',sans-serif;">
+        <button class="save-profile-btn" id="saveProfileChangesBtn" style="background:var(--success);border:none;padding:10px 20px;border-radius:40px;color:white;font-weight:bold;cursor:pointer;width:100%;margin-bottom:20px;font-family:'Cairo',sans-serif;"><i class="fas fa-save"></i> حفظ التغييرات</button>
     </div>
-    <div class="sidebar-menu-item" id="changeAvatarMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-camera"></i> تغيير الصورة الشخصية</div>
-    <div class="sidebar-menu-item" id="darkModeMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-moon"></i> الوضع الداكن</div>
-    <div class="sidebar-menu-item" id="muteNotificationsMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-volume-mute"></i> كتم الإشعارات</div>
-    <div class="sidebar-menu-item" id="exportChatMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-file-pdf"></i> تصدير المحادثة PDF</div>
-    <div class="sidebar-menu-item" id="exportTasksMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-file-pdf"></i> تصدير المهام PDF</div>
-    <div class="sidebar-menu-item" id="exportNotesMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-file-pdf"></i> تصدير الملاحظات PDF</div>
-    <div class="sidebar-menu-item" id="clearMessagesMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-trash-alt"></i> مسح جميع الرسائل</div>
-    <div class="sidebar-menu-item" id="logoutMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
+    <div class="sidebar-menu-item" id="changeAvatarMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'Cairo',sans-serif;"><i class="fas fa-camera"></i> تغيير الصورة الشخصية</div>
+    <div class="sidebar-menu-item" id="darkModeMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'Cairo',sans-serif;"><i class="fas fa-moon"></i> الوضع الداكن</div>
+    <div class="sidebar-menu-item" id="muteNotificationsMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'Cairo',sans-serif;"><i class="fas fa-volume-mute"></i> كتم الإشعارات</div>
+    <div class="sidebar-menu-item" id="exportChatMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'Cairo',sans-serif;"><i class="fas fa-file-pdf"></i> تصدير المحادثة PDF</div>
+    <div class="sidebar-menu-item" id="exportTasksMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'Cairo',sans-serif;"><i class="fas fa-file-pdf"></i> تصدير المهام PDF</div>
+    <div class="sidebar-menu-item" id="exportNotesMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'Cairo',sans-serif;"><i class="fas fa-file-pdf"></i> تصدير الملاحظات PDF</div>
+    <div class="sidebar-menu-item" id="clearMessagesMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'Cairo',sans-serif;"><i class="fas fa-trash-alt"></i> مسح جميع الرسائل</div>
+    <div class="sidebar-menu-item" id="logoutMenuItem" style="padding:14px 0;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border);font-family:'Cairo',sans-serif;"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
 </div>
 <div id="overlayNew" class="overlay"></div>
 
