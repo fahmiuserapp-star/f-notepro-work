@@ -1,4 +1,5 @@
 // Guides Management Module
+
 let guidesList = [];
 let currentEditId = null;
 let selectedColor = "#e94560";
@@ -7,38 +8,7 @@ let currentGuidePhoto = "";
 let currentBusPhoto = "";
 let unsubscribeGuides = null;
 
-async function compressAndUploadImage(file, type) {
-    return new Promise((resolve) => {
-        let reader = new FileReader();
-        reader.onload = e => {
-            let img = new Image();
-            img.onload = async () => {
-                let canvas = document.createElement('canvas');
-                let w = img.width, h = img.height;
-                let maxW = 400;
-                if (w > maxW) { h *= maxW / w; w = maxW; }
-                canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                let blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.7));
-                let url = await uploadToCloudinary(blob, type === 'guide' ? 'guides' : (type === 'bus' ? 'vehicles' : 'avatars'));
-                if (type === 'guide') {
-                    currentGuidePhoto = url;
-                    document.getElementById('guidePhotoImg').src = url;
-                    document.getElementById('guidePhotoPreview').style.display = 'flex';
-                } else if (type === 'bus') {
-                    currentBusPhoto = url;
-                    document.getElementById('busPhotoImg').src = url;
-                    document.getElementById('busPhotoPreview').style.display = 'flex';
-                }
-                showToast("✓ تم رفع الصورة");
-                resolve(url);
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
+// Function to trigger image upload (must be bound after DOM ready)
 function triggerImageUpload(type) {
     let inp = document.createElement('input');
     inp.type = 'file';
@@ -46,9 +16,6 @@ function triggerImageUpload(type) {
     inp.onchange = async e => { if (e.target.files[0]) await compressAndUploadImage(e.target.files[0], type); };
     inp.click();
 }
-
-document.getElementById('uploadGuidePhoto').onclick = () => triggerImageUpload('guide');
-document.getElementById('uploadBusPhoto').onclick = () => triggerImageUpload('bus');
 
 async function saveGuide() {
     let name = document.getElementById('guideName').value.trim();
@@ -132,9 +99,9 @@ async function renderContacts() {
                     <p><i class="fas fa-car"></i> اللوحة: ${escapeHtml(g.plate || '-')}</p>
                     <p><i class="fas fa-sticky-note"></i> ملاحظات: ${escapeHtml((g.notes || '').substring(0, 60))}</p>
                     <div class="call-buttons">
-                        <button class="call-btn btn-wa" onclick="makeCall('${g.phone}', 'whatsapp')"><i class="fab fa-whatsapp"></i> واتساب</button>
-                        <button class="call-btn btn-tg" onclick="makeCall('${g.phone}', 'telegram')"><i class="fab fa-telegram"></i> تلغرام</button>
-                        <button class="call-btn btn-phone" onclick="makeCall('${g.phone}', 'call')"><i class="fas fa-phone-alt"></i> اتصل</button>
+                        <button class="call-btn btn-wa" onclick="window.makeCall('${g.phone}', 'whatsapp')"><i class="fab fa-whatsapp"></i> واتساب</button>
+                        <button class="call-btn btn-tg" onclick="window.makeCall('${g.phone}', 'telegram')"><i class="fab fa-telegram"></i> تلغرام</button>
+                        <button class="call-btn btn-phone" onclick="window.makeCall('${g.phone}', 'call')"><i class="fas fa-phone-alt"></i> اتصل</button>
                     </div>
                     <div>
                         ${g.userId === currentUser?.uid ? `<button class="action-btn btn-edit" data-edit="${g.id}">تعديل</button><button class="action-btn btn-delete" data-del="${g.id}">حذف</button>` : ''}
@@ -145,10 +112,10 @@ async function renderContacts() {
         </div>`;
     }
     container.innerHTML = html;
-    attachGuideEventListeners();
+    attachGuideEvents();
 }
 
-function attachGuideEventListeners() {
+function attachGuideEvents() {
     document.querySelectorAll('.expand-icon').forEach(btn => {
         btn.onclick = () => {
             let div = document.getElementById(`exp-${btn.dataset.id}`);
@@ -222,5 +189,5 @@ function loadGuides() {
     };
     mine.onSnapshot(update);
     db.collection('guides').where('visibility', '==', 'public').onSnapshot(update);
-    unsubscribeGuides = () => { };
+    unsubscribeGuides = () => {};
 }
