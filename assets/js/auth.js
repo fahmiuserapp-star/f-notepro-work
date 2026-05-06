@@ -1,4 +1,5 @@
 // Authentication Module
+
 let currentUser = null;
 let currentDisplayName = "";
 let userAvatarUrl = "";
@@ -31,7 +32,7 @@ async function checkUserProfile() {
         await db.collection('user_profiles').doc(currentUser.uid).set({ displayName: currentDisplayName });
     }
     updateProfileUI();
-    // Presence
+    // Set presence
     rtdb.ref(`/status/${currentUser.uid}`).set({ state: 'online', name: currentDisplayName });
     rtdb.ref(`/status/${currentUser.uid}`).onDisconnect().set({ state: 'offline', lastSeen: firebase.database.ServerValue.TIMESTAMP });
 }
@@ -52,15 +53,17 @@ document.getElementById('doLoginBtn').onclick = async () => {
         document.getElementById('loginScreen').classList.add('hide');
         document.getElementById('mainApp').classList.add('show');
         showToast(`مرحباً ${currentDisplayName}`);
-        // Load guides and chat after login
+        // Load data after login
         if (typeof loadGuides === 'function') loadGuides();
         if (typeof loadChatMessages === 'function') loadChatMessages();
+        if (typeof loadNotes === 'function') loadNotes();
     } catch (e) {
         document.getElementById('loginError').innerText = e.message;
         showToast(e.message, true);
     }
 };
 
+// Logout
 document.getElementById('logoutSidebar').onclick = () => {
     auth.signOut();
     document.getElementById('mainApp').classList.remove('show');
@@ -70,12 +73,14 @@ document.getElementById('logoutSidebar').onclick = () => {
     showToast("تم تسجيل الخروج");
 };
 
+// Auth state observer
 auth.onAuthStateChanged(user => {
     if (user && !currentUser) {
         currentUser = user;
         checkUserProfile().then(() => {
             if (typeof loadGuides === 'function') loadGuides();
             if (typeof loadChatMessages === 'function') loadChatMessages();
+            if (typeof loadNotes === 'function') loadNotes();
         });
     }
 });
