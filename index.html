@@ -143,7 +143,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1); color: white;
             cursor: pointer; font-size: 16px;
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease; position: relative;
         }
         .header-btn:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.15); }
         .header-btn .badge {
@@ -218,39 +218,75 @@
         .action-btn.favorite.active .btn-icon { background: var(--primary); border-color: var(--primary); box-shadow: 0 8px 25px rgba(254,44,85,0.5); animation: heartPop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
         .action-btn.whatsapp:active .btn-icon { background: #25D366; border-color: #25D366; }
         .action-btn.call:active .btn-icon { background: var(--success); border-color: var(--success); }
-        .action-btn.message:active .btn-icon { background: var(--accent-blue); border-color: var(--accent-blue); }
         @keyframes heartPop { 0%{transform:scale(1)} 50%{transform:scale(1.25)} 100%{transform:scale(1)} }
 
-        /* ============ LIGHT EFFECTS FOR VOICE BUTTONS ============ */
+        /* ============ VOICE BUTTON WITH CORNER GLOW ============ */
         .voice-glow {
             position: relative;
             overflow: visible !important;
         }
+        /* زاوية الإضاءة الحمراء - أعلى اليمين */
         .voice-glow::before {
             content: '';
             position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%; height: 100%;
-            border-radius: inherit;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
             background: transparent;
-            transition: all 0.5s ease;
+            transition: all 0.4s ease;
             z-index: -1;
             pointer-events: none;
         }
         .voice-glow.recording::before {
-            animation: glowPulse 0.8s ease-in-out infinite;
+            background: rgba(239, 68, 68, 0.9);
+            box-shadow: 0 0 12px 4px rgba(239, 68, 68, 0.7), 0 0 25px 8px rgba(239, 68, 68, 0.4);
+            animation: cornerGlowRed 0.7s ease-in-out infinite;
         }
-        .voice-glow.recording-msg::before {
-            animation: glowPulseMsg 0.6s ease-in-out infinite;
+        @keyframes cornerGlowRed {
+            0%, 100% { 
+                box-shadow: 0 0 10px 3px rgba(239, 68, 68, 0.6), 0 0 20px 6px rgba(239, 68, 68, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 18px 6px rgba(239, 68, 68, 0.9), 0 0 35px 12px rgba(239, 68, 68, 0.5);
+                transform: scale(1.3);
+            }
         }
-        @keyframes glowPulse {
-            0%, 100% { box-shadow: 0 0 8px 2px rgba(239,68,68,0.4), 0 0 20px 5px rgba(239,68,68,0.2); width: 120%; height: 120%; }
-            50% { box-shadow: 0 0 15px 5px rgba(239,68,68,0.7), 0 0 35px 10px rgba(239,68,68,0.4); width: 140%; height: 140%; }
+
+        /* زاوية الإضاءة الزرقاء - أعلى اليمين للرسائل الصوتية */
+        .voice-glow-blue {
+            position: relative;
+            overflow: visible !important;
         }
-        @keyframes glowPulseMsg {
-            0%, 100% { box-shadow: 0 0 6px 2px rgba(59,130,246,0.4), 0 0 15px 4px rgba(59,130,246,0.2); width: 115%; height: 115%; }
-            50% { box-shadow: 0 0 12px 4px rgba(59,130,246,0.7), 0 0 28px 8px rgba(59,130,246,0.4); width: 130%; height: 130%; }
+        .voice-glow-blue::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            background: transparent;
+            transition: all 0.4s ease;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .voice-glow-blue.recording-msg::before {
+            background: rgba(59, 130, 246, 0.9);
+            box-shadow: 0 0 10px 3px rgba(59, 130, 246, 0.6), 0 0 20px 6px rgba(59, 130, 246, 0.3);
+            animation: cornerGlowBlue 0.6s ease-in-out infinite;
+        }
+        @keyframes cornerGlowBlue {
+            0%, 100% { 
+                box-shadow: 0 0 8px 2px rgba(59, 130, 246, 0.5), 0 0 18px 5px rgba(59, 130, 246, 0.25);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 14px 5px rgba(59, 130, 246, 0.8), 0 0 28px 10px rgba(59, 130, 246, 0.4);
+                transform: scale(1.25);
+            }
         }
 
         /* ============ EMPTY/LOADING ============ */
@@ -269,7 +305,7 @@
         .search-input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
         .search-input-wrapper i { color: var(--text-tertiary); }
         .search-input-wrapper input { flex: 1; background: none; border: none; color: var(--text-primary); font-size: 15px; font-family: 'Cairo', sans-serif; padding: 4px 0; min-width: 0; }
-        .voice-search-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border-color); color: var(--text-secondary); cursor: pointer; font-size: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s ease; position: relative; }
+        .voice-search-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border-color); color: var(--text-secondary); cursor: pointer; font-size: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s ease; }
         .voice-search-btn.recording { background: var(--danger); color: white; border-color: var(--danger); }
         .color-filters { display: flex; gap: 8px; padding: 8px 16px; overflow-x: auto; flex-shrink: 0; }
         .color-chip { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-elevated); color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; font-family: 'Cairo', sans-serif; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
@@ -279,7 +315,7 @@
         .search-result-item { aspect-ratio: 1; background-size: cover; background-position: center; background-color: var(--bg-elevated); border-radius: 6px; cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s ease; }
         .search-result-item:active { transform: scale(0.94); }
         .search-result-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 6px; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); }
-        .search-result-overlay .sr-name { font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .search-result-overlay .sr-name { font-size: 11px; font-weight: 700; }
         .no-results { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
 
         /* ============ MODALS ============ */
@@ -301,7 +337,7 @@
         .image-upload-area.has-image i, .image-upload-area.has-image span { display: none; }
         .image-change-badge { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; display: none; }
         .image-upload-area.has-image .image-change-badge { display: block; }
-        .upload-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: var(--primary); transition: width 0.3s ease; width: 0%; display: none; }
+        .upload-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: var(--primary); width: 0%; display: none; }
         .image-upload-area.uploading .upload-progress { display: block; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group label { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
@@ -309,7 +345,7 @@
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
         .voice-input-group { display: flex; gap: 8px; }
         .voice-input-group input { flex: 1; }
-        .voice-input-btn { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-input); border: 1.5px solid var(--border-color); color: var(--text-secondary); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s ease; position: relative; }
+        .voice-input-btn { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-input); border: 1.5px solid var(--border-color); color: var(--text-secondary); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s ease; }
         .voice-input-btn:active { background: var(--primary); color: white; border-color: var(--primary); }
         .voice-input-btn.recording { background: var(--danger); color: white; border-color: var(--danger); }
         .form-row { display: flex; gap: 10px; }
@@ -325,7 +361,7 @@
         .btn-cancel-delete { background: var(--bg-elevated); color: var(--text-primary); }
         .hidden-file-input { display: none; }
 
-        /* ============ MESSAGES PANEL ============ */
+        /* ============ MESSENGER-STYLE GROUP MESSAGES PANEL ============ */
         .messages-panel {
             position: fixed; top: 0; right: -100%;
             width: 100%; max-width: 430px; height: 100vh; height: 100dvh;
@@ -338,127 +374,113 @@
         .messages-backdrop.show { display: block; }
         .msg-panel-header {
             padding: 16px; border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; gap: 12px;
-            flex-shrink: 0;
-        }
-        .msg-panel-header h3 { font-size: 18px; font-weight: 800; flex: 1; }
-        .msg-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
-        .msg-tab {
-            flex: 1; padding: 14px; text-align: center; font-weight: 700; font-size: 14px;
-            cursor: pointer; color: var(--text-tertiary); border-bottom: 2px solid transparent;
-            transition: all 0.3s ease; background: none; border-top: none; border-left: none; border-right: none;
-            font-family: 'Cairo', sans-serif;
-        }
-        .msg-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .msg-tab .tab-badge {
-            display: inline-flex; width: 20px; height: 20px; border-radius: 50%;
-            background: var(--danger); color: white; font-size: 10px;
-            align-items: center; justify-content: center; margin-right: 6px;
-            vertical-align: middle;
-        }
-        .msg-list { flex: 1; overflow-y: auto; padding: 8px; }
-        .msg-user-item {
-            display: flex; align-items: center; gap: 12px; padding: 14px;
-            border-radius: 16px; cursor: pointer; transition: all 0.2s ease;
-            margin-bottom: 4px;
-        }
-        .msg-user-item:active { background: var(--bg-elevated); }
-        .msg-user-avatar {
-            width: 50px; height: 50px; border-radius: 50%;
-            background: var(--bg-elevated); display: flex; align-items: center;
-            justify-content: center; font-size: 20px; flex-shrink: 0;
-            background-size: cover; background-position: center;
-        }
-        .msg-user-info { flex: 1; min-width: 0; }
-        .msg-user-name { font-weight: 700; font-size: 15px; }
-        .msg-user-preview { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .msg-user-time { font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; }
-        .msg-unread-badge { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
-        .msg-actions { display: flex; gap: 6px; }
-        .msg-accept-btn, .msg-reject-btn {
-            padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 700;
-            cursor: pointer; border: none; font-family: 'Cairo', sans-serif;
-            transition: all 0.2s ease;
-        }
-        .msg-accept-btn { background: var(--success); color: white; }
-        .msg-reject-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-
-        /* ============ CHAT SCREEN ============ */
-        .chat-screen {
-            position: fixed; top: 0; right: -100%;
-            width: 100%; max-width: 430px; height: 100vh; height: 100dvh;
-            background: var(--bg-primary); z-index: 3700;
-            transition: right 0.4s cubic-bezier(0.32,0.72,0,1);
-            display: flex; flex-direction: column;
-        }
-        .chat-screen.open { right: 0; }
-        .chat-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 3650; display: none; }
-        .chat-backdrop.show { display: block; }
-        .chat-header {
-            padding: 14px 16px; border-bottom: 1px solid var(--border-color);
             display: flex; align-items: center; gap: 12px; flex-shrink: 0;
             background: var(--bg-primary);
         }
-        .chat-header .back-btn { background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: 20px; padding: 8px; }
-        .chat-header .chat-user-name { font-weight: 700; font-size: 16px; flex: 1; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-        .chat-msg {
-            max-width: 75%; padding: 12px 16px; border-radius: 18px;
+        .msg-panel-header h3 { font-size: 18px; font-weight: 800; flex: 1; display: flex; align-items: center; gap: 8px; }
+        .msg-panel-header .online-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--success); display: inline-block;
+            animation: onlinePulse 2s ease-in-out infinite;
+        }
+        @keyframes onlinePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        }
+        .msg-group-info {
+            padding: 12px 16px; background: var(--bg-elevated);
+            display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .group-avatars {
+            display: flex; gap: -10px;
+        }
+        .group-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--bg-card); border: 2px solid var(--bg-primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; margin-right: -8px;
+        }
+        .group-avatar:first-child { margin-right: 0; }
+        .group-meta { flex: 1; }
+        .group-meta .group-name { font-weight: 700; font-size: 14px; }
+        .group-meta .group-members { font-size: 11px; color: var(--text-tertiary); }
+
+        /* Group messages area */
+        .group-messages {
+            flex: 1; overflow-y: auto; padding: 16px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .group-msg {
+            max-width: 80%; padding: 12px 16px; border-radius: 18px;
             font-size: 14px; line-height: 1.5;
             animation: msgIn 0.3s ease;
         }
         @keyframes msgIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        .chat-msg.sent { align-self: flex-end; background: var(--primary); border-bottom-right-radius: 4px; }
-        .chat-msg.received { align-self: flex-start; background: var(--bg-elevated); border-bottom-left-radius: 4px; }
-        .chat-msg-time { font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: left; }
-        .chat-input-area {
+        .group-msg.mine { align-self: flex-end; background: var(--primary); border-bottom-right-radius: 4px; }
+        .group-msg.other { align-self: flex-start; background: var(--bg-elevated); border-bottom-left-radius: 4px; }
+        .group-msg-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .group-msg-sender { font-size: 12px; font-weight: 700; color: var(--secondary); }
+        .group-msg-time { font-size: 10px; opacity: 0.7; }
+        .group-msg.other .group-msg-sender { color: var(--accent-blue); }
+        .group-msg-date-divider {
+            text-align: center; font-size: 12px; color: var(--text-tertiary);
+            padding: 8px 0; font-weight: 600;
+        }
+
+        /* Group input area */
+        .group-input-area {
             padding: 12px 16px; border-top: 1px solid var(--border-color);
-            display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+            display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0;
             background: var(--bg-primary);
         }
-        .chat-input {
+        .group-input {
             flex: 1; padding: 12px 16px; background: var(--bg-elevated);
             border: 1px solid var(--border-color); border-radius: 24px;
             color: var(--text-primary); font-size: 15px; font-family: 'Cairo', sans-serif;
+            max-height: 100px; resize: none;
         }
-        .chat-send-btn {
+        .group-send-btn {
             width: 44px; height: 44px; border-radius: 50%;
             background: var(--primary); border: none; color: white;
             cursor: pointer; font-size: 18px; display: flex; align-items: center;
-            justify-content: center; transition: all 0.3s ease;
+            justify-content: center; transition: all 0.3s ease; flex-shrink: 0;
         }
-        .chat-send-btn:active { transform: scale(0.9); }
-        .chat-voice-btn {
+        .group-send-btn:active { transform: scale(0.9); }
+
+        /* Voice button with corner glow in group chat */
+        .group-voice-btn {
             width: 44px; height: 44px; border-radius: 50%;
             background: var(--bg-elevated); border: 1px solid var(--border-color);
             color: var(--text-secondary); cursor: pointer; font-size: 18px;
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease; position: relative;
+            transition: all 0.3s ease; flex-shrink: 0;
         }
-        .chat-voice-btn.recording-msg { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        .group-voice-btn.recording-msg {
+            background: var(--accent-blue); color: white; border-color: var(--accent-blue);
+        }
 
-        /* ============ ADD FRIEND MODAL ============ */
-        .friend-search-results { max-height: 300px; overflow-y: auto; }
-        .friend-result-item {
+        /* ============ ADD MEMBER MODAL ============ */
+        .member-search-results { max-height: 300px; overflow-y: auto; }
+        .member-result-item {
             display: flex; align-items: center; gap: 12px; padding: 12px;
             border-radius: 14px; cursor: pointer; transition: all 0.2s ease;
         }
-        .friend-result-item:active { background: var(--bg-elevated); }
-        .friend-result-avatar {
+        .member-result-item:active { background: var(--bg-elevated); }
+        .member-result-avatar {
             width: 44px; height: 44px; border-radius: 50%; background: var(--bg-elevated);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
         }
-        .friend-result-info { flex: 1; }
-        .friend-result-name { font-weight: 700; font-size: 14px; }
-        .friend-result-email { font-size: 11px; color: var(--text-tertiary); }
-        .friend-add-btn {
+        .member-result-info { flex: 1; }
+        .member-result-name { font-weight: 700; font-size: 14px; }
+        .member-result-email { font-size: 11px; color: var(--text-tertiary); }
+        .member-add-btn {
             padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 700;
             cursor: pointer; border: none; font-family: 'Cairo', sans-serif;
-            background: var(--primary); color: white; transition: all 0.2s ease;
+            background: var(--primary); color: white;
         }
-        .friend-add-btn:disabled { opacity: 0.5; }
-        .friend-add-btn.sent { background: var(--warning); }
+        .member-add-btn.added { background: var(--success); }
+        .member-add-btn.pending { background: var(--warning); }
 
         /* ============ SETTINGS ============ */
         .settings-panel { position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; background: var(--bg-card); z-index: 3500; transition: right 0.4s ease; padding: 20px; overflow-y: auto; box-shadow: -10px 0 40px rgba(0,0,0,0.5); }
@@ -529,55 +551,61 @@
             <div class="setting-item"><span><i class="fa-solid fa-wand-magic-sparkles"></i> تأثيرات</span><div class="toggle-switch active" id="animationsToggle" onclick="toggleSetting('animations')"></div></div>
         </div>
         <div class="settings-section"><h4>الإشعارات</h4>
-            <div class="setting-item"><span><i class="fa-solid fa-bell"></i> إشعارات الرسائل</span><div class="toggle-switch active" id="notificationsToggle" onclick="toggleSetting('notifications')"></div></div>
+            <div class="setting-item"><span><i class="fa-solid fa-bell"></i> إشعارات المجموعة</span><div class="toggle-switch active" id="notificationsToggle" onclick="toggleSetting('notifications')"></div></div>
         </div>
         <div class="settings-section"><button class="submit-btn" style="width:100%;background:transparent;border:1.5px solid var(--danger);color:var(--danger);box-shadow:none;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button></div>
     </div>
 
-    <!-- MESSAGES PANEL -->
+    <!-- GROUP MESSAGES PANEL (Messenger Style) -->
     <div class="messages-backdrop" id="messagesBackdrop" onclick="closeMessages()"></div>
     <div class="messages-panel" id="messagesPanel">
         <div class="msg-panel-header">
-            <h3><i class="fa-solid fa-envelope"></i> الرسائل</h3>
+            <h3><span class="online-dot"></span> مجموعة F-Note</h3>
             <button class="modal-close" onclick="closeMessages()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="msg-tabs">
-            <button class="msg-tab active" data-tab="chats" onclick="switchMsgTab('chats')">المحادثات</button>
-            <button class="msg-tab" data-tab="requests" onclick="switchMsgTab('requests')">الطلبات <span class="tab-badge" id="requestsBadge" style="display:none;">0</span></button>
-            <button class="msg-tab" data-tab="add" onclick="switchMsgTab('add')"><i class="fa-solid fa-user-plus"></i></button>
+        <div class="msg-group-info">
+            <div class="group-avatars" id="groupAvatars">
+                <div class="group-avatar"><i class="fa-solid fa-user"></i></div>
+            </div>
+            <div class="group-meta">
+                <div class="group-name">مجموعة العمل</div>
+                <div class="group-members" id="groupMemberCount">عضو واحد</div>
+            </div>
+            <button class="msg-accept-btn" onclick="openAddMember()" style="padding:6px 12px;font-size:12px;">
+                <i class="fa-solid fa-user-plus"></i> إضافة
+            </button>
         </div>
-        <div class="msg-list" id="msgList"></div>
-    </div>
-
-    <!-- CHAT SCREEN -->
-    <div class="chat-backdrop" id="chatBackdrop" onclick="closeChat()"></div>
-    <div class="chat-screen" id="chatScreen">
-        <div class="chat-header">
-            <button class="back-btn" onclick="closeChat()"><i class="fa-solid fa-arrow-right"></i></button>
-            <div class="msg-user-avatar" id="chatAvatar" style="width:40px;height:40px;font-size:16px;"></div>
-            <span class="chat-user-name" id="chatUserName"></span>
+        <div class="group-messages" id="groupMessages">
+            <div class="empty-state" style="padding:40px;">
+                <i class="fa-solid fa-comments" style="font-size:48px;opacity:0.3;"></i>
+                <p>لا توجد رسائل بعد</p>
+                <p style="font-size:12px;">ابدأ المحادثة مع مجموعتك</p>
+            </div>
         </div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-area">
-            <button class="chat-voice-btn voice-glow" id="chatVoiceBtn" onclick="startChatVoice()" title="رسالة صوتية">
+        <div class="group-input-area">
+            <button class="group-voice-btn voice-glow-blue" id="groupVoiceBtn" onclick="startGroupVoice()" title="رسالة صوتية">
                 <i class="fa-solid fa-microphone"></i>
             </button>
-            <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendMessage()">
-            <button class="chat-send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            <textarea class="group-input" id="groupInput" placeholder="اكتب رسالة للمجموعة..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGroupMessage();}"></textarea>
+            <button class="group-send-btn" onclick="sendGroupMessage()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
 
-    <!-- ADD FRIEND MODAL -->
-    <div id="addFriendModal" class="modal-overlay">
+    <!-- ADD MEMBER MODAL -->
+    <div id="addMemberModal" class="modal-overlay">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
-            <div class="modal-header"><h2>إضافة صديق</h2><button class="modal-close" onclick="closeAddFriend()"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="modal-header"><h2>إضافة عضو للمجموعة</h2><button class="modal-close" onclick="closeAddMember()"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="modal-form">
                 <div class="form-group">
                     <label>ابحث بالبريد الإلكتروني</label>
-                    <input type="email" id="friendSearchInput" placeholder="أدخل البريد الإلكتروني" dir="ltr" oninput="searchFriends()">
+                    <input type="email" id="memberSearchInput" placeholder="أدخل البريد الإلكتروني" dir="ltr" oninput="searchMembers()">
                 </div>
-                <div class="friend-search-results" id="friendSearchResults"></div>
+                <div class="member-search-results" id="memberSearchResults"></div>
+                <div style="border-top:1px solid var(--border-color);padding-top:12px;margin-top:8px;">
+                    <h4 style="font-size:14px;margin-bottom:8px;">أعضاء المجموعة الحاليين</h4>
+                    <div id="currentMembersList"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -588,8 +616,8 @@
             <div class="top-header">
                 <div class="header-logo"><div class="mini-icon"><i class="fa-solid fa-shield-halved" style="color:white;font-size:14px;"></i></div><span>F-Note Pro</span></div>
                 <div class="header-actions">
-                    <button class="header-btn" onclick="openMessages()" title="الرسائل">
-                        <i class="fa-solid fa-envelope"></i>
+                    <button class="header-btn" onclick="openMessages()" title="محادثة المجموعة">
+                        <i class="fa-solid fa-comments"></i>
                         <span class="badge" id="msgBadge" style="display:none;">0</span>
                     </button>
                     <button class="header-btn" onclick="openSettings()"><i class="fa-solid fa-gear"></i></button>
@@ -606,7 +634,6 @@
             <div class="color-filters">
                 <button class="color-chip active" data-color="all" onclick="filterByColor('all',this)"><span class="color-dot" style="background:linear-gradient(135deg,var(--primary),var(--secondary));"></span> الكل</button>
                 <button class="color-chip" data-color="star" onclick="filterByColor('star',this)"><span class="color-dot" style="background:var(--warning);"></span> المفضلين</button>
-                <button class="color-chip" data-color="message" onclick="filterByColor('message',this)"><span class="color-dot" style="background:var(--accent-blue);"></span> مراسلة</button>
             </div>
             <div class="search-results" id="searchResults"><div class="no-results"><i class="fa-solid fa-magnifying-glass"></i><p>ابدأ البحث</p></div></div>
         </div>
@@ -614,7 +641,7 @@
             <button class="nav-item active" data-screen="feed" onclick="switchScreen('feed')"><span class="nav-indicator"></span><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
             <button class="nav-item add-btn" onclick="openAddModal()"><i class="fa-solid fa-circle-plus"></i><span>إضافة</span></button>
             <button class="nav-item" data-screen="search" onclick="switchScreen('search')"><i class="fa-solid fa-magnifying-glass"></i><span>بحث</span></button>
-            <button class="nav-item" onclick="openMessages()" style="position:relative;"><i class="fa-solid fa-comments"></i><span>رسائل</span><span class="nav-badge" id="navMsgBadge" style="display:none;">0</span></button>
+            <button class="nav-item" onclick="openMessages()"><i class="fa-solid fa-comments"></i><span>المجموعة</span><span class="nav-badge" id="navMsgBadge" style="display:none;">0</span></button>
         </nav>
     </div>
 
@@ -653,9 +680,9 @@
 
     <!-- IMAGE VIEWER -->
     <div id="imageViewer" class="modal-overlay" onclick="closeImageViewer()" style="z-index:4000;">
-        <div class="modal-sheet" style="background:transparent;box-shadow:none;max-width:95vw;" onclick="event.stopPropagation()">
+        <div style="max-width:95vw;position:relative;" onclick="event.stopPropagation()">
             <button class="modal-close" style="position:absolute;top:10px;right:10px;z-index:10;" onclick="closeImageViewer()"><i class="fa-solid fa-xmark"></i></button>
-            <img id="viewerImage" src="" style="width:100%;border-radius:16px;">
+            <img id="viewerImage" src="" style="width:100%;border-radius:16px;max-height:85vh;object-fit:contain;">
         </div>
     </div>
 
@@ -693,14 +720,9 @@
         let recognition = null;
         let pendingDeleteId = null;
         let activeColorFilter = 'all';
-        let settings = { darkMode: true, animations: true, voiceSearch: true, notifications: true };
-        let currentChatId = null;
-        let currentChatUser = null;
-        let currentMsgTab = 'chats';
-        let friends = [];
-        let friendRequests = [];
+        let settings = { darkMode: true, animations: true, notifications: true };
+        let groupMembers = [];
         let unreadCount = 0;
-        let pendingRequestCount = 0;
 
         // ==================== AUTH ====================
         let isLoginMode = true;
@@ -747,10 +769,14 @@
                 const userDoc = await db.collection('users').doc(user.uid).get();
                 currentUserData = userDoc.exists ? userDoc.data() : { name: user.email, email: user.email };
                 if (!userDoc.exists) await db.collection('users').doc(user.uid).set({ name: user.email, email: user.email, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                
+                // Auto-add to group
+                await ensureGroupMembership();
+                
                 document.getElementById('authScreen').classList.add('hidden');
                 document.getElementById('appContainer').classList.remove('hidden');
                 loadGuides();
-                setupFriendsListener();
+                setupGroupListeners();
             } else {
                 currentUser = null; currentUserData = null;
                 document.getElementById('authScreen').classList.remove('hidden');
@@ -758,64 +784,164 @@
             }
         });
 
-        // ==================== FRIENDS SYSTEM ====================
-        function setupFriendsListener() {
-            if (!currentUser) return;
-            
-            // Listen for friend requests received
-            db.collection('friendRequests')
-                .where('to', '==', currentUser.uid)
-                .where('status', '==', 'pending')
-                .onSnapshot(snapshot => {
-                    friendRequests = [];
-                    snapshot.forEach(doc => friendRequests.push({ id: doc.id, ...doc.data() }));
-                    pendingRequestCount = friendRequests.length;
-                    updateBadges();
-                    if (currentMsgTab === 'requests') renderRequests();
+        // ==================== GROUP SYSTEM (Messenger Style) ====================
+        async function ensureGroupMembership() {
+            const memberRef = db.collection('groupMembers').doc(currentUser.uid);
+            const memberDoc = await memberRef.get();
+            if (!memberDoc.exists) {
+                await memberRef.set({
+                    userId: currentUser.uid,
+                    name: currentUserData.name,
+                    email: currentUser.email,
+                    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
-            // Listen for accepted friendships
-            db.collection('friendships')
-                .where('users', 'array-contains', currentUser.uid)
-                .onSnapshot(snapshot => {
-                    friends = [];
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const otherId = data.users.find(id => id !== currentUser.uid);
-                        friends.push({ id: doc.id, friendId: otherId, ...data });
-                    });
-                    if (currentMsgTab === 'chats') renderChats();
-                });
-
-            // Listen for unread messages
-            db.collection('messages')
-                .where('to', '==', currentUser.uid)
-                .where('read', '==', false)
-                .onSnapshot(snapshot => {
-                    unreadCount = snapshot.size;
-                    updateBadges();
-                });
-        }
-
-        function updateBadges() {
-            const totalBadges = unreadCount + pendingRequestCount;
-            ['msgBadge', 'navMsgBadge'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.textContent = totalBadges;
-                    el.style.display = totalBadges > 0 ? 'flex' : 'none';
-                }
-            });
-            const reqBadge = document.getElementById('requestsBadge');
-            if (reqBadge) {
-                reqBadge.textContent = pendingRequestCount;
-                reqBadge.style.display = pendingRequestCount > 0 ? 'inline-flex' : 'none';
             }
         }
 
-        async function searchFriends() {
-            const term = document.getElementById('friendSearchInput').value.trim().toLowerCase();
-            const container = document.getElementById('friendSearchResults');
+        function setupGroupListeners() {
+            // Listen for group members
+            db.collection('groupMembers').onSnapshot(snapshot => {
+                groupMembers = [];
+                snapshot.forEach(doc => groupMembers.push({ id: doc.id, ...doc.data() }));
+                updateGroupUI();
+            });
+
+            // Listen for group messages
+            db.collection('groupMessages').orderBy('createdAt', 'asc').limit(100).onSnapshot(snapshot => {
+                renderGroupMessages(snapshot);
+            });
+
+            // Listen for unread count
+            db.collection('groupMessages')
+                .where('readBy', 'array-contains', false)
+                .onSnapshot(snapshot => {
+                    let count = 0;
+                    snapshot.forEach(doc => {
+                        if (doc.data().senderId !== currentUser?.uid) {
+                            count++;
+                        }
+                    });
+                    unreadCount = count;
+                    updateBadges();
+                });
+        }
+
+        function updateGroupUI() {
+            const avatarsContainer = document.getElementById('groupAvatars');
+            const displayMembers = groupMembers.slice(0, 4);
+            avatarsContainer.innerHTML = displayMembers.map(m => 
+                `<div class="group-avatar" title="${m.name}"><i class="fa-solid fa-user"></i></div>`
+            ).join('');
+            if (groupMembers.length > 4) {
+                avatarsContainer.innerHTML += `<div class="group-avatar" style="background:var(--primary);color:white;font-size:11px;">+${groupMembers.length - 4}</div>`;
+            }
+            document.getElementById('groupMemberCount').textContent = `${groupMembers.length} أعضاء`;
+        }
+
+        function renderGroupMessages(snapshot) {
+            const container = document.getElementById('groupMessages');
+            const messages = [];
+            snapshot.forEach(doc => messages.push({ id: doc.id, ...doc.data() }));
+
+            if (messages.length === 0) {
+                container.innerHTML = `<div class="empty-state" style="padding:40px;"><i class="fa-solid fa-comments" style="font-size:48px;opacity:0.3;"></i><p>لا توجد رسائل بعد</p></div>`;
+                return;
+            }
+
+            let lastDate = '';
+            container.innerHTML = messages.map(msg => {
+                const isMine = msg.senderId === currentUser?.uid;
+                const date = msg.createdAt?.toDate().toLocaleDateString('ar-TN') || '';
+                let dateDivider = '';
+                if (date !== lastDate) {
+                    lastDate = date;
+                    dateDivider = `<div class="group-msg-date-divider">📅 ${date}</div>`;
+                }
+                return `${dateDivider}
+                <div class="group-msg ${isMine ? 'mine' : 'other'}">
+                    ${!isMine ? `<div class="group-msg-header"><span class="group-msg-sender">${msg.senderName||'مستخدم'}</span></div>` : ''}
+                    <div>${msg.text}</div>
+                    <div class="group-msg-time" style="text-align:${isMine?'left':'right'}">${formatTime(msg.createdAt)}</div>
+                </div>`;
+            }).join('');
+            
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendGroupMessage() {
+            const input = document.getElementById('groupInput');
+            const text = input.value.trim();
+            if (!text || !currentUser) return;
+
+            try {
+                await db.collection('groupMessages').add({
+                    senderId: currentUser.uid,
+                    senderName: currentUserData.name,
+                    text: text,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    readBy: [currentUser.uid]
+                });
+                input.value = '';
+                input.style.height = 'auto';
+            } catch (e) { showToast('خطأ في الإرسال', 'error'); }
+        }
+
+        async function startGroupVoice() {
+            const btn = document.getElementById('groupVoiceBtn');
+            if (!('webkitSpeechRecognition' in window)) { showToast('غير مدعوم', 'error'); return; }
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR();
+            recognition.lang = 'ar-TN';
+            recognition.interimResults = false;
+            btn.classList.add('recording-msg');
+            recognition.start();
+            recognition.onresult = (e) => {
+                document.getElementById('groupInput').value = e.results[0][0].transcript;
+                btn.classList.remove('recording-msg');
+                setTimeout(() => sendGroupMessage(), 300);
+            };
+            recognition.onerror = () => btn.classList.remove('recording-msg');
+            recognition.onend = () => btn.classList.remove('recording-msg');
+        }
+
+        function updateBadges() {
+            ['msgBadge', 'navMsgBadge'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.textContent = unreadCount;
+                    el.style.display = unreadCount > 0 ? 'flex' : 'none';
+                }
+            });
+        }
+
+        // ==================== ADD MEMBER ====================
+        function openAddMember() {
+            document.getElementById('addMemberModal').classList.add('active');
+            document.getElementById('memberSearchInput').value = '';
+            document.getElementById('memberSearchResults').innerHTML = '';
+            renderCurrentMembers();
+        }
+        function closeAddMember() {
+            document.getElementById('addMemberModal').classList.remove('active');
+        }
+
+        function renderCurrentMembers() {
+            const container = document.getElementById('currentMembersList');
+            container.innerHTML = groupMembers.map(m => `
+                <div class="member-result-item">
+                    <div class="member-result-avatar"><i class="fa-solid fa-user"></i></div>
+                    <div class="member-result-info">
+                        <div class="member-result-name">${m.name}</div>
+                        <div class="member-result-email">${m.email}</div>
+                    </div>
+                    ${m.userId !== currentUser?.uid ? `<button class="member-add-btn added" onclick="removeMember('${m.userId}')" style="background:var(--danger);">إزالة</button>` : '<span style="color:var(--success);font-size:12px;">أنت</span>'}
+                </div>
+            `).join('');
+        }
+
+        async function searchMembers() {
+            const term = document.getElementById('memberSearchInput').value.trim().toLowerCase();
+            const container = document.getElementById('memberSearchResults');
             if (!term || term.length < 3) { container.innerHTML = ''; return; }
 
             container.innerHTML = '<div style="text-align:center;padding:20px;"><div class="spinner"></div></div>';
@@ -838,290 +964,50 @@
                 }
 
                 container.innerHTML = results.map(u => {
-                    const alreadyFriend = friends.some(f => f.friendId === u.id);
-                    const requestSent = friendRequests.some(r => r.to === u.id && r.status === 'pending');
-                    const requestReceived = friendRequests.some(r => r.from === u.id && r.status === 'pending');
-                    
-                    let btnHtml = '';
-                    if (alreadyFriend) btnHtml = '<span style="color:var(--success);font-size:12px;"><i class="fa-solid fa-check"></i> صديق</span>';
-                    else if (requestSent) btnHtml = '<button class="friend-add-btn sent" disabled>تم الإرسال</button>';
-                    else if (requestReceived) btnHtml = '<button class="friend-add-btn" style="background:var(--success);" onclick="acceptRequestDirect(\'' + u.id + '\')">قبول</button>';
-                    else btnHtml = '<button class="friend-add-btn" onclick="sendFriendRequest(\'' + u.id + '\', this)">إضافة</button>';
-
-                    return `<div class="friend-result-item">
-                        <div class="friend-result-avatar"><i class="fa-solid fa-user"></i></div>
-                        <div class="friend-result-info"><div class="friend-result-name">${u.name||u.email}</div><div class="friend-result-email">${u.email}</div></div>
-                        ${btnHtml}
+                    const isMember = groupMembers.some(m => m.userId === u.id);
+                    return `<div class="member-result-item">
+                        <div class="member-result-avatar"><i class="fa-solid fa-user"></i></div>
+                        <div class="member-result-info">
+                            <div class="member-result-name">${u.name||u.email}</div>
+                            <div class="member-result-email">${u.email}</div>
+                        </div>
+                        ${isMember ? '<button class="member-add-btn added">موجود</button>' : `<button class="member-add-btn" onclick="addMemberToGroup('${u.id}', '${u.name}', '${u.email}', this)">إضافة</button>`}
                     </div>`;
                 }).join('');
-            } catch (e) { container.innerHTML = '<p style="text-align:center;color:var(--danger);">خطأ في البحث</p>'; }
+            } catch (e) { container.innerHTML = '<p style="text-align:center;color:var(--danger);">خطأ</p>'; }
         }
 
-        async function sendFriendRequest(toId, btn) {
-            if (!currentUser) return;
+        async function addMemberToGroup(userId, name, email, btn) {
             try {
-                // Check if already exists
-                const existing = await db.collection('friendRequests')
-                    .where('from', '==', currentUser.uid)
-                    .where('to', '==', toId)
-                    .where('status', '==', 'pending')
-                    .get();
-                if (!existing.empty) { showToast('تم إرسال الطلب مسبقاً', 'error'); return; }
-
-                await db.collection('friendRequests').add({
-                    from: currentUser.uid,
-                    to: toId,
-                    fromName: currentUserData.name,
-                    fromEmail: currentUser.email,
-                    status: 'pending',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                await db.collection('groupMembers').doc(userId).set({
+                    userId, name, email,
+                    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                btn.classList.add('sent');
-                btn.textContent = 'تم الإرسال';
+                btn.textContent = 'تم';
+                btn.classList.add('added');
                 btn.disabled = true;
-                showToast('تم إرسال طلب الصداقة', 'success');
+                showToast('تمت إضافة العضو', 'success');
+                renderCurrentMembers();
             } catch (e) { showToast('خطأ', 'error'); }
         }
 
-        async function acceptRequestDirect(fromId) {
+        async function removeMember(userId) {
             try {
-                const reqSnap = await db.collection('friendRequests')
-                    .where('from', '==', fromId)
-                    .where('to', '==', currentUser.uid)
-                    .where('status', '==', 'pending')
-                    .get();
-                if (!reqSnap.empty) {
-                    await db.collection('friendRequests').doc(reqSnap.docs[0].id).update({ status: 'accepted' });
-                    await db.collection('friendships').add({
-                        users: [currentUser.uid, fromId],
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    showToast('تم قبول الصداقة', 'success');
-                    searchFriends();
-                }
+                await db.collection('groupMembers').doc(userId).delete();
+                showToast('تمت إزالة العضو', 'success');
+                renderCurrentMembers();
             } catch (e) { showToast('خطأ', 'error'); }
         }
 
-        async function acceptRequest(reqId) {
-            try {
-                await db.collection('friendRequests').doc(reqId).update({ status: 'accepted' });
-                const req = friendRequests.find(r => r.id === reqId);
-                if (req) {
-                    await db.collection('friendships').add({
-                        users: [currentUser.uid, req.from],
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-                showToast('تم قبول الصداقة', 'success');
-            } catch (e) { showToast('خطأ', 'error'); }
-        }
-
-        async function rejectRequest(reqId) {
-            try {
-                await db.collection('friendRequests').doc(reqId).update({ status: 'rejected' });
-                showToast('تم رفض الطلب', 'success');
-            } catch (e) { showToast('خطأ', 'error'); }
-        }
-
-        // ==================== MESSAGES ====================
+        // ==================== MESSAGES PANEL ====================
         function openMessages() {
             document.getElementById('messagesPanel').classList.add('open');
             document.getElementById('messagesBackdrop').classList.add('show');
-            switchMsgTab('chats');
         }
         function closeMessages() {
             document.getElementById('messagesPanel').classList.remove('open');
             document.getElementById('messagesBackdrop').classList.remove('show');
-            closeAddFriend();
-        }
-        function switchMsgTab(tab) {
-            currentMsgTab = tab;
-            document.querySelectorAll('.msg-tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.msg-tab[data-tab="${tab}"]`).classList.add('active');
-            if (tab === 'chats') renderChats();
-            else if (tab === 'requests') renderRequests();
-            else if (tab === 'add') openAddFriend();
-        }
-        function openAddFriend() {
-            document.getElementById('addFriendModal').classList.add('active');
-            document.getElementById('friendSearchInput').value = '';
-            document.getElementById('friendSearchResults').innerHTML = '';
-            document.getElementById('friendSearchInput').focus();
-        }
-        function closeAddFriend() {
-            document.getElementById('addFriendModal').classList.remove('active');
-            if (currentMsgTab === 'add') switchMsgTab('chats');
-        }
-
-        async function renderChats() {
-            const container = document.getElementById('msgList');
-            if (!friends.length) {
-                container.innerHTML = '<div class="empty-state" style="padding:40px;"><i class="fa-solid fa-comments" style="font-size:48px;opacity:0.3;"></i><p>لا توجد محادثات</p><p style="font-size:12px;">أضف أصدقاء للبدء</p></div>';
-                return;
-            }
-
-            // Get last messages for each friend
-            const chatItems = [];
-            for (const f of friends) {
-                const msgsSnap = await db.collection('messages')
-                    .where('chatId', '==', [currentUser.uid, f.friendId].sort().join('_'))
-                    .orderBy('createdAt', 'desc')
-                    .limit(1)
-                    .get();
-                const lastMsg = msgsSnap.empty ? null : msgsSnap.docs[0].data();
-                
-                const unreadSnap = await db.collection('messages')
-                    .where('chatId', '==', [currentUser.uid, f.friendId].sort().join('_'))
-                    .where('to', '==', currentUser.uid)
-                    .where('read', '==', false)
-                    .get();
-
-                // Get friend data
-                const friendDoc = await db.collection('users').doc(f.friendId).get();
-                const friendData = friendDoc.exists ? friendDoc.data() : { name: 'مستخدم', email: '' };
-
-                chatItems.push({
-                    friendId: f.friendId,
-                    friendData,
-                    lastMsg,
-                    unread: unreadSnap.size,
-                    chatId: [currentUser.uid, f.friendId].sort().join('_')
-                });
-            }
-
-            container.innerHTML = chatItems.map(item => `
-                <div class="msg-user-item" onclick="openChat('${item.friendId}', '${item.friendData.name||item.friendData.email}')">
-                    <div class="msg-user-avatar"><i class="fa-solid fa-user"></i></div>
-                    <div class="msg-user-info">
-                        <div class="msg-user-name">${item.friendData.name||item.friendData.email}</div>
-                        <div class="msg-user-preview">${item.lastMsg ? item.lastMsg.text : 'ابدأ المحادثة...'}</div>
-                    </div>
-                    ${item.unread > 0 ? '<div class="msg-unread-badge"></div>' : ''}
-                    <div class="msg-user-time">${item.lastMsg ? formatTime(item.lastMsg.createdAt) : ''}</div>
-                </div>
-            `).join('');
-        }
-
-        async function renderRequests() {
-            const container = document.getElementById('msgList');
-            if (!friendRequests.length) {
-                container.innerHTML = '<div class="empty-state" style="padding:40px;"><i class="fa-solid fa-user-clock" style="font-size:48px;opacity:0.3;"></i><p>لا توجد طلبات صداقة</p></div>';
-                return;
-            }
-
-            const items = [];
-            for (const req of friendRequests) {
-                const fromDoc = await db.collection('users').doc(req.from).get();
-                const fromData = fromDoc.exists ? fromDoc.data() : { name: req.fromEmail, email: req.fromEmail };
-                items.push({ ...req, fromData });
-            }
-
-            container.innerHTML = items.map(item => `
-                <div class="msg-user-item">
-                    <div class="msg-user-avatar"><i class="fa-solid fa-user"></i></div>
-                    <div class="msg-user-info">
-                        <div class="msg-user-name">${item.fromData.name||item.fromEmail}</div>
-                        <div class="msg-user-preview">طلب صداقة</div>
-                    </div>
-                    <div class="msg-actions">
-                        <button class="msg-accept-btn" onclick="acceptRequest('${item.id}')">قبول</button>
-                        <button class="msg-reject-btn" onclick="rejectRequest('${item.id}')">رفض</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function openChat(friendId, friendName) {
-            currentChatId = [currentUser.uid, friendId].sort().join('_');
-            currentChatUser = { id: friendId, name: friendName };
-            
-            const friendDoc = await db.collection('users').doc(friendId).get();
-            if (friendDoc.exists) {
-                document.getElementById('chatUserName').textContent = friendDoc.data().name || friendName;
-            } else {
-                document.getElementById('chatUserName').textContent = friendName;
-            }
-            document.getElementById('chatAvatar').innerHTML = '<i class="fa-solid fa-user"></i>';
-            
-            document.getElementById('chatScreen').classList.add('open');
-            document.getElementById('chatBackdrop').classList.add('show');
-            document.getElementById('chatMessages').innerHTML = '';
-            
-            loadMessages();
-        }
-
-        function closeChat() {
-            document.getElementById('chatScreen').classList.remove('open');
-            document.getElementById('chatBackdrop').classList.remove('show');
-            currentChatId = null;
-            currentChatUser = null;
-            if (document.getElementById('messagesPanel').classList.contains('open')) {
-                renderChats();
-            }
-        }
-
-        function loadMessages() {
-            if (!currentChatId) return;
-            
-            db.collection('messages')
-                .where('chatId', '==', currentChatId)
-                .orderBy('createdAt', 'asc')
-                .onSnapshot(snapshot => {
-                    const container = document.getElementById('chatMessages');
-                    container.innerHTML = '';
-                    snapshot.forEach(doc => {
-                        const msg = doc.data();
-                        const isSent = msg.from === currentUser.uid;
-                        
-                        // Mark as read if received
-                        if (!isSent && !msg.read) {
-                            db.collection('messages').doc(doc.id).update({ read: true });
-                        }
-
-                        container.innerHTML += `
-                            <div class="chat-msg ${isSent ? 'sent' : 'received'}">
-                                ${msg.text}
-                                <div class="chat-msg-time">${formatTime(msg.createdAt)}</div>
-                            </div>`;
-                    });
-                    container.scrollTop = container.scrollHeight;
-                });
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text || !currentChatId || !currentChatUser) return;
-
-            try {
-                await db.collection('messages').add({
-                    chatId: currentChatId,
-                    from: currentUser.uid,
-                    to: currentChatUser.id,
-                    text,
-                    read: false,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                input.value = '';
-            } catch (e) { showToast('خطأ في الإرسال', 'error'); }
-        }
-
-        async function startChatVoice() {
-            const btn = document.getElementById('chatVoiceBtn');
-            if (!('webkitSpeechRecognition' in window)) { showToast('غير مدعوم', 'error'); return; }
-            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SR();
-            recognition.lang = 'ar-TN';
-            recognition.interimResults = false;
-            btn.classList.add('recording-msg');
-            recognition.start();
-            recognition.onresult = (e) => {
-                document.getElementById('chatInput').value = e.results[0][0].transcript;
-                btn.classList.remove('recording-msg');
-                setTimeout(() => sendMessage(), 300);
-            };
-            recognition.onerror = () => btn.classList.remove('recording-msg');
-            recognition.onend = () => btn.classList.remove('recording-msg');
+            closeAddMember();
         }
 
         // ==================== GUIDES ====================
@@ -1170,7 +1056,6 @@
                             <button class="action-btn favorite ${guide.isFavorite?'active':''}" onclick="event.stopPropagation();toggleFavorite('${guide.id}',${index})"><div class="btn-icon"><i class="fa-solid fa-star"></i></div><span class="btn-label">مفضل</span></button>
                             <button class="action-btn whatsapp" onclick="event.stopPropagation();openWhatsApp('${guide.phone}')"><div class="btn-icon"><i class="fa-brands fa-whatsapp"></i></div><span class="btn-label">واتساب</span></button>
                             <button class="action-btn call" onclick="event.stopPropagation();callGuide('${guide.phone}')"><div class="btn-icon"><i class="fa-solid fa-phone"></i></div><span class="btn-label">اتصال</span></button>
-                            <button class="action-btn message" onclick="event.stopPropagation();messageGuide('${guide.phone}')"><div class="btn-icon"><i class="fa-solid fa-comment"></i></div><span class="btn-label">رسالة</span></button>
                         </div>
                     </div>
                 </div>`;
@@ -1203,7 +1088,7 @@
         // ==================== SETTINGS ====================
         function openSettings() { document.getElementById('settingsPanel').classList.add('open'); document.getElementById('settingsBackdrop').classList.add('show'); }
         function closeSettings() { document.getElementById('settingsPanel').classList.remove('open'); document.getElementById('settingsBackdrop').classList.remove('show'); }
-        function toggleSetting(k) { settings[k] = !settings[k]; document.getElementById(k+'Toggle').classList.toggle('active', settings[k]); showToast(`تم ${settings[k]?'تفعيل':'إلغاء'} الإعداد`, 'success'); }
+        function toggleSetting(k) { settings[k] = !settings[k]; document.getElementById(k+'Toggle').classList.toggle('active', settings[k]); }
 
         // ==================== MODAL ====================
         function openAddModal() { resetForm(); document.getElementById('modalTitle').textContent = 'إضافة مرشد جديد'; document.getElementById('deleteGuideBtn').style.display = 'none'; document.getElementById('addModal').classList.add('active'); }
@@ -1213,7 +1098,6 @@
             uploadedGuideImage = ''; uploadedVehicleImage = '';
             ['guideImageUpload','vehicleImageUpload'].forEach(id => { const el = document.getElementById(id); el.classList.remove('has-image','uploading'); el.style.backgroundImage = ''; el.innerHTML = (id==='guideImageUpload'?'<i class="fa-solid fa-user"></i><span>صورة المرشد</span>':'<i class="fa-solid fa-bus"></i><span>صورة الحافلة</span>')+'<div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير</div><div class="upload-progress"></div>'; });
             document.getElementById('guideFileInput').value = ''; document.getElementById('vehicleFileInput').value = '';
-            document.getElementById('deleteConfirm').classList.remove('show'); document.getElementById('deleteGuideBtn').style.display = 'none';
         }
         function editGuide(id) { const g = guides.find(x => x.id === id); if (!g) return; document.getElementById('editGuideId').value = id; document.getElementById('guideName').value = g.name||''; document.getElementById('guidePhone').value = g.phone||''; document.getElementById('guideLicense').value = g.license||''; document.getElementById('guideLanguage').value = g.language||'العربية'; document.getElementById('guideNotes').value = g.notes||''; uploadedGuideImage = g.image||g.guideImage||''; uploadedVehicleImage = g.vehicleImage||''; updatePreview('guideImageUpload', uploadedGuideImage); updatePreview('vehicleImageUpload', uploadedVehicleImage); document.getElementById('modalTitle').textContent = 'تعديل المرشد'; document.getElementById('deleteGuideBtn').style.display = 'block'; document.getElementById('addModal').classList.add('active'); }
         function updatePreview(elId, url) { const el = document.getElementById(elId); if (url) { el.style.backgroundImage = `url(${url})`; el.classList.add('has-image'); el.innerHTML = '<div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير</div><div class="upload-progress"></div>'; } }
@@ -1281,8 +1165,6 @@
         async function toggleFavorite(id, i) { await db.collection('guides').doc(id).update({ isFavorite: !guides[i].isFavorite }); }
         function openWhatsApp(p) { window.open(`https://wa.me/${p.replace(/[^0-9+]/g,'')}`, '_blank'); }
         function callGuide(p) { window.location.href = `tel:${p}`; }
-        function messageGuide(p) { window.open(`sms:${p}`, '_blank'); }
-        async function shareGuide(id) { const g = guides.find(x => x.id === id); if (!g) return; const t = `🚐 ${g.name}\n📞 ${g.phone}\n📱 F-Note Pro`; if (navigator.share) { try { await navigator.share({ title: 'F-Note Pro', text: t }); } catch(e) {} } else { await navigator.clipboard.writeText(t); showToast('تم النسخ', 'success'); } }
 
         // ==================== SEARCH ====================
         document.getElementById('searchInput').addEventListener('input', debounce(function(e) { const term = e.target.value.trim(); if (term) searchGuides(term); else document.getElementById('searchResults').innerHTML = '<div class="no-results"><i class="fa-solid fa-magnifying-glass"></i><p>ابدأ البحث</p></div>'; }, 350));
@@ -1298,7 +1180,7 @@
         }
         function viewFromSearch(id) { const i = guides.findIndex(g => g.id === id); if (i !== -1) { currentFeedIndex = i; updateFeedPosition(); switchScreen('feed'); } }
 
-        // ==================== VOICE ====================
+        // ==================== VOICE WITH CORNER GLOW ====================
         function startVoiceSearch() {
             const btn = document.getElementById('voiceSearchBtn');
             if (!('webkitSpeechRecognition' in window)) { showToast('غير مدعوم', 'error'); return; }
@@ -1335,19 +1217,19 @@
 
         // ==================== EVENT LISTENERS ====================
         document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) closeAddModal(); });
-        document.getElementById('addFriendModal').addEventListener('click', function(e) { if (e.target === this) closeAddFriend(); });
+        document.getElementById('addMemberModal').addEventListener('click', function(e) { if (e.target === this) closeAddMember(); });
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                if (document.getElementById('chatScreen').classList.contains('open')) closeChat();
-                else if (document.getElementById('messagesPanel').classList.contains('open')) closeMessages();
+                if (document.getElementById('messagesPanel').classList.contains('open')) closeMessages();
                 else if (document.getElementById('addModal').classList.contains('active')) closeAddModal();
                 else if (document.getElementById('settingsPanel').classList.contains('open')) closeSettings();
                 else if (document.getElementById('imageViewer').classList.contains('active')) closeImageViewer();
+                else if (document.getElementById('addMemberModal').classList.contains('active')) closeAddMember();
             }
         });
 
-        console.log('🚀 F-Note Pro - Friends & Messages System Ready');
-        console.log('👥 Friends System | 💬 Real-time Chat | 🎤 Voice Effects');
+        console.log('🚀 F-Note Pro - Messenger Style Group Chat');
+        console.log('👥 Group Messages | 🎤 Voice with Corner Glow | ✨ Red/Blue Light Effects');
     </script>
 </body>
 </html>
