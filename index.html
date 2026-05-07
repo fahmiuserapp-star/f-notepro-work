@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>F-Note Pro | خزنة المرشدين + لاسلكي</title>
 
-    <!-- Firebase SDKs v10.12.0 -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -36,6 +36,7 @@
             --radius-full: 60px;
             --font: 'Segoe UI', 'Tajawal', system-ui, -apple-system, sans-serif;
             --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+            --bottom-nav-h: 70px;
         }
         body.dark {
             --bg: #0f172a;
@@ -52,7 +53,7 @@
             background:var(--bg); font-family:var(--font); color:var(--text);
             min-height:100vh; -webkit-tap-highlight-color:transparent; position:relative;
             overflow-x:hidden; transition:background var(--transition),color var(--transition);
-            padding-bottom:70px;
+            padding-bottom:var(--bottom-nav-h);
         }
         body::after {
             content:""; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
@@ -60,8 +61,33 @@
             background:url('https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png') center/contain no-repeat;
             opacity:0.03; z-index:0; pointer-events:none;
         }
-
-        /* الهيدر */
+        .login-screen {
+            position:fixed; inset:0; background:var(--bg); z-index:2000;
+            display:flex; align-items:center; justify-content:center; padding:20px;
+            transition:opacity 0.4s,visibility 0.4s;
+        }
+        .login-screen.hide { opacity:0; visibility:hidden; pointer-events:none; }
+        .login-card {
+            background:var(--card); border-radius:36px; padding:36px 24px; width:100%; max-width:380px;
+            text-align:center; box-shadow:var(--shadow-lg); border:1px solid var(--border);
+        }
+        .login-logo img { width:90px; margin-bottom:12px; }
+        .login-title { font-size:26px; font-weight:900; color:var(--gold); margin-bottom:4px; }
+        .login-sub { font-size:12px; color:var(--muted); margin-bottom:22px; }
+        .login-input {
+            width:100%; padding:13px 16px; margin:6px 0; border:2px solid var(--border);
+            border-radius:var(--radius-full); background:var(--bg); color:var(--text); font-size:14px;
+            outline:none; transition:var(--transition); direction:ltr;
+        }
+        .login-input:focus { border-color:var(--gold); box-shadow:0 0 0 4px rgba(233,69,96,0.08); }
+        .login-btn {
+            width:100%; padding:14px; margin-top:14px; border:none; border-radius:var(--radius-full);
+            background:var(--gold); color:#fff; font-weight:700; font-size:16px; cursor:pointer;
+            transition:var(--transition);
+        }
+        .login-btn.loading { pointer-events:none; opacity:0.65; }
+        .login-error { color:#ef4444; font-size:12px; margin-top:8px; display:none; }
+        .login-error.show { display:block; }
         .header {
             background:var(--card); padding:10px 16px; display:flex; align-items:center;
             justify-content:center; position:sticky; top:0; z-index:100;
@@ -72,50 +98,46 @@
             position:absolute; left:12px; top:50%; transform:translateY(-50%);
             background:var(--bg); border:none; font-size:22px; width:42px; height:42px;
             border-radius:50%; cursor:pointer; color:var(--sub); display:flex;
-            align-items:center; justify-content:center; transition:var(--transition);
+            align-items:center; justify-content:center;
         }
-        /* التنقل السفلي */
         .bottom-nav {
-            position:fixed; bottom:0; left:0; right:0; background:var(--card);
-            display:flex; border-top:1px solid var(--border); z-index:999;
-            box-shadow:0 -2px 10px rgba(0,0,0,0.05);
+            position:fixed; bottom:0; left:0; right:0; background:var(--card); display:flex;
+            border-top:1px solid var(--border); z-index:999; height:var(--bottom-nav-h);
         }
         .nav-tab {
             flex:1; padding:10px; text-align:center; cursor:pointer; font-size:13px;
-            font-weight:600; color:var(--muted); transition:var(--transition);
-            border:none; background:none; display:flex; flex-direction:column; align-items:center; gap:4px;
+            font-weight:600; color:var(--muted); border:none; background:none;
+            display:flex; flex-direction:column; align-items:center; gap:4px; transition:var(--transition);
         }
         .nav-tab.active { color:var(--gold); }
         .nav-tab .ico { font-size:22px; }
-
-        /* المحتوى */
         .page { display:none; }
         .page.active { display:block; }
 
-        /* صفحة المرشدين (نفس السابق) */
-        .toolbar { display:flex; padding:10px 14px; gap:8px; background:var(--bg); position:sticky; top:68px; z-index:90; }
+        .toolbar { display:flex; padding:10px 14px; gap:8px; background:var(--bg); position:sticky; top:64px; z-index:90; }
         .search-wrap { flex:1; display:flex; gap:8px; }
         .search-box {
             flex:1; padding:12px 16px; border:2px solid transparent; border-radius:var(--radius-full);
-            background:var(--card); color:var(--text); font-size:14px; outline:none;
-            transition:var(--transition); box-shadow:var(--shadow);
+            background:var(--card); color:var(--text); font-size:14px; outline:none; box-shadow:var(--shadow);
         }
-        .search-box:focus { border-color:var(--gold); }
+        .voice-btn, .add-btn {
+            border:none; cursor:pointer; transition:var(--transition); display:flex;
+            align-items:center; justify-content:center;
+        }
         .voice-btn {
-            width:48px; height:48px; border-radius:50%; background:var(--card); border:none;
-            font-size:20px; cursor:pointer; color:var(--sub); box-shadow:var(--shadow); transition:var(--transition);
+            width:48px; height:48px; border-radius:50%; background:var(--card); font-size:20px; color:var(--sub);
         }
         .voice-btn.listening { background:var(--success); color:#fff; animation:pulse 0.7s infinite; }
         .add-btn {
-            width:50px; height:50px; border-radius:50%; background:var(--gold); border:none;
-            color:#fff; font-size:28px; cursor:pointer; box-shadow:0 4px 16px rgba(233,69,96,0.35);
-            transition:var(--transition); display:flex; align-items:center; justify-content:center;
+            width:50px; height:50px; border-radius:50%; background:var(--gold); color:#fff; font-size:28px;
+            box-shadow:0 4px 16px rgba(233,69,96,0.35);
         }
+        @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.12);} }
         .filter-wrap { padding:4px 14px 8px; }
         .filter-toggle {
             width:100%; padding:10px; background:var(--card); border:1px solid var(--border);
-            border-radius:var(--radius-full); cursor:pointer; font-size:13px; font-weight:600;
-            color:var(--sub); display:flex; align-items:center; justify-content:center; gap:8px;
+            border-radius:var(--radius-full); cursor:pointer; font-size:13px; font-weight:600; color:var(--sub);
+            display:flex; align-items:center; justify-content:center; gap:8px;
         }
         .colors-panel {
             display:none; flex-wrap:wrap; gap:10px; margin-top:8px; padding:14px;
@@ -123,14 +145,13 @@
         }
         .colors-panel.show { display:flex; }
         .color-dot {
-            width:40px; height:40px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:var(--transition);
+            width:40px; height:40px; border-radius:50%; cursor:pointer; border:3px solid transparent;
         }
-        .color-dot.active { border-color:var(--gold); transform:scale(1.15); box-shadow:0 0 14px rgba(233,69,96,0.3); }
-
-        .guides-list { padding:8px 14px 20px; display:flex; flex-direction:column; gap:12px; position:relative; z-index:1; }
+        .color-dot.active { border-color:var(--gold); transform:scale(1.15); }
+        .guides-list { padding:8px 14px 20px; display:flex; flex-direction:column; gap:12px; }
         .guide-card {
             background:var(--card); border-radius:var(--radius); padding:14px 16px;
-            box-shadow:var(--shadow); border-right:5px solid var(--gold); cursor:pointer; transition:var(--transition);
+            box-shadow:var(--shadow); border-right:5px solid var(--gold); cursor:pointer;
         }
         .card-top { display:flex; align-items:center; gap:12px; }
         .card-avatar {
@@ -138,39 +159,41 @@
             background:var(--bg); flex-shrink:0; cursor:pointer;
         }
         .card-info { flex:1; min-width:0; }
-        .card-name { font-size:15px; font-weight:800; }
-        .card-phone { display:inline-flex; align-items:center; gap:5px; background:var(--bg); padding:4px 10px; border-radius:30px; font-size:11px; font-weight:600; color:var(--gold); direction:ltr; margin-top:3px; }
-        .card-phone .call-btn { background:var(--success); border:none; color:#fff; padding:3px 10px; border-radius:20px; font-size:10px; cursor:pointer; font-weight:700; }
-        .card-chevron { background:none; border:none; font-size:18px; cursor:pointer; color:var(--muted); width:30px; height:30px; border-radius:50%; }
+        .card-name { font-size:15px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .card-phone {
+            display:inline-flex; align-items:center; gap:5px; background:var(--bg); padding:4px 10px;
+            border-radius:30px; font-size:11px; font-weight:600; color:var(--gold); direction:ltr;
+        }
+        .card-phone .call-btn { background:var(--success); border:none; color:#fff; padding:3px 10px; border-radius:20px; font-size:10px; cursor:pointer; }
+        .card-chevron { background:none; border:none; font-size:18px; cursor:pointer; color:var(--muted); }
         .card-details { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); display:none; }
-        .card-details.show { display:block; animation:slideIn 0.25s ease; }
-        @keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+        .card-details.show { display:block; }
         .details-box { background:var(--bg); padding:12px; border-radius:var(--radius-sm); font-size:12px; line-height:1.8; }
         .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; margin:0 3px; }
         .badge-plate { background:var(--gold); color:#fff; }
         .badge-public { background:#3b82f6; color:#fff; }
         .badge-private { background:#64748b; color:#fff; }
         .action-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
-        .btn-sm { padding:7px 14px; border-radius:30px; border:none; font-size:11px; font-weight:700; cursor:pointer; transition:var(--transition); flex:1; min-width:70px; text-align:center; }
-        .btn-sm:active { transform:scale(0.94); }
+        .btn-sm {
+            padding:7px 14px; border-radius:30px; border:none; font-size:11px; font-weight:700;
+            cursor:pointer; flex:1; min-width:70px; text-align:center;
+        }
         .btn-edit { background:var(--success); color:#fff; }
         .btn-del { background:var(--danger); color:#fff; }
         .btn-share { background:#25D366; color:#fff; }
         .btn-fav { background:#f59e0b; color:#fff; }
 
-        /* صفحة اللاسلكي */
         .radio-container { padding:12px; }
-        .friends-section { margin-bottom:16px; }
         .friend-list { display:flex; gap:10px; overflow-x:auto; padding:6px 0; }
         .friend-item {
             flex-shrink:0; text-align:center; cursor:pointer; padding:8px; border-radius:var(--radius);
             background:var(--card); box-shadow:var(--shadow); min-width:70px; position:relative;
         }
         .friend-avatar { width:48px; height:48px; border-radius:50%; object-fit:cover; border:2px solid var(--border); background:var(--bg); }
-        .friend-name { font-size:11px; margin-top:4px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70px; }
+        .friend-name { font-size:11px; margin-top:4px; color:var(--text); }
         .online-dot {
             position:absolute; top:6px; right:6px; width:12px; height:12px; border-radius:50%;
-            background:#10b981; border:2px solid #fff; box-shadow:0 0 6px rgba(16,185,129,0.6);
+            background:#10b981; border:2px solid #fff;
         }
         .offline-dot { background:#94a3b8; }
         .add-friend-btn {
@@ -178,30 +201,27 @@
             cursor:pointer; font-weight:600; font-size:12px; white-space:nowrap;
         }
         .messages-area { background:var(--card); border-radius:var(--radius); padding:12px; min-height:200px; max-height:50vh; overflow-y:auto; }
-        .msg-item { display:flex; align-items:flex-start; gap:8px; margin-bottom:12px; position:relative; }
+        .msg-item { display:flex; align-items:flex-start; gap:8px; margin-bottom:12px; }
         .msg-item.sent { flex-direction:row-reverse; }
         .msg-avatar { width:36px; height:36px; border-radius:50%; object-fit:cover; background:var(--bg); }
         .msg-bubble { background:var(--bg); padding:10px 14px; border-radius:18px; max-width:80%; }
         .msg-sender { font-size:11px; font-weight:700; color:var(--gold); margin-bottom:4px; }
         .msg-time { font-size:10px; color:var(--muted); margin-top:4px; }
-        .play-btn { background:var(--walkie); border:none; color:#fff; padding:6px 14px; border-radius:20px; cursor:pointer; font-size:12px; font-weight:600; }
-        .play-btn:active { transform:scale(0.95); }
-        .msg-expiry { font-size:9px; color:var(--muted); }
-
+        .play-btn {
+            background:var(--walkie); border:none; color:#fff; padding:6px 14px; border-radius:20px;
+            cursor:pointer; font-size:12px; font-weight:600;
+        }
         .record-area { margin-top:12px; display:flex; align-items:center; gap:10px; }
         .record-btn {
             background:var(--walkie); color:#fff; border:none; width:56px; height:56px; border-radius:50%;
-            font-size:24px; cursor:pointer; transition:0.1s; flex-shrink:0;
+            font-size:24px; cursor:pointer; flex-shrink:0;
         }
         .record-btn.recording { background:var(--danger); animation:pulse 0.6s infinite; }
-        @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.12); } }
-        .recipient-select { flex:1; padding:12px; border-radius:var(--radius-full); border:2px solid var(--border); background:var(--bg); color:var(--text); font-size:13px; }
+        .recipient-select {
+            flex:1; padding:12px; border-radius:var(--radius-full); border:2px solid var(--border);
+            background:var(--bg); color:var(--text); font-size:13px;
+        }
 
-        /* الملف الشخصي */
-        .profile-modal .modal-box { max-width:400px; }
-        .profile-pic { width:100px; height:100px; border-radius:50%; object-fit:cover; margin:0 auto; display:block; border:3px solid var(--gold); }
-
-        /* باقي النوافذ */
         .modal {
             position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1600;
             display:flex; align-items:center; justify-content:center; padding:16px;
@@ -215,42 +235,63 @@
         .modal-box h3 { text-align:center; margin-bottom:16px; font-size:20px; font-weight:800; }
         .modal-box input, .modal-box textarea, .modal-box select {
             width:100%; padding:12px 16px; margin:6px 0; border:2px solid var(--border);
-            border-radius:var(--radius-full); background:var(--bg); color:var(--text);
-            font-size:13px; outline:none; transition:var(--transition); font-family:var(--font);
+            border-radius:var(--radius-full); background:var(--bg); color:var(--text); font-size:13px;
+            outline:none; font-family:var(--font);
         }
         .modal-box textarea { border-radius:var(--radius-sm); resize:vertical; min-height:60px; }
-        .modal-box input:focus, .modal-box textarea:focus { border-color:var(--gold); }
         .upload-card {
             background:#fef2f2; border:2px dashed var(--gold); border-radius:20px; padding:18px;
-            text-align:center; cursor:pointer; transition:var(--transition); margin:10px 0;
+            text-align:center; cursor:pointer; margin:10px 0;
         }
         body.dark .upload-card { background:#2d1b2a; }
-        .upload-card:active { transform:scale(0.96); }
         .upload-ico { font-size:36px; }
         .upload-title { font-weight:700; color:var(--gold); font-size:14px; }
         .upload-sub { font-size:10px; color:var(--muted); }
         .upload-preview { display:flex; justify-content:center; margin-top:8px; }
         .preview-img { width:64px; height:64px; border-radius:16px; object-fit:cover; border:2px solid var(--gold); }
         .color-selector { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; justify-content:center; }
-        .color-option { width:40px; height:40px; border-radius:14px; cursor:pointer; border:3px solid transparent; transition:var(--transition); }
-        .color-option.selected { border-color:var(--gold); transform:scale(1.1); box-shadow:0 0 14px rgba(233,69,96,0.3); }
+        .color-option {
+            width:40px; height:40px; border-radius:14px; cursor:pointer; border:3px solid transparent;
+        }
+        .color-option.selected { border-color:var(--gold); transform:scale(1.1); }
         .modal-btns { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
-        .btn-save, .btn-cancel { flex:1; padding:13px; border-radius:var(--radius-full); border:none; font-weight:700; cursor:pointer; font-size:13px; transition:var(--transition); min-width:90px; }
+        .btn-save, .btn-cancel {
+            flex:1; padding:13px; border-radius:var(--radius-full); border:none; font-weight:700;
+            cursor:pointer; font-size:13px; min-width:90px;
+        }
         .btn-save { background:var(--success); color:#fff; }
         .btn-cancel { background:#64748b; color:#fff; }
         .toast {
             position:fixed; bottom:80px; left:16px; right:16px; background:rgba(15,23,42,0.9);
             backdrop-filter:blur(14px); color:#fff; padding:14px 22px; border-radius:var(--radius-full);
-            text-align:center; z-index:9999; font-weight:500; font-size:13px; animation:slideUp 0.3s ease;
+            text-align:center; z-index:9999; font-weight:500; font-size:13px;
         }
-        @keyframes slideUp { from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0);} }
+        .profile-pic { width:100px; height:100px; border-radius:50%; object-fit:cover; margin:0 auto; display:block; border:3px solid var(--gold); }
+        .sidebar {
+            position:fixed; top:0; right:-300px; width:280px; height:100%; background:var(--card);
+            z-index:1500; transition:right 0.3s; overflow-y:auto; border-left:1px solid var(--border);
+        }
+        .sidebar.open { right:0; }
+        .sidebar-head { padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; }
+        .sidebar-head h3 { color:var(--gold); }
+        .sidebar-close { background:var(--bg); border:none; width:36px; height:36px; border-radius:50%; cursor:pointer; }
+        .sidebar-section { padding:16px; border-bottom:1px solid var(--border); }
+        .sidebar-section h4 { font-size:11px; color:var(--muted); margin-bottom:10px; }
+        .sidebar-item {
+            display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer;
+            border-radius:var(--radius-sm); color:var(--text); font-size:13px; margin:2px 0;
+        }
+        .sidebar-item:active { background:var(--bg); }
+        .overlay {
+            position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1400;
+            visibility:hidden; opacity:0; transition:var(--transition);
+        }
+        .overlay.show { visibility:visible; opacity:1; }
         .loading-msg { text-align:center; padding:40px; color:var(--muted); }
         #fullImage { max-width:90vw; max-height:75vh; border-radius:20px; cursor:pointer; }
     </style>
 </head>
 <body>
-    <!-- مؤشر الاتصال -->
-    <div class="toast" id="connBadge" style="display:none;">📡 غير متصل</div>
 
     <!-- شاشة الدخول -->
     <div class="login-screen" id="loginScreen">
@@ -258,11 +299,10 @@
             <div class="login-logo"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-Note Pro"></div>
             <div class="login-title">F-Note Pro</div>
             <div class="login-sub">خزنة المرشدين + لاسلكي متطور</div>
-            <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
-            <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
+            <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com" autocomplete="email">
+            <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور" autocomplete="current-password">
             <button class="login-btn" id="loginBtn">🔐 دخول</button>
             <div class="login-error" id="loginError"></div>
-            <div class="login-info">☁️ Cloudinary | 💾 Firestore | 📻 لاسلكي مع أصدقاء</div>
         </div>
     </div>
 
@@ -278,20 +318,19 @@
         <div class="sidebar-head"><h3>✨ F-Note Pro</h3><button class="sidebar-close" id="closeSidebar">✕</button></div>
         <div class="sidebar-section">
             <h4>👤 حسابي</h4>
-            <div id="userInfo" style="font-size:11px;word-break:break-all;margin-bottom:8px;"></div>
-            <div class="sidebar-item" id="profileBtn"><span class="ico">🧑</span> تعديل الملف الشخصي</div>
-            <div class="sidebar-item" id="signOutBtn" style="display:none;"><span class="ico">🚪</span> تسجيل الخروج</div>
+            <div id="userInfo" style="font-size:11px;"></div>
+            <div class="sidebar-item" id="profileBtn"><span>🧑</span> تعديل الملف الشخصي</div>
+            <div class="sidebar-item" id="signOutBtn" style="display:none;"><span>🚪</span> تسجيل الخروج</div>
         </div>
         <div class="sidebar-section">
             <h4>⚙️ الإعدادات</h4>
-            <div class="sidebar-item" id="darkModeBtn"><span class="ico">🌙</span><span id="darkLabel">الوضع الداكن</span></div>
-            <div class="sidebar-item" id="syncBtn"><span class="ico">🔄</span> مزامنة السحاب</div>
-            <div class="sidebar-item" id="exportJsonBtn"><span class="ico">💾</span> تصدير JSON</div>
-            <div class="sidebar-item" id="exportPdfBtn"><span class="ico">📄</span> تصدير PDF</div>
+            <div class="sidebar-item" id="darkModeBtn"><span>🌙</span><span id="darkLabel">الوضع الداكن</span></div>
+            <div class="sidebar-item" id="syncBtn"><span>🔄</span> مزامنة السحاب</div>
+            <div class="sidebar-item" id="exportJsonBtn"><span>💾</span> تصدير JSON</div>
+            <div class="sidebar-item" id="exportPdfBtn"><span>📄</span> تصدير PDF</div>
         </div>
     </div>
 
-    <!-- المحتوى الرئيسي (الصفحات) -->
     <!-- صفحة المرشدين -->
     <div id="pageGuides" class="page active">
         <div class="toolbar">
@@ -322,14 +361,12 @@
     <div id="pageRadio" class="page">
         <div class="radio-container">
             <div class="friends-section">
-                <h3 style="margin-bottom:8px; font-size:16px;">👥 الأصدقاء</h3>
+                <h3 style="margin-bottom:8px;">👥 الأصدقاء</h3>
                 <div class="friend-list" id="friendList">
                     <button class="add-friend-btn" id="addFriendBtn">➕ أضف صديق</button>
                 </div>
             </div>
-            <div class="messages-area" id="messagesArea">
-                <div class="loading-msg">لا توجد رسائل بعد</div>
-            </div>
+            <div class="messages-area" id="messagesArea"><div class="loading-msg">لا توجد رسائل</div></div>
             <div class="record-area">
                 <button class="record-btn" id="recordVoiceBtn">🎙️</button>
                 <select class="recipient-select" id="recipientSelect">
@@ -341,15 +378,12 @@
 
     <!-- شريط التنقل السفلي -->
     <div class="bottom-nav">
-        <button class="nav-tab active" data-page="pageGuides">
-            <span class="ico">📋</span> المرشدين
-        </button>
-        <button class="nav-tab" data-page="pageRadio">
-            <span class="ico">📻</span> اللاسلكي
-        </button>
+        <button class="nav-tab active" data-page="pageGuides"><span class="ico">📋</span> المرشدين</button>
+        <button class="nav-tab" data-page="pageRadio"><span class="ico">📻</span> اللاسلكي</button>
     </div>
 
-    <!-- النوافذ المنبثقة (نفس السابق + نافذة الملف الشخصي) -->
+    <!-- النوافذ المنبثقة -->
+    <!-- نافذة إضافة/تعديل مرشد -->
     <div id="guideModal" class="modal">
         <div class="modal-box">
             <h3 id="modalTitle">➕ إضافة مرشد جديد</h3>
@@ -358,14 +392,14 @@
             <input type="text" id="gPlate" placeholder="رقم اللوحة">
             <div id="phoneErr" style="color:#ef4444;font-size:11px;display:none;">⚠️ رقم غير صالح</div>
             <div class="upload-card" id="guideUploadCard">
-                <div class="upload-ico">📸</div><div class="upload-title">صورة المرشد</div><div class="upload-sub">اختر من الألبوم أو الكاميرا</div>
+                <div class="upload-ico">📸</div><div class="upload-title">صورة المرشد</div>
                 <div class="upload-preview" id="guidePreviewWrap" style="display:none;"><img id="guidePreviewImg" class="preview-img"></div>
-                <div id="guideUploadStat" style="font-size:10px;margin-top:4px;color:var(--muted);"></div>
+                <div id="guideUploadStat"></div>
             </div>
             <div class="upload-card" id="busUploadCard">
-                <div class="upload-ico">🚌</div><div class="upload-title">صورة وسيلة النقل</div><div class="upload-sub">اختر من الألبوم أو الكاميرا</div>
+                <div class="upload-ico">🚌</div><div class="upload-title">صورة وسيلة النقل</div>
                 <div class="upload-preview" id="busPreviewWrap" style="display:none;"><img id="busPreviewImg" class="preview-img"></div>
-                <div id="busUploadStat" style="font-size:10px;margin-top:4px;color:var(--muted);"></div>
+                <div id="busUploadStat"></div>
             </div>
             <input type="text" id="gTransport" placeholder="وسيلة النقل">
             <input type="text" id="gAgency" placeholder="الوكالة">
@@ -376,15 +410,17 @@
         </div>
     </div>
 
+    <!-- نافذة التفاصيل -->
     <div id="detailModal" class="modal">
         <div class="modal-box">
             <h3 id="detailName"></h3><div id="detailContent"></div>
-            <div id="detailVisDiv" style="margin-top:10px;"></div>
+            <div id="detailVisDiv"></div>
             <button class="btn-share btn-sm" id="shareWaBtn" style="width:100%;margin-top:8px;">💬 مشاركة واتساب</button>
             <button class="btn-cancel btn-sm" id="closeDetailBtn" style="width:100%;margin-top:6px;">إغلاق</button>
         </div>
     </div>
 
+    <!-- نافذة المشاركة -->
     <div id="multiShareModal" class="modal">
         <div class="modal-box">
             <h3>📱 اختر المستلمين</h3>
@@ -393,9 +429,10 @@
         </div>
     </div>
 
+    <!-- نافذة الصورة الكاملة -->
     <div id="fullImageModal" class="modal">
         <div class="modal-box" style="text-align:center;background:transparent;box-shadow:none;border:none;">
-            <img id="fullImage" alt="صورة مكبرة"><button class="btn-cancel" id="closeFullBtn" style="margin-top:10px;">إغلاق</button>
+            <img id="fullImage"><button class="btn-cancel" id="closeFullBtn" style="margin-top:10px;">إغلاق</button>
         </div>
     </div>
 
@@ -404,10 +441,7 @@
         <div class="modal-box">
             <h3>🧑 الملف الشخصي</h3>
             <img id="profilePicPreview" class="profile-pic" src="" onerror="this.style.display='none'">
-            <div class="upload-card" id="profilePicUpload">
-                <div class="upload-ico">📷</div><div class="upload-title">تغيير الصورة</div>
-                <div class="upload-sub">اختر صورة من جهازك</div>
-            </div>
+            <div class="upload-card" id="profilePicUpload"><div class="upload-ico">📷</div><div class="upload-title">تغيير الصورة</div></div>
             <input type="text" id="profileName" placeholder="الاسم الظاهر">
             <div class="modal-btns"><button class="btn-save" id="saveProfileBtn">💾 حفظ</button><button class="btn-cancel" id="closeProfileBtn">إغلاق</button></div>
         </div>
@@ -438,21 +472,21 @@
         const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
         // تهيئة Firebase
-        let app, db, auth, storage, rtdb;
-        try {
-            app = firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore(app);
-            auth = firebase.auth(app);
-            storage = firebase.storage(app);
-            rtdb = firebase.database(app);
-            db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
-        } catch(e) { console.error(e); }
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app);
+        const auth = firebase.auth(app);
+        const storage = firebase.storage(app);
+        const rtdb = firebase.database(app);
+        db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
 
-        // متغيرات عامة
+        // ==================== متغيرات عامة ====================
         let currentUser = null;
         let guides = [], editId = null, selectedColor = '#e94560', colorFilter = 'all', detailGuide = null;
         let guidePhotoData = '', busPhotoData = '';
         let userProfile = { displayName: '', photoURL: '' };
+        let friends = [], friendsPresence = {}, voiceMessages = [];
+        let isMuted = false;
+        let shareGuideId = null;
 
         // ==================== دوال مساعدة ====================
         function toast(msg, err=false) {
@@ -461,27 +495,32 @@
             t.textContent=msg; document.body.appendChild(t);
             setTimeout(()=>{ t.style.opacity='0'; t.style.transition='0.3s'; setTimeout(()=>t.remove(),300); },2200);
         }
-        function esc(s){ if(!s) return ''; const m={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}; return String(s).replace(/[&<>"']/g,c=>m[c]); }
-        function validPhone(p){ return /^\+?[0-9]{8,15}$/.test(p.replace(/[\s\-\(\)]/g,'')); }
-        function sanitize(s){ return s.replace(/[<>]/g,'').trim(); }
+        function esc(s) {
+            if(!s) return '';
+            const m={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
+            return String(s).replace(/[&<>"']/g,c=>m[c]);
+        }
+        function validPhone(p) { return /^\+?[0-9]{8,15}$/.test(p.replace(/[\s\-\(\)]/g,'')); }
+        function sanitize(s) { return s.replace(/[<>]/g,'').trim(); }
 
-        // ==================== تحميل الصور (Cloudinary) ====================
-        async function uploadToCloudinary(base64){
+        // ==================== Cloudinary ====================
+        async function uploadToCloudinary(base64) {
             if(!navigator.onLine) return null;
-            try{
+            try {
                 const blob = await fetch(base64).then(r=>r.blob());
                 const fd = new FormData(); fd.append('file',blob,'img_'+Date.now()+'.jpg'); fd.append('upload_preset',UPLOAD_PRESET);
                 const res = await fetch(CLOUDINARY_URL,{method:'POST',body:fd});
                 if(!res.ok) throw new Error('Upload failed');
                 const data = await res.json(); return data.secure_url;
-            }catch(e){ console.warn('Cloudinary fallback'); return null; }
+            } catch(e) { console.warn('Cloudinary fallback'); return null; }
         }
-        function handleImage(file, type){
+        function handleImage(file, type) {
             if(!file) return;
             const stat = document.getElementById(type==='guide'?'guideUploadStat':'busUploadStat');
             const prev = document.getElementById(type==='guide'?'guidePreviewImg':'busPreviewImg');
             const wrap = document.getElementById(type==='guide'?'guidePreviewWrap':'busPreviewWrap');
-            stat.textContent='⏳ ضغط...'; const r = new FileReader();
+            stat.textContent='⏳ ضغط...';
+            const r = new FileReader();
             r.onload = async (e) => {
                 const img = new Image(); img.onload = async () => {
                     const c = document.createElement('canvas'); const mw=450;
@@ -491,58 +530,19 @@
                     const b64 = c.toDataURL('image/jpeg',0.55);
                     stat.textContent='☁️ رفع...'; const url = await uploadToCloudinary(b64);
                     const final = url || b64;
-                    if(url) stat.textContent='✅ Cloudinary'; else stat.textContent='✅ محلي';
+                    stat.textContent = url ? '✅ Cloudinary' : '✅ محلي';
                     if(type==='guide') guidePhotoData=final; else busPhotoData=final;
-                    prev.src=b64; wrap.style.display='flex'; setTimeout(()=>stat.textContent='',1800);
+                    prev.src=b64; wrap.style.display='flex';
                 }; img.src = e.target.result;
             }; r.readAsDataURL(file);
         }
-        function pickImage(type){ const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.capture='environment'; inp.onchange=e=>{ if(e.target.files[0]) handleImage(e.target.files[0],type); }; inp.click(); }
-
-        // ==================== الملف الشخصي ====================
-        async function loadProfile(){
-            if(!currentUser) return;
-            const doc = await db.collection('users').doc(currentUser.uid).get();
-            if(doc.exists){
-                userProfile = doc.data();
-            } else {
-                userProfile = { displayName: '', photoURL: '' };
-                await db.collection('users').doc(currentUser.uid).set({ email: currentUser.email, displayName: '', photoURL: '' });
-            }
-            document.getElementById('profileName').value = userProfile.displayName || '';
-            if(userProfile.photoURL) document.getElementById('profilePicPreview').src = userProfile.photoURL;
+        function pickImage(type) {
+            const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.capture='environment';
+            inp.onchange=e=>{ if(e.target.files[0]) handleImage(e.target.files[0],type); }; inp.click();
         }
-        document.getElementById('profileBtn').onclick = ()=>{
-            document.getElementById('profileModal').classList.add('show');
-            document.getElementById('profileName').value = userProfile.displayName || '';
-            if(userProfile.photoURL) document.getElementById('profilePicPreview').src = userProfile.photoURL;
-        };
-        document.getElementById('closeProfileBtn').onclick = ()=>document.getElementById('profileModal').classList.remove('show');
-        document.getElementById('profilePicUpload').onclick = ()=>{
-            const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
-            inp.onchange = async e=>{
-                if(e.target.files[0]){
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    reader.onload = async ev=>{
-                        const base64 = ev.target.result;
-                        const url = await uploadToCloudinary(base64) || base64;
-                        document.getElementById('profilePicPreview').src = base64;
-                        userProfile.photoURL = url;
-                    }; reader.readAsDataURL(file);
-                }
-            }; inp.click();
-        };
-        document.getElementById('saveProfileBtn').onclick = async ()=>{
-            userProfile.displayName = sanitize(document.getElementById('profileName').value.trim());
-            await db.collection('users').doc(currentUser.uid).set(userProfile,{merge:true});
-            toast('✅ تم حفظ الملف الشخصي');
-            document.getElementById('profileModal').classList.remove('show');
-            // تحديث اسم المنشئ في الأدلة القديمة (اختياري)
-        };
 
-        // ==================== نظام المرشدين (بدون تغيير) ====================
-        async function saveGuide(data){
+        // ==================== نظام المرشدين ====================
+        async function saveGuide(data) {
             if(!currentUser) throw new Error('سجل الدخول');
             const ref = data.id ? db.collection('guides').doc(data.id) : db.collection('guides').doc();
             const doc = {
@@ -560,7 +560,7 @@
             await ref.set(doc,{merge:true});
         }
         let unsubGuides = null;
-        function listenGuides(){
+        function listenGuides() {
             if(unsubGuides) unsubGuides();
             if(!currentUser) return;
             unsubGuides = db.collection('guides').where('userId','==',currentUser.uid).onSnapshot(snap=>{
@@ -572,24 +572,24 @@
                 }).catch(()=>{ guides=mine; renderGuides(); });
             });
         }
-        function filterGuides(){
+        function filterGuides() {
             const q=document.getElementById('searchInput').value.toLowerCase();
             let f=guides.filter(g=>!q||(g.name||'').toLowerCase().includes(q)||(g.phone||'').includes(q)||(g.transportType||'').includes(q)||(g.agency||'').includes(q)||(g.plateNumber||'').includes(q));
             if(colorFilter!=='all') f=f.filter(g=>g.cardColor===colorFilter);
             f.sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0)); return f;
         }
-        function renderGuides(){
+        function renderGuides() {
             const f=filterGuides(); const c=document.getElementById('guidesContainer');
             if(!f.length){ c.innerHTML='<div class="loading-msg">😕 لا نتائج</div>'; return; }
             c.innerHTML = f.map(g=>{
                 const own=g.userId===currentUser?.uid;
                 const star=g.favorite?'⭐ ':'';
                 const vis=g.visibility==='public'?'<span class="badge badge-public">🌍 عام</span>':'<span class="badge badge-private">🔒 خاص</span>';
-                const creator = (!own && g.visibility==='public') ? `<div style="font-size:10px;color:var(--muted);margin-top:2px;">👤 ${esc(g.creatorName||'')}</div>` : '';
+                const creator = (!own && g.visibility==='public') ? `<div style="font-size:10px;color:var(--muted);">👤 ${esc(g.creatorName||'')}</div>` : '';
                 return `
                 <div class="guide-card" style="border-right-color:${esc(g.cardColor)}" onclick="showDetail('${g.id}')">
                   <div class="card-top">
-                    <img class="card-avatar" src="${g.guidePhoto||''}" onclick="event.stopPropagation();viewImage('${g.guidePhoto||''}')" onerror="this.src='data:image/svg+xml,...';">
+                    <img class="card-avatar" src="${g.guidePhoto||''}" onclick="event.stopPropagation();viewImage('${g.guidePhoto||''}')" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2216%22 fill=%22%23cbd5e1%22/%3E%3Cellipse cx=%2240%22 cy=%2265%22 rx=%2226%22 ry=%2218%22 fill=%22%23cbd5e1%22/%3E%3C/svg%3E';">
                     <div class="card-info">
                       <div class="card-name">${star}${esc(g.name)} ${vis}</div>
                       <div class="card-phone"><span>${esc(g.phone)}</span><button class="call-btn" onclick="event.stopPropagation();location.href='tel:${esc(g.phone)}'">📞</button></div>
@@ -597,236 +597,288 @@
                     </div>
                     <button class="card-chevron" onclick="event.stopPropagation();toggleDet('${g.id}',this)">▼</button>
                   </div>
-                  <div id="det-${g.id}" class="card-details">...</div>
+                  <div id="det-${g.id}" class="card-details">
+                    <div class="details-box">
+                      ${g.busPhoto?`<img src="${esc(g.busPhoto)}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;cursor:pointer;" onclick="event.stopPropagation();viewImage('${esc(g.busPhoto)}')">`:''}
+                      <p>🚐 ${esc(g.transportType||'—')}</p>
+                      <p>🚍 <span class="badge badge-plate">${esc(g.plateNumber||'—')}</span></p>
+                      <p>🏢 ${esc(g.agency||'—')}</p>
+                      <p>📝 ${esc((g.notes||'—').substring(0,50))}${(g.notes||'').length>50?'...':''}</p>
+                      <div class="action-row">
+                        ${own?`<button class="btn-sm btn-edit" onclick="event.stopPropagation();editGuide('${g.id}')">✏️</button>`:''}
+                        ${own?`<button class="btn-sm btn-del" onclick="event.stopPropagation();delGuide('${g.id}')">🗑️</button>`:''}
+                        <button class="btn-sm btn-share" onclick="event.stopPropagation();openShare('${g.id}')">💬</button>
+                        ${own?`<button class="btn-sm btn-fav" onclick="event.stopPropagation();toggleFav('${g.id}')">${g.favorite?'★':'☆'}</button>`:''}
+                      </div>
+                    </div>
+                  </div>
                 </div>`;
             }).join('');
         }
-        // ... (باقي دوال المرشدين كما في النسخة السابقة، تم اختصارها هنا للتركيز على الإضافات)
-
-        // ==================== نظام اللاسلكي (الجديد) ====================
-        let friends = [];
-        let voiceMessages = [];
-        let friendsPresence = {};
-
-        // التواجد (Presence) باستخدام Realtime Database
-        function setupPresence(){
-            if(!currentUser) return;
-            const uid = currentUser.uid;
-            const presenceRef = rtdb.ref('presence/' + uid);
-            presenceRef.set({ online: true, lastSeen: firebase.database.ServerValue.TIMESTAMP });
-            presenceRef.onDisconnect().set({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+        window.toggleDet = (id, btn) => { const el=document.getElementById('det-'+id); if(el){ el.classList.toggle('show'); btn.textContent=el.classList.contains('show')?'▲':'▼'; } };
+        window.viewImage = url => { if(url){ document.getElementById('fullImage').src=url; document.getElementById('fullImageModal').classList.add('show'); } };
+        window.toggleFav = async id => {
+            const g=guides.find(x=>x.id===id);
+            if(g&&g.userId===currentUser?.uid){ await db.collection('guides').doc(id).update({favorite:!g.favorite}); toast(g.favorite?'أزيل من المفضلة':'⭐ أضيف للمفضلة'); }
+        };
+        window.editGuide = id => {
+            const g=guides.find(x=>x.id===id);
+            if(!g||g.userId!==currentUser?.uid) return toast('لا يمكنك تعديل هذا',true);
+            editId=id;
+            document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||'';
+            document.getElementById('gPlate').value=g.plateNumber||''; document.getElementById('gTransport').value=g.transportType||'';
+            document.getElementById('gAgency').value=g.agency||''; document.getElementById('gNotes').value=g.notes||'';
+            document.getElementById('gVisibility').value=g.visibility||'private'; selectedColor=g.cardColor||'#e94560';
+            guidePhotoData=g.guidePhoto||''; busPhotoData=g.busPhoto||'';
+            if(g.guidePhoto){ document.getElementById('guidePreviewImg').src=g.guidePhoto; document.getElementById('guidePreviewWrap').style.display='flex'; }
+            else document.getElementById('guidePreviewWrap').style.display='none';
+            if(g.busPhoto){ document.getElementById('busPreviewImg').src=g.busPhoto; document.getElementById('busPreviewWrap').style.display='flex'; }
+            else document.getElementById('busPreviewWrap').style.display='none';
+            document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.classList.remove('selected'));
+            const s=document.querySelector(`#colorSelector .color-option[data-color="${selectedColor}"]`);
+            if(s) s.classList.add('selected');
+            document.getElementById('modalTitle').textContent='✏️ تعديل المرشد';
+            document.getElementById('guideModal').classList.add('show');
+        };
+        window.delGuide = async id => { if(confirm('حذف هذا المرشد؟')){ await db.collection('guides').doc(id).delete(); toast('تم الحذف'); } };
+        window.showDetail = id => {
+            const g=guides.find(x=>x.id===id); if(!g) return; detailGuide=g;
+            document.getElementById('detailName').innerHTML=`⭐ ${esc(g.name)}`;
+            document.getElementById('detailContent').innerHTML=`
+            <div style="text-align:center;margin-bottom:12px;">
+              ${g.guidePhoto?`<img src="${esc(g.guidePhoto)}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid ${esc(g.cardColor)};cursor:pointer;margin:4px;" onclick="viewImage('${esc(g.guidePhoto)}')">`:'<div style="width:90px;height:90px;border-radius:50%;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;">📷</div>'}
+              ${g.busPhoto?`<img src="${esc(g.busPhoto)}" style="width:70px;height:70px;border-radius:16px;object-fit:cover;border:2px solid var(--border);cursor:pointer;margin:4px;" onclick="viewImage('${esc(g.busPhoto)}')">`:''}
+            </div>
+            <div style="background:var(--bg);padding:14px;border-radius:18px;font-size:12px;line-height:2;">
+              <p>📞 <a href="tel:${esc(g.phone)}" style="color:var(--gold);font-weight:700;">${esc(g.phone)}</a></p>
+              <p>🚐 ${esc(g.transportType||'—')}</p><p>🚍 <span class="badge badge-plate">${esc(g.plateNumber||'—')}</span></p>
+              <p>🏢 ${esc(g.agency||'—')}</p><p>📝 ${esc(g.notes||'—')}</p>
+              <p>🔒 ${g.visibility==='public'?'عام':'خاص'}</p>${g.favorite?'<p>⭐ مفضل</p>':''}
+            </div>`;
+            const vd=document.getElementById('detailVisDiv');
+            if(g.userId===currentUser?.uid){
+                vd.innerHTML=`<button class="btn-save btn-sm" id="toggleVisBtn" style="width:100%;background:var(--gold);">${g.visibility==='public'?'🔒 جعله خاصاً':'🌍 نشره للعامة'}</button>`;
+                setTimeout(()=>{ const b=document.getElementById('toggleVisBtn'); if(b) b.onclick=async()=>{
+                    const nv=g.visibility==='public'?'private':'public'; await db.collection('guides').doc(g.id).update({visibility:nv});
+                    toast('تم التغيير'); document.getElementById('detailModal').classList.remove('show');
+                }; },60);
+            } else vd.innerHTML='';
+            document.getElementById('detailModal').classList.add('show');
+        };
+        window.openShare = id => {
+            shareGuideId=id;
+            const contacts=[{name:'أحمد',phone:'+21612345678'},{name:'سارة',phone:'+21698765432'},{name:'ياسر',phone:'+21655554444'},{name:'ليلى',phone:'+21633332222'}];
+            document.getElementById('contactsList').innerHTML=contacts.map(c=>`<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg);border-radius:20px;margin:4px 0;cursor:pointer;"><input type="checkbox" value="${c.phone}" class="share-chk"> ${c.name} (${c.phone})</label>`).join('');
+            document.getElementById('multiShareModal').classList.add('show');
+        };
+        function resetForm() {
+            editId=null; selectedColor='#e94560'; guidePhotoData=''; busPhotoData='';
+            ['gName','gPhone','gPlate','gTransport','gAgency','gNotes'].forEach(id=>document.getElementById(id).value='');
+            document.getElementById('guidePreviewWrap').style.display='none'; document.getElementById('busPreviewWrap').style.display='none';
+            document.getElementById('gVisibility').value='private'; document.getElementById('phoneErr').style.display='none';
+            document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.classList.remove('selected'));
+            const d=document.querySelector('#colorSelector .color-option[data-color="#e94560"]'); if(d) d.classList.add('selected');
+            document.getElementById('modalTitle').textContent='➕ إضافة مرشد جديد';
         }
-        // مراقبة تواجد الأصدقاء
-        function listenFriendsPresence(){
-            if(!currentUser) return;
-            friends.forEach(f=>{
-                const ref = rtdb.ref('presence/' + f.uid);
-                ref.on('value', snap=>{
-                    const data = snap.val();
-                    friendsPresence[f.uid] = data ? data.online : false;
-                    renderFriends();
-                });
-            });
-        }
 
-        // جلب الأصدقاء
-        async function loadFriends(){
+        // ==================== اللاسلكي والأصدقاء ====================
+        function setupPresence() {
+            if(!currentUser) return;
+            const ref = rtdb.ref('presence/'+currentUser.uid);
+            ref.set({ online: true, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+            ref.onDisconnect().set({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+        }
+        async function loadFriends() {
             if(!currentUser) return;
             const snap = await db.collection('friendships').where('users','array-contains',currentUser.uid).get();
-            friends = [];
-            snap.forEach(doc=>{
-                const data = doc.data();
-                const friendUid = data.users.find(u=>u!==currentUser.uid);
-                if(friendUid) friends.push({ uid: friendUid, name: '', photo: '' });
-            });
-            // جلب بيانات الأصدقاء
+            friends=[]; snap.forEach(doc=>{ const data=doc.data(); const fUid=data.users.find(u=>u!==currentUser.uid); if(fUid) friends.push({uid:fUid,name:'',photo:''}); });
             for(let f of friends){
-                const userDoc = await db.collection('users').doc(f.uid).get();
-                if(userDoc.exists){
-                    const d = userDoc.data();
-                    f.name = d.displayName || d.email;
-                    f.photo = d.photoURL || '';
-                }
+                const userDoc=await db.collection('users').doc(f.uid).get();
+                if(userDoc.exists){ const d=userDoc.data(); f.name=d.displayName||d.email; f.photo=d.photoURL||''; }
             }
-            listenFriendsPresence();
-            renderFriends();
+            listenFriendsPresence(); renderFriends();
         }
-        function renderFriends(){
-            const container = document.getElementById('friendList');
-            let html = '';
+        function listenFriendsPresence() {
             friends.forEach(f=>{
-                const online = friendsPresence[f.uid];
-                html += `
-                <div class="friend-item" onclick="selectFriend('${f.uid}')">
-                    <img class="friend-avatar" src="${f.photo||''}" onerror="this.style.display='none'">
-                    <div class="friend-name">${esc(f.name||'مستخدم')}</div>
-                    <span class="online-dot ${online?'':'offline-dot'}"></span>
-                </div>`;
+                rtdb.ref('presence/'+f.uid).on('value',snap=>{ friendsPresence[f.uid]=snap.val()?.online||false; renderFriends(); });
             });
-            html += '<button class="add-friend-btn" id="addFriendBtnInner">➕ أضف صديق</button>';
-            container.innerHTML = html;
-            document.getElementById('addFriendBtnInner').onclick = ()=>document.getElementById('addFriendModal').classList.add('show');
+        }
+        function renderFriends() {
+            const c=document.getElementById('friendList');
+            let html='';
+            friends.forEach(f=>{ const online=friendsPresence[f.uid]; html+=`<div class="friend-item" onclick="selectFriend('${f.uid}')"><img class="friend-avatar" src="${f.photo||''}" onerror="this.style.display='none'"><div class="friend-name">${esc(f.name||'مستخدم')}</div><span class="online-dot ${online?'':'offline-dot'}"></span></div>`; });
+            html+='<button class="add-friend-btn" id="addFriendBtnInner">➕ أضف صديق</button>';
+            c.innerHTML=html;
+            document.getElementById('addFriendBtnInner').onclick=()=>document.getElementById('addFriendModal').classList.add('show');
             updateRecipientSelect();
         }
-        function updateRecipientSelect(){
-            const sel = document.getElementById('recipientSelect');
-            sel.innerHTML = '<option value="all">📢 جميع الأصدقاء</option>';
-            friends.forEach(f=>{
-                sel.innerHTML += `<option value="${f.uid}">${esc(f.name||'صديق')}</option>`;
-            });
+        function updateRecipientSelect() {
+            const sel=document.getElementById('recipientSelect'); sel.innerHTML='<option value="all">📢 جميع الأصدقاء</option>';
+            friends.forEach(f=>{ sel.innerHTML+=`<option value="${f.uid}">${esc(f.name||'صديق')}</option>`; });
         }
-        window.selectFriend = (uid)=>{ document.getElementById('recipientSelect').value = uid; };
+        window.selectFriend = uid => { document.getElementById('recipientSelect').value=uid; };
 
-        // إضافة صديق
-        document.getElementById('searchFriendBtn').onclick = async ()=>{
-            const email = document.getElementById('friendEmail').value.trim();
-            if(!email) return toast('أدخل البريد الإلكتروني',true);
-            const snap = await db.collection('users').where('email','==',email).get();
-            if(snap.empty) return toast('لم يتم العثور على مستخدم',true);
-            const friendUid = snap.docs[0].id;
-            if(friendUid === currentUser.uid) return toast('لا يمكنك إضافة نفسك',true);
-            // تحقق من عدم وجود صداقة سابقة
-            const existing = await db.collection('friendships').where('users','array-contains',currentUser.uid).get();
-            let already = false;
-            existing.forEach(doc=>{ if(doc.data().users.includes(friendUid)) already=true; });
-            if(already) return toast('الصديق موجود بالفعل');
-            await db.collection('friendships').add({ users: [currentUser.uid, friendUid], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-            toast('✅ تمت الإضافة');
-            document.getElementById('addFriendModal').classList.remove('show');
-            loadFriends();
-        };
-        document.getElementById('closeAddFriendBtn').onclick = ()=>document.getElementById('addFriendModal').classList.remove('show');
-        document.getElementById('addFriendBtn').onclick = ()=>document.getElementById('addFriendModal').classList.add('show');
-
-        // الرسائل الصوتية
-        async function loadVoiceMessages(){
+        async function loadVoiceMessages() {
             if(!currentUser) return;
             const snap = await db.collection('voiceMessages').where('participants','array-contains',currentUser.uid).orderBy('timestamp','desc').limit(50).get();
-            voiceMessages = [];
-            const now = Date.now();
+            voiceMessages=[]; const now=Date.now();
             snap.forEach(doc=>{
-                const data = doc.data();
-                const expire = data.expiresAt ? data.expiresAt.toMillis() : 0;
-                const openedByMe = data.openedBy && data.openedBy[currentUser.uid];
-                const deleteAt = openedByMe ? openedByMe.deleteAt.toMillis() : 0;
-                if(now >= expire || (deleteAt && now >= deleteAt)){
-                    // حذف الرسالة وملف الصوت
-                    if(data.audioUrl) storage.refFromURL(data.audioUrl).delete().catch(()=>{});
-                    doc.ref.delete().catch(()=>{});
-                } else {
-                    voiceMessages.push({ id: doc.id, ...data });
-                }
+                const data=doc.data(); const expire=data.expiresAt?data.expiresAt.toMillis():0;
+                const opened=data.openedBy?.[currentUser.uid]; const deleteAt=opened?.deleteAt?.toMillis()||0;
+                if(now>=expire||(deleteAt&&now>=deleteAt)){ if(data.audioUrl) storage.refFromURL(data.audioUrl).delete().catch(()=>{}); doc.ref.delete().catch(()=>{}); }
+                else voiceMessages.push({id:doc.id,...data});
             });
             renderVoiceMessages();
         }
-        function renderVoiceMessages(){
-            const area = document.getElementById('messagesArea');
+        function renderVoiceMessages() {
+            const area=document.getElementById('messagesArea');
             if(!voiceMessages.length){ area.innerHTML='<div class="loading-msg">لا توجد رسائل</div>'; return; }
-            area.innerHTML = voiceMessages.map(msg=>{
-                const isSent = msg.senderId === currentUser.uid;
-                const sender = isSent ? (userProfile.displayName||'أنت') : (friends.find(f=>f.uid===msg.senderId)?.name||'مستخدم');
-                const avatar = isSent ? (userProfile.photoURL||'') : (friends.find(f=>f.uid===msg.senderId)?.photo||'');
-                const time = msg.timestamp ? new Date(msg.timestamp.toMillis()).toLocaleTimeString('ar-TN') : '';
-                const expiryInfo = msg.openedBy && msg.openedBy[currentUser.uid] ? 'سُمعت' : '';
-                return `
-                <div class="msg-item ${isSent?'sent':''}">
-                    <img class="msg-avatar" src="${avatar}" onerror="this.style.display='none'">
-                    <div class="msg-bubble">
-                        <div class="msg-sender">${esc(sender)}</div>
-                        <button class="play-btn" onclick="playAudio('${msg.audioUrl}','${msg.id}')">▶️ استمع</button>
-                        <div class="msg-time">${time} ${expiryInfo?`· ${expiryInfo}`:''}</div>
-                    </div>
-                </div>`;
+            area.innerHTML=voiceMessages.map(msg=>{
+                const sent=msg.senderId===currentUser.uid;
+                const sender=sent?(userProfile.displayName||'أنت'):(friends.find(f=>f.uid===msg.senderId)?.name||'مستخدم');
+                const avatar=sent?(userProfile.photoURL||''):(friends.find(f=>f.uid===msg.senderId)?.photo||'');
+                const time=msg.timestamp?new Date(msg.timestamp.toMillis()).toLocaleTimeString('ar-TN'):'';
+                const expiry=msg.openedBy?.[currentUser.uid]?'سُمعت':'';
+                return `<div class="msg-item ${sent?'sent':''}"><img class="msg-avatar" src="${avatar}" onerror="this.style.display='none'"><div class="msg-bubble"><div class="msg-sender">${esc(sender)}</div><button class="play-btn" onclick="playAudio('${msg.audioUrl}','${msg.id}')">▶️ استمع</button><div class="msg-time">${time} ${expiry?`· ${expiry}`:''}</div></div></div>`;
             }).join('');
         }
-        window.playAudio = async (url, msgId) => {
-            const audio = new Audio(url);
-            await audio.play();
-            // تحديث openedBy
-            if(msgId && currentUser){
-                const ref = db.collection('voiceMessages').doc(msgId);
-                const now = firebase.firestore.FieldValue.serverTimestamp();
-                const deleteAt = new Date(Date.now() + 10*60*1000); // 10 دقائق
-                await ref.update({
-                    [`openedBy.${currentUser.uid}`]: { openedAt: now, deleteAt: firebase.firestore.Timestamp.fromDate(deleteAt) }
-                });
+        window.playAudio = async (url,msgId) => {
+            const audio=new Audio(url); await audio.play();
+            if(msgId&&currentUser){
+                const ref=db.collection('voiceMessages').doc(msgId);
+                const deleteAt=new Date(Date.now()+10*60*1000);
+                await ref.update({[`openedBy.${currentUser.uid}`]:{openedAt:firebase.firestore.FieldValue.serverTimestamp(),deleteAt:firebase.firestore.Timestamp.fromDate(deleteAt)}});
                 loadVoiceMessages();
             }
         };
-
-        // تسجيل وإرسال رسالة
-        let mediaRecorder, chunks=[], recording=false;
-        async function startRecording(){
-            if(recording) return;
-            const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-            mediaRecorder = new MediaRecorder(stream,{mimeType:'audio/webm;codecs=opus'});
-            chunks=[];
-            mediaRecorder.ondataavailable = e=>chunks.push(e.data);
-            mediaRecorder.onstop = async ()=>{
-                const blob = new Blob(chunks,{type:'audio/webm'});
-                const path = `voice/${currentUser.uid}_${Date.now()}.webm`;
-                const snap = await storage.ref(path).put(blob);
-                const url = await snap.ref.getDownloadURL();
-                const recipient = document.getElementById('recipientSelect').value;
-                const participants = recipient==='all' ? [currentUser.uid, ...friends.map(f=>f.uid)] : [currentUser.uid, recipient];
-                const expiresAt = new Date(Date.now() + 24*60*60*1000); // 24 ساعة
-                await db.collection('voiceMessages').add({
-                    senderId: currentUser.uid,
-                    recipientId: recipient,
-                    participants: participants,
-                    audioUrl: url,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    expiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
-                    openedBy: {}
-                });
-                toast('✅ تم الإرسال');
-                loadVoiceMessages();
-                stream.getTracks().forEach(t=>t.stop());
+        let mediaRecorder,chunks=[],recording=false;
+        async function startRecording() {
+            if(recording||!currentUser) return;
+            const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+            mediaRecorder=new MediaRecorder(stream,{mimeType:'audio/webm;codecs=opus'}); chunks=[];
+            mediaRecorder.ondataavailable=e=>chunks.push(e.data);
+            mediaRecorder.onstop=async()=>{
+                const blob=new Blob(chunks,{type:'audio/webm'}); const path=`voice/${currentUser.uid}_${Date.now()}.webm`;
+                const snap=await storage.ref(path).put(blob); const url=await snap.ref.getDownloadURL();
+                const recipient=document.getElementById('recipientSelect').value;
+                const participants=recipient==='all'?[currentUser.uid,...friends.map(f=>f.uid)]:[currentUser.uid,recipient];
+                const expiresAt=new Date(Date.now()+24*60*60*1000);
+                await db.collection('voiceMessages').add({senderId:currentUser.uid,recipientId:recipient,participants,audioUrl:url,timestamp:firebase.firestore.FieldValue.serverTimestamp(),expiresAt:firebase.firestore.Timestamp.fromDate(expiresAt),openedBy:{}});
+                toast('✅ تم الإرسال'); loadVoiceMessages(); stream.getTracks().forEach(t=>t.stop());
             };
-            mediaRecorder.start();
-            recording=true;
-            document.getElementById('recordVoiceBtn').classList.add('recording');
+            mediaRecorder.start(); recording=true; document.getElementById('recordVoiceBtn').classList.add('recording');
         }
-        function stopRecording(){
-            if(mediaRecorder && recording && mediaRecorder.state!=='inactive'){
-                mediaRecorder.stop(); recording=false;
-                document.getElementById('recordVoiceBtn').classList.remove('recording');
-            }
+        function stopRecording() {
+            if(mediaRecorder&&recording&&mediaRecorder.state!=='inactive'){ mediaRecorder.stop(); recording=false; document.getElementById('recordVoiceBtn').classList.remove('recording'); }
         }
+
+        // ==================== الملف الشخصي ====================
+        async function loadProfile() {
+            if(!currentUser) return;
+            const doc=await db.collection('users').doc(currentUser.uid).get();
+            if(doc.exists) userProfile=doc.data();
+            else { userProfile={displayName:'',photoURL:''}; await db.collection('users').doc(currentUser.uid).set({email:currentUser.email,displayName:'',photoURL:''}); }
+            document.getElementById('profileName').value=userProfile.displayName||'';
+            if(userProfile.photoURL) document.getElementById('profilePicPreview').src=userProfile.photoURL;
+        }
+
+        // ==================== المصادقة ====================
+        async function login(email,pw) {
+            const btn=document.getElementById('loginBtn'), errEl=document.getElementById('loginError');
+            if(!email||!pw){ errEl.textContent='املأ الحقول'; errEl.classList.add('show'); return; }
+            btn.classList.add('loading'); btn.textContent='⏳...'; errEl.classList.remove('show');
+            try { await auth.signInWithEmailAndPassword(email.trim(),pw); }
+            catch(e){ errEl.textContent='⚠️ '+(e.code==='auth/invalid-credential'?'بيانات خاطئة':e.message); errEl.classList.add('show'); }
+            finally { btn.classList.remove('loading'); btn.textContent='🔐 دخول'; }
+        }
+        function logout() {
+            if(confirm('تسجيل الخروج؟')){ auth.signOut(); currentUser=null; if(unsubGuides) unsubGuides(); guides=[]; renderGuides();
+                document.getElementById('loginScreen').classList.remove('hide'); document.getElementById('signOutBtn').style.display='none'; }
+        }
+        auth.onAuthStateChanged(async u=>{
+            if(u){ currentUser=u; document.getElementById('loginScreen').classList.add('hide');
+                document.getElementById('signOutBtn').style.display='flex';
+                document.getElementById('userInfo').innerHTML=`<strong>${u.email}</strong>`;
+                await loadProfile(); setupPresence(); listenGuides(); renderGuides();
+            } else { currentUser=null; guides=[]; renderGuides(); document.getElementById('loginScreen').classList.remove('hide'); }
+        });
+
+        // ==================== أحداث الواجهة ====================
+        document.getElementById('loginBtn').onclick=()=>login(document.getElementById('loginEmail').value,document.getElementById('loginPassword').value);
+        document.getElementById('signOutBtn').onclick=logout;
+        document.getElementById('menuBtn').onclick=()=>{ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
+        document.getElementById('closeSidebar').onclick=()=>{ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+        document.getElementById('overlay').onclick=()=>{ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+        document.getElementById('darkModeBtn').onclick=()=>{ document.body.classList.toggle('dark'); localStorage.setItem('dark',document.body.classList.contains('dark')?'1':'0'); document.getElementById('darkLabel').textContent=document.body.classList.contains('dark')?'الوضع المضيء':'الوضع الداكن'; };
+        if(localStorage.getItem('dark')==='1'){ document.body.classList.add('dark'); document.getElementById('darkLabel').textContent='الوضع المضيء'; }
+        document.getElementById('addBtn').onclick=()=>{ resetForm(); document.getElementById('guideModal').classList.add('show'); };
+        document.getElementById('cancelBtn').onclick=()=>document.getElementById('guideModal').classList.remove('show');
+        document.getElementById('closeDetailBtn').onclick=()=>document.getElementById('detailModal').classList.remove('show');
+        document.getElementById('closeFullBtn').onclick=()=>document.getElementById('fullImageModal').classList.remove('show');
+        document.getElementById('saveBtn').onclick=async()=>{
+            const name=document.getElementById('gName').value.trim(), phone=document.getElementById('gPhone').value.trim();
+            if(!name||!phone) return toast('الاسم والهاتف مطلوبان',true);
+            if(!validPhone(phone)){ document.getElementById('phoneErr').style.display='block'; return toast('رقم غير صالح',true); }
+            document.getElementById('phoneErr').style.display='none';
+            try{ await saveGuide({id:editId,name,phone,plate:document.getElementById('gPlate').value.trim(),color:selectedColor,transport:document.getElementById('gTransport').value.trim(),agency:document.getElementById('gAgency').value.trim(),notes:document.getElementById('gNotes').value.trim(),fav:editId?(guides.find(g=>g.id===editId)?.favorite||false):false,vis:document.getElementById('gVisibility').value});
+                toast('✅ تم الحفظ'); document.getElementById('guideModal').classList.remove('show'); resetForm(); }
+            catch(e){ toast('❌ '+e.message,true); }
+        };
+        document.getElementById('guideUploadCard').onclick=()=>pickImage('guide');
+        document.getElementById('busUploadCard').onclick=()=>pickImage('bus');
+        document.getElementById('confirmShareBtn').onclick=()=>{
+            const g=guides.find(x=>x.id===shareGuideId); if(!g) return;
+            const cbs=document.querySelectorAll('.share-chk:checked'); if(!cbs.length) return toast('اختر مستلماً',true);
+            const msg=`*${g.name}*\n📞 ${g.phone}\n🚐 ${g.transportType||''}\n🚍 ${g.plateNumber||''}\n🏢 ${g.agency||''}`;
+            cbs.forEach(cb=>window.open(`https://wa.me/${cb.value.replace(/[^0-9+]/g,'')}?text=${encodeURIComponent(msg)}`,'_blank'));
+            document.getElementById('multiShareModal').classList.remove('show'); toast(`✅ ${cbs.length} مستلم`);
+        };
+        document.getElementById('closeMultiBtn').onclick=()=>document.getElementById('multiShareModal').classList.remove('show');
+        document.getElementById('shareWaBtn').onclick=()=>{ if(detailGuide) window.openShare(detailGuide.id); };
+        document.getElementById('searchInput').oninput=renderGuides;
+        document.getElementById('filterToggle').onclick=()=>document.getElementById('colorsPanel').classList.toggle('show');
+        document.querySelectorAll('.color-dot').forEach(d=>d.onclick=()=>{ colorFilter=d.dataset.color; document.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('active')); d.classList.add('active'); renderGuides(); document.getElementById('colorsPanel').classList.remove('show'); });
+        document.getElementById('syncBtn').onclick=()=>toast('🔄 تلقائية');
+        document.getElementById('exportJsonBtn').onclick=()=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(guides,null,2)],{type:'application/json'})); a.download='F-NotePro_'+new Date().toISOString().slice(0,10)+'.json'; a.click(); };
+        document.getElementById('exportPdfBtn').onclick=()=>{ const el=document.createElement('div'); el.dir='rtl'; el.innerHTML='<h1 style="text-align:center;color:#e94560;">F-Note Pro</h1><hr>'; guides.forEach(g=>{ el.innerHTML+=`<div style="border:1px solid #ccc;border-radius:14px;padding:10px;margin:8px 0;"><b>${esc(g.name)}</b><br>📞 ${esc(g.phone)}</div>`; }); html2pdf().from(el).set({margin:6,filename:'F-NotePro_'+new Date().toISOString().slice(0,10)+'.pdf'}).save(); };
+        document.getElementById('profileBtn').onclick=()=>{ document.getElementById('profileName').value=userProfile.displayName||''; if(userProfile.photoURL) document.getElementById('profilePicPreview').src=userProfile.photoURL; document.getElementById('profileModal').classList.add('show'); };
+        document.getElementById('closeProfileBtn').onclick=()=>document.getElementById('profileModal').classList.remove('show');
+        document.getElementById('profilePicUpload').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=async e=>{ if(e.target.files[0]){ const r=new FileReader(); r.onload=async ev=>{ const url=await uploadToCloudinary(ev.target.result)||ev.target.result; document.getElementById('profilePicPreview').src=ev.target.result; userProfile.photoURL=url; }; r.readAsDataURL(e.target.files[0]); } }; inp.click(); };
+        document.getElementById('saveProfileBtn').onclick=async()=>{ userProfile.displayName=sanitize(document.getElementById('profileName').value.trim()); await db.collection('users').doc(currentUser.uid).set(userProfile,{merge:true}); toast('✅ تم الحفظ'); document.getElementById('profileModal').classList.remove('show'); };
+        document.getElementById('searchFriendBtn').onclick=async()=>{
+            const email=document.getElementById('friendEmail').value.trim(); if(!email) return toast('أدخل بريداً',true);
+            const snap=await db.collection('users').where('email','==',email).get();
+            if(snap.empty) return toast('لم يتم العثور',true);
+            const fUid=snap.docs[0].id; if(fUid===currentUser.uid) return toast('لا يمكنك إضافة نفسك',true);
+            const exist=await db.collection('friendships').where('users','array-contains',currentUser.uid).get();
+            let found=false; exist.forEach(doc=>{ if(doc.data().users.includes(fUid)) found=true; });
+            if(found) return toast('موجود بالفعل');
+            await db.collection('friendships').add({users:[currentUser.uid,fUid],createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+            toast('✅ تمت الإضافة'); document.getElementById('addFriendModal').classList.remove('show'); loadFriends();
+        };
+        document.getElementById('closeAddFriendBtn').onclick=()=>document.getElementById('addFriendModal').classList.remove('show');
+        document.getElementById('addFriendBtn').onclick=()=>document.getElementById('addFriendModal').classList.add('show');
         document.getElementById('recordVoiceBtn').addEventListener('pointerdown',startRecording);
         document.getElementById('recordVoiceBtn').addEventListener('pointerup',stopRecording);
         document.getElementById('recordVoiceBtn').addEventListener('pointerleave',stopRecording);
 
+        // التنقل بين الصفحات
+        document.querySelectorAll('.nav-tab').forEach(tab=>tab.addEventListener('click',()=>{
+            document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+            document.getElementById(tab.dataset.page).classList.add('active');
+            if(tab.dataset.page==='pageRadio'){ loadFriends(); loadVoiceMessages(); }
+        }));
+
+        // محدد الألوان
+        const colors=['#e94560','#2c7da0','#e76f51','#2a9d8f','#e9c46a','#9b5de5','#06d6a0','#ff006e'];
+        document.getElementById('colorSelector').innerHTML=colors.map(c=>`<div class="color-option" data-color="${c}" style="background:${c};"></div>`).join('');
+        document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.onclick=()=>{ document.querySelectorAll('#colorSelector .color-option').forEach(x=>x.classList.remove('selected')); o.classList.add('selected'); selectedColor=o.dataset.color; });
+        document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected');
+
         // التنظيف الدوري
-        setInterval(()=>{ if(currentUser) loadVoiceMessages(); }, 30000);
-
-        // ==================== بقية الأحداث والتبويب ====================
-        document.querySelectorAll('.nav-tab').forEach(tab=>{
-            tab.addEventListener('click',()=>{
-                document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-                tab.classList.add('active');
-                document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-                document.getElementById(tab.dataset.page).classList.add('active');
-                if(tab.dataset.page==='pageRadio') loadFriends().then(()=>loadVoiceMessages());
-            });
-        });
-
-        // ==================== مصادقة ====================
-        auth.onAuthStateChanged(async u=>{
-            if(u){
-                currentUser=u;
-                document.getElementById('loginScreen').classList.add('hide');
-                document.getElementById('signOutBtn').style.display='flex';
-                await loadProfile();
-                setupPresence();
-                listenGuides();
-                renderGuides();
-            } else {
-                currentUser=null; guides=[]; renderGuides();
-                document.getElementById('loginScreen').classList.remove('hide');
-            }
-        });
-        // ... باقي أحداث الدخول والخروج كما في النسخة السابقة
+        setInterval(()=>{ if(currentUser) loadVoiceMessages(); },60000);
     </script>
 </body>
 </html>
