@@ -2,646 +2,1352 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>F-Note Pro - النظام المتكامل</title>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#121212">
+    <title>F-Note Pro | المرشدين السياحيين</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Tajawal', system-ui, sans-serif; }
         :root {
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --border: #e2e8f0;
-            --gold: #e94560;
+            --primary: #fe2c55;
+            --primary-dark: #e8254a;
+            --primary-light: rgba(254, 44, 85, 0.15);
+            --secondary: #25f4ee;
+            --accent-gold: #f59e0b;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --bg-primary: #121212;
+            --bg-card: #1e1e1e;
+            --bg-elevated: #252525;
+            --bg-input: rgba(255, 255, 255, 0.06);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-tertiary: #71717a;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --danger: #ef4444;
             --success: #10b981;
-            --walkie-bg: #ef4444;
-            --search-bg: #f1f5f9;
-            --modal-bg: #ffffff;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --warning: #f59e0b;
+            --bottom-nav-height: 72px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --modal-radius: 28px;
         }
-        body.dark {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --text-primary: #f1f5f9;
-            --search-bg: #334155;
-            --modal-bg: #1e293b;
-            --border: #334155;
-        }
-        body { background: var(--bg-body); color: var(--text-primary); padding-bottom: 85px; transition: background 0.3s; }
-        
-        body::before {
-            content: "";
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+        *:focus { outline: none; }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh; height: 100dvh;
+            width: 100vw;
             position: fixed;
+            top: 0; left: 0;
+        }
+
+        /* ============ AUTH SCREEN ============ */
+        .auth-screen {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 5000; padding: 20px;
+            transition: all 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        .auth-screen.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
+        .auth-container {
+            width: 100%; max-width: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 40px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .auth-logo { text-align: center; margin-bottom: 30px; }
+        .auth-logo .logo-icon {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 22px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; margin: 0 auto 16px;
+            box-shadow: 0 15px 40px rgba(254, 44, 85, 0.4);
+            animation: logoPulse 2s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%, 100% { box-shadow: 0 15px 40px rgba(254, 44, 85, 0.4); transform: scale(1); }
+            50% { box-shadow: 0 20px 50px rgba(254, 44, 85, 0.6); transform: scale(1.03); }
+        }
+        .auth-logo h1 {
+            font-size: 28px; font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .auth-form { display: flex; flex-direction: column; gap: 14px; }
+        .auth-form input {
+            width: 100%; padding: 14px 18px;
+            background: var(--bg-input); border: 1px solid var(--border-color);
+            border-radius: 14px; color: var(--text-primary);
+            font-size: 15px; font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+        .auth-form input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+        .auth-btn {
+            padding: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white; border: none; border-radius: 14px;
+            font-size: 17px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(254, 44, 85, 0.3);
+            transition: all 0.3s ease; margin-top: 8px;
+        }
+        .auth-btn:active { transform: scale(0.96); }
+        .auth-toggle { text-align: center; margin-top: 20px; color: var(--text-secondary); font-size: 14px; }
+        .auth-toggle span { color: var(--primary); cursor: pointer; font-weight: 700; }
+        .error-message { color: var(--danger); text-align: center; font-size: 14px; margin-top: 10px; display: none; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 10px; }
+        .error-message.show { display: block; }
+
+        /* ============ APP CONTAINER ============ */
+        .app-container { height: 100vh; height: 100dvh; display: flex; flex-direction: column; position: relative; }
+        .app-container.hidden { display: none; }
+        .main-content { flex: 1; overflow: hidden; position: relative; }
+
+        /* ============ TOP HEADER ============ */
+        .top-header {
+            position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 12px 16px; padding-top: calc(env(safe-area-inset-top, 20px) + 8px);
+            display: flex; align-items: center; justify-content: space-between;
+            pointer-events: none;
+        }
+        .top-header > * { pointer-events: auto; }
+        .header-logo {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(20px);
+            padding: 8px 16px; border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header-logo .mini-icon {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+        }
+        .header-logo span { font-weight: 800; font-size: 16px; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header-actions { display: flex; gap: 8px; }
+        .header-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); color: white;
+            cursor: pointer; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .header-btn:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.15); }
+        .header-btn .badge {
+            position: absolute; top: -4px; right: -4px;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--danger); color: white;
+            font-size: 10px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--bg-primary);
+        }
+
+        /* ============ FEED SCREEN ============ */
+        .feed-screen { height: 100%; position: relative; overflow: hidden; display: none; }
+        .feed-screen.active { display: block; }
+        .feed-stack { height: 100%; transition: transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94); will-change: transform; }
+        .guide-card {
+            height: 100vh; height: 100dvh; width: 100%;
+            background-size: cover; background-position: center;
+            position: relative; display: flex; align-items: flex-end;
+            cursor: grab; background-color: var(--bg-card);
+        }
+        .guide-card:active { cursor: grabbing; }
+        .card-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 65%;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.75) 25%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 75%, transparent 100%);
+            pointer-events: none;
+        }
+        .card-thumbnails { position: absolute; top: 120px; left: 16px; z-index: 3; display: flex; flex-direction: column; gap: 8px; }
+        .card-thumb {
+            width: 48px; height: 48px; border-radius: 12px;
+            background-size: cover; background-position: center;
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .card-thumb:active { transform: scale(1.15); border-color: var(--primary); }
+        .card-top-badge { position: absolute; top: 60px; left: 16px; z-index: 3; display: flex; gap: 8px; flex-wrap: wrap; }
+        .card-badge {
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(20px);
+            padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex; align-items: center; gap: 6px; cursor: pointer;
+        }
+        .card-badge.favorite-badge { color: var(--warning); border-color: rgba(245,158,11,0.3); }
+        .card-content {
+            position: relative; z-index: 2; width: 100%;
+            padding: 20px 16px; padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 20px);
+            display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;
+        }
+        .guide-info { flex: 1; min-width: 0; }
+        .guide-name { font-size: 28px; font-weight: 900; margin-bottom: 6px; text-shadow: 0 2px 20px rgba(0,0,0,0.9); line-height: 1.2; }
+        .guide-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .meta-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgba(255,255,255,0.12); backdrop-filter: blur(10px);
+            padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .lang-badge { background: rgba(37,244,238,0.15); color: var(--secondary); border-color: rgba(37,244,238,0.25); }
+        .guide-notes { color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.5; max-width: 280px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .action-buttons { display: flex; flex-direction: column; gap: 18px; align-items: center; flex-shrink: 0; }
+        .action-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; background: none; border: none; color: white; cursor: pointer; transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+        .action-btn .btn-icon {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; transition: all 0.25s ease;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .action-btn .btn-label { font-size: 11px; font-weight: 600; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }
+        .action-btn:active .btn-icon { transform: scale(0.85); }
+        .action-btn.favorite.active .btn-icon { background: var(--primary); border-color: var(--primary); box-shadow: 0 8px 25px rgba(254,44,85,0.5); animation: heartPop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+        .action-btn.whatsapp:active .btn-icon { background: #25D366; border-color: #25D366; }
+        .action-btn.call:active .btn-icon { background: var(--success); border-color: var(--success); }
+        .action-btn.message:active .btn-icon { background: var(--accent-blue); border-color: var(--accent-blue); }
+        @keyframes heartPop { 0%{transform:scale(1)} 50%{transform:scale(1.25)} 100%{transform:scale(1)} }
+
+        /* ============ LIGHT EFFECTS FOR VOICE BUTTONS ============ */
+        .voice-glow {
+            position: relative;
+            overflow: visible !important;
+        }
+        .voice-glow::before {
+            content: '';
+            position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 55%; max-width: 300px;
-            aspect-ratio: 1;
-            background-image: url('https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            opacity: 0.25;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .app-header {
-            background: var(--bg-card);
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow-sm);
-            position: relative;
-            z-index: 20;
-        }
-        .logo-header img { height: 38px; }
-        .header-btn {
+            width: 100%; height: 100%;
+            border-radius: inherit;
             background: transparent;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-primary);
-            padding: 6px;
-            border-radius: 50%;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: all 0.5s ease;
+            z-index: -1;
+            pointer-events: none;
         }
-        .profile-btn .profile-photo-small { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
-        .header-btn:active { transform: scale(0.92); background: var(--search-bg);}
-        .add-btn-center { display: flex; justify-content: center; margin: 12px 0 8px; }
-        .floating-add-btn { background: var(--gold); color: white; border: none; padding: 10px 24px; border-radius: 60px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-md); }
-        .floating-add-btn:active { transform: scale(0.96); }
-        .search-filter-bar { display: flex; gap: 8px; padding: 8px 16px; flex-wrap: wrap; align-items: center; }
-        .search-input { flex: 2; padding: 10px 16px; border: 1px solid var(--border); border-radius: 60px; background: var(--search-bg); color: var(--text-primary); }
-        .filter-select { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: 60px; background: var(--search-bg); }
-        .action-buttons { display: flex; gap: 8px; }
-        .voice-search-btn, .call-now-btn { background: var(--gold); color: white; border: none; width: 48px; border-radius: 60px; font-size: 20px; cursor: pointer; transition: all 0.2s; }
-        .call-now-btn { background: var(--success); font-size: 18px; }
-        .voice-search-btn:active, .call-now-btn:active { transform: scale(0.92); }
-        .guides-list { padding: 16px; display: flex; flex-direction: column; gap: 16px; z-index: 1; position: relative; margin-bottom: 10px; }
-        .guide-card { background: var(--bg-card); border-radius: 28px; padding: 16px; box-shadow: var(--shadow-md); border-right: 5px solid var(--gold); transition: all 0.2s; cursor: pointer; }
-        .guide-card:active { transform: scale(0.99); }
-        .card-row { display: flex; align-items: center; gap: 12px; }
-        .card-photo { width: 55px; height: 55px; border-radius: 20px; object-fit: cover; border: 2px solid var(--gold); cursor: pointer; background: var(--search-bg); }
-        .card-name { font-weight: 800; font-size: 16px; margin-bottom: 4px; }
-        .card-phone { background: var(--search-bg); display: inline-flex; gap: 6px; padding: 4px 12px; border-radius: 40px; font-size: 12px; margin-top: 5px; align-items: center; }
-        .expand-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 6px; border-radius: 50%; transition: 0.2s; }
-        .expand-btn:active { transform: scale(0.9); background: var(--search-bg);}
-        .card-details { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: none; }
-        .card-details.show { display: block; animation: fadeIn 0.2s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        .details-grid { background: var(--search-bg); padding: 12px; border-radius: 20px; }
-        .share-btn { background: #25D366; border: none; padding: 6px 14px; border-radius: 40px; color: white; cursor: pointer; margin-top: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; transition: 0.2s; }
-        .share-btn:active { transform: scale(0.96); }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; padding: 6px 20px 10px; box-shadow: 0 -2px 15px rgba(0,0,0,0.08); border-top: 1px solid var(--border); z-index: 100; }
-        .nav-btn { background: transparent; border: none; text-align: center; cursor: pointer; color: var(--text-primary); padding: 4px 10px; border-radius: 30px; transition: 0.2s; }
-        .nav-btn:active { transform: scale(0.94); background: var(--search-bg);}
-        .nav-icon { font-size: 26px; display: block; margin-bottom: 2px; }
-        .channel-badge { background: var(--gold); color: white; padding: 2px 10px; border-radius: 40px; font-size: 12px; margin-right: 4px; display: inline-block; }
-        .walkie-talkie { position: fixed; bottom: 90px; left: 20px; width: 65px; height: 65px; background: var(--walkie-bg); border-radius: 50%; border: none; color: white; font-size: 34px; box-shadow: 0 6px 18px rgba(0,0,0,0.25); cursor: pointer; z-index: 99; transition: all 0.05s linear; touch-action: none; display: flex; align-items: center; justify-content: center; }
-        .walkie-talkie.recording { background: #b91c1c; animation: pulse 0.6s infinite; }
-        @keyframes pulse { 0% { transform: scale(1);} 50% { transform: scale(1.08);} 100% { transform: scale(1);}}
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1100; visibility: hidden; opacity: 0; transition: 0.2s; }
-        .modal.show { visibility: visible; opacity: 1; }
-        .modal-content { background: var(--modal-bg); width: 92%; max-width: 500px; border-radius: 48px; padding: 24px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
-        input, textarea, select { width: 100%; padding: 12px 16px; margin: 8px 0; border-radius: 60px; border: 1px solid var(--border); background: var(--search-bg); color: var(--text-primary); }
-        input:focus { outline: none; border-color: var(--gold); }
-        .upload-card { border: 2px dashed var(--gold); padding: 14px; border-radius: 28px; text-align: center; cursor: pointer; margin: 10px 0; transition: 0.2s; }
-        .upload-card:active { transform: scale(0.98); background: rgba(233,69,96,0.05);}
-        .preview-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-top: 8px; border: 2px solid var(--gold); }
-        .color-option { width: 48px; height: 48px; border-radius: 24px; display: inline-block; margin: 4px; cursor: pointer; border: 2px solid transparent; }
-        .color-option.selected { border-color: var(--gold); transform: scale(1.08);}
-        .save-btn, .cancel-btn { padding: 12px; border-radius: 60px; border: none; font-weight: bold; cursor: pointer; margin-top: 12px; width: 100%; transition: 0.2s; }
-        .save-btn { background: var(--success); color: white; }
-        .cancel-btn { background: #64748b; color: white; }
-        .save-btn:active, .cancel-btn:active { transform: scale(0.97); }
-        .toast { position: fixed; bottom: 100px; left: 20px; right: 20px; background: #1e293b; color: white; text-align: center; padding: 12px 18px; border-radius: 60px; z-index: 1200; backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: space-between; direction: rtl; }
-        .toast-btn { background: var(--gold); border: none; color: white; padding: 4px 14px; border-radius: 40px; cursor: pointer; margin-right: 12px; }
-        .sidebar { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: var(--bg-card); z-index: 1000; transition: 0.3s; padding: 20px; box-shadow: -4px 0 20px rgba(0,0,0,0.1); overflow-y: auto; }
-        .sidebar.open { right: 0; }
-        .sidebar-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-        .sidebar-profile-img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
-        .sidebar-item { padding: 12px; cursor: pointer; border-radius: 40px; margin: 6px 0; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
-        .sidebar-item:active { background: var(--search-bg); transform: scale(0.98);}
-        .message-item { background: var(--search-bg); border-radius: 24px; padding: 14px; margin-bottom: 12px; }
-        .login-screen { position: fixed; inset: 0; background: var(--bg-body); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .login-screen.hide { display: none; }
-        .login-card { background: var(--bg-card); padding: 35px; border-radius: 48px; text-align: center; width: 90%; max-width: 340px; box-shadow: var(--shadow-lg);}
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; visibility: hidden; backdrop-filter: blur(2px); }
-        .overlay.show { visibility: visible; }
+        .voice-glow.recording::before {
+            animation: glowPulse 0.8s ease-in-out infinite;
+        }
+        .voice-glow.recording-msg::before {
+            animation: glowPulseMsg 0.6s ease-in-out infinite;
+        }
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 8px 2px rgba(239,68,68,0.4), 0 0 20px 5px rgba(239,68,68,0.2); width: 120%; height: 120%; }
+            50% { box-shadow: 0 0 15px 5px rgba(239,68,68,0.7), 0 0 35px 10px rgba(239,68,68,0.4); width: 140%; height: 140%; }
+        }
+        @keyframes glowPulseMsg {
+            0%, 100% { box-shadow: 0 0 6px 2px rgba(59,130,246,0.4), 0 0 15px 4px rgba(59,130,246,0.2); width: 115%; height: 115%; }
+            50% { box-shadow: 0 0 12px 4px rgba(59,130,246,0.7), 0 0 28px 8px rgba(59,130,246,0.4); width: 130%; height: 130%; }
+        }
+
+        /* ============ EMPTY/LOADING ============ */
+        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); text-align: center; padding: 40px; }
+        .empty-icon { width: 100px; height: 100px; background: var(--bg-elevated); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 44px; margin-bottom: 24px; border: 2px dashed var(--border-color); color: var(--text-tertiary); }
+        .empty-state h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
+        .loading-spinner { height: 100%; display: flex; align-items: center; justify-content: center; }
+        .spinner { width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.08); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ============ SEARCH SCREEN ============ */
+        .search-screen { height: 100%; display: none; flex-direction: column; overflow: hidden; }
+        .search-screen.active { display: flex; }
+        .search-header { padding: 12px 16px; background: var(--bg-primary); z-index: 10; display: flex; gap: 8px; align-items: center; }
+        .search-input-wrapper { flex: 1; display: flex; align-items: center; background: var(--bg-elevated); border-radius: 24px; padding: 10px 18px; border: 2px solid transparent; transition: all 0.3s ease; gap: 10px; }
+        .search-input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+        .search-input-wrapper i { color: var(--text-tertiary); }
+        .search-input-wrapper input { flex: 1; background: none; border: none; color: var(--text-primary); font-size: 15px; font-family: 'Cairo', sans-serif; padding: 4px 0; min-width: 0; }
+        .voice-search-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border-color); color: var(--text-secondary); cursor: pointer; font-size: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s ease; position: relative; }
+        .voice-search-btn.recording { background: var(--danger); color: white; border-color: var(--danger); }
+        .color-filters { display: flex; gap: 8px; padding: 8px 16px; overflow-x: auto; flex-shrink: 0; }
+        .color-chip { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-elevated); color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; font-family: 'Cairo', sans-serif; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
+        .color-chip .color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .color-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .search-results { flex: 1; overflow-y: auto; padding: 6px 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 10px); }
+        .search-result-item { aspect-ratio: 1; background-size: cover; background-position: center; background-color: var(--bg-elevated); border-radius: 6px; cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s ease; }
+        .search-result-item:active { transform: scale(0.94); }
+        .search-result-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 6px; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); }
+        .search-result-overlay .sr-name { font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .no-results { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
+
+        /* ============ MODALS ============ */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: none; align-items: flex-end; justify-content: center; z-index: 2000; animation: fadeIn 0.25s ease; }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        .modal-sheet { background: #1a1a1a; width: 100%; max-width: 500px; max-height: 88vh; border-radius: var(--modal-radius) var(--modal-radius) 0 0; overflow-y: auto; animation: slideUp 0.45s cubic-bezier(0.32,0.72,0,1); box-shadow: 0 -10px 50px rgba(0,0,0,0.6); }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-handle { width: 36px; height: 5px; background: rgba(255,255,255,0.25); border-radius: 3px; margin: 14px auto 4px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 20px 16px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: #1a1a1a; z-index: 2; }
+        .modal-header h2 { font-size: 19px; font-weight: 800; }
+        .modal-close { background: var(--bg-elevated); border: none; color: var(--text-primary); cursor: pointer; font-size: 18px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s ease; }
+        .modal-form { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+        .dual-image-upload { display: flex; gap: 12px; }
+        .image-upload-area { flex: 1; height: 130px; border: 2px dashed rgba(255,255,255,0.15); border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-tertiary); cursor: pointer; transition: all 0.3s ease; background-size: cover; background-position: center; background-color: var(--bg-input); position: relative; overflow: hidden; }
+        .image-upload-area.has-image { border-color: var(--success); border-style: solid; }
+        .image-upload-area i { font-size: 32px; }
+        .image-upload-area span { font-size: 12px; text-align: center; }
+        .image-upload-area.has-image i, .image-upload-area.has-image span { display: none; }
+        .image-change-badge { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 600; display: none; }
+        .image-upload-area.has-image .image-change-badge { display: block; }
+        .upload-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: var(--primary); transition: width 0.3s ease; width: 0%; display: none; }
+        .image-upload-area.uploading .upload-progress { display: block; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 13px 16px; background: var(--bg-input); border: 1.5px solid var(--border-color); border-radius: 14px; color: var(--text-primary); font-size: 15px; font-family: 'Cairo', sans-serif; transition: all 0.3s ease; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+        .voice-input-group { display: flex; gap: 8px; }
+        .voice-input-group input { flex: 1; }
+        .voice-input-btn { width: 48px; height: 48px; border-radius: 14px; background: var(--bg-input); border: 1.5px solid var(--border-color); color: var(--text-secondary); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s ease; position: relative; }
+        .voice-input-btn:active { background: var(--primary); color: white; border-color: var(--primary); }
+        .voice-input-btn.recording { background: var(--danger); color: white; border-color: var(--danger); }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+        .submit-btn { padding: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; border-radius: 16px; font-size: 17px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; margin-top: 6px; box-shadow: 0 8px 30px rgba(254,44,85,0.3); }
+        .submit-btn:active { transform: scale(0.96); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .delete-confirm { display: none; padding: 16px 20px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 16px; margin-top: 8px; text-align: center; }
+        .delete-confirm.show { display: block; }
+        .delete-confirm-btns { display: flex; gap: 8px; justify-content: center; }
+        .delete-confirm-btns button { padding: 8px 20px; border-radius: 20px; font-weight: 700; font-size: 13px; cursor: pointer; border: none; }
+        .btn-confirm-delete { background: var(--danger); color: white; }
+        .btn-cancel-delete { background: var(--bg-elevated); color: var(--text-primary); }
+        .hidden-file-input { display: none; }
+
+        /* ============ MESSAGES PANEL ============ */
+        .messages-panel {
+            position: fixed; top: 0; right: -100%;
+            width: 100%; max-width: 430px; height: 100vh; height: 100dvh;
+            background: var(--bg-primary); z-index: 3600;
+            transition: right 0.4s cubic-bezier(0.32,0.72,0,1);
+            display: flex; flex-direction: column;
+        }
+        .messages-panel.open { right: 0; }
+        .messages-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 3500; display: none; }
+        .messages-backdrop.show { display: block; }
+        .msg-panel-header {
+            padding: 16px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 12px;
+            flex-shrink: 0;
+        }
+        .msg-panel-header h3 { font-size: 18px; font-weight: 800; flex: 1; }
+        .msg-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .msg-tab {
+            flex: 1; padding: 14px; text-align: center; font-weight: 700; font-size: 14px;
+            cursor: pointer; color: var(--text-tertiary); border-bottom: 2px solid transparent;
+            transition: all 0.3s ease; background: none; border-top: none; border-left: none; border-right: none;
+            font-family: 'Cairo', sans-serif;
+        }
+        .msg-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .msg-tab .tab-badge {
+            display: inline-flex; width: 20px; height: 20px; border-radius: 50%;
+            background: var(--danger); color: white; font-size: 10px;
+            align-items: center; justify-content: center; margin-right: 6px;
+            vertical-align: middle;
+        }
+        .msg-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .msg-user-item {
+            display: flex; align-items: center; gap: 12px; padding: 14px;
+            border-radius: 16px; cursor: pointer; transition: all 0.2s ease;
+            margin-bottom: 4px;
+        }
+        .msg-user-item:active { background: var(--bg-elevated); }
+        .msg-user-avatar {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: var(--bg-elevated); display: flex; align-items: center;
+            justify-content: center; font-size: 20px; flex-shrink: 0;
+            background-size: cover; background-position: center;
+        }
+        .msg-user-info { flex: 1; min-width: 0; }
+        .msg-user-name { font-weight: 700; font-size: 15px; }
+        .msg-user-preview { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .msg-user-time { font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; }
+        .msg-unread-badge { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+        .msg-actions { display: flex; gap: 6px; }
+        .msg-accept-btn, .msg-reject-btn {
+            padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 700;
+            cursor: pointer; border: none; font-family: 'Cairo', sans-serif;
+            transition: all 0.2s ease;
+        }
+        .msg-accept-btn { background: var(--success); color: white; }
+        .msg-reject-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+
+        /* ============ CHAT SCREEN ============ */
+        .chat-screen {
+            position: fixed; top: 0; right: -100%;
+            width: 100%; max-width: 430px; height: 100vh; height: 100dvh;
+            background: var(--bg-primary); z-index: 3700;
+            transition: right 0.4s cubic-bezier(0.32,0.72,0,1);
+            display: flex; flex-direction: column;
+        }
+        .chat-screen.open { right: 0; }
+        .chat-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 3650; display: none; }
+        .chat-backdrop.show { display: block; }
+        .chat-header {
+            padding: 14px 16px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+            background: var(--bg-primary);
+        }
+        .chat-header .back-btn { background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: 20px; padding: 8px; }
+        .chat-header .chat-user-name { font-weight: 700; font-size: 16px; flex: 1; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .chat-msg {
+            max-width: 75%; padding: 12px 16px; border-radius: 18px;
+            font-size: 14px; line-height: 1.5;
+            animation: msgIn 0.3s ease;
+        }
+        @keyframes msgIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .chat-msg.sent { align-self: flex-end; background: var(--primary); border-bottom-right-radius: 4px; }
+        .chat-msg.received { align-self: flex-start; background: var(--bg-elevated); border-bottom-left-radius: 4px; }
+        .chat-msg-time { font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: left; }
+        .chat-input-area {
+            padding: 12px 16px; border-top: 1px solid var(--border-color);
+            display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+            background: var(--bg-primary);
+        }
+        .chat-input {
+            flex: 1; padding: 12px 16px; background: var(--bg-elevated);
+            border: 1px solid var(--border-color); border-radius: 24px;
+            color: var(--text-primary); font-size: 15px; font-family: 'Cairo', sans-serif;
+        }
+        .chat-send-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--primary); border: none; color: white;
+            cursor: pointer; font-size: 18px; display: flex; align-items: center;
+            justify-content: center; transition: all 0.3s ease;
+        }
+        .chat-send-btn:active { transform: scale(0.9); }
+        .chat-voice-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--bg-elevated); border: 1px solid var(--border-color);
+            color: var(--text-secondary); cursor: pointer; font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease; position: relative;
+        }
+        .chat-voice-btn.recording-msg { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+        /* ============ ADD FRIEND MODAL ============ */
+        .friend-search-results { max-height: 300px; overflow-y: auto; }
+        .friend-result-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            border-radius: 14px; cursor: pointer; transition: all 0.2s ease;
+        }
+        .friend-result-item:active { background: var(--bg-elevated); }
+        .friend-result-avatar {
+            width: 44px; height: 44px; border-radius: 50%; background: var(--bg-elevated);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .friend-result-info { flex: 1; }
+        .friend-result-name { font-weight: 700; font-size: 14px; }
+        .friend-result-email { font-size: 11px; color: var(--text-tertiary); }
+        .friend-add-btn {
+            padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 700;
+            cursor: pointer; border: none; font-family: 'Cairo', sans-serif;
+            background: var(--primary); color: white; transition: all 0.2s ease;
+        }
+        .friend-add-btn:disabled { opacity: 0.5; }
+        .friend-add-btn.sent { background: var(--warning); }
+
+        /* ============ SETTINGS ============ */
+        .settings-panel { position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; background: var(--bg-card); z-index: 3500; transition: right 0.4s ease; padding: 20px; overflow-y: auto; box-shadow: -10px 0 40px rgba(0,0,0,0.5); }
+        .settings-panel.open { right: 0; }
+        .settings-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 3400; display: none; }
+        .settings-backdrop.show { display: block; }
+        .settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .settings-header h3 { font-size: 18px; font-weight: 800; }
+        .settings-section { margin-bottom: 24px; }
+        .settings-section h4 { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; font-weight: 700; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+        .toggle-switch { width: 50px; height: 28px; background: var(--bg-elevated); border-radius: 14px; cursor: pointer; position: relative; transition: all 0.3s ease; border: 1px solid var(--border-color); }
+        .toggle-switch.active { background: var(--primary); border-color: var(--primary); }
+        .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: all 0.3s ease; }
+        .toggle-switch.active::after { left: 25px; }
+
+        /* ============ BOTTOM NAV ============ */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--bottom-nav-height); background: rgba(18,18,18,0.92); backdrop-filter: blur(30px); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border-color); z-index: 1000; padding-bottom: var(--safe-bottom); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; padding: 8px 16px; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); font-family: 'Cairo', sans-serif; position: relative; min-width: 70px; }
+        .nav-item.active { color: var(--text-primary); }
+        .nav-item i { font-size: 22px; }
+        .nav-item span { font-size: 11px; font-weight: 700; }
+        .nav-indicator { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: var(--primary); border-radius: 0 0 3px 3px; transition: all 0.35s cubic-bezier(0.68,-0.55,0.265,1.55); opacity: 0; }
+        .nav-item.active .nav-indicator { opacity: 1; }
+        .nav-item.add-btn i { font-size: 30px; background: linear-gradient(135deg, var(--primary), #ff6b81); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 4px 8px rgba(254,44,85,0.5)); }
+        .nav-badge { position: absolute; top: 2px; right: 8px; width: 18px; height: 18px; border-radius: 50%; background: var(--danger); color: white; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+        /* ============ TOAST ============ */
+        .toast-container { position: fixed; bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 16px); left: 50%; transform: translateX(-50%); z-index: 3000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast { background: var(--bg-elevated); color: var(--text-primary); padding: 12px 22px; border-radius: 30px; font-size: 13px; font-weight: 700; border: 1px solid var(--border-color); box-shadow: 0 10px 40px rgba(0,0,0,0.6); white-space: nowrap; animation: toastIn 0.4s ease, toastOut 0.3s ease 2.4s forwards; display: flex; align-items: center; gap: 8px; pointer-events: auto; }
+        .toast.success { border-color: var(--success); color: var(--success); }
+        .toast.error { border-color: var(--danger); color: var(--danger); }
+        @keyframes toastIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+        @keyframes toastOut { from{transform:translateY(0);opacity:1} to{transform:translateY(20px);opacity:0} }
+
+        ::-webkit-scrollbar { width: 0; }
+        @media (max-width: 360px) { .guide-name { font-size: 24px; } .action-btn .btn-icon { width: 38px; height: 38px; } .dual-image-upload { flex-direction: column; } }
+        @media (min-width: 768px) { .search-results { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 1024px) { body { max-width: 430px; margin: 0 auto; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); } .bottom-nav { max-width: 430px; left: 50%; transform: translateX(-50%); border-radius: 20px 20px 0 0; } }
     </style>
 </head>
 <body>
 
-<div class="app-header">
-    <button class="header-btn" id="menuBtn">☰</button>
-    <div class="logo-header"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-Note Pro"></div>
-    <button class="header-btn profile-btn" id="profileBtn">
-        <img id="headerProfilePhoto" class="profile-photo-small" src="https://via.placeholder.com/36" alt="بروفيل">
-    </button>
-</div>
-
-<div class="add-btn-center">
-    <button class="floating-add-btn" id="openModalBtn">+ إضافة مرشد</button>
-</div>
-
-<div class="search-filter-bar">
-    <input type="text" id="searchInput" class="search-input" placeholder="🔍 بحث بالاسم أو الهاتف">
-    <select id="filterAgency" class="filter-select">
-        <option value="all">جميع الوكالات</option>
-        <option value="فندق">فندق</option>
-        <option value="شركة">شركة</option>
-        <option value="مستقل">مستقل</option>
-    </select>
-    <div class="action-buttons">
-        <button class="voice-search-btn" id="voiceSearchBtn">🎤</button>
-        <button class="call-now-btn" id="callNowBtn">📞</button>
-    </div>
-</div>
-
-<div id="guidesContainer" class="guides-list"><div class="loading">⏳ جاري التحميل...</div></div>
-
-<div class="bottom-nav">
-    <button class="nav-btn" id="showMessagesBtn"><span class="nav-icon">📼</span><span>الرسائل</span></button>
-    <button class="nav-btn" id="channelSelectorBtn"><span class="nav-icon">📡</span><span>الموجة <span id="currentChannelDisplay" class="channel-badge">1</span></span></button>
-    <button class="nav-btn" id="helpInfoBtn"><span class="nav-icon">ℹ️</span><span>تعليمات</span></button>
-</div>
-
-<button id="walkieTalkieBtn" class="walkie-talkie">🎙️</button>
-
-<!-- ==================== النوافذ المنبثقة ==================== -->
-<div id="profileModal" class="modal"><div class="modal-content"><h3>👤 البروفيل الشخصي</h3>
-<div style="text-align:center; margin:10px 0;">
-    <img id="profilePhotoPreview" class="preview-img" src="https://via.placeholder.com/80" style="width:90px; height:90px; border-radius:50%;">
-    <div class="upload-card" id="profileUploadCard" style="margin-top:10px; padding:10px;">📷 تغيير الصورة</div>
-    <div id="profileUploadStatus" style="font-size:12px;"></div>
-</div>
-<input type="text" id="profileName" placeholder="الاسم الكامل">
-<input type="email" id="profileEmail" placeholder="البريد الإلكتروني" readonly>
-<input type="tel" id="profilePhone" placeholder="رقم الهاتف">
-<button class="save-btn" id="saveProfileBtn">💾 حفظ التعديلات</button>
-<button class="cancel-btn" id="closeProfileBtn">إغلاق</button></div></div>
-
-<div id="guideModal" class="modal"><div class="modal-content"><h3 id="modalTitle">➕ إضافة مرشد</h3>
-<input type="text" id="guideName" placeholder="الاسم الكامل *"><input type="tel" id="guidePhone" placeholder="رقم الهاتف *"><input type="text" id="plateNumber" placeholder="رقم اللوحة"><div id="phoneError" style="color:red; display:none;">⚠️ أرقام فقط</div>
-<div class="upload-card" id="guideUploadCard"><div>📸 صورة المرشد</div><div class="upload-preview" id="guidePreviewContainer" style="display:none;"><img id="guidePhotoPreview" class="preview-img" style="width:70px;height:70px;border-radius:20px;"></div><div id="guideUploadStatus"></div></div>
-<div class="upload-card" id="busUploadCard"><div>🚌 صورة وسيلة النقل</div><div class="upload-preview" id="busPreviewContainer" style="display:none;"><img id="busPhotoPreview" class="preview-img" style="width:70px;height:70px;border-radius:20px;"></div><div id="busUploadStatus"></div></div>
-<input type="text" id="transportType" placeholder="وسيلة النقل"><input type="text" id="agency" placeholder="الوكالة"><textarea id="guideNotes" rows="2" placeholder="ملاحظات"></textarea>
-<div class="color-selector" id="colorSelector"></div>
-<select id="guideVisibility"><option value="private">🔒 خاص</option><option value="public">🌍 عام</option></select>
-<div class="modal-buttons"><button class="save-btn" id="saveGuideBtn">💾 حفظ</button><button class="cancel-btn" id="closeModalBtn">❌ إلغاء</button></div></div></div>
-
-<div id="detailModal" class="modal"><div class="modal-content"><h3 id="detailName"></h3><div id="detailContent"></div><div id="visibilityChangeDiv"></div><button class="share-btn" id="detailShareBtn">💬 مشاركة واتساب</button><button class="cancel-btn" id="closeDetailBtn">إغلاق</button></div></div>
-
-<div id="multiShareModal" class="modal"><div class="modal-content"><h3>اختر المستلمين</h3><div id="contactsList"></div><button class="save-btn" id="confirmShareBtn">إرسال عبر واتساب</button><button class="cancel-btn" id="closeMultiShareBtn">إلغاء</button></div></div>
-
-<div id="messagesModal" class="modal"><div class="modal-content"><h3>📡 رسائل الموجة <span id="modalChannelNum">1</span></h3><div id="messagesList"></div><p style="font-size:12px; margin-top:10px;">📌 الرسائل تُحذف بعد 48 ساعة أو بعد ساعة من فتحها</p><button class="cancel-btn" id="closeMessagesBtn">إغلاق</button></div></div>
-
-<div id="channelModal" class="modal"><div class="modal-content"><h3>اختر الموجة</h3><button class="save-btn channel-opt" data-channel="1" style="background:#3b82f6; margin:6px 0;">الموجة 1 - عامة</button><button class="save-btn channel-opt" data-channel="2" style="background:#8b5cf6; margin:6px 0;">الموجة 2 - فريق العمل</button><button class="save-btn channel-opt" data-channel="3" style="background:#ef4444; margin:6px 0;">الموجة 3 - طوارئ</button><button class="cancel-btn" id="closeChannelModal">إلغاء</button></div></div>
-
-<div id="fullImageModal" class="modal"><div class="modal-content"><img id="fullImage" style="width:100%; border-radius:28px;"><button class="cancel-btn" id="closeFullImageBtn" style="margin-top:12px;">إغلاق</button></div></div>
-
-<div id="sidebar" class="sidebar">
-    <div class="sidebar-header">
-        <img id="sidebarProfilePhoto" class="sidebar-profile-img" src="https://via.placeholder.com/55" alt="صورة">
-        <div><strong id="sidebarUserName">المستخدم</strong><br><span id="sidebarUserEmail" style="font-size:12px;"></span></div>
-    </div>
-    <div class="sidebar-item" id="signOutBtn" style="display:none;"><span>🚪</span> تسجيل الخروج</div>
-    <div class="sidebar-item" id="darkModeSidebar"><span>🌙</span> الوضع الداكن</div>
-    <div class="sidebar-item" id="exportDataBtn"><span>💾</span> تصدير JSON</div>
-    <div class="sidebar-item" id="exportPdfBtn"><span>📄</span> تصدير PDF</div>
-    <div class="sidebar-item" id="clearMessagesBtn"><span>🗑️</span> مسح كل الرسائل</div>
-</div>
-
-<div id="loginScreen" class="login-screen"><div class="login-card"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" style="width:70px;"><h2>F-Note Pro</h2><input type="email" id="loginEmail" placeholder="البريد" value="fahmiajmi5@gmail.com"><input type="password" id="loginPassword" placeholder="كلمة المرور"><button class="save-btn" id="loginBtn">دخول</button></div></div>
-<div class="overlay" id="overlay"></div>
-
-<script>
-    // ==================== 1. تهيئة Firebase ====================
-    const firebaseConfig = {
-        apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
-        authDomain: "f-notepro-work-2d25b.firebaseapp.com",
-        databaseURL: "https://f-notepro-work-2d25b-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "f-notepro-work-2d25b",
-        storageBucket: "f-notepro-work-2d25b.firebasestorage.app",
-        messagingSenderId: "221438380381",
-        appId: "1:221438380381:web:b46c35d0ec0944079480b4",
-        measurementId: "G-E4YBHXQE9B"
-    };
-    let app, db, auth;
-    try {
-        app = firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore(app);
-        auth = firebase.auth(app);
-        db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn);
-        console.log("✅ Firebase initialized");
-    } catch(e) { console.error(e); }
-
-    // ==================== 2. IndexedDB للرسائل الصوتية ====================
-    const voiceDB = new Dexie('VoiceMessagesDB');
-    voiceDB.version(2).stores({ messages: '++id, channel, sender, timestamp, audioBlob, expiry, isOpened, openedAt' }).upgrade(tx => {
-        return tx.table('messages').toCollection().modify(msg => {
-            if(msg.isOpened === undefined) msg.isOpened = false;
-            if(msg.openedAt === undefined) msg.openedAt = null;
-        });
-    });
-
-    // ==================== 3. المتغيرات العامة ====================
-    let currentUser = null;
-    let guides = [];
-    let currentEditId = null;
-    let selectedColor = "#e94560";
-    let currentGuidePhotoBase64 = "", currentBusPhotoBase64 = "";
-    let currentChannel = 1;
-    let mediaRecorder = null, audioChunks = [], isRecording = false;
-    let unsubscribeGuides = null, unsubscribeSignals = null;
-    let currentGuideForDetail = null, currentShareGuideId = null;
-    let userProfile = { name: "", phone: "", photoBase64: "" };
-
-    // ==================== 4. دوال مساعدة عامة ====================
-    function showToast(msg, isErr=false, action=null){ 
-        let t=document.createElement('div'); t.className='toast'; 
-        t.innerHTML = `<span>${msg}</span>${action ? `<button class="toast-btn" id="toastActionBtn">${action.label}</button>` : ''}`;
-        document.body.appendChild(t); 
-        if(action) document.getElementById("toastActionBtn").onclick = () => { action.callback(); t.remove(); };
-        setTimeout(()=>t.remove(), 5000); 
-    }
-    function escapeHtml(s){ return s?s.replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]):""; }
-    function validatePhone(p){ return /^[\+]?[0-9]{8,15}$/.test(p.replace(/\s/g,'')); }
-    function compressToBase64(file, callback) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 400;
-                let width = img.width, height = img.height;
-                if(width > MAX_WIDTH) { height = (height * MAX_WIDTH) / width; width = MAX_WIDTH; }
-                canvas.width = width; canvas.height = height;
-                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                callback(canvas.toDataURL('image/jpeg', 0.6));
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    // ==================== 5. إدارة ملف تعريف المستخدم ====================
-    async function saveUserProfileToFirestore() {
-        if(!currentUser) return;
-        await db.collection("users").doc(currentUser.uid).set({
-            name: userProfile.name,
-            phone: userProfile.phone,
-            photoBase64: userProfile.photoBase64 || null,
-            email: currentUser.email,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-    }
-
-    async function loadUserProfile() {
-        if(!currentUser) return;
-        const doc = await db.collection("users").doc(currentUser.uid).get();
-        if(doc.exists) {
-            userProfile = { name: doc.data().name || "", phone: doc.data().phone || "", photoBase64: doc.data().photoBase64 || "" };
-        } else {
-            userProfile = { name: currentUser.email?.split('@')[0] || "", phone: "", photoBase64: "" };
-        }
-        document.getElementById("profileName").value = userProfile.name;
-        document.getElementById("profileEmail").value = currentUser.email;
-        document.getElementById("profilePhone").value = userProfile.phone;
-        const imgSrc = userProfile.photoBase64 || "https://via.placeholder.com/80";
-        document.getElementById("profilePhotoPreview").src = imgSrc;
-        document.getElementById("headerProfilePhoto").src = imgSrc;
-        document.getElementById("sidebarProfilePhoto").src = imgSrc;
-        document.getElementById("sidebarUserName").innerText = userProfile.name || "مرحباً";
-        document.getElementById("sidebarUserEmail").innerText = currentUser.email;
-    }
-
-    function handleProfileImageUpload(file) {
-        if(!file) return;
-        const statusDiv = document.getElementById("profileUploadStatus");
-        statusDiv.innerText = "جاري الضغط...";
-        compressToBase64(file, (base64) => {
-            userProfile.photoBase64 = base64;
-            document.getElementById("profilePhotoPreview").src = base64;
-            document.getElementById("headerProfilePhoto").src = base64;
-            document.getElementById("sidebarProfilePhoto").src = base64;
-            statusDiv.innerText = "✅ تم التحديث";
-            setTimeout(()=>statusDiv.innerText="", 1500);
-            saveUserProfileToFirestore();
-        });
-    }
-    document.getElementById("profileUploadCard")?.addEventListener('click', () => {
-        let inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=e=>{ if(e.target.files[0]) handleProfileImageUpload(e.target.files[0]); }; inp.click();
-    });
-    document.getElementById("saveProfileBtn").onclick = async () => {
-        userProfile.name = document.getElementById("profileName").value.trim();
-        userProfile.phone = document.getElementById("profilePhone").value.trim();
-        await saveUserProfileToFirestore();
-        document.getElementById("sidebarUserName").innerText = userProfile.name || "مرحباً";
-        showToast("تم حفظ بيانات البروفيل");
-        document.getElementById("profileModal").classList.remove("show");
-    };
-
-    // ==================== 6. إدارة المرشدين (ضغط الصور + حفظ في Firestore) ====================
-    function compressImageToBase64(file, type) {
-        if(!file) return;
-        const statusDiv = document.getElementById(type==='guide'?'guideUploadStatus':'busUploadStatus');
-        if(statusDiv) statusDiv.innerText = "جاري الضغط...";
-        compressToBase64(file, (base64) => {
-            if(type === 'guide') { currentGuidePhotoBase64 = base64; document.getElementById("guidePhotoPreview").src = base64; document.getElementById("guidePreviewContainer").style.display = "flex"; }
-            else { currentBusPhotoBase64 = base64; document.getElementById("busPhotoPreview").src = base64; document.getElementById("busPreviewContainer").style.display = "flex"; }
-            if(statusDiv) { statusDiv.innerText = "✅ تم"; setTimeout(()=>statusDiv.innerText="",1500); }
-        });
-    }
-    function triggerUpload(type){ let inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=e=>{ if(e.target.files[0]) compressImageToBase64(e.target.files[0], type); }; inp.click(); }
-    document.getElementById("guideUploadCard")?.addEventListener('click',()=>triggerUpload('guide'));
-    document.getElementById("busUploadCard")?.addEventListener('click',()=>triggerUpload('bus'));
-
-    async function saveGuideToFirestore(guideData) {
-        showToast("جاري الحفظ...");
-        try {
-            const docRef = guideData.id ? db.collection("guides").doc(guideData.id) : db.collection("guides").doc();
-            const finalData = { userId: currentUser.uid, name: guideData.name, phone: guideData.phone, plateNumber: guideData.plateNumber||"", guidePhoto: currentGuidePhotoBase64||null, busPhoto: currentBusPhotoBase64||null, cardColor: guideData.cardColor, transportType: guideData.transportType||"", agency: guideData.agency||"", notes: guideData.notes||"", favorite: false, visibility: guideData.visibility||"private", updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-            if(!guideData.id) finalData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            await docRef.set(finalData,{merge:true});
-            return true;
-        } catch(e){ throw e; }
-    }
-
-    function resetForm(){ 
-        currentEditId=null; selectedColor="#e94560"; currentGuidePhotoBase64=""; currentBusPhotoBase64=""; 
-        document.getElementById("guideName").value=""; document.getElementById("guidePhone").value=""; 
-        document.getElementById("plateNumber").value=""; document.getElementById("transportType").value=""; 
-        document.getElementById("agency").value=""; document.getElementById("guideNotes").value=""; 
-        document.getElementById("guidePreviewContainer").style.display="none"; 
-        document.getElementById("busPreviewContainer").style.display="none"; 
-        document.getElementById("guideVisibility").value="private"; 
-        document.getElementById("modalTitle").innerHTML="➕ إضافة مرشد"; 
-        document.getElementById("phoneError").style.display="none"; 
-    }
-
-    // ==================== 7. الاستماع للبيانات من Firestore (عرض فوري) ====================
-    function subscribeToGuides() {
-        if(unsubscribeGuides) unsubscribeGuides();
-        if(!currentUser) return;
-        
-        const myQuery = db.collection("guides").where("userId", "==", currentUser.uid);
-        const publicQuery = db.collection("guides").where("visibility", "==", "public");
-        
-        const updateList = () => {
-            Promise.all([myQuery.get(), publicQuery.get()]).then(([mySnap, pubSnap])=>{
-                let all = [];
-                mySnap.forEach(d => all.push({ id: d.id, ...d.data() }));
-                pubSnap.forEach(d => { if(d.data().userId !== currentUser.uid) all.push({ id: d.id, ...d.data() }); });
-                const unique = [];
-                all.forEach(g => { if(!unique.some(u => u.id === g.id)) unique.push(g); });
-                guides = unique;
-                renderList();
-                console.log("✅ تم تحديث القائمة, عدد المرشدين:", guides.length);
-            }).catch(e => console.warn("خطأ في جلب البيانات:", e));
-        };
-        
-        myQuery.onSnapshot(updateList, err => console.warn("myQuery error:", err));
-        publicQuery.onSnapshot(updateList, err => console.warn("publicQuery error:", err));
-        unsubscribeGuides = () => {};
-    }
-
-    // ==================== 8. عرض قائمة المرشدين مع الفلتر ====================
-    function renderList() {
-        let search = document.getElementById("searchInput").value.toLowerCase();
-        let agencyFilter = document.getElementById("filterAgency").value;
-        let filtered = guides.filter(g => (g.name && g.name.toLowerCase().includes(search)) || (g.phone && g.phone.includes(search)));
-        if(agencyFilter !== "all") filtered = filtered.filter(g => g.agency === agencyFilter);
-        let container = document.getElementById("guidesContainer");
-        if(filtered.length === 0){ container.innerHTML = '<div class="loading">😕 لا توجد نتائج</div>'; return; }
-        container.innerHTML = filtered.map(guide => `
-            <div class="guide-card" style="border-right-color: ${guide.cardColor};" onclick="window.showFullDetails(${JSON.stringify(guide).replace(/"/g, '&quot;')})">
-                <div class="card-row">
-                    <img class="card-photo" src="${guide.guidePhoto || ''}" onclick="event.stopPropagation(); window.showImage('${guide.guidePhoto}')" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20fill=%22gray%22%3E%3Ccircle%20cx=%2212%22%20cy=%2212%22%20r=%2210%22/%3E%3C/svg%3E';">
-                    <div class="card-info">
-                        <div class="card-name">${escapeHtml(guide.name)} ${guide.visibility === 'public' ? '<span style="font-size:11px;background:#3b82f6;color:white;padding:2px 8px;border-radius:30px;">عام</span>' : '<span style="font-size:11px;background:#64748b;color:white;padding:2px 8px;border-radius:30px;">خاص</span>'}</div>
-                        <div class="card-phone"><span>${escapeHtml(guide.phone)}</span><button onclick="event.stopPropagation(); window.location.href='tel:${guide.phone}'">اتصل</button></div>
-                    </div>
-                    <button class="expand-btn" onclick="event.stopPropagation(); window.toggleDetails('${guide.id}', this)">▼</button>
-                </div>
-                <div id="details-${guide.id}" class="card-details"><div class="details-grid">
-                    ${guide.busPhoto ? `<img src="${guide.busPhoto}" style="width:50px;border-radius:14px;" onclick="event.stopPropagation(); window.showImage('${guide.busPhoto}')">` : ''}
-                    <p><strong>🚐 وسيلة النقل:</strong> ${escapeHtml(guide.transportType || '—')}</p>
-                    <p><strong>🚍 اللوحة:</strong> <span style="background:${guide.cardColor};color:white;padding:2px 12px;border-radius:30px;">${escapeHtml(guide.plateNumber || '—')}</span></p>
-                    <p><strong>🏢 الوكالة:</strong> ${escapeHtml(guide.agency || '—')}</p>
-                    <p><strong>📝 ملاحظات:</strong> ${escapeHtml((guide.notes || '').substring(0, 60))}</p>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        ${guide.userId === currentUser?.uid ? `<button class="save-btn" style="padding:4px 12px; font-size:12px;" onclick="event.stopPropagation(); window.editGuideById('${guide.id}')">✏️ تعديل</button><button class="cancel-btn" style="padding:4px 12px; background:#dc2626;" onclick="event.stopPropagation(); window.deleteGuideById('${guide.id}')">🗑️ حذف</button>` : ''}
-                        <button class="share-btn" onclick="event.stopPropagation(); window.openMultiShare('${guide.id}')">💬 مشاركة واتساب</button>
-                    </div>
-                </div></div>
+    <!-- AUTH SCREEN -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:white;"></i></div>
+                <h1>F-Note Pro</h1>
             </div>
-        `).join("");
-    }
+            <form id="authForm" class="auth-form">
+                <input type="text" id="authName" placeholder="الاسم الكامل" required>
+                <input type="email" id="authEmail" placeholder="البريد الإلكتروني" required dir="ltr">
+                <input type="password" id="authPassword" placeholder="كلمة المرور" required>
+                <button type="submit" class="auth-btn" id="authSubmitBtn">تسجيل الدخول</button>
+            </form>
+            <p class="auth-toggle" id="authToggle">ليس لديك حساب؟ <span onclick="toggleAuthMode()">إنشاء حساب جديد</span></p>
+            <p class="error-message" id="authError"></p>
+        </div>
+    </div>
 
-    window.showFullDetails = (guide) => {
-        currentGuideForDetail = guide;
-        document.getElementById("detailName").innerHTML = `<span style="color:${guide.cardColor}">⭐</span> ${escapeHtml(guide.name)}`;
-        document.getElementById("detailContent").innerHTML = `
-            <div style="text-align:center;">${guide.guidePhoto ? `<img src="${guide.guidePhoto}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:10px;cursor:pointer;" onclick="window.showImage('${guide.guidePhoto}')">` : '<div style="width:100px;height:100px;border-radius:50%;background:var(--search-bg);display:flex;align-items:center;justify-content:center;margin:10px auto;">📷</div>'}</div>
-            <p><strong>📞 اتصل:</strong> <a href="tel:${guide.phone}" style="color:var(--gold);">${guide.phone}</a></p>
-            <p><strong>🚐 وسيلة النقل:</strong> ${escapeHtml(guide.transportType || '—')}</p>
-            <p><strong>🚍 رقم اللوحة:</strong> <span class="plate-badge">${escapeHtml(guide.plateNumber || '—')}</span></p>
-            <p><strong>🏢 الوكالة:</strong> ${escapeHtml(guide.agency || '—')}</p>
-            <p><strong>📝 ملاحظات:</strong> ${escapeHtml(guide.notes || 'لا توجد ملاحظات')}</p>
-        `;
-        document.getElementById("detailModal").classList.add("show");
-    };
-    window.showImage = (url) => { if(url){ document.getElementById("fullImage").src = url; document.getElementById("fullImageModal").classList.add("show"); } };
-    window.toggleDetails = (id, btn) => { let d = document.getElementById(`details-${id}`); if(d){ d.classList.toggle("show"); btn.innerHTML = d.classList.contains("show") ? "▲" : "▼"; } };
-    window.editGuideById = async (id) => { let g = guides.find(g=>g.id === id); if(g && g.userId === currentUser?.uid){ 
-        currentEditId = id; document.getElementById("guideName").value = g.name; document.getElementById("guidePhone").value = g.phone;
-        document.getElementById("plateNumber").value = g.plateNumber || ""; document.getElementById("transportType").value = g.transportType || "";
-        document.getElementById("agency").value = g.agency || ""; document.getElementById("guideNotes").value = g.notes || "";
-        selectedColor = g.cardColor || "#e94560"; document.getElementById("guideVisibility").value = g.visibility || "private";
-        if(g.guidePhoto){ currentGuidePhotoBase64 = g.guidePhoto; document.getElementById("guidePhotoPreview").src = g.guidePhoto; document.getElementById("guidePreviewContainer").style.display = "flex"; }
-        else { currentGuidePhotoBase64 = ""; document.getElementById("guidePreviewContainer").style.display = "none"; }
-        if(g.busPhoto){ currentBusPhotoBase64 = g.busPhoto; document.getElementById("busPhotoPreview").src = g.busPhoto; document.getElementById("busPreviewContainer").style.display = "flex"; }
-        else { currentBusPhotoBase64 = ""; document.getElementById("busPreviewContainer").style.display = "none"; }
-        document.getElementById("modalTitle").innerHTML = "✏️ تعديل مرشد"; document.getElementById("guideModal").classList.add("show");
-    } else showToast("لا يمكنك تعديل بيانات الآخرين", true); };
-    window.deleteGuideById = async (id) => { if(confirm("حذف هذا المرشد؟")) await db.collection("guides").doc(id).delete(); };
-    
-    // ==================== 9. مشاركة واتساب متعددة ====================
-    window.openMultiShare = (guideId) => {
-        currentShareGuideId = guideId;
-        const guide = guides.find(g => g.id === guideId);
-        if(!guide) return;
-        const contacts = [{name:"أحمد", phone:"+21612345678"},{name:"سارة", phone:"+21698765432"},{name:"ياسر", phone:"+21655554444"}];
-        document.getElementById("contactsList").innerHTML = contacts.map(c => `<label style="display:block;margin:8px;background:var(--search-bg);padding:10px;border-radius:30px;"><input type="checkbox" value="${c.phone}" class="contact-checkbox"> ${c.name} (${c.phone})</label>`).join("");
-        document.getElementById("multiShareModal").classList.add("show");
-    };
-    document.getElementById("confirmShareBtn").onclick = () => {
-        const guide = guides.find(g => g.id === currentShareGuideId);
-        if(!guide) return;
-        const checks = document.querySelectorAll(".contact-checkbox:checked");
-        if(checks.length === 0){ showToast("اختر مستلم", true); return; }
-        const msg = `*${guide.name}*\n📞 ${guide.phone}\n🚐 ${guide.transportType||''}\n🚍 ${guide.plateNumber||''}`;
-        checks.forEach(cb => { window.open(`https://wa.me/${cb.value.replace(/[^0-9+]/g,'')}?text=${encodeURIComponent(msg)}`, '_blank'); });
-        document.getElementById("multiShareModal").classList.remove("show");
-    };
-    document.getElementById("closeMultiShareBtn").onclick = () => document.getElementById("multiShareModal").classList.remove("show");
-    document.getElementById("detailShareBtn").onclick = () => { if(currentGuideForDetail) window.openMultiShare(currentGuideForDetail.id); };
+    <!-- SETTINGS -->
+    <div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings()"></div>
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header"><h3><i class="fa-solid fa-gear"></i> الإعدادات</h3><button class="modal-close" onclick="closeSettings()"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="settings-section"><h4>المظهر</h4>
+            <div class="setting-item"><span><i class="fa-solid fa-moon"></i> الوضع الليلي</span><div class="toggle-switch active" id="darkModeToggle" onclick="toggleSetting('darkMode')"></div></div>
+            <div class="setting-item"><span><i class="fa-solid fa-wand-magic-sparkles"></i> تأثيرات</span><div class="toggle-switch active" id="animationsToggle" onclick="toggleSetting('animations')"></div></div>
+        </div>
+        <div class="settings-section"><h4>الإشعارات</h4>
+            <div class="setting-item"><span><i class="fa-solid fa-bell"></i> إشعارات الرسائل</span><div class="toggle-switch active" id="notificationsToggle" onclick="toggleSetting('notifications')"></div></div>
+        </div>
+        <div class="settings-section"><button class="submit-btn" style="width:100%;background:transparent;border:1.5px solid var(--danger);color:var(--danger);box-shadow:none;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button></div>
+    </div>
 
-    // ==================== 10. نظام اللاسلكي الفوري ====================
-    async function startRecording() {
-        if(isRecording) return;
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const now = new Date();
-                const expiryUnread = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-                const messageId = Date.now() + "_" + Math.random();
-                await voiceDB.messages.add({
-                    id: messageId, channel: currentChannel, sender: currentUser.email,
-                    senderName: userProfile.name || currentUser.email, timestamp: now.toISOString(),
-                    audioBlob: audioBlob, expiry: expiryUnread.toISOString(), isOpened: false, openedAt: null
+    <!-- MESSAGES PANEL -->
+    <div class="messages-backdrop" id="messagesBackdrop" onclick="closeMessages()"></div>
+    <div class="messages-panel" id="messagesPanel">
+        <div class="msg-panel-header">
+            <h3><i class="fa-solid fa-envelope"></i> الرسائل</h3>
+            <button class="modal-close" onclick="closeMessages()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="msg-tabs">
+            <button class="msg-tab active" data-tab="chats" onclick="switchMsgTab('chats')">المحادثات</button>
+            <button class="msg-tab" data-tab="requests" onclick="switchMsgTab('requests')">الطلبات <span class="tab-badge" id="requestsBadge" style="display:none;">0</span></button>
+            <button class="msg-tab" data-tab="add" onclick="switchMsgTab('add')"><i class="fa-solid fa-user-plus"></i></button>
+        </div>
+        <div class="msg-list" id="msgList"></div>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div class="chat-backdrop" id="chatBackdrop" onclick="closeChat()"></div>
+    <div class="chat-screen" id="chatScreen">
+        <div class="chat-header">
+            <button class="back-btn" onclick="closeChat()"><i class="fa-solid fa-arrow-right"></i></button>
+            <div class="msg-user-avatar" id="chatAvatar" style="width:40px;height:40px;font-size:16px;"></div>
+            <span class="chat-user-name" id="chatUserName"></span>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <button class="chat-voice-btn voice-glow" id="chatVoiceBtn" onclick="startChatVoice()" title="رسالة صوتية">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+            <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendMessage()">
+            <button class="chat-send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- ADD FRIEND MODAL -->
+    <div id="addFriendModal" class="modal-overlay">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header"><h2>إضافة صديق</h2><button class="modal-close" onclick="closeAddFriend()"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="modal-form">
+                <div class="form-group">
+                    <label>ابحث بالبريد الإلكتروني</label>
+                    <input type="email" id="friendSearchInput" placeholder="أدخل البريد الإلكتروني" dir="ltr" oninput="searchFriends()">
+                </div>
+                <div class="friend-search-results" id="friendSearchResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="appContainer" class="app-container hidden">
+        <div id="feedScreen" class="feed-screen active">
+            <div class="top-header">
+                <div class="header-logo"><div class="mini-icon"><i class="fa-solid fa-shield-halved" style="color:white;font-size:14px;"></i></div><span>F-Note Pro</span></div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="openMessages()" title="الرسائل">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span class="badge" id="msgBadge" style="display:none;">0</span>
+                    </button>
+                    <button class="header-btn" onclick="openSettings()"><i class="fa-solid fa-gear"></i></button>
+                    <button class="header-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </div>
+            <div class="main-content"><div id="feedStack" class="feed-stack"></div></div>
+        </div>
+        <div id="searchScreen" class="search-screen">
+            <div class="search-header">
+                <div class="search-input-wrapper"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="searchInput" placeholder="ابحث باسم المرشد..."></div>
+                <button class="voice-search-btn voice-glow" id="voiceSearchBtn" onclick="startVoiceSearch()"><i class="fa-solid fa-microphone"></i></button>
+            </div>
+            <div class="color-filters">
+                <button class="color-chip active" data-color="all" onclick="filterByColor('all',this)"><span class="color-dot" style="background:linear-gradient(135deg,var(--primary),var(--secondary));"></span> الكل</button>
+                <button class="color-chip" data-color="star" onclick="filterByColor('star',this)"><span class="color-dot" style="background:var(--warning);"></span> المفضلين</button>
+                <button class="color-chip" data-color="message" onclick="filterByColor('message',this)"><span class="color-dot" style="background:var(--accent-blue);"></span> مراسلة</button>
+            </div>
+            <div class="search-results" id="searchResults"><div class="no-results"><i class="fa-solid fa-magnifying-glass"></i><p>ابدأ البحث</p></div></div>
+        </div>
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-screen="feed" onclick="switchScreen('feed')"><span class="nav-indicator"></span><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
+            <button class="nav-item add-btn" onclick="openAddModal()"><i class="fa-solid fa-circle-plus"></i><span>إضافة</span></button>
+            <button class="nav-item" data-screen="search" onclick="switchScreen('search')"><i class="fa-solid fa-magnifying-glass"></i><span>بحث</span></button>
+            <button class="nav-item" onclick="openMessages()" style="position:relative;"><i class="fa-solid fa-comments"></i><span>رسائل</span><span class="nav-badge" id="navMsgBadge" style="display:none;">0</span></button>
+        </nav>
+    </div>
+
+    <!-- ADD/EDIT MODAL -->
+    <div id="addModal" class="modal-overlay">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header"><h2 id="modalTitle">إضافة مرشد جديد</h2><button class="modal-close" onclick="closeAddModal()"><i class="fa-solid fa-xmark"></i></button></div>
+            <form id="addGuideForm" class="modal-form" onsubmit="saveGuide(event)">
+                <input type="hidden" id="editGuideId" value="">
+                <input type="file" id="guideFileInput" class="hidden-file-input" accept="image/*" onchange="handleFileSelect(event,'guide')">
+                <input type="file" id="vehicleFileInput" class="hidden-file-input" accept="image/*" onchange="handleFileSelect(event,'vehicle')">
+                <label style="font-size:13px;font-weight:700;color:var(--text-secondary);">الصور</label>
+                <div class="dual-image-upload">
+                    <div class="image-upload-area" id="guideImageUpload" onclick="document.getElementById('guideFileInput').click()"><i class="fa-solid fa-user"></i><span>صورة المرشد</span><div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير</div><div class="upload-progress"></div></div>
+                    <div class="image-upload-area" id="vehicleImageUpload" onclick="document.getElementById('vehicleFileInput').click()"><i class="fa-solid fa-bus"></i><span>صورة الحافلة</span><div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير</div><div class="upload-progress"></div></div>
+                </div>
+                <div class="form-group"><label>اسم المرشد <span style="color:var(--danger);">*</span></label>
+                    <div class="voice-input-group">
+                        <input type="text" id="guideName" placeholder="أدخل الاسم الكامل" required>
+                        <button type="button" class="voice-input-btn voice-glow" id="nameVoiceBtn" onclick="startNameVoice()"><i class="fa-solid fa-microphone"></i></button>
+                    </div>
+                </div>
+                <div class="form-group"><label>رقم الهاتف <span style="color:var(--danger);">*</span></label><input type="tel" id="guidePhone" placeholder="+216 XX XXX XXX" required dir="ltr"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>رقم الرخصة</label><input type="text" id="guideLicense" placeholder="رقم الرخصة"></div>
+                    <div class="form-group"><label>اللغة</label><select id="guideLanguage"><option value="العربية">العربية</option><option value="الفرنسية">الفرنسية</option><option value="الإنجليزية">الإنجليزية</option><option value="تونسي (دارجة)">تونسي</option><option value="متعدد اللغات">متعدد</option></select></div>
+                </div>
+                <div class="form-group"><label>ملاحظات</label><textarea id="guideNotes" placeholder="ملاحظات..."></textarea></div>
+                <div class="delete-confirm" id="deleteConfirm"><p>هل أنت متأكد من حذف هذا المرشد؟</p><div class="delete-confirm-btns"><button type="button" class="btn-cancel-delete" onclick="cancelDelete()">إلغاء</button><button type="button" class="btn-confirm-delete" onclick="confirmDelete()">حذف</button></div></div>
+                <button type="submit" class="submit-btn" id="submitGuideBtn"><i class="fa-solid fa-check"></i> حفظ المرشد</button>
+                <button type="button" class="submit-btn" id="deleteGuideBtn" style="display:none;background:transparent;border:1.5px solid var(--danger);color:var(--danger);box-shadow:none;" onclick="showDeleteConfirm()"><i class="fa-solid fa-trash"></i> حذف</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- IMAGE VIEWER -->
+    <div id="imageViewer" class="modal-overlay" onclick="closeImageViewer()" style="z-index:4000;">
+        <div class="modal-sheet" style="background:transparent;box-shadow:none;max-width:95vw;" onclick="event.stopPropagation()">
+            <button class="modal-close" style="position:absolute;top:10px;right:10px;z-index:10;" onclick="closeImageViewer()"><i class="fa-solid fa-xmark"></i></button>
+            <img id="viewerImage" src="" style="width:100%;border-radius:16px;">
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ==================== FIREBASE ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAJLpdRoKamaHHofnCh4qQk6mHKeI25Tgc",
+            authDomain: "f-notepro-work.firebaseapp.com",
+            databaseURL: "https://f-notepro-work-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "f-notepro-work",
+            storageBucket: "f-notepro-work.firebasestorage.app",
+            messagingSenderId: "645688115664",
+            appId: "1:645688115664:web:5dbfee1e28c41e0a1c79d5"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const CLOUDINARY_CLOUD_NAME = 'dmhtx93nj';
+        const CLOUDINARY_UPLOAD_PRESET = 'ml_default';
+        const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+        // ==================== STATE ====================
+        let currentUser = null;
+        let currentUserData = null;
+        let guides = [];
+        let currentFeedIndex = 0;
+        let startY = 0;
+        let isDragging = false;
+        let currentScreen = 'feed';
+        let uploadedGuideImage = '';
+        let uploadedVehicleImage = '';
+        let recognition = null;
+        let pendingDeleteId = null;
+        let activeColorFilter = 'all';
+        let settings = { darkMode: true, animations: true, voiceSearch: true, notifications: true };
+        let currentChatId = null;
+        let currentChatUser = null;
+        let currentMsgTab = 'chats';
+        let friends = [];
+        let friendRequests = [];
+        let unreadCount = 0;
+        let pendingRequestCount = 0;
+
+        // ==================== AUTH ====================
+        let isLoginMode = true;
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authSubmitBtn').textContent = isLoginMode ? 'تسجيل الدخول' : 'إنشاء حساب';
+            document.getElementById('authToggle').innerHTML = isLoginMode ? 'ليس لديك حساب؟ <span onclick="toggleAuthMode()">إنشاء حساب جديد</span>' : 'لديك حساب بالفعل؟ <span onclick="toggleAuthMode()">تسجيل الدخول</span>';
+            document.querySelector('#authName').parentElement.style.display = isLoginMode ? 'none' : 'block';
+        }
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('authName').value.trim();
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const errorEl = document.getElementById('authError');
+            try {
+                errorEl.classList.remove('show');
+                if (isLoginMode) {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } else {
+                    if (!name) { errorEl.textContent = 'الرجاء إدخال الاسم'; errorEl.classList.add('show'); return; }
+                    const cred = await auth.createUserWithEmailAndPassword(email, password);
+                    await db.collection('users').doc(cred.user.uid).set({
+                        name, email, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            } catch (error) {
+                errorEl.textContent = getArabicError(error.code);
+                errorEl.classList.add('show');
+            }
+        });
+
+        function getArabicError(code) {
+            const m = { 'auth/email-already-in-use': 'البريد مستخدم', 'auth/invalid-email': 'بريد غير صالح', 'auth/weak-password': 'كلمة مرور ضعيفة', 'auth/user-not-found': 'مستخدم غير موجود', 'auth/wrong-password': 'كلمة مرور خاطئة', 'auth/too-many-requests': 'محاولات كثيرة' };
+            return m[code] || 'حدث خطأ';
+        }
+
+        function logout() { auth.signOut(); closeSettings(); }
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                currentUserData = userDoc.exists ? userDoc.data() : { name: user.email, email: user.email };
+                if (!userDoc.exists) await db.collection('users').doc(user.uid).set({ name: user.email, email: user.email, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appContainer').classList.remove('hidden');
+                loadGuides();
+                setupFriendsListener();
+            } else {
+                currentUser = null; currentUserData = null;
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('appContainer').classList.add('hidden');
+            }
+        });
+
+        // ==================== FRIENDS SYSTEM ====================
+        function setupFriendsListener() {
+            if (!currentUser) return;
+            
+            // Listen for friend requests received
+            db.collection('friendRequests')
+                .where('to', '==', currentUser.uid)
+                .where('status', '==', 'pending')
+                .onSnapshot(snapshot => {
+                    friendRequests = [];
+                    snapshot.forEach(doc => friendRequests.push({ id: doc.id, ...doc.data() }));
+                    pendingRequestCount = friendRequests.length;
+                    updateBadges();
+                    if (currentMsgTab === 'requests') renderRequests();
                 });
-                await db.collection("voiceSignals").add({
-                    messageId: messageId, channel: currentChannel, sender: currentUser.email,
-                    senderName: userProfile.name || currentUser.email, timestamp: firebase.firestore.FieldValue.serverTimestamp(), type: "new_voice"
-                });
-                showToast(`📡 تم إرسال البث في الموجة ${currentChannel}`);
-                stream.getTracks().forEach(t=>t.stop());
-            };
-            mediaRecorder.start();
-            isRecording = true;
-            document.getElementById("walkieTalkieBtn").classList.add("recording");
-            try { let ctx = new (AudioContext||webkitAudioContext)(); let osc=ctx.createOscillator(); let gain=ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value=880; gain.gain.value=0.2; osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.3); osc.stop(ctx.currentTime+0.3); } catch(e){}
-        } catch(e){ showToast("الرجاء السماح بالميكروفون", true); }
-    }
-    function stopRecording() { if(mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; document.getElementById("walkieTalkieBtn").classList.remove("recording"); } }
-    document.getElementById("walkieTalkieBtn").addEventListener("pointerdown", startRecording);
-    document.getElementById("walkieTalkieBtn").addEventListener("pointerup", stopRecording);
-    document.getElementById("walkieTalkieBtn").addEventListener("pointerleave", stopRecording);
 
-    function listenForVoiceSignals() {
-        if(unsubscribeSignals) unsubscribeSignals();
-        if(!currentUser) return;
-        unsubscribeSignals = db.collection("voiceSignals").where("channel", "==", currentChannel).orderBy("timestamp", "desc").limit(1).onSnapshot((snapshot) => {
-            snapshot.docChanges().forEach(change => {
-                if(change.type === "added") {
-                    const signal = change.doc.data();
-                    if(signal.sender !== currentUser.email) {
-                        showToast(`🔊 رسالة صوتية جديدة من ${signal.senderName || signal.sender} في الموجة ${currentChannel}`, false, { label: "عرض", callback: () => showMessages() });
-                    }
+            // Listen for accepted friendships
+            db.collection('friendships')
+                .where('users', 'array-contains', currentUser.uid)
+                .onSnapshot(snapshot => {
+                    friends = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const otherId = data.users.find(id => id !== currentUser.uid);
+                        friends.push({ id: doc.id, friendId: otherId, ...data });
+                    });
+                    if (currentMsgTab === 'chats') renderChats();
+                });
+
+            // Listen for unread messages
+            db.collection('messages')
+                .where('to', '==', currentUser.uid)
+                .where('read', '==', false)
+                .onSnapshot(snapshot => {
+                    unreadCount = snapshot.size;
+                    updateBadges();
+                });
+        }
+
+        function updateBadges() {
+            const totalBadges = unreadCount + pendingRequestCount;
+            ['msgBadge', 'navMsgBadge'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.textContent = totalBadges;
+                    el.style.display = totalBadges > 0 ? 'flex' : 'none';
                 }
             });
-        });
-    }
-
-    async function showMessages() {
-        const now = new Date();
-        await voiceDB.messages.where('expiry').below(now.toISOString()).delete();
-        const msgs = await voiceDB.messages.where('channel').equals(currentChannel).toArray();
-        const container = document.getElementById("messagesList");
-        if(msgs.length === 0) container.innerHTML = "<p>لا توجد رسائل صوتية</p>";
-        else {
-            container.innerHTML = msgs.sort((a,b)=>new Date(b.timestamp) - new Date(a.timestamp)).map(msg => {
-                const isExpiredSoon = new Date(msg.expiry) < new Date(now.getTime() + 60*60*1000);
-                return `<div class="message-item"><div><strong>من:</strong> ${escapeHtml(msg.senderName || msg.sender)}</div><div>${new Date(msg.timestamp).toLocaleString()}</div><audio controls src="${URL.createObjectURL(msg.audioBlob)}" style="width:100%; margin-top:8px;"></audio><div style="font-size:11px; margin-top:6px; color: ${isExpiredSoon ? '#ef4444' : 'var(--text-secondary)'}">⏳ تنتهي: ${new Date(msg.expiry).toLocaleString()}</div></div>`;
-            }).join("");
-            for(let msg of msgs){
-                if(!msg.isOpened){
-                    await voiceDB.messages.update(msg.id, { isOpened: true, openedAt: now.toISOString() });
-                    await voiceDB.messages.update(msg.id, { expiry: new Date(now.getTime() + 60 * 60 * 1000).toISOString() });
-                }
+            const reqBadge = document.getElementById('requestsBadge');
+            if (reqBadge) {
+                reqBadge.textContent = pendingRequestCount;
+                reqBadge.style.display = pendingRequestCount > 0 ? 'inline-flex' : 'none';
             }
         }
-        document.getElementById("modalChannelNum").innerText = currentChannel;
-        document.getElementById("messagesModal").classList.add("show");
-    }
-    document.getElementById("showMessagesBtn").onclick = showMessages;
-    document.getElementById("closeMessagesBtn").onclick = () => document.getElementById("messagesModal").classList.remove("show");
-    document.getElementById("clearMessagesBtn").onclick = async () => { if(confirm("مسح كل الرسائل؟")) await voiceDB.messages.clear(); showToast("تم المسح"); };
-    
-    function setChannel(ch){ currentChannel = ch; document.getElementById("currentChannelDisplay").innerText = ch; showToast(`الموجة الحالية: ${ch}`); listenForVoiceSignals(); }
-    document.getElementById("channelSelectorBtn").onclick = () => document.getElementById("channelModal").classList.add("show");
-    document.querySelectorAll(".channel-opt").forEach(btn => { btn.onclick = () => { setChannel(parseInt(btn.dataset.channel)); document.getElementById("channelModal").classList.remove("show"); }; });
-    document.getElementById("closeChannelModal").onclick = () => document.getElementById("channelModal").classList.remove("show");
 
-    // ==================== 11. حفظ المرشد الرئيسي ====================
-    document.getElementById("saveGuideBtn").onclick = async () => {
-        let name = document.getElementById("guideName").value.trim(), phone = document.getElementById("guidePhone").value.trim();
-        if(!name || !phone){ showToast("الاسم والهاتف مطلوبان", true); return; }
-        if(!validatePhone(phone)){ document.getElementById("phoneError").style.display = "block"; showToast("رقم غير صالح", true); return; }
-        document.getElementById("phoneError").style.display = "none";
-        const guideData = { id: currentEditId || null, name, phone, plateNumber: document.getElementById("plateNumber").value.trim(), cardColor: selectedColor, transportType: document.getElementById("transportType").value.trim(), agency: document.getElementById("agency").value.trim(), notes: document.getElementById("guideNotes").value.trim(), visibility: document.getElementById("guideVisibility").value };
-        try{ await saveGuideToFirestore(guideData); showToast("تم الحفظ"); document.getElementById("guideModal").classList.remove("show"); resetForm(); } catch(e){ showToast("فشل الحفظ", true); }
-    };
+        async function searchFriends() {
+            const term = document.getElementById('friendSearchInput').value.trim().toLowerCase();
+            const container = document.getElementById('friendSearchResults');
+            if (!term || term.length < 3) { container.innerHTML = ''; return; }
 
-    // ==================== 12. المصادقة وإدارة الجلسة ====================
-    async function handleLogin(email, password){ try{ await auth.signInWithEmailAndPassword(email, password); showToast("تم تسجيل الدخول"); } catch(e){ showToast(e.message, true); } }
-    function handleLogout(){ if(confirm("تسجيل الخروج؟")){ auth.signOut(); currentUser = null; if(unsubscribeGuides) unsubscribeGuides(); if(unsubscribeSignals) unsubscribeSignals(); guides = []; renderList(); document.getElementById("loginScreen").classList.remove("hide"); document.getElementById("signOutBtn").style.display = "none"; showToast("تم الخروج"); } }
-    auth.onAuthStateChanged(async (user) => {
-        if(user){
-            currentUser = user;
-            document.getElementById("loginScreen").classList.add("hide");
-            document.getElementById("signOutBtn").style.display = "flex";
-            await loadUserProfile();
-            subscribeToGuides();
-            listenForVoiceSignals();
-        } else {
-            if(unsubscribeGuides) unsubscribeGuides();
-            if(unsubscribeSignals) unsubscribeSignals();
-            guides = []; renderList();
-            document.getElementById("loginScreen").classList.remove("hide");
-            document.getElementById("signOutBtn").style.display = "none";
+            container.innerHTML = '<div style="text-align:center;padding:20px;"><div class="spinner"></div></div>';
+
+            try {
+                const snap = await db.collection('users')
+                    .where('email', '>=', term)
+                    .where('email', '<=', term + '\uf8ff')
+                    .limit(10)
+                    .get();
+                
+                const results = [];
+                snap.forEach(doc => {
+                    if (doc.id !== currentUser.uid) results.push({ id: doc.id, ...doc.data() });
+                });
+
+                if (!results.length) {
+                    container.innerHTML = '<p style="text-align:center;color:var(--text-tertiary);padding:20px;">لا يوجد مستخدمين</p>';
+                    return;
+                }
+
+                container.innerHTML = results.map(u => {
+                    const alreadyFriend = friends.some(f => f.friendId === u.id);
+                    const requestSent = friendRequests.some(r => r.to === u.id && r.status === 'pending');
+                    const requestReceived = friendRequests.some(r => r.from === u.id && r.status === 'pending');
+                    
+                    let btnHtml = '';
+                    if (alreadyFriend) btnHtml = '<span style="color:var(--success);font-size:12px;"><i class="fa-solid fa-check"></i> صديق</span>';
+                    else if (requestSent) btnHtml = '<button class="friend-add-btn sent" disabled>تم الإرسال</button>';
+                    else if (requestReceived) btnHtml = '<button class="friend-add-btn" style="background:var(--success);" onclick="acceptRequestDirect(\'' + u.id + '\')">قبول</button>';
+                    else btnHtml = '<button class="friend-add-btn" onclick="sendFriendRequest(\'' + u.id + '\', this)">إضافة</button>';
+
+                    return `<div class="friend-result-item">
+                        <div class="friend-result-avatar"><i class="fa-solid fa-user"></i></div>
+                        <div class="friend-result-info"><div class="friend-result-name">${u.name||u.email}</div><div class="friend-result-email">${u.email}</div></div>
+                        ${btnHtml}
+                    </div>`;
+                }).join('');
+            } catch (e) { container.innerHTML = '<p style="text-align:center;color:var(--danger);">خطأ في البحث</p>'; }
         }
-    });
-    document.getElementById("loginBtn").onclick = () => handleLogin(loginEmail.value.trim(), loginPassword.value.trim());
-    document.getElementById("signOutBtn").onclick = handleLogout;
 
-    // ==================== 13. أحداث الواجهة والإعدادات ====================
-    document.getElementById("refreshBtn").onclick = () => { if(currentUser) subscribeToGuides(); showToast("تم التحديث"); };
-    document.getElementById("darkModeSidebar").onclick = () => { document.body.classList.toggle("dark"); localStorage.setItem("darkMode", document.body.classList.contains("dark")); };
-    if(localStorage.getItem("darkMode") === "true") document.body.classList.add("dark");
-    document.getElementById("exportDataBtn").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], {type: "application/json"})); a.download = `guides_${Date.now()}.json`; a.click(); showToast("تم التصدير"); };
-    document.getElementById("exportPdfBtn").onclick = () => { let el = document.createElement("div"); el.dir = "rtl"; el.innerHTML = "<h1 style='text-align:center;color:#e94560;'>F-Note Pro</h1><hr>"; guides.forEach(g => { el.innerHTML += `<div style="border:1px solid #ccc;border-radius:16px;padding:12px;margin:10px 0;"><strong>${g.name}</strong><br>📞 ${g.phone}<br>🚐 ${g.transportType || '-'}<br>🚍 ${g.plateNumber || '-'}<br>🏢 ${g.agency || '-'}</div>`; }); html2pdf().from(el).set({ margin: 1, filename: `guides_${Date.now()}.pdf` }).save(); };
-    document.getElementById("openModalBtn").onclick = () => { resetForm(); document.getElementById("guideModal").classList.add("show"); };
-    document.getElementById("closeModalBtn").onclick = () => document.getElementById("guideModal").classList.remove("show");
-    document.getElementById("closeDetailBtn").onclick = () => document.getElementById("detailModal").classList.remove("show");
-    document.getElementById("closeFullImageBtn").onclick = () => document.getElementById("fullImageModal").classList.remove("show");
-    document.getElementById("profileBtn").onclick = () => document.getElementById("profileModal").classList.add("show");
-    document.getElementById("closeProfileBtn").onclick = () => document.getElementById("profileModal").classList.remove("show");
-    document.getElementById("menuBtn").onclick = () => { document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); };
-    document.getElementById("overlay").onclick = () => { document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
-    document.getElementById("voiceSearchBtn").onclick = () => { if(!('webkitSpeechRecognition' in window)){ showToast("غير مدعوم", true); return; } let rec = new webkitSpeechRecognition(); rec.lang = 'ar'; rec.start(); rec.onresult = e => { document.getElementById("searchInput").value = e.results[0][0].transcript; renderList(); }; };
-    document.getElementById("searchInput").oninput = () => renderList();
-    document.getElementById("filterAgency").onchange = () => renderList();
-    document.getElementById("helpInfoBtn").onclick = () => showToast("📡 الموجة 1 عامة | 2 فريق | 3 طوارئ\n🎙️ اضغط مطولاً للتسجيل وسيصل فوراً للمستخدمين على نفس الموجة");
-    document.getElementById("callNowBtn").onclick = () => { let phone = prompt("أدخل رقم الهاتف للاتصال:", ""); if(phone && phone.trim()) window.location.href = `tel:${phone.trim()}`; else showToast("الرجاء إدخال رقم صحيح", true); };
+        async function sendFriendRequest(toId, btn) {
+            if (!currentUser) return;
+            try {
+                // Check if already exists
+                const existing = await db.collection('friendRequests')
+                    .where('from', '==', currentUser.uid)
+                    .where('to', '==', toId)
+                    .where('status', '==', 'pending')
+                    .get();
+                if (!existing.empty) { showToast('تم إرسال الطلب مسبقاً', 'error'); return; }
 
-    // ==================== 14. منتقي الألوان ====================
-    const colorDiv = document.getElementById("colorSelector");
-    if(colorDiv){
-        colorDiv.innerHTML = `<div class="color-option" style="background:#e94560;" data-color="#e94560"></div><div class="color-option" style="background:#2c7da0;" data-color="#2c7da0"></div><div class="color-option" style="background:#e76f51;" data-color="#e76f51"></div><div class="color-option" style="background:#2a9d8f;" data-color="#2a9d8f"></div><div class="color-option" style="background:#e9c46a;" data-color="#e9c46a"></div><div class="color-option" style="background:#9b5de5;" data-color="#9b5de5"></div><div class="color-option" style="background:#06d6a0;" data-color="#06d6a0"></div><div class="color-option" style="background:#ff006e;" data-color="#ff006e"></div>`;
-        document.querySelectorAll("#colorSelector .color-option").forEach(opt => { opt.onclick = () => { document.querySelectorAll("#colorSelector .color-option").forEach(o => o.classList.remove("selected")); opt.classList.add("selected"); selectedColor = opt.dataset.color; }; });
-        document.querySelector("#colorSelector .color-option[data-color='#e94560']").classList.add("selected");
-    }
-    
-    // ==================== 15. تنظيف دوري للرسائل المنتهية ====================
-    setInterval(async () => { if(currentUser) await voiceDB.messages.where('expiry').below(new Date().toISOString()).delete(); }, 3600000);
-    console.log("✅ التطبيق جاهز: تنظيم كامل للوظائف، سرعة عالية، ربط حسابات Firebase");
-</script>
+                await db.collection('friendRequests').add({
+                    from: currentUser.uid,
+                    to: toId,
+                    fromName: currentUserData.name,
+                    fromEmail: currentUser.email,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                btn.classList.add('sent');
+                btn.textContent = 'تم الإرسال';
+                btn.disabled = true;
+                showToast('تم إرسال طلب الصداقة', 'success');
+            } catch (e) { showToast('خطأ', 'error'); }
+        }
+
+        async function acceptRequestDirect(fromId) {
+            try {
+                const reqSnap = await db.collection('friendRequests')
+                    .where('from', '==', fromId)
+                    .where('to', '==', currentUser.uid)
+                    .where('status', '==', 'pending')
+                    .get();
+                if (!reqSnap.empty) {
+                    await db.collection('friendRequests').doc(reqSnap.docs[0].id).update({ status: 'accepted' });
+                    await db.collection('friendships').add({
+                        users: [currentUser.uid, fromId],
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showToast('تم قبول الصداقة', 'success');
+                    searchFriends();
+                }
+            } catch (e) { showToast('خطأ', 'error'); }
+        }
+
+        async function acceptRequest(reqId) {
+            try {
+                await db.collection('friendRequests').doc(reqId).update({ status: 'accepted' });
+                const req = friendRequests.find(r => r.id === reqId);
+                if (req) {
+                    await db.collection('friendships').add({
+                        users: [currentUser.uid, req.from],
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                showToast('تم قبول الصداقة', 'success');
+            } catch (e) { showToast('خطأ', 'error'); }
+        }
+
+        async function rejectRequest(reqId) {
+            try {
+                await db.collection('friendRequests').doc(reqId).update({ status: 'rejected' });
+                showToast('تم رفض الطلب', 'success');
+            } catch (e) { showToast('خطأ', 'error'); }
+        }
+
+        // ==================== MESSAGES ====================
+        function openMessages() {
+            document.getElementById('messagesPanel').classList.add('open');
+            document.getElementById('messagesBackdrop').classList.add('show');
+            switchMsgTab('chats');
+        }
+        function closeMessages() {
+            document.getElementById('messagesPanel').classList.remove('open');
+            document.getElementById('messagesBackdrop').classList.remove('show');
+            closeAddFriend();
+        }
+        function switchMsgTab(tab) {
+            currentMsgTab = tab;
+            document.querySelectorAll('.msg-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.msg-tab[data-tab="${tab}"]`).classList.add('active');
+            if (tab === 'chats') renderChats();
+            else if (tab === 'requests') renderRequests();
+            else if (tab === 'add') openAddFriend();
+        }
+        function openAddFriend() {
+            document.getElementById('addFriendModal').classList.add('active');
+            document.getElementById('friendSearchInput').value = '';
+            document.getElementById('friendSearchResults').innerHTML = '';
+            document.getElementById('friendSearchInput').focus();
+        }
+        function closeAddFriend() {
+            document.getElementById('addFriendModal').classList.remove('active');
+            if (currentMsgTab === 'add') switchMsgTab('chats');
+        }
+
+        async function renderChats() {
+            const container = document.getElementById('msgList');
+            if (!friends.length) {
+                container.innerHTML = '<div class="empty-state" style="padding:40px;"><i class="fa-solid fa-comments" style="font-size:48px;opacity:0.3;"></i><p>لا توجد محادثات</p><p style="font-size:12px;">أضف أصدقاء للبدء</p></div>';
+                return;
+            }
+
+            // Get last messages for each friend
+            const chatItems = [];
+            for (const f of friends) {
+                const msgsSnap = await db.collection('messages')
+                    .where('chatId', '==', [currentUser.uid, f.friendId].sort().join('_'))
+                    .orderBy('createdAt', 'desc')
+                    .limit(1)
+                    .get();
+                const lastMsg = msgsSnap.empty ? null : msgsSnap.docs[0].data();
+                
+                const unreadSnap = await db.collection('messages')
+                    .where('chatId', '==', [currentUser.uid, f.friendId].sort().join('_'))
+                    .where('to', '==', currentUser.uid)
+                    .where('read', '==', false)
+                    .get();
+
+                // Get friend data
+                const friendDoc = await db.collection('users').doc(f.friendId).get();
+                const friendData = friendDoc.exists ? friendDoc.data() : { name: 'مستخدم', email: '' };
+
+                chatItems.push({
+                    friendId: f.friendId,
+                    friendData,
+                    lastMsg,
+                    unread: unreadSnap.size,
+                    chatId: [currentUser.uid, f.friendId].sort().join('_')
+                });
+            }
+
+            container.innerHTML = chatItems.map(item => `
+                <div class="msg-user-item" onclick="openChat('${item.friendId}', '${item.friendData.name||item.friendData.email}')">
+                    <div class="msg-user-avatar"><i class="fa-solid fa-user"></i></div>
+                    <div class="msg-user-info">
+                        <div class="msg-user-name">${item.friendData.name||item.friendData.email}</div>
+                        <div class="msg-user-preview">${item.lastMsg ? item.lastMsg.text : 'ابدأ المحادثة...'}</div>
+                    </div>
+                    ${item.unread > 0 ? '<div class="msg-unread-badge"></div>' : ''}
+                    <div class="msg-user-time">${item.lastMsg ? formatTime(item.lastMsg.createdAt) : ''}</div>
+                </div>
+            `).join('');
+        }
+
+        async function renderRequests() {
+            const container = document.getElementById('msgList');
+            if (!friendRequests.length) {
+                container.innerHTML = '<div class="empty-state" style="padding:40px;"><i class="fa-solid fa-user-clock" style="font-size:48px;opacity:0.3;"></i><p>لا توجد طلبات صداقة</p></div>';
+                return;
+            }
+
+            const items = [];
+            for (const req of friendRequests) {
+                const fromDoc = await db.collection('users').doc(req.from).get();
+                const fromData = fromDoc.exists ? fromDoc.data() : { name: req.fromEmail, email: req.fromEmail };
+                items.push({ ...req, fromData });
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="msg-user-item">
+                    <div class="msg-user-avatar"><i class="fa-solid fa-user"></i></div>
+                    <div class="msg-user-info">
+                        <div class="msg-user-name">${item.fromData.name||item.fromEmail}</div>
+                        <div class="msg-user-preview">طلب صداقة</div>
+                    </div>
+                    <div class="msg-actions">
+                        <button class="msg-accept-btn" onclick="acceptRequest('${item.id}')">قبول</button>
+                        <button class="msg-reject-btn" onclick="rejectRequest('${item.id}')">رفض</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function openChat(friendId, friendName) {
+            currentChatId = [currentUser.uid, friendId].sort().join('_');
+            currentChatUser = { id: friendId, name: friendName };
+            
+            const friendDoc = await db.collection('users').doc(friendId).get();
+            if (friendDoc.exists) {
+                document.getElementById('chatUserName').textContent = friendDoc.data().name || friendName;
+            } else {
+                document.getElementById('chatUserName').textContent = friendName;
+            }
+            document.getElementById('chatAvatar').innerHTML = '<i class="fa-solid fa-user"></i>';
+            
+            document.getElementById('chatScreen').classList.add('open');
+            document.getElementById('chatBackdrop').classList.add('show');
+            document.getElementById('chatMessages').innerHTML = '';
+            
+            loadMessages();
+        }
+
+        function closeChat() {
+            document.getElementById('chatScreen').classList.remove('open');
+            document.getElementById('chatBackdrop').classList.remove('show');
+            currentChatId = null;
+            currentChatUser = null;
+            if (document.getElementById('messagesPanel').classList.contains('open')) {
+                renderChats();
+            }
+        }
+
+        function loadMessages() {
+            if (!currentChatId) return;
+            
+            db.collection('messages')
+                .where('chatId', '==', currentChatId)
+                .orderBy('createdAt', 'asc')
+                .onSnapshot(snapshot => {
+                    const container = document.getElementById('chatMessages');
+                    container.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const msg = doc.data();
+                        const isSent = msg.from === currentUser.uid;
+                        
+                        // Mark as read if received
+                        if (!isSent && !msg.read) {
+                            db.collection('messages').doc(doc.id).update({ read: true });
+                        }
+
+                        container.innerHTML += `
+                            <div class="chat-msg ${isSent ? 'sent' : 'received'}">
+                                ${msg.text}
+                                <div class="chat-msg-time">${formatTime(msg.createdAt)}</div>
+                            </div>`;
+                    });
+                    container.scrollTop = container.scrollHeight;
+                });
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || !currentChatId || !currentChatUser) return;
+
+            try {
+                await db.collection('messages').add({
+                    chatId: currentChatId,
+                    from: currentUser.uid,
+                    to: currentChatUser.id,
+                    text,
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                input.value = '';
+            } catch (e) { showToast('خطأ في الإرسال', 'error'); }
+        }
+
+        async function startChatVoice() {
+            const btn = document.getElementById('chatVoiceBtn');
+            if (!('webkitSpeechRecognition' in window)) { showToast('غير مدعوم', 'error'); return; }
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR();
+            recognition.lang = 'ar-TN';
+            recognition.interimResults = false;
+            btn.classList.add('recording-msg');
+            recognition.start();
+            recognition.onresult = (e) => {
+                document.getElementById('chatInput').value = e.results[0][0].transcript;
+                btn.classList.remove('recording-msg');
+                setTimeout(() => sendMessage(), 300);
+            };
+            recognition.onerror = () => btn.classList.remove('recording-msg');
+            recognition.onend = () => btn.classList.remove('recording-msg');
+        }
+
+        // ==================== GUIDES ====================
+        function loadGuides() {
+            const feedStack = document.getElementById('feedStack');
+            feedStack.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            db.collection('guides').where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    guides = [];
+                    snapshot.forEach((doc) => guides.push({ id: doc.id, ...doc.data() }));
+                    renderFeed();
+                }, () => { feedStack.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></div><h3>خطأ</h3></div>'; });
+        }
+
+        function renderFeed() {
+            const feedStack = document.getElementById('feedStack');
+            if (guides.length === 0) {
+                feedStack.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-users-slash"></i></div><h3>لا يوجد مرشدين</h3><p>اضغط على <span style="color:var(--primary);">+</span> للإضافة</p></div>';
+                return;
+            }
+            feedStack.innerHTML = guides.map((guide, index) => {
+                const bgImage = guide.image || guide.guideImage || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80';
+                const guideImg = guide.image || guide.guideImage || '';
+                const vehicleImg = guide.vehicleImage || '';
+                return `
+                <div class="guide-card" style="background-image:url('${bgImage}')" data-index="${index}">
+                    <div class="card-overlay"></div>
+                    <div class="card-top-badge">
+                        ${guide.isFavorite ? '<div class="card-badge favorite-badge"><i class="fa-solid fa-star"></i> مفضل</div>' : ''}
+                        <div class="card-badge" onclick="event.stopPropagation();editGuide(\'${guide.id}\')"><i class="fa-solid fa-pen-to-square"></i> تعديل</div>
+                    </div>
+                    <div class="card-thumbnails">
+                        ${guideImg ? `<div class="card-thumb" style="background-image:url('${guideImg}')" onclick="event.stopPropagation();openImage('${guideImg}')"></div>` : ''}
+                        ${vehicleImg ? `<div class="card-thumb" style="background-image:url('${vehicleImg}')" onclick="event.stopPropagation();openImage('${vehicleImg}')"></div>` : ''}
+                    </div>
+                    <div class="card-content">
+                        <div class="guide-info">
+                            <h2 class="guide-name">${guide.name}</h2>
+                            <div class="guide-meta">
+                                ${guide.license ? `<span class="meta-badge"><i class="fa-solid fa-id-card"></i> ${guide.license}</span>` : ''}
+                                <span class="meta-badge lang-badge"><i class="fa-solid fa-language"></i> ${guide.language||'العربية'}</span>
+                            </div>
+                            ${guide.notes ? `<p class="guide-notes">${guide.notes}</p>` : ''}
+                        </div>
+                        <div class="action-buttons">
+                            <button class="action-btn favorite ${guide.isFavorite?'active':''}" onclick="event.stopPropagation();toggleFavorite('${guide.id}',${index})"><div class="btn-icon"><i class="fa-solid fa-star"></i></div><span class="btn-label">مفضل</span></button>
+                            <button class="action-btn whatsapp" onclick="event.stopPropagation();openWhatsApp('${guide.phone}')"><div class="btn-icon"><i class="fa-brands fa-whatsapp"></i></div><span class="btn-label">واتساب</span></button>
+                            <button class="action-btn call" onclick="event.stopPropagation();callGuide('${guide.phone}')"><div class="btn-icon"><i class="fa-solid fa-phone"></i></div><span class="btn-label">اتصال</span></button>
+                            <button class="action-btn message" onclick="event.stopPropagation();messageGuide('${guide.phone}')"><div class="btn-icon"><i class="fa-solid fa-comment"></i></div><span class="btn-label">رسالة</span></button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            currentFeedIndex = 0;
+            updateFeedPosition();
+            setupSwipeGestures();
+        }
+
+        // ==================== SWIPE ====================
+        function setupSwipeGestures() {
+            const fs = document.getElementById('feedStack');
+            const nfs = fs.cloneNode(true);
+            fs.parentNode.replaceChild(nfs, fs);
+            nfs.addEventListener('touchstart', e => { startY = e.touches[0].clientY; isDragging = true; document.getElementById('feedStack').style.transition = 'none'; }, { passive: false });
+            nfs.addEventListener('touchmove', e => { if (!isDragging) return; const d = e.touches[0].clientY - startY; document.getElementById('feedStack').style.transform = `translateY(${-currentFeedIndex*window.innerHeight + d*0.6}px)`; }, { passive: false });
+            nfs.addEventListener('touchend', e => { isDragging = false; document.getElementById('feedStack').style.transition = 'transform 0.55s ease'; handleSwipeEnd(e.changedTouches[0].clientY - startY); });
+        }
+        function handleSwipeEnd(d) { if (Math.abs(d) > 70) { if (d > 0 && currentFeedIndex > 0) currentFeedIndex--; else if (d < 0 && currentFeedIndex < guides.length - 1) currentFeedIndex++; } updateFeedPosition(); }
+        function updateFeedPosition() { document.getElementById('feedStack').style.transform = `translateY(-${currentFeedIndex*window.innerHeight}px)`; }
+
+        // ==================== SCREENS ====================
+        function switchScreen(s) {
+            currentScreen = s;
+            document.getElementById('feedScreen').classList.toggle('active', s === 'feed');
+            document.getElementById('searchScreen').classList.toggle('active', s === 'search');
+            document.querySelectorAll('.nav-item[data-screen]').forEach(i => i.classList.toggle('active', i.dataset.screen === s));
+        }
+
+        // ==================== SETTINGS ====================
+        function openSettings() { document.getElementById('settingsPanel').classList.add('open'); document.getElementById('settingsBackdrop').classList.add('show'); }
+        function closeSettings() { document.getElementById('settingsPanel').classList.remove('open'); document.getElementById('settingsBackdrop').classList.remove('show'); }
+        function toggleSetting(k) { settings[k] = !settings[k]; document.getElementById(k+'Toggle').classList.toggle('active', settings[k]); showToast(`تم ${settings[k]?'تفعيل':'إلغاء'} الإعداد`, 'success'); }
+
+        // ==================== MODAL ====================
+        function openAddModal() { resetForm(); document.getElementById('modalTitle').textContent = 'إضافة مرشد جديد'; document.getElementById('deleteGuideBtn').style.display = 'none'; document.getElementById('addModal').classList.add('active'); }
+        function closeAddModal() { document.getElementById('addModal').classList.remove('active'); resetForm(); }
+        function resetForm() {
+            document.getElementById('addGuideForm').reset(); document.getElementById('editGuideId').value = '';
+            uploadedGuideImage = ''; uploadedVehicleImage = '';
+            ['guideImageUpload','vehicleImageUpload'].forEach(id => { const el = document.getElementById(id); el.classList.remove('has-image','uploading'); el.style.backgroundImage = ''; el.innerHTML = (id==='guideImageUpload'?'<i class="fa-solid fa-user"></i><span>صورة المرشد</span>':'<i class="fa-solid fa-bus"></i><span>صورة الحافلة</span>')+'<div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير</div><div class="upload-progress"></div>'; });
+            document.getElementById('guideFileInput').value = ''; document.getElementById('vehicleFileInput').value = '';
+            document.getElementById('deleteConfirm').classList.remove('show'); document.getElementById('deleteGuideBtn').style.display = 'none';
+        }
+        function editGuide(id) { const g = guides.find(x => x.id === id); if (!g) return; document.getElementById('editGuideId').value = id; document.getElementById('guideName').value = g.name||''; document.getElementById('guidePhone').value = g.phone||''; document.getElementById('guideLicense').value = g.license||''; document.getElementById('guideLanguage').value = g.language||'العربية'; document.getElementById('guideNotes').value = g.notes||''; uploadedGuideImage = g.image||g.guideImage||''; uploadedVehicleImage = g.vehicleImage||''; updatePreview('guideImageUpload', uploadedGuideImage); updatePreview('vehicleImageUpload', uploadedVehicleImage); document.getElementById('modalTitle').textContent = 'تعديل المرشد'; document.getElementById('deleteGuideBtn').style.display = 'block'; document.getElementById('addModal').classList.add('active'); }
+        function updatePreview(elId, url) { const el = document.getElementById(elId); if (url) { el.style.backgroundImage = `url(${url})`; el.classList.add('has-image'); el.innerHTML = '<div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير</div><div class="upload-progress"></div>'; } }
+        function showDeleteConfirm() { document.getElementById('deleteConfirm').classList.add('show'); pendingDeleteId = document.getElementById('editGuideId').value; }
+        function cancelDelete() { document.getElementById('deleteConfirm').classList.remove('show'); }
+        async function confirmDelete() { if (!pendingDeleteId) return; await db.collection('guides').doc(pendingDeleteId).delete(); showToast('تم الحذف', 'success'); closeAddModal(); }
+
+        // ==================== FILE UPLOAD ====================
+        function handleFileSelect(e, type) {
+            const file = e.target.files[0]; if (!file) return;
+            const area = document.getElementById(type==='guide'?'guideImageUpload':'vehicleImageUpload');
+            const reader = new FileReader();
+            reader.onload = ev => { area.style.backgroundImage = `url(${ev.target.result})`; area.classList.add('has-image'); area.innerHTML = '<div class="image-change-badge"><i class="fa-solid fa-camera"></i> تغيير</div><div class="upload-progress"></div>'; };
+            reader.readAsDataURL(file);
+            uploadToCloudinary(file, type);
+        }
+        async function uploadToCloudinary(file, type) {
+            const area = document.getElementById(type==='guide'?'guideImageUpload':'vehicleImageUpload');
+            const progressBar = area.querySelector('.upload-progress');
+            area.classList.add('uploading');
+            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET); fd.append('folder', 'f-note-pro');
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.upload.addEventListener('progress', e => { if (e.lengthComputable) progressBar.style.width = (e.loaded/e.total)*100+'%'; });
+                const resp = await new Promise((resolve, reject) => { xhr.open('POST', CLOUDINARY_UPLOAD_URL); xhr.onload = () => xhr.status===200 ? resolve(JSON.parse(xhr.responseText)) : reject(); xhr.onerror = reject; xhr.send(fd); });
+                if (type === 'guide') uploadedGuideImage = resp.secure_url;
+                else uploadedVehicleImage = resp.secure_url;
+                progressBar.style.width = '100%';
+                setTimeout(() => { area.classList.remove('uploading'); progressBar.style.width = '0%'; }, 500);
+                showToast('تم رفع الصورة 📸', 'success');
+            } catch (er) { area.classList.remove('uploading'); progressBar.style.width = '0%'; showToast('فشل الرفع', 'error'); }
+        }
+
+        // ==================== SAVE ====================
+        async function saveGuide(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitGuideBtn');
+            const editId = document.getElementById('editGuideId').value;
+            if (document.getElementById('guideImageUpload').classList.contains('uploading') || document.getElementById('vehicleImageUpload').classList.contains('uploading')) { showToast('انتظر رفع الصور', 'error'); return; }
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+            const data = {
+                name: document.getElementById('guideName').value.trim(),
+                phone: document.getElementById('guidePhone').value.trim(),
+                license: document.getElementById('guideLicense').value.trim(),
+                language: document.getElementById('guideLanguage').value,
+                notes: document.getElementById('guideNotes').value.trim(),
+                image: uploadedGuideImage, guideImage: uploadedGuideImage,
+                vehicleImage: uploadedVehicleImage,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            if (!data.name || !data.phone) { showToast('الرجاء ملء الاسم والهاتف', 'error'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> حفظ'; return; }
+            try {
+                if (editId) { await db.collection('guides').doc(editId).update(data); showToast('تم التحديث ✨', 'success'); }
+                else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); data.isFavorite = false; data.userId = currentUser.uid; await db.collection('guides').add(data); showToast('تمت الإضافة 🎉', 'success'); }
+                closeAddModal();
+            } catch (er) { showToast('خطأ', 'error'); }
+            btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> حفظ';
+        }
+
+        // ==================== IMAGE VIEWER ====================
+        function openImage(url) { document.getElementById('viewerImage').src = url; document.getElementById('imageViewer').classList.add('active'); }
+        function closeImageViewer() { document.getElementById('imageViewer').classList.remove('active'); }
+
+        // ==================== GUIDE ACTIONS ====================
+        async function toggleFavorite(id, i) { await db.collection('guides').doc(id).update({ isFavorite: !guides[i].isFavorite }); }
+        function openWhatsApp(p) { window.open(`https://wa.me/${p.replace(/[^0-9+]/g,'')}`, '_blank'); }
+        function callGuide(p) { window.location.href = `tel:${p}`; }
+        function messageGuide(p) { window.open(`sms:${p}`, '_blank'); }
+        async function shareGuide(id) { const g = guides.find(x => x.id === id); if (!g) return; const t = `🚐 ${g.name}\n📞 ${g.phone}\n📱 F-Note Pro`; if (navigator.share) { try { await navigator.share({ title: 'F-Note Pro', text: t }); } catch(e) {} } else { await navigator.clipboard.writeText(t); showToast('تم النسخ', 'success'); } }
+
+        // ==================== SEARCH ====================
+        document.getElementById('searchInput').addEventListener('input', debounce(function(e) { const term = e.target.value.trim(); if (term) searchGuides(term); else document.getElementById('searchResults').innerHTML = '<div class="no-results"><i class="fa-solid fa-magnifying-glass"></i><p>ابدأ البحث</p></div>'; }, 350));
+        function filterByColor(c, btn) { activeColorFilter = c; document.querySelectorAll('#colorFilters .color-chip').forEach(ch => ch.classList.remove('active')); btn.classList.add('active'); const term = document.getElementById('searchInput').value.trim(); if (term) searchGuides(term); }
+        async function searchGuides(term) {
+            const rc = document.getElementById('searchResults');
+            rc.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            const snap = await db.collection('guides').where('userId','==',currentUser.uid).orderBy('name').startAt(term).endAt(term+'\uf8ff').limit(30).get();
+            let results = []; snap.forEach(d => results.push({ id: d.id, ...d.data() }));
+            if (activeColorFilter === 'star') results = results.filter(g => g.isFavorite);
+            if (!results.length) { rc.innerHTML = `<div class="no-results"><i class="fa-solid fa-face-sad-tear"></i><p>لا نتائج</p></div>`; return; }
+            rc.innerHTML = results.map(g => `<div class="search-result-item" style="background-image:url('${g.image||g.guideImage||'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=60'}')" onclick="viewFromSearch('${g.id}')"><div class="search-result-overlay"><div class="sr-name">${g.name}</div></div></div>`).join('');
+        }
+        function viewFromSearch(id) { const i = guides.findIndex(g => g.id === id); if (i !== -1) { currentFeedIndex = i; updateFeedPosition(); switchScreen('feed'); } }
+
+        // ==================== VOICE ====================
+        function startVoiceSearch() {
+            const btn = document.getElementById('voiceSearchBtn');
+            if (!('webkitSpeechRecognition' in window)) { showToast('غير مدعوم', 'error'); return; }
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR(); recognition.lang = 'ar-TN'; recognition.interimResults = false;
+            btn.classList.add('recording'); recognition.start();
+            recognition.onresult = (e) => { document.getElementById('searchInput').value = e.results[0][0].transcript; searchGuides(e.results[0][0].transcript); btn.classList.remove('recording'); };
+            recognition.onerror = () => btn.classList.remove('recording');
+            recognition.onend = () => btn.classList.remove('recording');
+        }
+        function startNameVoice() {
+            const btn = document.getElementById('nameVoiceBtn');
+            if (!('webkitSpeechRecognition' in window)) return;
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR(); recognition.lang = 'ar-TN'; recognition.interimResults = false;
+            btn.classList.add('recording'); recognition.start();
+            recognition.onresult = (e) => { document.getElementById('guideName').value = e.results[0][0].transcript; btn.classList.remove('recording'); };
+            recognition.onerror = () => btn.classList.remove('recording');
+            recognition.onend = () => btn.classList.remove('recording');
+        }
+
+        // ==================== UTILS ====================
+        function showToast(msg, type = '') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            const icons = { success: 'circle-check', error: 'circle-xmark' };
+            t.innerHTML = `<i class="fa-solid fa-${icons[type]||'bell'}"></i> ${msg}`;
+            c.appendChild(t);
+            setTimeout(() => { if (t.parentNode) t.remove(); }, 2800);
+        }
+        function debounce(f, w) { let t; return function(...a) { clearTimeout(t); t = setTimeout(() => f.apply(this, a), w); }; }
+        function formatTime(ts) { if (!ts) return ''; const d = ts.toDate ? ts.toDate() : new Date(ts); const now = new Date(); const diff = now - d; if (diff < 60000) return 'الآن'; if (diff < 3600000) return Math.floor(diff/60000) + ' د'; if (diff < 86400000) return Math.floor(diff/3600000) + ' س'; return d.toLocaleDateString('ar-TN'); }
+
+        // ==================== EVENT LISTENERS ====================
+        document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) closeAddModal(); });
+        document.getElementById('addFriendModal').addEventListener('click', function(e) { if (e.target === this) closeAddFriend(); });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (document.getElementById('chatScreen').classList.contains('open')) closeChat();
+                else if (document.getElementById('messagesPanel').classList.contains('open')) closeMessages();
+                else if (document.getElementById('addModal').classList.contains('active')) closeAddModal();
+                else if (document.getElementById('settingsPanel').classList.contains('open')) closeSettings();
+                else if (document.getElementById('imageViewer').classList.contains('active')) closeImageViewer();
+            }
+        });
+
+        console.log('🚀 F-Note Pro - Friends & Messages System Ready');
+        console.log('👥 Friends System | 💬 Real-time Chat | 🎤 Voice Effects');
+    </script>
 </body>
 </html>
