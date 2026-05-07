@@ -207,7 +207,7 @@
 </head>
 <body>
 
-<!-- الرأس العلوي -->
+<!-- الراس العلوي -->
 <div class="app-header">
     <button class="header-btn" id="menuBtn">☰</button>
     <div class="logo-header"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-Note Pro"></div>
@@ -268,7 +268,7 @@
 <div class="overlay" id="overlay"></div>
 
 <script>
-    // Firebase config (ثابت)
+    // Firebase config
     const firebaseConfig = { apiKey: "AIzaSyAJLpdRoKamaHHofnCh4qQk6mHKeI25Tgc", authDomain: "f-notepro-work.firebaseapp.com", projectId: "f-notepro-work", storageBucket: "f-notepro-work.firebasestorage.app", messagingSenderId: "645688115664", appId: "1:645688115664:web:5dbfee1e28c41e0a1c79d5" };
     let app, db, auth;
     try { app = firebase.initializeApp(firebaseConfig); db = firebase.firestore(app); auth = firebase.auth(app); db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn); } catch(e) { console.error(e); }
@@ -292,7 +292,7 @@
     function handleImageUpload(file, type) {
         if(!file) return;
         const statusDiv = document.getElementById(type==='guide'?'guideUploadStatus':'busUploadStatus');
-        statusDiv.innerText = "جاري الضغط...";
+        if(statusDiv) statusDiv.innerText = "جاري الضغط...";
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = new Image();
@@ -305,17 +305,18 @@
                 const base64 = canvas.toDataURL('image/jpeg',0.6);
                 if(type==='guide'){ currentGuidePhotoBase64=base64; document.getElementById("guidePhotoPreview").src=base64; document.getElementById("guidePreviewContainer").style.display="flex"; }
                 else { currentBusPhotoBase64=base64; document.getElementById("busPhotoPreview").src=base64; document.getElementById("busPreviewContainer").style.display="flex"; }
-                statusDiv.innerText = "✅ جاهزة"; setTimeout(()=>statusDiv.innerText="",2000);
+                if(statusDiv) statusDiv.innerText = "✅ جاهزة";
+                setTimeout(()=>{ if(statusDiv) statusDiv.innerText=""; },2000);
             };
             img.src=e.target.result;
         };
         reader.readAsDataURL(file);
     }
     function triggerUpload(type){ let inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=e=>{ if(e.target.files[0]) handleImageUpload(e.target.files[0],type); }; inp.click(); }
-    document.getElementById("guideUploadCard").onclick=()=>triggerUpload('guide');
-    document.getElementById("busUploadCard").onclick=()=>triggerUpload('bus');
+    document.getElementById("guideUploadCard")?.addEventListener('click',()=>triggerUpload('guide'));
+    document.getElementById("busUploadCard")?.addEventListener('click',()=>triggerUpload('bus'));
 
-    // حفظ المرشد في Firestore
+    // حفظ المرشد
     async function saveGuideToFirestore(guideData) {
         showToast("جاري الحفظ...");
         try {
@@ -363,7 +364,7 @@
                         <div class="card-name">${escapeHtml(guide.name)} ${guide.visibility==='public'?'<span style="font-size:11px;background:#3b82f6;color:white;padding:2px 8px;border-radius:30px;">عام</span>':'<span style="font-size:11px;background:#64748b;color:white;padding:2px 8px;border-radius:30px;">خاص</span>'}</div>
                         <div class="card-phone"><span>${escapeHtml(guide.phone)}</span><button onclick="window.location.href='tel:${guide.phone}'">اتصل</button></div>
                     </div>
-                    <button class="expand-btn" onclick="toggleDetails('${guide.id}',this)">▼</button>
+                    <button class="expand-btn" onclick="window.toggleDetails('${guide.id}',this)">▼</button>
                 </div>
                 <div id="details-${guide.id}" class="card-details"><div class="details-grid">
                     ${guide.busPhoto?`<img src="${guide.busPhoto}" style="width:50px;border-radius:14px;" onclick="window.showImage('${guide.busPhoto}')">`:''}
@@ -372,8 +373,8 @@
                     <p><strong>🏢 الوكالة:</strong> ${escapeHtml(guide.agency||'—')}</p>
                     <p><strong>📝 ملاحظات:</strong> ${escapeHtml((guide.notes||'').substring(0,60))}</p>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        ${guide.userId===currentUser?.uid?`<button class="save-btn" style="padding:4px 12px; font-size:12px;" onclick="editGuideById('${guide.id}')">✏️ تعديل</button><button class="cancel-btn" style="padding:4px 12px; background:#dc2626;" onclick="deleteGuideById('${guide.id}')">🗑️ حذف</button>`:''}
-                        <button class="share-btn" onclick="openMultiShare('${guide.id}')">💬 مشاركة واتساب</button>
+                        ${guide.userId===currentUser?.uid?`<button class="save-btn" style="padding:4px 12px; font-size:12px;" onclick="window.editGuideById('${guide.id}')">✏️ تعديل</button><button class="cancel-btn" style="padding:4px 12px; background:#dc2626;" onclick="window.deleteGuideById('${guide.id}')">🗑️ حذف</button>`:''}
+                        <button class="share-btn" onclick="window.openMultiShare('${guide.id}')">💬 مشاركة واتساب</button>
                     </div>
                 </div></div>
             </div>
@@ -386,14 +387,14 @@
     window.deleteGuideById = async (id)=>{ if(confirm("حذف هذا المرشد؟")) await db.collection("guides").doc(id).delete(); };
 
     // مشاركة واتساب متعددة
-    function openMultiShare(guideId){
+    window.openMultiShare = (guideId)=>{
         currentShareGuideId = guideId;
         const guide = guides.find(g=>g.id===guideId);
         if(!guide) return;
         const contacts = [{ name:"أحمد", phone:"+21612345678" },{ name:"سارة", phone:"+21698765432" },{ name:"ياسر", phone:"+21655554444" }];
         document.getElementById("contactsList").innerHTML = contacts.map(c=>`<label style="display:block;margin:8px;background:var(--search-bg);padding:10px;border-radius:30px;"><input type="checkbox" value="${c.phone}" class="contact-checkbox"> ${c.name} (${c.phone})</label>`).join("");
         document.getElementById("multiShareModal").classList.add("show");
-    }
+    };
     document.getElementById("confirmShareBtn").onclick = ()=>{
         const guide = guides.find(g=>g.id===currentShareGuideId);
         if(!guide) return;
@@ -404,7 +405,7 @@
         document.getElementById("multiShareModal").classList.remove("show");
     };
     document.getElementById("closeMultiShareBtn").onclick = ()=>document.getElementById("multiShareModal").classList.remove("show");
-    document.getElementById("detailShareBtn").onclick = ()=>{ if(currentGuideForDetail) openMultiShare(currentGuideForDetail.id); };
+    document.getElementById("detailShareBtn").onclick = ()=>{ if(currentGuideForDetail) window.openMultiShare(currentGuideForDetail.id); };
 
     // التسجيل الصوتي والموجات
     async function startRecording() {
@@ -423,7 +424,7 @@
         mediaRecorder.start();
         isRecording = true;
         document.getElementById("walkieTalkieBtn").classList.add("recording");
-        // صوت بيب قصير
+        // صوت بيب
         try { let ctx = new (AudioContext||webkitAudioContext)(); let osc=ctx.createOscillator(); let gain=ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value=880; gain.gain.value=0.2; osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.3); osc.stop(ctx.currentTime+0.3); } catch(e){}
     }
     function stopRecording() { if(mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording=false; document.getElementById("walkieTalkieBtn").classList.remove("recording"); } }
@@ -486,7 +487,6 @@
     document.getElementById("closeDetailBtn").onclick = ()=>document.getElementById("detailModal").classList.remove("show");
     document.getElementById("closeFullImageBtn").onclick = ()=>document.getElementById("fullImageModal").classList.remove("show");
     document.getElementById("menuBtn").onclick = ()=>{ document.getElementById("sidebar").classList.add("open"); document.getElementById("overlay").classList.add("show"); };
-    document.getElementById("closeSidebar").remove();
     document.getElementById("overlay").onclick = ()=>{ document.getElementById("sidebar").classList.remove("open"); document.getElementById("overlay").classList.remove("show"); };
     document.getElementById("voiceSearchBtn").onclick = ()=>{ if(!('webkitSpeechRecognition' in window)){ showToast("غير مدعوم",true); return; } let rec=new webkitSpeechRecognition(); rec.lang='ar'; rec.start(); rec.onresult=e=>{ document.getElementById("searchInput").value=e.results[0][0].transcript; renderList(); }; };
     document.getElementById("searchInput").oninput = ()=>renderList();
@@ -500,7 +500,7 @@
         document.querySelector("#colorSelector .color-option[data-color='#e94560']").classList.add("selected");
     }
     window.showFullDetails = (guide)=>{ currentGuideForDetail=guide; document.getElementById("detailName").innerHTML=`<span style="color:${guide.cardColor}">⭐</span> ${escapeHtml(guide.name)}`; document.getElementById("detailContent").innerHTML=`<div style="text-align:center;">${guide.guidePhoto?`<img src="${guide.guidePhoto}" style="width:100px;border-radius:50%;" onclick="window.showImage('${guide.guidePhoto}')">`:'<div>📷</div>'}</div><p><strong>📞:</strong> ${guide.phone}</p><p><strong>🚐:</strong> ${guide.transportType||'—'}</p><p><strong>🚍:</strong> ${guide.plateNumber||'—'}</p><p><strong>🏢:</strong> ${guide.agency||'—'}</p>`; document.getElementById("detailModal").classList.add("show"); };
-    console.log("✅ التطبيق جاهز بكامل الميزات ويعمل بشكل صحيح.");
+    console.log("✅ التطبيق جاهز ويعمل بكامل الميزات");
 </script>
 </body>
 </html>
