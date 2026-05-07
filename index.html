@@ -2,30 +2,55 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAHMI-Safe Browser - متصفح العائلة الآمن</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/_sdk/element_sdk.js"></script>
-    <script src="/_sdk/data_sdk.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <meta name="theme-color" content="#e94560">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>F-Note Pro | خزنة المرشدين المتكاملة</title>
+
+    <!-- Firebase SDKs v10.12.0 -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+    </script>
+
     <style>
         :root {
-            --parent-primary: #00a8ff;
-            --parent-secondary: #9c88ff;
-            --parent-accent: #4cd137;
-            --child-primary: #4cd137;
-            --child-secondary: #00a8ff;
-            --child-accent: #ff9ff3;
-            --bg-color: #0a0a0a;
-            --text-color: #ffffff;
-            --card-bg: rgba(30, 30, 46, 0.9);
-            --card-border: rgba(100, 100, 255, 0.2);
-            --header-height: 60px;
-            --sidebar-width: 280px;
-            --safe-color: #4cd137;
-            --warning-color: #fbc531;
-            --danger-color: #e84118;
-            --points-color: #ffd32a;
-            --transition-speed: 0.3s;
+            --bg: #f5f6fa;
+            --card: #ffffff;
+            --text: #1a1a2e;
+            --sub: #545f71;
+            --muted: #8b95a5;
+            --border: #e8ecf1;
+            --gold: #e94560;
+            --gold-light: #ff6b81;
+            --success: #10b981;
+            --danger: #ef4444;
+            --walkie: #25D366;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
+            --radius: 20px;
+            --radius-sm: 14px;
+            --radius-full: 60px;
+            --font: 'Segoe UI', 'Tajawal', system-ui, -apple-system, sans-serif;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.dark {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --sub: #cbd5e1;
+            --muted: #94a3b8;
+            --border: #334155;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
         }
 
         * {
@@ -35,2900 +60,1606 @@
         }
 
         body {
-            font-family: 'Segoe UI', 'Segoe UI Emoji', 'Tahoma', 'Arial', sans-serif;
-            background: var(--bg-color);
-            color: var(--text-color);
-            overflow-x: hidden;
-            line-height: 1.6;
-            transition: background-color var(--transition-speed);
-        }
-
-        .app-container {
-            display: flex;
-            height: 100vh;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(0, 168, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(156, 136, 255, 0.1) 0%, transparent 50%);
-        }
-
-        /* الشريط الجانبي */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: rgba(20, 20, 35, 0.95);
-            backdrop-filter: blur(20px);
-            border-left: 1px solid var(--card-border);
-            display: flex;
-            flex-direction: column;
-            transition: transform var(--transition-speed) ease;
-            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.3);
-            z-index: 100;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--card-border);
-            text-align: center;
-        }
-
-        .sidebar-logo {
-            font-size: 24px;
-            font-weight: 800;
-            background: linear-gradient(45deg, var(--parent-primary), var(--parent-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            padding: 20px 0;
-            overflow-y: auto;
-        }
-
-        .nav-section {
-            margin-bottom: 25px;
-        }
-
-        .nav-section-title {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
-            padding: 0 20px 10px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-right: 3px solid transparent;
-        }
-
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-right-color: var(--parent-primary);
-        }
-
-        .nav-item.active {
-            background: rgba(0, 168, 255, 0.1);
-            border-right-color: var(--parent-primary);
-        }
-
-        .nav-icon {
-            width: 20px;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        .nav-text {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        /* المحتوى الرئيسي */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* الهيدر */
-        .header {
-            height: var(--header-height);
-            background: rgba(25, 25, 40, 0.9);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--card-border);
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            gap: 15px;
-        }
-
-        .header-controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .control-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .control-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .control-btn.active {
-            background: var(--parent-primary);
-            color: white;
-        }
-
-        .search-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        .search-bar {
-            width: 100%;
+            background: var(--bg);
+            font-family: var(--font);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
             position: relative;
-            margin-bottom: 10px;
+            overflow-x: hidden;
+            transition: background var(--transition), color var(--transition);
         }
 
-        .search-input {
-            width: 100%;
-            height: 45px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            padding: 0 50px 0 15px;
-            color: white;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--parent-primary);
-            box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.2);
-        }
-
-        .search-btn {
-            position: absolute;
-            left: 5px;
+        /* علامة مائية */
+        body::after {
+            content: "";
+            position: fixed;
             top: 50%;
-            transform: translateY(-50%);
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: var(--parent-primary);
-            border: none;
-            color: white;
-            cursor: pointer;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50%;
+            max-width: 280px;
+            aspect-ratio: 1;
+            background: url('https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png') center/contain no-repeat;
+            opacity: 0.03;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ==================== شاشة الدخول ==================== */
+        .login-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 2000;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .search-engines {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .engine-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 15px;
-            padding: 5px 12px;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 12px;
-        }
-
-        .engine-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .engine-btn.active {
-            background: var(--parent-primary);
-            color: white;
-        }
-
-        .mode-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: rgba(0, 168, 255, 0.1);
-            border: 1px solid rgba(0, 168, 255, 0.3);
-            border-radius: 10px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .mode-toggle:hover {
-            background: rgba(0, 168, 255, 0.2);
-        }
-
-        .points-display {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: rgba(255, 211, 42, 0.1);
-            border: 1px solid rgba(255, 211, 42, 0.3);
-            border-radius: 10px;
-            color: var(--points-color);
-            font-weight: 600;
-        }
-
-        /* منطقة المحتوى */
-        .content-area {
-            flex: 1;
             padding: 20px;
-            overflow-y: auto;
+            transition: opacity 0.4s, visibility 0.4s;
         }
-
-        .page {
+        .login-screen.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .login-card {
+            background: var(--card);
+            border-radius: 36px;
+            padding: 36px 24px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            animation: popIn 0.5s ease;
+        }
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .login-logo img {
+            width: 90px;
+            margin-bottom: 12px;
+        }
+        .login-title {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--gold);
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+        .login-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 22px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 13px 16px;
+            margin: 6px 0;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-full);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+            direction: ltr;
+        }
+        .login-input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.08);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 14px;
+            border: none;
+            border-radius: var(--radius-full);
+            background: var(--gold);
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.3px;
+        }
+        .login-btn:active {
+            transform: scale(0.95);
+        }
+        .login-btn.loading {
+            pointer-events: none;
+            opacity: 0.65;
+        }
+        .login-error {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 8px;
+            min-height: 20px;
+            background: #fef2f2;
+            border-radius: 30px;
+            padding: 8px 14px;
             display: none;
-            animation: fadeIn 0.3s ease;
         }
-
-        .page.active {
+        .login-error.show {
             display: block;
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        body.dark .login-error {
+            background: #2d1b1b;
+        }
+        .login-info {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 16px;
+            line-height: 1.8;
         }
 
-        /* صفحة الرئيسية */
-        .welcome-section {
-            text-align: center;
-            padding: 40px 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .welcome-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .welcome-title {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            background: linear-gradient(45deg, var(--parent-primary), var(--parent-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .welcome-subtitle {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 40px;
-        }
-
-        .quick-links-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .quick-link {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 20px 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        /* ==================== الهيدر ==================== */
+        .header {
+            background: var(--card);
+            padding: 10px 16px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-logo img {
+            height: 48px;
+        }
+        .header-menu {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg);
+            border: none;
+            font-size: 22px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--sub);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .header-menu:active {
+            background: var(--border);
+            transform: translateY(-50%) scale(0.92);
+        }
+
+        /* ==================== الشريط الجانبي ==================== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background: var(--card);
+            z-index: 1500;
+            transition: right 0.3s ease;
+            box-shadow: -6px 0 28px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            direction: rtl;
+            border-left: 1px solid var(--border);
+        }
+        .sidebar.open {
+            right: 0;
+        }
+        .sidebar-head {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sidebar-head h3 {
+            color: var(--gold);
+            font-size: 18px;
+        }
+        .sidebar-close {
+            background: var(--bg);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--sub);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .sidebar-section h4 {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .sidebar-item {
+            display: flex;
             align-items: center;
             gap: 10px;
+            padding: 11px 12px;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 13px;
+            transition: var(--transition);
+            margin: 2px 0;
+        }
+        .sidebar-item:active {
+            background: var(--bg);
+        }
+        .sidebar-item .ico {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 1400;
+            visibility: hidden;
+            opacity: 0;
+            transition: var(--transition);
+            backdrop-filter: blur(2px);
+        }
+        .overlay.show {
+            visibility: visible;
+            opacity: 1;
         }
 
-        .quick-link:hover {
-            transform: translateY(-5px);
-            border-color: var(--parent-primary);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        /* ==================== شريط البحث ==================== */
+        .toolbar {
+            display: flex;
+            padding: 10px 14px;
+            gap: 8px;
+            background: var(--bg);
+            position: sticky;
+            top: 68px;
+            z-index: 90;
         }
-
-        .quick-link-icon {
+        .search-wrap {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+        }
+        .search-box {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid transparent;
+            border-radius: var(--radius-full);
+            background: var(--card);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+        .search-box:focus {
+            border-color: var(--gold);
+        }
+        .voice-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--card);
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--sub);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .voice-btn.listening {
+            background: var(--success);
+            color: #fff;
+            animation: pulse 0.7s infinite;
+        }
+        .add-btn {
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: rgba(0, 168, 255, 0.1);
+            background: var(--gold);
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(233, 69, 96, 0.35);
+            transition: var(--transition);
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            line-height: 1;
+        }
+        .add-btn:active {
+            transform: scale(0.88);
         }
 
-        .quick-link-name {
-            font-size: 14px;
-            font-weight: 500;
+        /* ==================== فلتر الألوان ==================== */
+        .filter-wrap {
+            padding: 4px 14px 8px;
         }
-
-        /* صفحة الإعدادات */
-        .settings-section {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .settings-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 25px;
+        .filter-toggle {
+            width: 100%;
+            padding: 10px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--sub);
             display: flex;
             align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+        .colors-panel {
+            display: none;
+            flex-wrap: wrap;
             gap: 10px;
+            margin-top: 8px;
+            padding: 14px;
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            justify-content: center;
+        }
+        .colors-panel.show {
+            display: flex;
+        }
+        .color-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: var(--transition);
+        }
+        .color-dot.active {
+            border-color: var(--gold);
+            transform: scale(1.15);
+            box-shadow: 0 0 14px rgba(233, 69, 96, 0.3);
         }
 
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 20px;
+        /* ==================== بطاقات المرشدين ==================== */
+        .guides-list {
+            padding: 8px 14px 110px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
         }
-
-        .settings-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
+        .guide-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            box-shadow: var(--shadow);
+            border-right: 5px solid var(--gold);
+            cursor: pointer;
+            transition: var(--transition);
         }
-
-        .settings-card:hover {
-            border-color: var(--parent-primary);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        .guide-card:active {
+            transform: scale(0.985);
         }
-
-        .card-header {
+        .card-top {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .card-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(0, 168, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .setting-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .setting-item:last-child {
-            border-bottom: none;
-        }
-
-        .setting-label {
-            font-size: 14px;
-        }
-
-        .setting-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* التبديل */
-        .toggle {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
-        }
-
-        .toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
+        .card-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
+            object-fit: cover;
+            border: 2px solid var(--gold);
+            background: var(--bg);
+            flex-shrink: 0;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.2);
-            transition: .3s;
-            border-radius: 24px;
         }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .3s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--parent-primary);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(20px);
-        }
-
-        /* الأزرار */
-        .btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-primary {
-            background: var(--parent-primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #0097e6;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--card-border);
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--parent-primary);
-            color: white;
-        }
-
-        .btn-success {
-            background: var(--safe-color);
-            color: white;
-        }
-
-        .btn-warning {
-            background: var(--warning-color);
-            color: white;
-        }
-
-        .btn-danger {
-            background: var(--danger-color);
-            color: white;
-        }
-
-        /* صفحة الأمان */
-        .security-status {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .status-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(76, 209, 55, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #4cd137;
-        }
-
-        .status-content {
+        .card-info {
             flex: 1;
+            min-width: 0;
         }
-
-        .status-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .status-desc {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-        }
-
-        /* علامات التبويب */
-        .tabs-container {
-            display: flex;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 5px;
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .tab.active {
-            background: var(--parent-primary);
-        }
-
-        /* السمات */
-        .themes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-        }
-
-        .theme-option {
-            border: 2px solid transparent;
-            border-radius: 10px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .theme-option.active {
-            border-color: var(--parent-primary);
-        }
-
-        .theme-preview {
-            height: 80px;
-            display: flex;
-        }
-
-        .theme-dark .theme-preview {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-        }
-
-        .theme-light .theme-preview {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        }
-
-        .theme-blue .theme-preview {
-            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
-        }
-
-        .theme-green .theme-preview {
-            background: linear-gradient(135deg, #1a2f1a 0%, #2a4a2a 100%);
-        }
-
-        .theme-name {
-            padding: 10px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
-            font-size: 12px;
-        }
-
-        /* نافذة فحص الأمان */
-        .security-scan-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .security-scan-modal.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .scan-container {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--card-border);
-        }
-
-        .scan-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: var(--parent-primary);
-        }
-
-        .scan-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .scan-message {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 25px;
-            font-size: 16px;
-        }
-
-        .scan-progress {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-
-        .scan-progress-bar {
-            height: 100%;
-            background: var(--parent-primary);
-            width: 0%;
-            transition: width 0.5s ease;
-        }
-
-        .scan-result {
-            display: none;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: right;
-        }
-
-        .scan-result.safe {
-            background: rgba(76, 209, 55, 0.1);
-            border: 1px solid rgba(76, 209, 55, 0.3);
-        }
-
-        .scan-result.warning {
-            background: rgba(251, 197, 49, 0.1);
-            border: 1px solid rgba(251, 197, 49, 0.3);
-        }
-
-        .scan-result.danger {
-            background: rgba(232, 65, 24, 0.1);
-            border: 1px solid rgba(232, 65, 24, 0.3);
-        }
-
-        .result-icon {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .result-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .result-desc {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-
-        /* صفحة النقاط والإحالات */
-        .points-section {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .points-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 25px;
-        }
-
-        .points-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .points-value {
-            font-size: 48px;
-            font-weight: 700;
-            color: var(--points-color);
-            margin: 10px 0;
-        }
-
-        .points-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 16px;
-        }
-
-        .referral-links-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .referral-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .referral-card:hover {
-            border-color: var(--parent-primary);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .referral-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .referral-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .points-badge {
-            background: var(--points-color);
-            color: #000;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .referral-link {
-            word-break: break-all;
-            color: var(--text-color);
-            text-decoration: none;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            display: block;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        .referral-link:hover {
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        /* صفحة الاشتراكات */
-        .subscriptions-section {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .plans-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-
-        .plan-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .plan-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--parent-primary);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .plan-card.featured {
-            border-color: var(--parent-primary);
-            transform: scale(1.05);
-        }
-
-        .plan-card.featured::before {
-            content: "مميز";
-            position: absolute;
-            top: 15px;
-            left: -30px;
-            background: var(--parent-primary);
-            color: white;
-            padding: 5px 40px;
-            transform: rotate(-45deg);
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .plan-name {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .plan-price {
-            font-size: 32px;
+        .card-name {
+            font-size: 15px;
             font-weight: 800;
-            margin: 15px 0;
-            color: var(--parent-primary);
-        }
-
-        .plan-period {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-        }
-
-        .plan-features {
-            list-style: none;
-            margin: 20px 0;
-            text-align: right;
-        }
-
-        .plan-features li {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .plan-features li:last-child {
-            border-bottom: none;
-        }
-
-        .plan-features li i {
-            color: var(--safe-color);
-            margin-left: 8px;
-        }
-
-        /* صفحة الأطفال */
-        .child-section {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .child-code-input {
-            width: 100%;
-            padding: 15px;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--card-border);
-            color: white;
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .child-code-input:focus {
-            outline: none;
-            border-color: var(--parent-primary);
-        }
-
-        .child-features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
-        }
-
-        .child-feature {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .child-feature:hover {
-            border-color: var(--child-primary);
-        }
-
-        .child-feature-icon {
-            font-size: 32px;
-            margin-bottom: 15px;
-            color: var(--child-primary);
-        }
-
-        .child-feature-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .child-feature-desc {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .gps-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 15px;
-            background: rgba(76, 209, 55, 0.1);
-            border: 1px solid rgba(76, 209, 55, 0.3);
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        .gps-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--safe-color);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        /* نافذة العودة إلى وضع الأب */
-        .parent-code-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .parent-code-modal.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .parent-code-container {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--card-border);
-        }
-
-        .parent-code-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: var(--parent-primary);
-        }
-
-        .parent-code-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .parent-code-message {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 25px;
-            font-size: 16px;
-        }
-
-        .parent-code-input {
-            width: 100%;
-            padding: 15px;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--card-border);
-            color: white;
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .parent-code-input:focus {
-            outline: none;
-            border-color: var(--parent-primary);
-        }
-
-        .parent-code-result {
-            display: none;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: right;
-        }
-
-        .parent-code-result.success {
-            background: rgba(76, 209, 55, 0.1);
-            border: 1px solid rgba(76, 209, 55, 0.3);
-        }
-
-        .parent-code-result.error {
-            background: rgba(232, 65, 24, 0.1);
-            border: 1px solid rgba(232, 65, 24, 0.3);
-        }
-
-        /* قائمة التحكم المنبثقة - محسنة */
-        .control-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 5px;
-            display: none;
-            flex-direction: row;
-            gap: 5px;
-            z-index: 100;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .control-menu.active {
-            display: flex;
-        }
-
-        .control-menu-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .control-menu-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .control-menu-item:active {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* إشعارات محسنة - سطر واحد */
-        .notification-container {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 10001;
-        }
-
-        .notification {
-            background: rgba(30, 30, 46, 0.9);
-            border-left: 3px solid var(--parent-primary);
-            border-radius: 6px;
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            max-width: 300px;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            opacity: 0.9;
-            font-size: 13px;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.hiding {
-            opacity: 0;
-            transform: translateX(-100%);
-        }
-
-        .notification.success {
-            border-left-color: var(--safe-color);
-        }
-
-        .notification.warning {
-            border-left-color: var(--warning-color);
-        }
-
-        .notification.error {
-            border-left-color: var(--danger-color);
-        }
-
-        .notification-icon {
-            font-size: 16px;
-        }
-
-        .notification-content {
-            flex: 1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        /* شريط البحث المحسن */
-        .search-row {
             display: flex;
-            width: 100%;
-            padding: 10px 20px;
-            background: rgba(25, 25, 40, 0.9);
-            border-bottom: 1px solid var(--card-border);
-            gap: 10px;
             align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
         }
-
-        .search-full-bar {
+        .card-phone {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--bg);
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gold);
+            direction: ltr;
+            margin-top: 3px;
+        }
+        .card-phone .call-btn {
+            background: var(--success);
+            border: none;
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .card-chevron {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--muted);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+        .card-details {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+            display: none;
+        }
+        .card-details.show {
+            display: block;
+            animation: slideIn 0.25s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .details-box {
+            background: var(--bg);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            margin: 0 3px;
+        }
+        .badge-plate {
+            background: var(--gold);
+            color: #fff;
+        }
+        .badge-public {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .badge-private {
+            background: #64748b;
+            color: #fff;
+        }
+        .badge-fav {
+            background: #fbbf24;
+            color: #1a1a2e;
+        }
+        .action-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-sm {
+            padding: 7px 14px;
+            border-radius: 30px;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
             flex: 1;
-            position: relative;
+            min-width: 70px;
+            text-align: center;
+        }
+        .btn-sm:active {
+            transform: scale(0.94);
+        }
+        .btn-edit {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-del {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-share {
+            background: #25D366;
+            color: #fff;
+        }
+        .btn-fav {
+            background: #f59e0b;
+            color: #fff;
         }
 
-        .search-full-input {
+        /* ==================== النوافذ ==================== */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 1600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            visibility: hidden;
+            opacity: 0;
+            transition: var(--transition);
+            backdrop-filter: blur(3px);
+        }
+        .modal.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-box {
+            background: var(--card);
             width: 100%;
-            height: 45px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            padding: 0 120px 0 15px;
-            color: white;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-radius: 28px;
+            padding: 22px 18px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            animation: popIn 0.3s ease;
         }
-
-        .search-full-input:focus {
+        .modal-box h3 {
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .modal-box input,
+        .modal-box textarea,
+        .modal-box select {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 6px 0;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-full);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 13px;
             outline: none;
-            border-color: var(--parent-primary);
-            box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.2);
+            transition: var(--transition);
+            font-family: var(--font);
         }
-
-        .search-full-btn {
-            position: absolute;
-            left: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: var(--parent-primary);
-            border: none;
-            color: white;
+        .modal-box textarea {
+            border-radius: var(--radius-sm);
+            resize: vertical;
+            min-height: 60px;
+        }
+        .modal-box input:focus,
+        .modal-box textarea:focus {
+            border-color: var(--gold);
+        }
+        .upload-card {
+            background: #fef2f2;
+            border: 2px dashed var(--gold);
+            border-radius: 20px;
+            padding: 18px;
+            text-align: center;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: var(--transition);
+            margin: 10px 0;
         }
-
-        .search-actions {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            gap: 5px;
+        body.dark .upload-card {
+            background: #2d1b2a;
         }
-
-        .search-action-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
+        .upload-card:active {
+            transform: scale(0.96);
         }
-
-        .search-action-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .upload-ico {
+            font-size: 36px;
         }
-
-        .search-engines-mini {
-            display: flex;
-            gap: 5px;
-        }
-
-        .engine-btn-mini {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
+        .upload-title {
+            font-weight: 700;
+            color: var(--gold);
             font-size: 14px;
         }
-
-        .engine-btn-mini:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .upload-sub {
+            font-size: 10px;
+            color: var(--muted);
         }
-
-        .engine-btn-mini.active {
-            background: var(--parent-primary);
-            color: white;
+        .upload-preview {
+            display: flex;
+            justify-content: center;
+            margin-top: 8px;
         }
-
-        /* زر التحميل المباشر */
-        .download-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.8);
+        .preview-img {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 2px solid var(--gold);
+        }
+        .color-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+            justify-content: center;
+        }
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
             cursor: pointer;
+            border: 3px solid transparent;
+            transition: var(--transition);
+        }
+        .color-option.selected {
+            border-color: var(--gold);
+            transform: scale(1.1);
+            box-shadow: 0 0 14px rgba(233, 69, 96, 0.3);
+        }
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+        .btn-save,
+        .btn-cancel {
+            flex: 1;
+            padding: 13px;
+            border-radius: var(--radius-full);
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+            transition: var(--transition);
+            min-width: 90px;
+        }
+        .btn-save {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-cancel {
+            background: #64748b;
+            color: #fff;
+        }
+        .btn-save:active,
+        .btn-cancel:active {
+            transform: scale(0.94);
+        }
+
+        /* ==================== زر اللاسلكي ==================== */
+        .walkie-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 62px;
+            height: 62px;
+            background: var(--walkie);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .download-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .download-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 5px;
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            z-index: 100;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            min-width: 180px;
-        }
-
-        .download-menu.active {
-            display: flex;
-        }
-
-        .download-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            border-radius: 6px;
+            z-index: 9999;
             cursor: pointer;
-            transition: all 0.2s ease;
+            box-shadow: 0 6px 22px rgba(37, 211, 102, 0.4);
+            transition: all 0.12s ease;
+            user-select: none;
+            touch-action: none;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+        .walkie-btn.recording {
+            background: #ef4444;
+            transform: scale(1.08);
+            animation: pulse 0.7s infinite;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                transform: scale(1.08);
+            }
+            50% {
+                transform: scale(1.16);
+            }
+        }
+        .walkie-btn.muted {
+            background: #64748b;
+            opacity: 0.5;
+        }
+
+        /* ==================== Toast ==================== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 16px;
+            right: 16px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(14px);
+            color: #fff;
+            padding: 14px 22px;
+            border-radius: var(--radius-full);
+            text-align: center;
+            z-index: 9999;
+            font-weight: 500;
             font-size: 13px;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .download-menu-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .download-menu-item:active {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* تحسينات لوضع حماية العين */
-        .eye-protection-mode {
-            filter: sepia(0.3) hue-rotate(120deg) brightness(0.9);
-        }
-
-        /* تحسينات للبحث */
-        .search-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 0 0 10px 10px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 100;
+        /* ==================== حالة الاتصال ==================== */
+        .conn-badge {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            z-index: 9999;
             display: none;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         }
-
-        .search-suggestions.active {
+        .conn-badge.show {
             display: block;
         }
-
-        .suggestion-item {
-            padding: 10px 15px;
+        .conn-badge.online {
+            background: var(--success);
+        }
+        .loading-msg {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+        }
+        #fullImage {
+            max-width: 90vw;
+            max-height: 75vh;
+            border-radius: 20px;
             cursor: pointer;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .suggestion-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
-
-        /* التكيف مع الشاشات الصغيرة */
-        @media (max-width: 1024px) {
-            .sidebar {
-                position: fixed;
-                top: 0;
-                right: -100%;
-                height: 100%;
-                z-index: 1000;
-                transition: right 0.3s ease;
-            }
-
-            .sidebar.active {
-                right: 0;
-            }
-
-            .settings-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .plans-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .plan-card.featured {
-                transform: none;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                padding: 0 15px;
-            }
-
-            .search-container {
-                max-width: 100%;
-            }
-
-            .quick-links-grid {
-                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            }
-
-            .referral-links-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .points-header {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
-
-            .search-row {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .search-engines-mini {
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header {
-                flex-wrap: wrap;
-                height: auto;
-                padding: 10px 15px;
-            }
-
-            .search-container {
-                order: 3;
-                max-width: 100%;
-                margin-top: 10px;
-            }
-
-            .quick-links-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .child-features-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- الشريط الجانبي -->
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">FAHMI-Safe</div>
-                <div class="mode-toggle" id="mode-toggle">
-                    <span id="mode-icon"><i class="fas fa-user-shield"></i></span>
-                    <span id="mode-text">وضع الأب</span>
-                </div>
-            </div>
-            
-            <div class="sidebar-nav">
-                <div class="nav-section">
-                    <div class="nav-section-title">
-                        <i class="fas fa-home"></i> الرئيسية
-                    </div>
-                    <div class="nav-item active" data-page="home">
-                        <div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>
-                        <div class="nav-text">لوحة التحكم</div>
-                    </div>
-                    <div class="nav-item" data-page="quick-links">
-                        <div class="nav-icon"><i class="fas fa-rocket"></i></div>
-                        <div class="nav-text">المواقع السريعة</div>
-                    </div>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">
-                        <i class="fas fa-cog"></i> الإعدادات
-                    </div>
-                    <div class="nav-item" data-page="settings-general">
-                        <div class="nav-icon"><i class="fas fa-sliders-h"></i></div>
-                        <div class="nav-text">الإعدادات العامة</div>
-                    </div>
-                    <div class="nav-item" data-page="settings-security">
-                        <div class="nav-icon"><i class="fas fa-shield-alt"></i></div>
-                        <div class="nav-text">الأمان والحماية</div>
-                    </div>
-                    <div class="nav-item" data-page="settings-privacy">
-                        <div class="nav-icon"><i class="fas fa-lock"></i></div>
-                        <div class="nav-text">الخصوصية</div>
-                    </div>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">
-                        <i class="fas fa-palette"></i> المظهر
-                    </div>
-                    <div class="nav-item" data-page="themes">
-                        <div class="nav-icon"><i class="fas fa-paint-brush"></i></div>
-                        <div class="nav-text">السمات</div>
-                    </div>
-                    <div class="nav-item" data-page="appearance">
-                        <div class="nav-icon"><i class="fas fa-eye"></i></div>
-                        <div class="nav-text">المظهر والعرض</div>
-                    </div>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-title">
-                        <i class="fas fa-users"></i> العائلة
-                    </div>
-                    <div class="nav-item" data-page="family-profiles">
-                        <div class="nav-icon"><i class="fas fa-user"></i></div>
-                        <div class="nav-text">المستخدمين</div>
-                    </div>
-                    <div class="nav-item" data-page="parental-controls">
-                        <div class="nav-icon"><i class="fas fa-user-lock"></i></div>
-                        <div class="nav-text">الرقابة الأبوية</div>
-                    </div>
-                </div>
 
-                <!-- الأقسام الجديدة -->
-                <div class="nav-section">
-                    <div class="nav-section-title">
-                        <i class="fas fa-gift"></i> المكافآت
-                    </div>
-                    <div class="nav-item" data-page="points-referrals">
-                        <div class="nav-icon"><i class="fas fa-coins"></i></div>
-                        <div class="nav-text">النقاط والإحالات</div>
-                    </div>
-                    <div class="nav-item" data-page="subscriptions">
-                        <div class="nav-icon"><i class="fas fa-crown"></i></div>
-                        <div class="nav-text">باقات الاشتراك</div>
-                    </div>
-                </div>
-                
-                <!-- خيار العودة إلى وضع الأب (يظهر فقط في وضع الطفل) -->
-                <div class="nav-section" id="back-to-parent-section" style="display: none;">
-                    <div class="nav-section-title">
-                        <i class="fas fa-arrow-right"></i> العودة
-                    </div>
-                    <div class="nav-item" id="back-to-parent-btn">
-                        <div class="nav-icon"><i class="fas fa-user-shield"></i></div>
-                        <div class="nav-text">العودة إلى وضع الأب</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- المحتوى الرئيسي -->
-        <div class="main-content">
-            <!-- الهيدر -->
-            <div class="header">
-                <div class="header-controls" style="position: relative;">
-                    <button class="control-btn" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
-                    <button class="control-btn" id="refresh-menu-btn"><i class="fas fa-sync-alt"></i></button>
-                    <div class="control-menu" id="control-menu">
-                        <div class="control-menu-item" id="back-btn" title="الخلف">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        <div class="control-menu-item" id="forward-btn" title="الأمام">
-                            <i class="fas fa-arrow-left"></i>
-                        </div>
-                        <div class="control-menu-item" id="refresh-btn" title="إعادة التحميل">
-                            <i class="fas fa-redo"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="header-controls">
-                    <div class="points-display" id="points-display">
-                        <i class="fas fa-coins"></i>
-                        <span id="points-value">150</span> نقطة
-                    </div>
-                    <button class="control-btn" id="security-btn" title="الحماية"><i class="fas fa-shield-alt"></i></button>
-                    
-                    <!-- زر التحميل المباشر -->
-                    <div style="position: relative;">
-                        <button class="download-btn" id="download-btn" title="التحميل المباشر">
-                            <i class="fas fa-download"></i>
-                        </button>
-                        <div class="download-menu" id="download-menu">
-                            <div class="download-menu-item" onclick="downloadFrom('instagram')">
-                                <i class="fab fa-instagram"></i>
-                                <span>انستغرام</span>
-                            </div>
-                            <div class="download-menu-item" onclick="downloadFrom('facebook')">
-                                <i class="fab fa-facebook"></i>
-                                <span>فيسبوك</span>
-                            </div>
-                            <div class="download-menu-item" onclick="downloadFrom('twitter')">
-                                <i class="fab fa-twitter"></i>
-                                <span>تويتر</span>
-                            </div>
-                            <div class="download-menu-item" onclick="downloadFrom('youtube')">
-                                <i class="fab fa-youtube"></i>
-                                <span>يوتيوب</span>
-                            </div>
-                            <div class="download-menu-item" onclick="downloadFrom('tiktok')">
-                                <i class="fab fa-tiktok"></i>
-                                <span>تيك توك</span>
-                            </div>
-                            <div class="download-menu-item" onclick="downloadFrom('whatsapp')">
-                                <i class="fab fa-whatsapp"></i>
-                                <span>واتساب</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- شريط البحث المحسن -->
-            <div class="search-row">
-                <div class="search-full-bar">
-                    <input type="text" class="search-full-input" placeholder="ابحث في الإنترنت أو أدخل عنوان موقع..." id="search-full-input">
-                    <button class="search-full-btn" id="search-full-btn"><i class="fas fa-search"></i></button>
-                    <div class="search-actions">
-                        <button class="search-action-btn" id="voice-search-btn" title="البحث الصوتي">
-                            <i class="fas fa-microphone"></i>
-                        </button>
-                        <button class="search-action-btn" id="image-search-btn" title="البحث بالصورة">
-                            <i class="fas fa-camera"></i>
-                        </button>
-                        <button class="search-action-btn" id="file-search-btn" title="البحث بملف">
-                            <i class="fas fa-file-upload"></i>
-                        </button>
-                    </div>
-                    <div class="search-suggestions" id="search-suggestions"></div>
-                </div>
-                
-                <div class="search-engines-mini">
-                    <button class="engine-btn-mini active" data-engine="google" title="جوجل">
-                        <i class="fab fa-google"></i>
-                    </button>
-                    <button class="engine-btn-mini" data-engine="bing" title="بينغ">
-                        <i class="fab fa-microsoft"></i>
-                    </button>
-                    <button class="engine-btn-mini" data-engine="yahoo" title="ياهو">
-                        <i class="fab fa-yahoo"></i>
-                    </button>
-                    <button class="engine-btn-mini" data-engine="duckduckgo" title="دك دك جو">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- منطقة المحتوى -->
-            <div class="content-area">
-                <!-- الصفحة الرئيسية -->
-                <div class="page active" id="home-page">
-                    <div class="welcome-section">
-                        <div class="welcome-icon"><i class="fas fa-shield-alt"></i></div>
-                        <h1 class="welcome-title" id="welcome-title">مرحباً بك في FAHMI-Safe Browser</h1>
-                        <p class="welcome-subtitle" id="welcome-subtitle">تصفح آمن ومحمي للعائلة مع ميزات متقدمة</p>
-                        
-                        <div class="quick-links-grid" id="quick-links-grid">
-                            <!-- سيتم تعبئتها ديناميكياً -->
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- صفحة النقاط والإحالات -->
-                <div class="page" id="points-referrals-page">
-                    <div class="points-section">
-                        <div class="points-header">
-                            <h2 class="settings-title"><i class="fas fa-coins"></i> النقاط والإحالات</h2>
-                            <div class="btn btn-primary" id="share-referral-btn">
-                                <i class="fas fa-share-alt"></i> مشاركة رابط الإحالة
-                            </div>
-                        </div>
-                        
-                        <div class="points-card">
-                            <div class="points-label">إجمالي نقاطك</div>
-                            <div class="points-value" id="total-points">150</div>
-                            <div class="points-label">يمكنك استبدال النقاط بمزايا حصرية</div>
-                        </div>
-                        
-                        <h3 class="settings-title" style="margin-top: 30px;"><i class="fas fa-link"></i> واحة التسجيلات والمكافآت</h3>
-                        <p style="margin-bottom: 20px; color: rgba(255,255,255,0.7);">سجّل في هذه المنصات واحصل على 10 نقاط لكل تسجيل ناجح!</p>
-                        
-                        <div class="referral-links-grid" id="referral-links-grid">
-                            <!-- سيتم تعبئتها ديناميكياً -->
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- صفحة الاشتراكات -->
-                <div class="page" id="subscriptions-page">
-                    <div class="subscriptions-section">
-                        <h2 class="settings-title"><i class="fas fa-crown"></i> باقات الاشتراك المميزة</h2>
-                        <p style="margin-bottom: 20px; color: rgba(255,255,255,0.7);">اختر الباقة المناسبة لتحصل على حماية متقدمة ومزايا حصرية</p>
-                        
-                        <div class="plans-grid">
-                            <div class="plan-card">
-                                <div class="plan-name">الباقة الأساسية</div>
-                                <div class="plan-price">$2.99</div>
-                                <div class="plan-period">أسبوعياً</div>
-                                <ul class="plan-features">
-                                    <li><i class="fas fa-check"></i> فحص الأمان التلقائي</li>
-                                    <li><i class="fas fa-check"></i> حماية أساسية من الفيروسات</li>
-                                    <li><i class="fas fa-check"></i> فلترة الإعلانات</li>
-                                    <li><i class="fas fa-check"></i> دعم فني محدود</li>
-                                </ul>
-                                <button class="btn btn-outline" style="width: 100%;">اشترك الآن</button>
-                            </div>
-                            
-                            <div class="plan-card">
-                                <div class="plan-name">الباقة المتوسطة</div>
-                                <div class="plan-price">$9.99</div>
-                                <div class="plan-period">شهرياً</div>
-                                <ul class="plan-features">
-                                    <li><i class="fas fa-check"></i> جميع ميزات الباقة الأساسية</li>
-                                    <li><i class="fas fa-check"></i> حماية متقدمة من التتبع</li>
-                                    <li><i class="fas fa-check"></i> وضع الأطفال مع GPS</li>
-                                    <li><i class="fas fa-check"></i> دعم فني سريع</li>
-                                </ul>
-                                <button class="btn btn-primary" style="width: 100%;">اشترك الآن</button>
-                            </div>
-                            
-                            <div class="plan-card featured">
-                                <div class="plan-name">الباقة المميزة</div>
-                                <div class="plan-price">$99.99</div>
-                                <div class="plan-period">سنوياً</div>
-                                <ul class="plan-features">
-                                    <li><i class="fas fa-check"></i> جميع الميزات السابقة</li>
-                                    <li><i class="fas fa-check"></i> VPN مدمج مجاني</li>
-                                    <li><i class="fas fa-check"></i> حماية متقدمة للبيانات</li>
-                                    <li><i class="fas fa-check"></i> دعم فني على مدار الساعة</li>
-                                    <li><i class="fas fa-check"></i> خصم 30% على التجديد</li>
-                                </ul>
-                                <button class="btn btn-warning" style="width: 100%;">اشترك الآن</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- صفحة الرقابة الأبوية -->
-                <div class="page" id="parental-controls-page">
-                    <div class="child-section">
-                        <h2 class="settings-title"><i class="fas fa-user-lock"></i> الرقابة الأبوية</h2>
-                        
-                        <div class="settings-card">
-                            <div class="card-header">
-                                <div class="card-icon"><i class="fas fa-child"></i></div>
-                                <div class="card-title">تفعيل وضع الأطفال</div>
-                            </div>
-                            
-                            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.7);">لتفعيل وضع الأطفال، أدخل الكود المربوط بحساب الأب:</p>
-                            <input type="text" class="child-code-input" placeholder="أدخل كود الأطفال" id="child-code-input">
-                            <button class="btn btn-primary" id="activate-child-mode" style="width: 100%;">تفعيل وضع الأطفال</button>
-                            
-                            <div class="gps-status" id="gps-status" style="display: none;">
-                                <div class="gps-indicator"></div>
-                                <div>تتبع GPS نشط - يتم تعقب موقع الطفل لحمايته</div>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-card">
-                            <div class="card-header">
-                                <div class="card-icon"><i class="fas fa-filter"></i></div>
-                                <div class="card-title">فلترة المواقع يدوياً</div>
-                            </div>
-                            
-                            <div class="setting-item">
-                                <div class="setting-label">فلترة المواقع الضارة</div>
-                                <div class="setting-control">
-                                    <label class="toggle">
-                                        <input type="checkbox" checked id="harmful-filter">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="setting-item">
-                                <div class="setting-label">منع المواقع غير المناسبة</div>
-                                <div class="setting-control">
-                                    <label class="toggle">
-                                        <input type="checkbox" checked id="inappropriate-filter">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="setting-item">
-                                <div class="setting-label">تفعيل حماية العين للطفل</div>
-                                <div class="setting-control">
-                                    <label class="toggle">
-                                        <input type="checkbox" id="child-eye-protection">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="setting-item">
-                                <div class="setting-label">إضافة مواقع للقائمة البيضاء</div>
-                                <div class="setting-control">
-                                    <button class="btn btn-outline">إدارة القائمة</button>
-                                </div>
-                            </div>
-                            
-                            <div class="setting-item">
-                                <div class="setting-label">إضافة مواقع للقائمة السوداء</div>
-                                <div class="setting-control">
-                                    <button class="btn btn-outline">إدارة القائمة</button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <h3 class="settings-title" style="margin-top: 30px;">ميزات وضع الأطفال</h3>
-                        
-                        <div class="child-features-grid">
-                            <div class="child-feature">
-                                <div class="child-feature-icon"><i class="fas fa-shield-alt"></i></div>
-                                <div class="child-feature-title">حماية متقدمة</div>
-                                <div class="child-feature-desc">حظر تلقائي للمواقع الضارة وغير المناسبة</div>
-                            </div>
-                            
-                            <div class="child-feature">
-                                <div class="child-feature-icon"><i class="fas fa-map-marker-alt"></i></div>
-                                <div class="child-feature-title">تتبع GPS</div>
-                                <div class="child-feature-desc">تعقب موقع الطفل لحمايته في الوقت الحقيقي</div>
-                            </div>
-                            
-                            <div class="child-feature">
-                                <div class="child-feature-icon"><i class="fas fa-clock"></i></div>
-                                <div class="child-feature-title">تحديد وقت الاستخدام</div>
-                                <div class="child-feature-desc">ضبط وقت التصفح اليومي للطفل</div>
-                            </div>
-                            
-                            <div class="child-feature">
-                                <div class="child-feature-icon"><i class="fas fa-filter"></i></div>
-                                <div class="child-feature-title">فلترة يدوية</div>
-                                <div class="child-feature-desc">إمكانية فلترة المواقع يدوياً من قبل الأب</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- صفحة الإعدادات العامة -->
-                <div class="page" id="settings-general-page">
-                    <div class="settings-section">
-                        <h2 class="settings-title"><i class="fas fa-sliders-h"></i> الإعدادات العامة</h2>
-                        
-                        <div class="settings-grid">
-                            <div class="settings-card">
-                                <div class="card-header">
-                                    <div class="card-icon"><i class="fas fa-bell"></i></div>
-                                    <div class="card-title">الإشعارات</div>
-                                </div>
-                                
-                                <div class="setting-item">
-                                    <div class="setting-label">تفعيل الإشعارات</div>
-                                    <div class="setting-control">
-                                        <label class="toggle">
-                                            <input type="checkbox" checked id="enable-notifications">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="setting-item">
-                                    <div class="setting-label">مدة ظهور الإشعارات (ثانية)</div>
-                                    <div class="setting-control">
-                                        <select id="notification-duration" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--card-border); border-radius: 5px; padding: 5px;">
-                                            <option value="2">2 ثواني</option>
-                                            <option value="3">3 ثواني</option>
-                                            <option value="5">5 ثواني</option>
-                                            <option value="0">لا تختفي تلقائياً</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="setting-item">
-                                    <div class="setting-label">تفعيل حماية العين</div>
-                                    <div class="setting-control">
-                                        <label class="toggle">
-                                            <input type="checkbox" id="eye-protection-setting">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="settings-card">
-                                <div class="card-header">
-                                    <div class="card-icon"><i class="fas fa-search"></i></div>
-                                    <div class="card-title">البحث</div>
-                                </div>
-                                
-                                <div class="setting-item">
-                                    <div class="setting-label">محرك البحث الافتراضي</div>
-                                    <div class="setting-control">
-                                        <select id="default-search-engine" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--card-border); border-radius: 5px; padding: 5px;">
-                                            <option value="google">جوجل</option>
-                                            <option value="bing">بينغ</option>
-                                            <option value="yahoo">ياهو</option>
-                                            <option value="duckduckgo">دك دك جو</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="setting-item">
-                                    <div class="setting-label">عرض اقتراحات البحث</div>
-                                    <div class="setting-control">
-                                        <label class="toggle">
-                                            <input type="checkbox" checked id="search-suggestions-setting">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="page" id="themes-page">
-                    <!-- محتوى صفحة السمات -->
-                </div>
+    <!-- مؤشر الاتصال -->
+    <div class="conn-badge" id="connBadge">📡 غير متصل</div>
+
+    <!-- شاشة الدخول -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-Note Pro"></div>
+            <div class="login-title">F-Note Pro</div>
+            <div class="login-sub">خزنة المرشدين – النسخة المتكاملة</div>
+            <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com" autocomplete="email">
+            <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور" autocomplete="current-password">
+            <button class="login-btn" id="loginBtn">🔐 دخول</button>
+            <div class="login-error" id="loginError"></div>
+            <div class="login-info">
+                ☁️ Cloudinary للصور | 💾 تخزين سحابي + محلي<br>🔊 لاسلكي PTT | 🌍 عام/خاص | 📱 واتساب
             </div>
         </div>
     </div>
 
-    <!-- نافذة فحص الأمان -->
-    <div class="security-scan-modal" id="security-scan-modal">
-        <div class="scan-container">
-            <div class="scan-icon">
-                <i class="fas fa-shield-alt"></i>
+    <!-- الهيدر -->
+    <div class="header">
+        <div class="header-logo"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-Note Pro"></div>
+        <button class="header-menu" id="menuBtn">☰</button>
+    </div>
+
+    <!-- القائمة الجانبية -->
+    <div class="overlay" id="overlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-head"><h3>✨ F-Note Pro</h3><button class="sidebar-close" id="closeSidebar">✕</button></div>
+        <div class="sidebar-section">
+            <h4>👤 حسابي</h4>
+            <div id="userInfo" style="font-size:11px;word-break:break-all;margin-bottom:8px;"></div>
+            <div class="sidebar-item" id="signOutBtn" style="display:none;"><span class="ico">🚪</span> تسجيل الخروج</div>
+        </div>
+        <div class="sidebar-section">
+            <h4>⚙️ الإعدادات</h4>
+            <div class="sidebar-item" id="darkModeBtn"><span class="ico">🌙</span><span id="darkLabel">الوضع الداكن</span></div>
+            <div class="sidebar-item" id="muteBtn"><span class="ico">🔇</span> كتم اللاسلكي</div>
+            <div class="sidebar-item" id="syncBtn"><span class="ico">🔄</span> مزامنة السحاب</div>
+            <div class="sidebar-item" id="exportJsonBtn"><span class="ico">💾</span> تصدير JSON</div>
+            <div class="sidebar-item" id="exportPdfBtn"><span class="ico">📄</span> تصدير PDF</div>
+        </div>
+        <div class="sidebar-section">
+            <h4>ℹ️ عن التطبيق</h4>
+            <p style="font-size:10px;color:var(--muted);">نسخة 38.0 – Cloudinary + Firestore</p>
+        </div>
+    </div>
+
+    <!-- شريط البحث -->
+    <div class="toolbar">
+        <div class="search-wrap">
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث عن مرشد...">
+            <button class="voice-btn" id="voiceBtn">🎤</button>
+        </div>
+        <button class="add-btn" id="addBtn">+</button>
+    </div>
+
+    <!-- فلتر الألوان -->
+    <div class="filter-wrap">
+        <button class="filter-toggle" id="filterToggle">🎨 فلتر الألوان ▼</button>
+        <div class="colors-panel" id="colorsPanel">
+            <div class="color-dot active" data-color="all" style="background:conic-gradient(#e94560,#f59e0b,#10b981,#3b82f6,#9b5de5,#e94560);"></div>
+            <div class="color-dot" data-color="#e94560" style="background:#e94560;"></div>
+            <div class="color-dot" data-color="#2c7da0" style="background:#2c7da0;"></div>
+            <div class="color-dot" data-color="#e76f51" style="background:#e76f51;"></div>
+            <div class="color-dot" data-color="#2a9d8f" style="background:#2a9d8f;"></div>
+            <div class="color-dot" data-color="#e9c46a" style="background:#e9c46a;"></div>
+            <div class="color-dot" data-color="#9b5de5" style="background:#9b5de5;"></div>
+            <div class="color-dot" data-color="#06d6a0" style="background:#06d6a0;"></div>
+            <div class="color-dot" data-color="#ff006e" style="background:#ff006e;"></div>
+        </div>
+    </div>
+
+    <!-- قائمة المرشدين -->
+    <div id="guidesContainer" class="guides-list"><div class="loading-msg">⏳ جاري التحميل...</div></div>
+
+    <!-- نافذة إضافة/تعديل -->
+    <div id="guideModal" class="modal">
+        <div class="modal-box">
+            <h3 id="modalTitle">➕ إضافة مرشد جديد</h3>
+            <input type="text" id="gName" placeholder="الاسم الكامل *">
+            <input type="tel" id="gPhone" placeholder="رقم الهاتف *">
+            <input type="text" id="gPlate" placeholder="رقم اللوحة">
+            <div id="phoneErr" style="color:#ef4444;font-size:11px;display:none;">⚠️ رقم غير صالح</div>
+
+            <div class="upload-card" id="guideUploadCard">
+                <div class="upload-ico">📸</div>
+                <div class="upload-title">صورة المرشد</div>
+                <div class="upload-sub">اختر من الألبوم أو الكاميرا</div>
+                <div class="upload-preview" id="guidePreviewWrap" style="display:none;"><img id="guidePreviewImg" class="preview-img"></div>
+                <div id="guideUploadStat" style="font-size:10px;margin-top:4px;color:var(--muted);"></div>
             </div>
-            <h2 class="scan-title" id="scan-title">جاري فحص الأمان للموقع</h2>
-            <p class="scan-message" id="scan-message">يتم فحص الموقع للتأكد من أمانه</p>
-            
-            <div class="scan-progress">
-                <div class="scan-progress-bar" id="scan-progress-bar"></div>
+
+            <div class="upload-card" id="busUploadCard">
+                <div class="upload-ico">🚌</div>
+                <div class="upload-title">صورة وسيلة النقل</div>
+                <div class="upload-sub">اختر من الألبوم أو الكاميرا</div>
+                <div class="upload-preview" id="busPreviewWrap" style="display:none;"><img id="busPreviewImg" class="preview-img"></div>
+                <div id="busUploadStat" style="font-size:10px;margin-top:4px;color:var(--muted);"></div>
             </div>
-            
-            <div class="scan-result" id="scan-result">
-                <div class="result-icon" id="result-icon"></div>
-                <h3 class="result-title" id="result-title"></h3>
-                <p class="result-desc" id="result-desc"></p>
-                <div class="result-actions" id="result-actions">
-                    <!-- سيتم تعبئتها ديناميكياً -->
-                </div>
+
+            <input type="text" id="gTransport" placeholder="وسيلة النقل">
+            <input type="text" id="gAgency" placeholder="الوكالة">
+            <textarea id="gNotes" rows="2" placeholder="ملاحظات"></textarea>
+            <div class="color-selector" id="colorSelector"></div>
+            <select id="gVisibility">
+                <option value="private">🔒 خاص</option>
+                <option value="public">🌍 عام</option>
+            </select>
+            <div class="modal-btns">
+                <button class="btn-save" id="saveBtn">💾 حفظ</button>
+                <button class="btn-cancel" id="cancelBtn">❌ إلغاء</button>
             </div>
         </div>
     </div>
 
-    <!-- نافذة العودة إلى وضع الأب -->
-    <div class="parent-code-modal" id="parent-code-modal">
-        <div class="parent-code-container">
-            <div class="parent-code-icon">
-                <i class="fas fa-user-shield"></i>
-            </div>
-            <h2 class="parent-code-title">العودة إلى وضع الأب</h2>
-            <p class="parent-code-message">للعودة إلى وضع الأب، يرجى إدخال كود الأب الخاص بك:</p>
-            
-            <input type="password" class="parent-code-input" placeholder="أدخل كود الأب" id="parent-code-input">
-            <button class="btn btn-primary" id="verify-parent-code" style="width: 100%;">تحقق من الكود</button>
-            
-            <div class="parent-code-result" id="parent-code-result">
-                <div class="result-icon" id="parent-result-icon"></div>
-                <h3 class="result-title" id="parent-result-title"></h3>
-                <p class="result-desc" id="parent-result-desc"></p>
-                <div class="result-actions" id="parent-result-actions">
-                    <!-- سيتم تعبئتها ديناميكياً -->
-                </div>
+    <!-- نافذة التفاصيل -->
+    <div id="detailModal" class="modal">
+        <div class="modal-box">
+            <h3 id="detailName"></h3>
+            <div id="detailContent"></div>
+            <div id="detailVisDiv" style="margin-top:10px;"></div>
+            <button class="btn-share btn-sm" id="shareWaBtn" style="width:100%;margin-top:8px;">💬 مشاركة واتساب</button>
+            <button class="btn-cancel btn-sm" id="closeDetailBtn" style="width:100%;margin-top:6px;">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- نافذة المشاركة -->
+    <div id="multiShareModal" class="modal">
+        <div class="modal-box">
+            <h3>📱 اختر المستلمين</h3>
+            <div id="contactsList" style="max-height:250px;overflow-y:auto;margin:10px 0;"></div>
+            <div class="modal-btns">
+                <button class="btn-save" id="confirmShareBtn">✅ إرسال</button>
+                <button class="btn-cancel" id="closeMultiBtn">❌ إلغاء</button>
             </div>
         </div>
     </div>
 
-    <!-- حاوية الإشعارات -->
-    <div class="notification-container" id="notification-container"></div>
+    <!-- نافذة الصورة الكاملة -->
+    <div id="fullImageModal" class="modal">
+        <div class="modal-box" style="text-align:center;background:transparent;box-shadow:none;border:none;">
+            <img id="fullImage" alt="صورة مكبرة">
+            <button class="btn-cancel" id="closeFullBtn" style="margin-top:10px;">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- زر اللاسلكي -->
+    <div id="walkieBtn" class="walkie-btn">🎙️</div>
 
     <script>
-        // حالة التطبيق
-        let currentMode = 'parent';
-        let currentTheme = 'dark';
-        let eyeProtectionEnabled = false;
-        let currentPage = 'home';
-        let userPoints = 150;
-        let currentSearchEngine = 'google';
-        let parentCode = ''; // سيتم توليده عند تفعيل وضع الأطفال
-        let notificationDuration = 2; // مدة ظهور الإشعارات بالثواني
-        let notificationsEnabled = true; // تفعيل الإشعارات
-
-        // قائمة المواقع الضارة (للمحاكاة)
-        const maliciousSites = [
-            'malicious.com',
-            'dangerous-site.net',
-            'phishing-website.org',
-            'virus-download.com',
-            'harmful-content.info'
-        ];
-
-        // اقتراحات البحث الشائعة
-        const searchSuggestions = [
-            'جوجل', 'فيسبوك', 'يوتيوب', 'ويكيبيديا', 'تويتر',
-            'انستغرام', 'أمازون', 'نتفليكس', 'البريد', 'خرائط'
-        ];
-        
-        // بيانات التطبيق
-        const quickLinks = {
-            parent: [
-                { name: "البحث", url: "https://www.google.com", icon: "fas fa-search" },
-                { name: "البريد", url: "https://gmail.com", icon: "fas fa-envelope" },
-                { name: "الفيسبوك", url: "https://www.facebook.com", icon: "fab fa-facebook" },
-                { name: "YouTube", url: "https://www.youtube.com", icon: "fab fa-youtube" },
-                { name: "البنك الأهلي", url: "https://alahli.com", icon: "fas fa-university" },
-                { name: "STC Pay", url: "https://stcpay.com.sa", icon: "fas fa-mobile-alt" },
-                { name: "Amazon", url: "https://amazon.com", icon: "fab fa-amazon" },
-                { name: "Netflix", url: "https://netflix.com", icon: "fas fa-film" }
-            ],
-            child: [
-                { name: "PBS Kids", url: "https://pbskids.org", icon: "fas fa-child" },
-                { name: "National Geographic", url: "https://kids.nationalgeographic.com", icon: "fas fa-globe-americas" },
-                { name: "Funbrain", url: "https://funbrain.com", icon: "fas fa-gamepad" },
-                { name: "Starfall", url: "https://starfall.com", icon: "fas fa-star" },
-                { name: "ABCya", url: "https://abcya.com", icon: "fas fa-font" },
-                { name: "Coolmath", url: "https://coolmathgames.com", icon: "fas fa-calculator" },
-                { name: "Nick Jr.", url: "https://nickjr.com", icon: "fas fa-tv" },
-                { name: "Disney", url: "https://disneyjunior.com", icon: "fas fa-hat-wizard" }
-            ]
+        // ==================== إعدادات Firebase ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
+            authDomain: "f-notepro-work-2d25b.firebaseapp.com",
+            databaseURL: "https://f-notepro-work-2d25b-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "f-notepro-work-2d25b",
+            storageBucket: "f-notepro-work-2d25b.firebasestorage.app",
+            messagingSenderId: "221438380381",
+            appId: "1:221438380381:web:b46c35d0ec0944079480b4",
+            measurementId: "G-E4YBHXQE9B"
         };
 
-        // روابط الإحالة
-        const referralLinks = [
-            { name: "Bybit", url: "https://www.bybit.com/invite?ref=Y3G4V2M", points: 10 },
-            { name: "Coinbase", url: "https://advanced.coinbase.com/join/S6CEGCG", points: 10 },
-            { name: "AirTM", url: "https://app.airtm.com/jvt/fahminhoajmi", points: 10 },
-            { name: "Freecash", url: "https://freecash.com/rJSSEQY", points: 10 },
-            { name: "Jumptask", url: "https://www.jumptask.io/r/lufijetimemy", points: 10 },
-            { name: "Binance", url: "https://www.binance.com/referral/earn-together/refer2earn-usdc/claim?hl=en&ref=GRO_28502_PKUMV&utm_source=default", points: 10 },
-            { name: "URL Shortener", url: "https://url.hk/j/en/h10qa", points: 10 },
-            { name: "SVRc App", url: "svrcapp.com/j/fahmi.safe_us", points: 10 },
-            { name: "Getlee", url: "https://r.getlee.co/r/6b9e2f6bfb", points: 10 },
-            { name: "OKX", url: "https://okx.com/join/31008252", points: 10 },
-            { name: "KuCoin", url: "https://www.kucoin.com/r/rf/QBSZ4LEL", points: 10 }
-        ];
+        // ==================== إعدادات Cloudinary ====================
+        const CLOUD_NAME = 'dmhtx93nj';
+        const UPLOAD_PRESET = 'fcloud_preset';
+        const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
-        // محركات البحث
-        const searchEngines = {
-            google: { name: "جوجل", url: "https://www.google.com/search?q=" },
-            bing: { name: "بينغ", url: "https://www.bing.com/search?q=" },
-            yahoo: { name: "ياهو", url: "https://search.yahoo.com/search?p=" },
-            duckduckgo: { name: "دك دك جو", url: "https://duckduckgo.com/?q=" }
+        // ==================== تهيئة Firebase ====================
+        let app, db, auth, storage;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore(app);
+            auth = firebase.auth(app);
+            storage = firebase.storage(app);
+            db.enablePersistence({ synchronizeTabs: true }).then(() => console.log('✅ Offline ready')).catch(() => {});
+            console.log('✅ Firebase ready');
+        } catch (e) { console.error(e);
+            alert('خطأ Firebase'); }
+
+        // ==================== متغيرات ====================
+        let currentUser = null;
+        let guides = [];
+        let editId = null;
+        let selectedColor = '#e94560';
+        let colorFilter = 'all';
+        let detailGuide = null;
+        let guidePhotoData = '';
+        let busPhotoData = '';
+        let isMuted = false;
+        let shareGuideId = null;
+
+        // ==================== الاتصال ====================
+        const connBadge = document.getElementById('connBadge');
+        function updateConn() {
+            if (navigator.onLine) {
+                connBadge.textContent = '✅ متصل';
+                connBadge.classList.add('online');
+                setTimeout(() => connBadge.classList.remove('show'), 2000);
+            } else {
+                connBadge.textContent = '📡 غير متصل – محلي';
+                connBadge.classList.remove('online');
+                connBadge.classList.add('show');
+            }
+        }
+        window.addEventListener('online', updateConn);
+        window.addEventListener('offline', updateConn);
+        updateConn();
+
+        // ==================== Toast ====================
+        function toast(msg, err = false) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.style.background = err ? 'rgba(239,68,68,0.92)' : 'rgba(15,23,42,0.9)';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0';
+                t.style.transition = '0.3s';
+                setTimeout(() => t.remove(), 300); }, 2200);
+        }
+
+        function esc(s) { if (!s) return '';
+            const m = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }; return String(s).replace(
+                /[&<>"']/g, c => m[c]); }
+
+        function validPhone(p) { return /^\+?[0-9]{8,15}$/.test(p.replace(/[\s\-\(\)]/g, '')); }
+
+        function sanitize(s) { return s.replace(/[<>]/g, '').trim(); }
+
+        // ==================== Cloudinary رفع ====================
+        async function uploadToCloudinary(base64) {
+            if (!navigator.onLine) return null;
+            try {
+                const blob = await fetch(base64).then(r => r.blob());
+                const fd = new FormData();
+                fd.append('file', blob, 'img_' + Date.now() + '.jpg');
+                fd.append('upload_preset', UPLOAD_PRESET);
+                const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd });
+                if (!res.ok) throw new Error('Upload failed');
+                const data = await res.json();
+                return data.secure_url;
+            } catch (e) {
+                console.warn('Cloudinary fallback:', e.message);
+                return null;
+            }
+        }
+
+        // ==================== ضغط الصور ====================
+        function handleImage(file, type) {
+            if (!file) return;
+            const stat = document.getElementById(type === 'guide' ? 'guideUploadStat' : 'busUploadStat');
+            const prev = document.getElementById(type === 'guide' ? 'guidePreviewImg' : 'busPreviewImg');
+            const wrap = document.getElementById(type === 'guide' ? 'guidePreviewWrap' : 'busPreviewWrap');
+            stat.textContent = '⏳ ضغط...';
+            const r = new FileReader();
+            r.onload = async (e) => {
+                const img = new Image();
+                img.onload = async () => {
+                    const c = document.createElement('canvas');
+                    const mw = 450;
+                    let w = img.width,
+                        h = img.height;
+                    if (w > mw) { h *= mw / w;
+                        w = mw; }
+                    c.width = Math.round(w);
+                    c.height = Math.round(h);
+                    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                    const b64 = c.toDataURL('image/jpeg', 0.55);
+                    // رفع Cloudinary
+                    stat.textContent = '☁️ رفع...';
+                    const url = await uploadToCloudinary(b64);
+                    const final = url || b64;
+                    if (url) stat.textContent = '✅ Cloudinary';
+                    else stat.textContent = '✅ محلي';
+                    if (type === 'guide') guidePhotoData = final;
+                    else busPhotoData = final;
+                    prev.src = b64;
+                    wrap.style.display = 'flex';
+                    setTimeout(() => stat.textContent = '', 1800);
+                };
+                img.src = e.target.result;
+            };
+            r.readAsDataURL(file);
+        }
+
+        function pickImage(type) {
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.accept = 'image/*';
+            inp.capture = 'environment';
+            inp.onchange = e => { if (e.target.files[0]) handleImage(e.target.files[0], type); };
+            inp.click();
+        }
+
+        // ==================== حفظ ====================
+        async function saveGuide(data) {
+            if (!currentUser) throw new Error('سجل الدخول');
+            const ref = data.id ? db.collection('guides').doc(data.id) : db.collection('guides').doc();
+            const doc = {
+                userId: currentUser.uid,
+                name: sanitize(data.name),
+                phone: data.phone.replace(/[\s\-\(\)]/g, ''),
+                plateNumber: sanitize(data.plate || ''),
+                guidePhoto: guidePhotoData || null,
+                busPhoto: busPhotoData || null,
+                cardColor: data.color,
+                transportType: sanitize(data.transport || ''),
+                agency: sanitize(data.agency || ''),
+                notes: sanitize(data.notes || ''),
+                favorite: data.fav || false,
+                visibility: data.vis || 'private',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            };
+            if (!data.id) doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await ref.set(doc, { merge: true });
+        }
+
+        // ==================== استماع ====================
+        let unsub = null;
+
+        function listen() {
+            if (unsub) unsub();
+            if (!currentUser) return;
+            unsub = db.collection('guides').where('userId', '==', currentUser.uid).onSnapshot(snap => {
+                let mine = [];
+                snap.forEach(d => mine.push({ id: d.id, ...d.data() }));
+                db.collection('guides').where('visibility', '==', 'public').get().then(ps => {
+                    let pubs = [];
+                    ps.forEach(d => { if (d.data().userId !== currentUser.uid) pubs.push({ id: d.id, ...d
+                            .data() }); });
+                    const all = [...mine, ...pubs];
+                    const u = new Map();
+                    all.forEach(g => u.set(g.id, g));
+                    guides = Array.from(u.values());
+                    render();
+                }).catch(() => { guides = mine;
+                    render(); });
+            }, err => console.warn('Snapshot err:', err));
+        }
+
+        // ==================== عرض ====================
+        function filterGuides() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            let f = guides.filter(g => {
+                if (!q) return true;
+                return (g.name || '').toLowerCase().includes(q) || (g.phone || '').includes(q) || (g.transportType ||
+                    '').includes(q) || (g.agency || '').includes(q) || (g.plateNumber || '').includes(q);
+            });
+            if (colorFilter !== 'all') f = f.filter(g => g.cardColor === colorFilter);
+            f.sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
+            return f;
+        }
+
+        function render() {
+            const f = filterGuides();
+            const c = document.getElementById('guidesContainer');
+            if (!f.length) { c.innerHTML = '<div class="loading-msg">😕 لا نتائج</div>'; return; }
+            c.innerHTML = f.map(g => {
+                const own = g.userId === currentUser?.uid;
+                const star = g.favorite ? '⭐ ' : '';
+                const vis = g.visibility === 'public' ?
+                    '<span class="badge badge-public">🌍 عام</span>' :
+                    '<span class="badge badge-private">🔒 خاص</span>';
+                return `
+            <div class="guide-card" style="border-right-color:${esc(g.cardColor)}" onclick="showDetail('${g.id}')">
+              <div class="card-top">
+                <img class="card-avatar" src="${g.guidePhoto||''}" onclick="event.stopPropagation();viewImage('${g.guidePhoto||''}')" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2216%22 fill=%22%23cbd5e1%22/%3E%3Cellipse cx=%2240%22 cy=%2265%22 rx=%2226%22 ry=%2218%22 fill=%22%23cbd5e1%22/%3E%3C/svg%3E';">
+                <div class="card-info">
+                  <div class="card-name">${star}${esc(g.name)} ${vis}</div>
+                  <div class="card-phone"><span>${esc(g.phone)}</span><button class="call-btn" onclick="event.stopPropagation();location.href='tel:${esc(g.phone)}'">📞</button></div>
+                </div>
+                <button class="card-chevron" onclick="event.stopPropagation();toggleDet('${g.id}',this)">▼</button>
+              </div>
+              <div id="det-${g.id}" class="card-details">
+                <div class="details-box">
+                  ${g.busPhoto?`<img src="${esc(g.busPhoto)}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;cursor:pointer;border:1px solid var(--border);" onclick="event.stopPropagation();viewImage('${esc(g.busPhoto)}')">`:''}
+                  <p>🚐 ${esc(g.transportType||'—')}</p>
+                  <p>🚍 <span class="badge badge-plate">${esc(g.plateNumber||'—')}</span></p>
+                  <p>🏢 ${esc(g.agency||'—')}</p>
+                  <p>📝 ${esc((g.notes||'—').substring(0,50))}${(g.notes||'').length>50?'...':''}</p>
+                  <div class="action-row">
+                    ${own?`<button class="btn-sm btn-edit" onclick="event.stopPropagation();editGuide('${g.id}')">✏️</button>`:''}
+                    ${own?`<button class="btn-sm btn-del" onclick="event.stopPropagation();delGuide('${g.id}')">🗑️</button>`:''}
+                    <button class="btn-sm btn-share" onclick="event.stopPropagation();openShare('${g.id}')">💬</button>
+                    ${own?`<button class="btn-sm btn-fav" onclick="event.stopPropagation();toggleFav('${g.id}')">${g.favorite?'★':'☆'}</button>`:''}
+                  </div>
+                </div>
+              </div>
+            </div>`;
+            }).join('');
+        }
+
+        window.toggleDet = (id, btn) => {
+            const el = document.getElementById('det-' + id);
+            if (el) { el.classList.toggle('show');
+                btn.textContent = el.classList.contains('show') ? '▲' : '▼'; }
+        };
+        window.viewImage = url => {
+            if (url) { document.getElementById('fullImage').src = url;
+                document.getElementById('fullImageModal').classList.add('show'); }
+        };
+        window.toggleFav = async id => {
+            const g = guides.find(x => x.id === id);
+            if (g && g.userId === currentUser?.uid) {
+                await db.collection('guides').doc(id).update({ favorite: !g.favorite });
+                toast(g.favorite ? 'أزيل من المفضلة' : '⭐ أضيف للمفضلة');
+            }
+        };
+        window.editGuide = id => {
+            const g = guides.find(x => x.id === id);
+            if (!g || g.userId !== currentUser?.uid) return toast('لا يمكنك تعديل هذا', true);
+            editId = id;
+            document.getElementById('gName').value = g.name || '';
+            document.getElementById('gPhone').value = g.phone || '';
+            document.getElementById('gPlate').value = g.plateNumber || '';
+            document.getElementById('gTransport').value = g.transportType || '';
+            document.getElementById('gAgency').value = g.agency || '';
+            document.getElementById('gNotes').value = g.notes || '';
+            document.getElementById('gVisibility').value = g.visibility || 'private';
+            selectedColor = g.cardColor || '#e94560';
+            guidePhotoData = g.guidePhoto || '';
+            busPhotoData = g.busPhoto || '';
+            if (g.guidePhoto) { document.getElementById('guidePreviewImg').src = g.guidePhoto;
+                document.getElementById('guidePreviewWrap').style.display = 'flex'; } else document.getElementById(
+                'guidePreviewWrap').style.display = 'none';
+            if (g.busPhoto) { document.getElementById('busPreviewImg').src = g.busPhoto;
+                document.getElementById('busPreviewWrap').style.display = 'flex'; } else document.getElementById(
+                'busPreviewWrap').style.display = 'none';
+            document.querySelectorAll('#colorSelector .color-option').forEach(o => o.classList.remove('selected'));
+            const s = document.querySelector(`#colorSelector .color-option[data-color="${selectedColor}"]`);
+            if (s) s.classList.add('selected');
+            document.getElementById('modalTitle').textContent = '✏️ تعديل المرشد';
+            document.getElementById('guideModal').classList.add('show');
+        };
+        window.delGuide = async id => {
+            if (confirm('حذف هذا المرشد؟')) { await db.collection('guides').doc(id).delete();
+                toast('تم الحذف'); }
+        };
+        window.showDetail = id => {
+            const g = guides.find(x => x.id === id);
+            if (!g) return;
+            detailGuide = g;
+            document.getElementById('detailName').innerHTML = `⭐ ${esc(g.name)}`;
+            document.getElementById('detailContent').innerHTML = `
+            <div style="text-align:center;margin-bottom:12px;">
+              ${g.guidePhoto?`<img src="${esc(g.guidePhoto)}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid ${esc(g.cardColor)};cursor:pointer;margin:4px;" onclick="viewImage('${esc(g.guidePhoto)}')">`:'<div style="width:90px;height:90px;border-radius:50%;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;">📷</div>'}
+              ${g.busPhoto?`<img src="${esc(g.busPhoto)}" style="width:70px;height:70px;border-radius:16px;object-fit:cover;border:2px solid var(--border);cursor:pointer;margin:4px;" onclick="viewImage('${esc(g.busPhoto)}')">`:''}
+            </div>
+            <div style="background:var(--bg);padding:14px;border-radius:18px;font-size:12px;line-height:2;">
+              <p>📞 <a href="tel:${esc(g.phone)}" style="color:var(--gold);font-weight:700;">${esc(g.phone)}</a></p>
+              <p>🚐 ${esc(g.transportType||'—')}</p>
+              <p>🚍 <span class="badge badge-plate">${esc(g.plateNumber||'—')}</span></p>
+              <p>🏢 ${esc(g.agency||'—')}</p>
+              <p>📝 ${esc(g.notes||'—')}</p>
+              <p>🔒 ${g.visibility==='public'?'عام':'خاص'}</p>
+              ${g.favorite?'<p>⭐ مفضل</p>':''}
+            </div>`;
+            const vd = document.getElementById('detailVisDiv');
+            if (g.userId === currentUser?.uid) {
+                vd.innerHTML =
+                    `<button class="btn-save btn-sm" id="toggleVisBtn" style="width:100%;background:var(--gold);">${g.visibility==='public'?'🔒 جعله خاصاً':'🌍 نشره للعامة'}</button>`;
+                setTimeout(() => {
+                    const b = document.getElementById('toggleVisBtn');
+                    if (b) b.onclick = async () => {
+                        const nv = g.visibility === 'public' ? 'private' : 'public';
+                        await db.collection('guides').doc(g.id).update({ visibility: nv });
+                        toast('تم التغيير');
+                        document.getElementById('detailModal').classList.remove('show');
+                    };
+                }, 60);
+            } else vd.innerHTML = '';
+            document.getElementById('detailModal').classList.add('show');
         };
 
-        // تهيئة التطبيق
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            setupEventListeners();
-            updateQuickLinks();
-            updateReferralLinks();
-            updatePointsDisplay();
+        // ==================== مشاركة ====================
+        window.openShare = id => {
+            shareGuideId = id;
+            const contacts = [
+                { name: 'أحمد', phone: '+21612345678' }, { name: 'سارة', phone: '+21698765432' },
+                { name: 'ياسر', phone: '+21655554444' }, { name: 'ليلى', phone: '+21633332222' }
+            ];
+            document.getElementById('contactsList').innerHTML = contacts.map(c => `
+            <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg);border-radius:20px;margin:4px 0;cursor:pointer;">
+              <input type="checkbox" value="${c.phone}" data-name="${c.name}" class="share-chk"> ${c.name} (${c.phone})
+            </label>`).join('');
+            document.getElementById('multiShareModal').classList.add('show');
+        };
+        document.getElementById('confirmShareBtn').onclick = () => {
+            const g = guides.find(x => x.id === shareGuideId);
+            if (!g) return;
+            const cbs = document.querySelectorAll('.share-chk:checked');
+            if (!cbs.length) return toast('اختر مستلماً', true);
+            const msg =
+                `*${g.name}*\n📞 ${g.phone}\n🚐 ${g.transportType||''}\n🚍 ${g.plateNumber||''}\n🏢 ${g.agency||''}`;
+            cbs.forEach(cb => window.open(`https://wa.me/${cb.value.replace(/[^0-9+]/g,'')}?text=${encodeURIComponent(msg)}`,
+                '_blank'));
+            document.getElementById('multiShareModal').classList.remove('show');
+            toast(`✅ ${cbs.length} مستلم`);
+        };
+        document.getElementById('closeMultiBtn').onclick = () => document.getElementById('multiShareModal').classList.remove(
+            'show');
+
+        // ==================== حفظ ====================
+        document.getElementById('saveBtn').onclick = async () => {
+            const name = document.getElementById('gName').value.trim();
+            const phone = document.getElementById('gPhone').value.trim();
+            if (!name || !phone) return toast('الاسم والهاتف مطلوبان', true);
+            if (!validPhone(phone)) { document.getElementById('phoneErr').style.display = 'block'; return toast(
+                    'رقم هاتف غير صالح', true); }
+            document.getElementById('phoneErr').style.display = 'none';
+            const data = {
+                id: editId,
+                name,
+                phone,
+                plate: document.getElementById('gPlate').value.trim(),
+                color: selectedColor,
+                transport: document.getElementById('gTransport').value.trim(),
+                agency: document.getElementById('gAgency').value.trim(),
+                notes: document.getElementById('gNotes').value.trim(),
+                fav: editId ? (guides.find(g => g.id === editId)?.favorite || false) : false,
+                vis: document.getElementById('gVisibility').value,
+            };
+            try {
+                await saveGuide(data);
+                toast('✅ تم الحفظ');
+                document.getElementById('guideModal').classList.remove('show');
+                resetForm();
+            } catch (e) { toast('❌ ' + e.message, true); }
+        };
+
+        function resetForm() {
+            editId = null;
+            selectedColor = '#e94560';
+            guidePhotoData = '';
+            busPhotoData = '';
+            ['gName', 'gPhone', 'gPlate', 'gTransport', 'gAgency', 'gNotes'].forEach(id => document.getElementById(id)
+                .value = '');
+            document.getElementById('guidePreviewWrap').style.display = 'none';
+            document.getElementById('busPreviewWrap').style.display = 'none';
+            document.getElementById('gVisibility').value = 'private';
+            document.getElementById('phoneErr').style.display = 'none';
+            document.querySelectorAll('#colorSelector .color-option').forEach(o => o.classList.remove('selected'));
+            const d = document.querySelector('#colorSelector .color-option[data-color="#e94560"]');
+            if (d) d.classList.add('selected');
+            document.getElementById('modalTitle').textContent = '➕ إضافة مرشد جديد';
+            document.getElementById('guideUploadStat').textContent = '';
+            document.getElementById('busUploadStat').textContent = '';
+        }
+
+        // ==================== رفع الصور ====================
+        document.getElementById('guideUploadCard').onclick = () => pickImage('guide');
+        document.getElementById('busUploadCard').onclick = () => pickImage('bus');
+
+        // ==================== اللاسلكي ====================
+        let mediaRecorder,
+            chunks = [],
+            recording = false;
+        const walkie = document.getElementById('walkieBtn');
+
+        async function startRec() {
+            if (recording || !currentUser) return;
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+            chunks = [];
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                if (!chunks.length) return;
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const ref = storage.ref(`radio/broadcast_${Date.now()}.webm`);
+                const snap = await ref.put(blob);
+                const url = await snap.ref.getDownloadURL();
+                await db.collection('radio_broadcasts').add({ url, sender: currentUser.uid,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                toast('📻 تم البث');
+                stream.getTracks().forEach(t => t.stop());
+            };
+            mediaRecorder.start();
+            recording = true;
+            walkie.classList.add('recording');
+            walkie.textContent = '🔴';
+        }
+
+        function stopRec() {
+            if (mediaRecorder && recording && mediaRecorder.state !== 'inactive') { mediaRecorder.stop();
+                recording = false;
+                walkie.classList.remove('recording');
+                walkie.textContent = '🎙️'; }
+        }
+        walkie.addEventListener('pointerdown', startRec);
+        walkie.addEventListener('pointerup', stopRec);
+        walkie.addEventListener('pointerleave', stopRec);
+        walkie.addEventListener('pointercancel', stopRec);
+        walkie.addEventListener('touchstart', e => { e.preventDefault();
+            startRec(); });
+        walkie.addEventListener('touchend', stopRec);
+
+        let radioUnsub = null;
+
+        function listenRadio() {
+            if (radioUnsub) radioUnsub();
+            if (!currentUser) return;
+            radioUnsub = db.collection('radio_broadcasts').orderBy('timestamp', 'desc').limit(1).onSnapshot(snap => {
+                snap.docChanges().forEach(ch => {
+                    if (ch.type === 'added' && !isMuted && ch.doc.data().sender !== currentUser.uid) {
+                        new Audio(ch.doc.data().url).play().catch(() => {});
+                    }
+                });
+            });
+        }
+        document.getElementById('muteBtn').onclick = () => {
+            isMuted = !isMuted;
+            walkie.classList.toggle('muted', isMuted);
+            walkie.textContent = isMuted ? '🔇' : '🎙️';
+            toast(isMuted ? 'تم الكتم' : 'تم الإلغاء');
+        };
+
+        // ==================== مصادقة ====================
+        async function login(email, pw) {
+            const btn = document.getElementById('loginBtn');
+            const errEl = document.getElementById('loginError');
+            if (!email || !pw) { errEl.textContent = 'املأ الحقول';
+                errEl.classList.add('show'); return; }
+            btn.classList.add('loading');
+            btn.textContent = '⏳...';
+            errEl.classList.remove('show');
+            try {
+                await auth.signInWithEmailAndPassword(email.trim(), pw);
+            } catch (e) {
+                const msgs = {
+                    'auth/invalid-email': 'بريد غير صالح',
+                    'auth/user-not-found': 'مستخدم غير موجود',
+                    'auth/wrong-password': 'كلمة مرور خاطئة',
+                    'auth/invalid-credential': 'بيانات خاطئة',
+                    'auth/too-many-requests': 'محاولات كثيرة – انتظر',
+                };
+                errEl.textContent = '⚠️ ' + (msgs[e.code] || e.message);
+                errEl.classList.add('show');
+            } finally { btn.classList.remove('loading');
+                btn.textContent = '🔐 دخول'; }
+        }
+        document.getElementById('loginBtn').onclick = () => login(document.getElementById('loginEmail').value, document
+            .getElementById('loginPassword').value);
+        document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') login(document
+                .getElementById('loginEmail').value, document.getElementById('loginPassword').value); });
+
+        function logout() {
+            if (confirm('تسجيل الخروج؟')) {
+                auth.signOut();
+                currentUser = null;
+                if (unsub) unsub();
+                if (radioUnsub) radioUnsub();
+                guides = [];
+                render();
+                document.getElementById('loginScreen').classList.remove('hide');
+                document.getElementById('signOutBtn').style.display = 'none';
+                document.getElementById('userInfo').innerHTML = '';
+                toast('👋 خروج');
+            }
+        }
+        document.getElementById('signOutBtn').onclick = logout;
+
+        auth.onAuthStateChanged(u => {
+            if (u) {
+                currentUser = u;
+                document.getElementById('loginScreen').classList.add('hide');
+                document.getElementById('signOutBtn').style.display = 'flex';
+                document.getElementById('userInfo').innerHTML =
+                    `<strong>${u.email}</strong> <span class="badge badge-public">📡</span>`;
+                listen();
+                listenRadio();
+            } else {
+                currentUser = null;
+                if (unsub) unsub();
+                if (radioUnsub) radioUnsub();
+                guides = [];
+                render();
+                document.getElementById('loginScreen').classList.remove('hide');
+                document.getElementById('signOutBtn').style.display = 'none';
+            }
         });
 
-        // تهيئة التطبيق
-        function initializeApp() {
-            updateModeUI();
-            updateThemeUI();
-            showPage('home');
-            updateSearchEngines();
-            
-            // تحميل التفضيلات من التخزين المحلي
-            loadPreferences();
-        }
+        // ==================== تصدير ====================
+        document.getElementById('exportJsonBtn').onclick = () => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], { type: 'application/json' }));
+            a.download = 'F-NotePro_' + new Date().toISOString().slice(0, 10) + '.json';
+            a.click();
+            toast('💾 تم التصدير');
+        };
+        document.getElementById('exportPdfBtn').onclick = () => {
+            const el = document.createElement('div');
+            el.dir = 'rtl';
+            el.innerHTML =
+                '<h1 style="text-align:center;color:#e94560;">F-Note Pro</h1><p style="text-align:center;">تقرير المرشدين</p><hr>';
+            guides.forEach(g => { el.innerHTML +=
+                    `<div style="border:1px solid #ccc;border-radius:14px;padding:10px;margin:8px 0;"><b>${esc(g.name)}</b><br>📞 ${esc(g.phone)}<br>🚐 ${esc(g.transportType||'—')}<br>🚍 ${esc(g.plateNumber||'—')}<br>🏢 ${esc(g.agency||'—')}</div>`; });
+            html2pdf().from(el).set({ margin: 6, filename: 'F-NotePro_' + new Date().toISOString().slice(0, 10) +
+                '.pdf' }).save();
+        };
+        document.getElementById('syncBtn').onclick = () => toast('🔄 المزامنة التلقائية مفعلة');
 
-        // إعداد مستمعي الأحداث
-        function setupEventListeners() {
-            // تبديل الشريط الجانبي
-            document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
-            
-            // تبديل الوضع (فقط في وضع الأب)
-            document.getElementById('mode-toggle').addEventListener('click', function() {
-                if (currentMode === 'parent') {
-                    showParentCodeModal();
-                }
-            });
-            
-            // التنقل بين الصفحات
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const page = this.getAttribute('data-page');
-                    showPage(page);
-                    // إغلاق الشريط الجانبي على الأجهزة الصغيرة
-                    if (window.innerWidth <= 1024) {
-                        document.getElementById('sidebar').classList.remove('active');
-                    }
-                });
-            });
-            
-            // العودة إلى وضع الأب
-            document.getElementById('back-to-parent-btn').addEventListener('click', showParentCodeModal);
-            
-            // قائمة التحكم المنبثقة
-            document.getElementById('refresh-menu-btn').addEventListener('click', toggleControlMenu);
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('#refresh-menu-btn') && !e.target.closest('#control-menu')) {
-                    document.getElementById('control-menu').classList.remove('active');
-                }
-            });
-            
-            // قائمة التحميل المباشر
-            document.getElementById('download-btn').addEventListener('click', toggleDownloadMenu);
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('#download-btn') && !e.target.closest('#download-menu')) {
-                    document.getElementById('download-menu').classList.remove('active');
-                }
-            });
-            
-            // البحث
-            document.getElementById('search-full-btn').addEventListener('click', performSearch);
-            document.getElementById('search-full-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') performSearch();
-            });
-            
-            // البحث الصوتي
-            document.getElementById('voice-search-btn').addEventListener('click', startVoiceSearch);
-            
-            // البحث بالصورة
-            document.getElementById('image-search-btn').addEventListener('click', startImageSearch);
-            
-            // البحث بملف
-            document.getElementById('file-search-btn').addEventListener('click', startFileSearch);
-            
-            // اقتراحات البحث
-            document.getElementById('search-full-input').addEventListener('input', showSearchSuggestions);
-            document.getElementById('search-full-input').addEventListener('focus', showSearchSuggestions);
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.search-full-bar')) {
-                    hideSearchSuggestions();
-                }
-            });
-            
-            // محركات البحث المصغرة
-            document.querySelectorAll('.engine-btn-mini').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const engine = this.getAttribute('data-engine');
-                    setSearchEngine(engine);
-                });
-            });
-            
-            // تفعيل وضع الأطفال
-            document.getElementById('activate-child-mode').addEventListener('click', activateChildMode);
-            
-            // مشاركة رابط الإحالة
-            document.getElementById('share-referral-btn').addEventListener('click', shareReferralLink);
-            
-            // أزرار التحكم
-            document.getElementById('back-btn').addEventListener('click', goBack);
-            document.getElementById('forward-btn').addEventListener('click', goForward);
-            document.getElementById('refresh-btn').addEventListener('click', refreshPage);
-            
-            // الأمان
-            document.getElementById('security-btn').addEventListener('click', showSecurityDashboard);
-            
-            // تحقق من كود الأب
-            document.getElementById('verify-parent-code').addEventListener('click', verifyParentCode);
-            document.getElementById('parent-code-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') verifyParentCode();
-            });
-            
-            // إعدادات الإشعارات
-            document.getElementById('enable-notifications').addEventListener('change', function() {
-                notificationsEnabled = this.checked;
-                savePreferences();
-            });
-            
-            document.getElementById('notification-duration').addEventListener('change', function() {
-                notificationDuration = parseInt(this.value);
-                savePreferences();
-            });
-            
-            // إعدادات حماية العين
-            document.getElementById('eye-protection-setting').addEventListener('change', function() {
-                eyeProtectionEnabled = this.checked;
-                if (eyeProtectionEnabled) {
-                    document.body.classList.add('eye-protection-mode');
-                    showNotification('تم تفعيل وضع حماية العين', 'success');
-                } else {
-                    document.body.classList.remove('eye-protection-mode');
-                    showNotification('تم إيقاف وضع حماية العين');
-                }
-                savePreferences();
-            });
-            
-            // إعدادات حماية العين للطفل
-            document.getElementById('child-eye-protection').addEventListener('change', function() {
-                if (this.checked) {
-                    showNotification('تم تفعيل حماية العين للطفل', 'success');
-                } else {
-                    showNotification('تم إيقاف حماية العين للطفل');
-                }
-                savePreferences();
-            });
-            
-            // إعدادات محرك البحث الافتراضي
-            document.getElementById('default-search-engine').addEventListener('change', function() {
-                setSearchEngine(this.value);
-            });
-        }
+        // ==================== الوضع الداكن ====================
+        if (localStorage.getItem('dark') === '1') { document.body.classList.add('dark');
+            document.getElementById('darkLabel').textContent = 'الوضع المضيء'; }
+        document.getElementById('darkModeBtn').onclick = () => {
+            document.body.classList.toggle('dark');
+            const d = document.body.classList.contains('dark');
+            localStorage.setItem('dark', d ? '1' : '0');
+            document.getElementById('darkLabel').textContent = d ? 'الوضع المضيء' : 'الوضع الداكن';
+        };
 
-        // تبديل الشريط الجانبي
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-        }
+        // ==================== فلتر ====================
+        document.getElementById('filterToggle').onclick = () => document.getElementById('colorsPanel').classList.toggle(
+            'show');
+        document.querySelectorAll('.color-dot').forEach(d => d.onclick = () => {
+            colorFilter = d.dataset.color;
+            document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
+            d.classList.add('active');
+            render();
+            document.getElementById('colorsPanel').classList.remove('show');
+        });
 
-        // تبديل قائمة التحكم المنبثقة
-        function toggleControlMenu() {
-            document.getElementById('control-menu').classList.toggle('active');
-        }
+        // ==================== محدد الألوان ====================
+        const colors = ['#e94560', '#2c7da0', '#e76f51', '#2a9d8f', '#e9c46a', '#9b5de5', '#06d6a0', '#ff006e'];
+        document.getElementById('colorSelector').innerHTML = colors.map(c =>
+            `<div class="color-option" data-color="${c}" style="background:${c};"></div>`).join('');
+        document.querySelectorAll('#colorSelector .color-option').forEach(o => o.onclick = () => {
+            document.querySelectorAll('#colorSelector .color-option').forEach(x => x.classList.remove('selected'));
+            o.classList.add('selected');
+            selectedColor = o.dataset.color;
+        });
+        document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected');
 
-        // تبديل قائمة التحميل المباشر
-        function toggleDownloadMenu() {
-            document.getElementById('download-menu').classList.toggle('active');
+        // ==================== صوتي ====================
+        let recog = null;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recog = new SR();
+            recog.continuous = false;
+            recog.lang = 'ar-SA';
         }
+        document.getElementById('voiceBtn').onclick = () => {
+            if (!recog) return toast('غير مدعوم', true);
+            const b = document.getElementById('voiceBtn');
+            b.classList.add('listening');
+            b.textContent = '🎧';
+            recog.start();
+            recog.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript;
+                render();
+                b.classList.remove('listening');
+                b.textContent = '🎤'; };
+            recog.onerror = () => { b.classList.remove('listening');
+                b.textContent = '🎤'; };
+            recog.onend = () => { b.classList.remove('listening');
+                b.textContent = '🎤'; };
+        };
 
-        // عرض نافذة كود الأب
-        function showParentCodeModal() {
-            const modal = document.getElementById('parent-code-modal');
-            const result = document.getElementById('parent-code-result');
-            
-            // إعادة تعيين النافذة
-            result.style.display = 'none';
-            result.className = 'parent-code-result';
-            document.getElementById('parent-code-input').value = '';
-            
-            // عرض النافذة
-            modal.classList.add('active');
-        }
+        // ==================== أحداث ====================
+        document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open');
+            document.getElementById('overlay').classList.add('show'); };
+        document.getElementById('closeSidebar').onclick = () => { document.getElementById('sidebar').classList.remove(
+                'open');
+            document.getElementById('overlay').classList.remove('show'); };
+        document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('show'); };
+        document.getElementById('addBtn').onclick = () => { resetForm();
+            document.getElementById('guideModal').classList.add('show'); };
+        document.getElementById('cancelBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
+        document.getElementById('closeDetailBtn').onclick = () => document.getElementById('detailModal').classList.remove(
+            'show');
+        document.getElementById('closeFullBtn').onclick = () => document.getElementById('fullImageModal').classList.remove(
+            'show');
+        document.getElementById('fullImage').onclick = () => document.getElementById('fullImageModal').classList.remove(
+            'show');
+        document.getElementById('searchInput').oninput = render;
+        document.getElementById('shareWaBtn').onclick = () => { if (detailGuide) window.openShare(detailGuide.id); };
+        document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', function(e) { if (e.target === this) this
+                .classList.remove('show'); }));
 
-        // إغلاق نافذة كود الأب
-        function closeParentCodeModal() {
-            document.getElementById('parent-code-modal').classList.remove('active');
-        }
-
-        // التحقق من كود الأب
-        function verifyParentCode() {
-            const input = document.getElementById('parent-code-input').value.trim();
-            const result = document.getElementById('parent-code-result');
-            const resultIcon = document.getElementById('parent-result-icon');
-            const resultTitle = document.getElementById('parent-result-title');
-            const resultDesc = document.getElementById('parent-result-desc');
-            const resultActions = document.getElementById('parent-result-actions');
-            
-            if (input === parentCode) {
-                // الكود صحيح
-                result.classList.add('success');
-                resultIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
-                resultTitle.textContent = 'تم التحقق بنجاح';
-                resultDesc.textContent = 'سيتم العودة إلى وضع الأب الآن';
-                
-                resultActions.innerHTML = `
-                    <button class="btn btn-success" onclick="switchToParentMode()"><i class="fas fa-check"></i> موافق</button>
-                `;
-                
-                result.style.display = 'block';
-            } else {
-                // الكود خاطئ
-                result.classList.add('error');
-                resultIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
-                resultTitle.textContent = 'كود الأب غير صحيح';
-                resultDesc.textContent = 'يرجى التأكد من الكود والمحاولة مرة أخرى';
-                
-                resultActions.innerHTML = `
-                    <button class="btn btn-danger" onclick="closeParentCodeModal()"><i class="fas fa-times"></i> إغلاق</button>
-                    <button class="btn btn-outline" onclick="retryParentCode()"><i class="fas fa-redo"></i> إعادة المحاولة</button>
-                `;
-                
-                result.style.display = 'block';
-            }
-        }
-
-        // إعادة محاولة إدخال كود الأب
-        function retryParentCode() {
-            const result = document.getElementById('parent-code-result');
-            result.style.display = 'none';
-            document.getElementById('parent-code-input').value = '';
-            document.getElementById('parent-code-input').focus();
-        }
-
-        // التبديل إلى وضع الأب
-        function switchToParentMode() {
-            currentMode = 'parent';
-            updateModeUI();
-            updateQuickLinks();
-            document.getElementById('gps-status').style.display = 'none';
-            closeParentCodeModal();
-            showNotification('تم العودة إلى وضع الأب بنجاح', 'success');
-            showPage('home');
-            savePreferences();
-        }
-
-        // تحديث واجهة الوضع
-        function updateModeUI() {
-            const modeIcon = document.getElementById('mode-icon');
-            const modeText = document.getElementById('mode-text');
-            const welcomeTitle = document.getElementById('welcome-title');
-            const welcomeSubtitle = document.getElementById('welcome-subtitle');
-            const backToParentSection = document.getElementById('back-to-parent-section');
-            
-            if (currentMode === 'parent') {
-                modeIcon.innerHTML = '<i class="fas fa-user-shield"></i>';
-                modeText.textContent = 'وضع الأب';
-                welcomeTitle.textContent = 'مرحباً بك في وضع الأب';
-                welcomeSubtitle.textContent = 'تصفح آمن مع إدارة متكاملة للعائلة';
-                backToParentSection.style.display = 'none';
-            } else {
-                modeIcon.innerHTML = '<i class="fas fa-child"></i>';
-                modeText.textContent = 'وضع الطفل';
-                welcomeTitle.textContent = 'مرحباً بك في وضع الطفل';
-                welcomeSubtitle.textContent = 'تصفح آمن ومحمي تحت إشراف الأهل';
-                backToParentSection.style.display = 'block';
-            }
-            
-            // تحديث الألوان حسب الوضع
-            updateColorsByMode();
-        }
-
-        // تحديث الألوان حسب الوضع
-        function updateColorsByMode() {
-            const root = document.documentElement;
-            
-            if (currentMode === 'parent') {
-                root.style.setProperty('--parent-primary', '#00a8ff');
-                root.style.setProperty('--parent-secondary', '#9c88ff');
-            } else {
-                root.style.setProperty('--parent-primary', '#4cd137');
-                root.style.setProperty('--parent-secondary', '#00a8ff');
-            }
-        }
-
-        // تغيير السمة
-        function changeTheme(theme) {
-            currentTheme = theme;
-            updateThemeUI();
-            
-            // إزالة الفعالية من جميع السمات
-            document.querySelectorAll('.theme-option').forEach(option => {
-                option.classList.remove('active');
-            });
-            
-            // إضافة الفعالية للسمة المختارة
-            document.querySelector(`.theme-option[data-theme="${theme}"]`).classList.add('active');
-            
-            showNotification(`تم التبديل إلى السمة ${getThemeName(theme)}`);
-            savePreferences();
-        }
-
-        // تحديث واجهة السمة
-        function updateThemeUI() {
-            document.body.className = `theme-${currentTheme} ${currentMode}-mode`;
-        }
-
-        // الحصول على اسم السمة
-        function getThemeName(theme) {
-            const names = {
-                'dark': 'الداكن',
-                'light': 'الفاتح',
-                'blue': 'الأزرق',
-                'green': 'الأخضر'
-            };
-            return names[theme] || theme;
-        }
-
-        // عرض صفحة
-        function showPage(pageId) {
-            // إخفاء جميع الصفحات
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-            
-            // إزالة الفعالية من جميع عناصر التنقل
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // إظهار الصفحة المطلوبة
-            document.getElementById(`${pageId}-page`).classList.add('active');
-            
-            // إضافة الفعالية لعنصر التنقل المناسب
-            document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add('active');
-            
-            currentPage = pageId;
-        }
-
-        // تحديث الروابط السريعة
-        function updateQuickLinks() {
-            const grid = document.getElementById('quick-links-grid');
-            const links = quickLinks[currentMode];
-            
-            grid.innerHTML = links.map(link => `
-                <div class="quick-link" onclick="navigateTo('${link.url}', '${link.name}')">
-                    <div class="quick-link-icon"><i class="${link.icon}"></i></div>
-                    <div class="quick-link-name">${link.name}</div>
-                </div>
-            `).join('');
-        }
-
-        // تحديث روابط الإحالة
-        function updateReferralLinks() {
-            const grid = document.getElementById('referral-links-grid');
-            
-            grid.innerHTML = referralLinks.map(link => `
-                <div class="referral-card">
-                    <div class="referral-header">
-                        <div class="referral-title">${link.name}</div>
-                        <div class="points-badge">+${link.points} نقاط</div>
-                    </div>
-                    <a href="${link.url}" class="referral-link" target="_blank">${link.url}</a>
-                    <button class="btn btn-primary" onclick="registerForReferral('${link.name}', ${link.points})" style="width: 100%;">
-                        <i class="fas fa-user-plus"></i> سجّل الآن
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        // تحديث عرض النقاط
-        function updatePointsDisplay() {
-            document.getElementById('points-value').textContent = userPoints;
-            document.getElementById('total-points').textContent = userPoints;
-        }
-
-        // التسجيل عبر رابط إحالة
-        function registerForReferral(name, points) {
-            // محاكاة عملية التسجيل
-            showNotification(`جاري التسجيل في ${name}...`);
-            
-            setTimeout(() => {
-                userPoints += points;
-                updatePointsDisplay();
-                showNotification(`تم التسجيل بنجاح! حصلت على ${points} نقاط`, 'success');
-                savePreferences();
-            }, 2000);
-        }
-
-        // مشاركة رابط الإحالة
-        function shareReferralLink() {
-            const referralCode = "FAHMI-SAFE-2023";
-            const referralUrl = `https://fahmi-safe.com/ref/${referralCode}`;
-            
-            // محاكاة مشاركة الرابط
-            if (navigator.share) {
-                navigator.share({
-                    title: 'انضم إلى Fahmi-Safe Browser',
-                    text: 'جرب متصفح Fahmi-Safe الآمن للعائلة واحصل على مزايا حصرية!',
-                    url: referralUrl,
-                })
-                .then(() => showNotification('تم مشاركة رابط الإحالة بنجاح', 'success'))
-                .catch((error) => {
-                    // إذا فشلت المشاركة، عرض الرابط للمستخدم
-                    prompt('انسخ رابط الإحالة الخاص بك:', referralUrl);
-                });
-            } else {
-                // إذا لم يكن Web Share API مدعوماً
-                prompt('انسخ رابط الإحالة الخاص بك:', referralUrl);
-            }
-        }
-
-        // تحديث محركات البحث
-        function updateSearchEngines() {
-            document.querySelectorAll('.engine-btn-mini').forEach(btn => {
-                if (btn.getAttribute('data-engine') === currentSearchEngine) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-        }
-
-        // تعيين محرك البحث
-        function setSearchEngine(engine) {
-            currentSearchEngine = engine;
-            updateSearchEngines();
-            showNotification(`تم التبديل إلى محرك البحث ${searchEngines[engine].name}`);
-            savePreferences();
-        }
-
-        // بدء البحث الصوتي
-        function startVoiceSearch() {
-            showNotification('جاري بدء البحث الصوتي...');
-            // في التطبيق الحقيقي، سيتم استخدام Web Speech API
-            setTimeout(() => {
-                showNotification('البحث الصوتي غير متاح حالياً', 'warning');
-            }, 1000);
-        }
-
-        // بدء البحث بالصورة
-        function startImageSearch() {
-            showNotification('جاري بدء البحث بالصورة...');
-            // في التطبيق الحقيقي، سيتم فتح نافذة لرفع الصورة
-            setTimeout(() => {
-                showNotification('البحث بالصورة غير متاح حالياً', 'warning');
-            }, 1000);
-        }
-
-        // بدء البحث بملف
-        function startFileSearch() {
-            showNotification('جاري بدء البحث بملف...');
-            // في التطبيق الحقيقي، سيتم فتح نافذة لرفع الملف
-            setTimeout(() => {
-                showNotification('البحث بملف غير متاح حالياً', 'warning');
-            }, 1000);
-        }
-
-        // التحميل من منصة
-        function downloadFrom(platform) {
-            showNotification(`جاري تحميل المحتوى من ${platform}...`);
-            document.getElementById('download-menu').classList.remove('active');
-            
-            // محاكاة عملية التحميل
-            setTimeout(() => {
-                showNotification(`تم تحميل المحتوى من ${platform} بنجاح`, 'success');
-            }, 2000);
-        }
-
-        // عرض اقتراحات البحث
-        function showSearchSuggestions() {
-            const input = document.getElementById('search-full-input');
-            const suggestionsContainer = document.getElementById('search-suggestions');
-            const query = input.value.trim().toLowerCase();
-            
-            if (query.length === 0) {
-                // عرض الاقتراحات الشائعة
-                const commonSuggestions = searchSuggestions.slice(0, 5);
-                suggestionsContainer.innerHTML = commonSuggestions.map(suggestion => `
-                    <div class="suggestion-item" onclick="setSearchQuery('${suggestion}')">${suggestion}</div>
-                `).join('');
-            } else {
-                // تصفية الاقتراحات بناءً على البحث
-                const filtered = searchSuggestions.filter(s => 
-                    s.toLowerCase().includes(query)
-                ).slice(0, 5);
-                
-                suggestionsContainer.innerHTML = filtered.map(suggestion => `
-                    <div class="suggestion-item" onclick="setSearchQuery('${suggestion}')">${suggestion}</div>
-                `).join('');
-            }
-            
-            suggestionsContainer.classList.add('active');
-        }
-
-        // إخفاء اقتراحات البحث
-        function hideSearchSuggestions() {
-            document.getElementById('search-suggestions').classList.remove('active');
-        }
-
-        // تعيين استعلام البحث
-        function setSearchQuery(query) {
-            document.getElementById('search-full-input').value = query;
-            hideSearchSuggestions();
-            performSearch();
-        }
-
-        // التنقل إلى رابط
-        function navigateTo(url, name) {
-            showSecurityScan(url, name);
-        }
-
-        // فحص الأمان
-        function showSecurityScan(url, name) {
-            const modal = document.getElementById('security-scan-modal');
-            const scanTitle = document.getElementById('scan-title');
-            const scanMessage = document.getElementById('scan-message');
-            const progressBar = document.getElementById('scan-progress-bar');
-            const scanResult = document.getElementById('scan-result');
-            const resultIcon = document.getElementById('result-icon');
-            const resultTitle = document.getElementById('result-title');
-            const resultDesc = document.getElementById('result-desc');
-            const resultActions = document.getElementById('result-actions');
-            
-            // إعادة تعيين النافذة
-            scanResult.style.display = 'none';
-            scanResult.className = 'scan-result';
-            progressBar.style.width = '0%';
-            
-            // عرض النافذة
-            modal.classList.add('active');
-            scanTitle.textContent = `جاري فحص الأمان لـ ${name}`;
-            scanMessage.textContent = 'يتم فحص الموقع للتأكد من أمانه وحمايته';
-            
-            // محاكاة تقدم الفحص (أسرع من السابق)
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.random() * 25;
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(interval);
-                    
-                    // فحص إذا كان الموقع ضاراً
-                    const domain = extractDomain(url);
-                    const isMalicious = maliciousSites.some(site => domain.includes(site));
-                    
-                    // عرض نتيجة الفحص
-                    showScanResult(isMalicious, url, name);
-                }
-                
-                progressBar.style.width = `${progress}%`;
-            }, 200);
-        }
-
-        // عرض نتيجة الفحص
-        function showScanResult(isMalicious, url, name) {
-            const scanResult = document.getElementById('scan-result');
-            const resultIcon = document.getElementById('result-icon');
-            const resultTitle = document.getElementById('result-title');
-            const resultDesc = document.getElementById('result-desc');
-            const resultActions = document.getElementById('result-actions');
-            
-            if (isMalicious) {
-                // الموقع ضار
-                scanResult.classList.add('danger');
-                resultIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-                resultTitle.textContent = 'تحذير: موقع خطير!';
-                resultDesc.textContent = 'تم اكتشاف أن هذا الموقع يحتوي على محتوى ضار أو خطير. يوصى بعدم زيارته.';
-                
-                resultActions.innerHTML = `
-                    <button class="btn btn-danger" onclick="closeSecurityScan()"><i class="fas fa-times"></i> إغلاق</button>
-                    <button class="btn btn-outline" onclick="openWebsiteAnyway('${url}')"><i class="fas fa-external-link-alt"></i> فتح رغم التحذير</button>
-                `;
-            } else {
-                // الموقع آمن
-                scanResult.classList.add('safe');
-                resultIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
-                resultTitle.textContent = 'الموقع آمن';
-                resultDesc.textContent = 'تم فحص الموقع ولم يتم اكتشاف أي تهديدات. سيتم توجيهك إليه تلقائياً خلال 3 ثوانٍ.';
-                
-                resultActions.innerHTML = `
-                    <button class="btn btn-success" onclick="openWebsite('${url}')"><i class="fas fa-external-link-alt"></i> فتح الآن</button>
-                    <button class="btn btn-outline" onclick="closeSecurityScan()"><i class="fas fa-times"></i> إلغاء</button>
-                `;
-                
-                // إعادة التوجيه التلقائي بعد 3 ثوانٍ
-                setTimeout(() => {
-                    if (modal.classList.contains('active')) {
-                        openWebsite(url);
-                    }
-                }, 3000);
-            }
-            
-            scanResult.style.display = 'block';
-        }
-
-        // إغلاق نافذة فحص الأمان
-        function closeSecurityScan() {
-            document.getElementById('security-scan-modal').classList.remove('active');
-        }
-
-        // فتح الموقع (آمن)
-        function openWebsite(url) {
-            closeSecurityScan();
-            // في تطبيق حقيقي، سيتم فتح الرابط في المتصفح
-            window.open(url, '_blank');
-            showNotification('جاري فتح الموقع الآمن', 'success');
-        }
-
-        // فتح الموقع رغم التحذير
-        function openWebsiteAnyway(url) {
-            closeSecurityScan();
-            // في تطبيق حقيقي، سيتم فتح الرابط في المتصفح مع تحذيرات إضافية
-            window.open(url, '_blank');
-            showNotification('تم فتح الموقع رغم التحذيرات. يرجى الحذر!', 'warning');
-        }
-
-        // استخراج النطاق من الرابط
-        function extractDomain(url) {
-            try {
-                const domain = new URL(url).hostname;
-                return domain;
-            } catch {
-                return url;
-            }
-        }
-
-        // البحث
-        function performSearch() {
-            const query = document.getElementById('search-full-input').value.trim();
-            if (!query) return;
-            
-            let searchUrl;
-            
-            // إذا كان الرابط يحتوي على نطاق
-            if (query.includes('.') && !query.includes(' ')) {
-                // إضافة https:// إذا لم يكن موجوداً
-                searchUrl = query.startsWith('http') ? query : `https://${query}`;
-                navigateTo(searchUrl, query);
-            } else {
-                // بحث عادي باستخدام محرك البحث المختار
-                const engine = searchEngines[currentSearchEngine];
-                searchUrl = engine.url + encodeURIComponent(query);
-                navigateTo(searchUrl, `بحث: ${query}`);
-            }
-            
-            hideSearchSuggestions();
-        }
-
-        // تفعيل وضع الأطفال
-        function activateChildMode() {
-            const code = document.getElementById('child-code-input').value.trim();
-            if (!code) {
-                showNotification('يرجى إدخال كود الأطفال', 'warning');
-                return;
-            }
-            
-            // محاكاة التحقق من الكود
-            if (code === '1234' || code === 'child') {
-                currentMode = 'child';
-                // توليد كود الأب عشوائيًا (في التطبيق الحقيقي سيكون مربوطًا بحساب الأب)
-                parentCode = generateParentCode();
-                updateModeUI();
-                updateQuickLinks();
-                document.getElementById('gps-status').style.display = 'flex';
-                showNotification('تم تفعيل وضع الأطفال بنجاح', 'success');
-                showPage('home');
-                savePreferences();
-                
-                // عرض كود الأب للمستخدم (في التطبيق الحقيقي سيتم إرساله عبر البريد أو الرسائل)
-                alert(`كود الأب الخاص بك هو: ${parentCode}\n\nيرجى حفظ هذا الكود في مكان آمن. ستحتاج إليه للعودة إلى وضع الأب.`);
-            } else {
-                showNotification('كود الأطفال غير صحيح', 'error');
-            }
-        }
-
-        // توليد كود الأب
-        function generateParentCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = '';
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
-        // وظائف التحكم في الصفحة
-        function goBack() {
-            showNotification('الرجوع للخلف');
-            document.getElementById('control-menu').classList.remove('active');
-        }
-
-        function goForward() {
-            showNotification('التقدم للأمام');
-            document.getElementById('control-menu').classList.remove('active');
-        }
-
-        function refreshPage() {
-            showNotification('جاري تحديث الصفحة');
-            document.getElementById('control-menu').classList.remove('active');
-        }
-
-        // عرض لوحة الأمان
-        function showSecurityDashboard() {
-            showPage('settings-security');
-            showNotification('جاري فتح لوحة إعدادات الأمان');
-        }
-
-        // حفظ التفضيلات
-        function savePreferences() {
-            const preferences = {
-                mode: currentMode,
-                theme: currentTheme,
-                eyeProtection: eyeProtectionEnabled,
-                searchEngine: currentSearchEngine,
-                points: userPoints,
-                parentCode: parentCode,
-                notificationDuration: notificationDuration,
-                notificationsEnabled: notificationsEnabled
-            };
-            
-            localStorage.setItem('fahmi-safe-preferences', JSON.stringify(preferences));
-        }
-
-        // تحميل التفضيلات
-        function loadPreferences() {
-            const saved = localStorage.getItem('fahmi-safe-preferences');
-            if (saved) {
-                const preferences = JSON.parse(saved);
-                
-                currentMode = preferences.mode || currentMode;
-                currentTheme = preferences.theme || currentTheme;
-                eyeProtectionEnabled = preferences.eyeProtection || false;
-                currentSearchEngine = preferences.searchEngine || currentSearchEngine;
-                userPoints = preferences.points || userPoints;
-                parentCode = preferences.parentCode || '';
-                notificationDuration = preferences.notificationDuration || 2;
-                notificationsEnabled = preferences.notificationsEnabled !== undefined ? preferences.notificationsEnabled : true;
-                
-                // تطبيق التفضيلات المحملة
-                updateModeUI();
-                updateThemeUI();
-                updatePointsDisplay();
-                updateSearchEngines();
-                
-                // تطبيق إعدادات الإشعارات
-                document.getElementById('enable-notifications').checked = notificationsEnabled;
-                document.getElementById('notification-duration').value = notificationDuration;
-                
-                // تطبيق إعدادات حماية العين
-                document.getElementById('eye-protection-setting').checked = eyeProtectionEnabled;
-                if (eyeProtectionEnabled) {
-                    document.body.classList.add('eye-protection-mode');
-                }
-                
-                if (currentMode === 'child') {
-                    document.getElementById('gps-status').style.display = 'flex';
-                }
-            }
-        }
-
-        // عرض الإشعارات
-        function showNotification(message, type = 'info') {
-            if (!notificationsEnabled) return;
-            
-            const container = document.getElementById('notification-container');
-            const id = 'notification-' + Date.now();
-            
-            let icon = 'fas fa-info-circle';
-            let title = 'معلومة';
-            
-            if (type === 'success') {
-                icon = 'fas fa-check-circle';
-                title = 'نجاح';
-            } else if (type === 'warning') {
-                icon = 'fas fa-exclamation-triangle';
-                title = 'تحذير';
-            } else if (type === 'error') {
-                icon = 'fas fa-times-circle';
-                title = 'خطأ';
-            }
-            
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.id = id;
-            notification.innerHTML = `
-                <div class="notification-icon"><i class="${icon}"></i></div>
-                <div class="notification-content">${message}</div>
-            `;
-            
-            container.appendChild(notification);
-            
-            // إظهار الإشعار
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 10);
-            
-            // إخفاء الإشعار تلقائياً بعد المدة المحددة
-            if (notificationDuration > 0) {
-                setTimeout(() => {
-                    closeNotification(id);
-                }, notificationDuration * 1000);
-            }
-        }
-
-        // إغلاق الإشعار
-        function closeNotification(id) {
-            const notification = document.getElementById(id);
-            if (notification) {
-                notification.classList.add('hiding');
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }
-        }
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+        console.log('🚀 F-Note Pro v38.0 – Cloudinary + Firebase Ready');
     </script>
 </body>
 </html>
