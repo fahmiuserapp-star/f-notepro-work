@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#e94560">
-    <title>F-Note Pro Max | خزنة المرشدين + بث مباشر للمجموعة</title>
+    <title>F-Note Pro Max | المجموعة + بث مباشر متكامل</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -110,7 +110,7 @@
         .voice-play-btn.playing { animation: pulse 0.6s infinite; background: #ef4444; }
         .waveform-canvas { width: 120px; height: 34px; border-radius: 20px; background: rgba(0,0,0,0.05); }
         .chat-toolbar { display: flex; gap: 12px; padding: 12px; background: var(--bg-card); border-top: 1px solid var(--border); align-items: center; justify-content: space-around; }
-        .toolbar-btn { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--bg-body); font-size: 20px; cursor: pointer; transition: 0.1s; box-shadow: var(--shadow-sm); }
+        .toolbar-btn { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--bg-body); font-size: 20px; cursor: pointer; transition: 0.1s; box-shadow: var(--shadow-sm); user-select: none; -webkit-tap-highlight-color: transparent; }
         .toolbar-btn.ptt-main { width: 64px; height: 64px; background: var(--walkie-bg); color: white; font-size: 30px; border: 3px solid var(--bg-card); }
         .toolbar-btn.ptt-main.recording { background: #ef4444; animation: pttPulse 0.5s infinite; }
         @keyframes pttPulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
@@ -140,6 +140,9 @@
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .loading-msg { text-align: center; padding: 30px; color: var(--text-secondary); }
         .online-users-chip { display: inline-flex; align-items: center; gap: 4px; background: #10b981; border-radius: 40px; padding: 2px 8px; font-size: 11px; color: white; margin-right: 8px; }
+        .confirm-modal { max-width: 320px; text-align: center; }
+        .confirm-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .confirm-buttons button { flex: 1; }
     </style>
 </head>
 <body>
@@ -197,6 +200,18 @@
     <div class="bottom-nav"><button class="nav-tab active" data-page="pageGuides"><span class="ico">📋</span> المرشدين</button><button class="nav-tab" data-page="pageChat"><span class="ico">📻</span> المجموعة</button></div>
     <div class="floating-bubble" id="floatingBubble"><img id="floatingAvatar" src=""><div class="floating-badge" id="floatingBadge">0</div></div>
 
+    <!-- نافذة تأكيد عالمية -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-box confirm-modal">
+            <h3 id="confirmTitle">تأكيد الإرسال</h3>
+            <p id="confirmMessage">هل أنت متأكد من إرسال هذه الرسالة؟</p>
+            <div class="confirm-buttons">
+                <button class="btn-save" id="confirmYesBtn">✅ نعم، أرسل</button>
+                <button class="btn-cancel" id="confirmNoBtn">❌ إلغاء</button>
+            </div>
+        </div>
+    </div>
+
     <div id="guideModal" class="modal"><div class="modal-box"><h3 id="modalTitle">➕ إضافة مرشد</h3>
         <input type="text" id="gName" placeholder="الاسم الكامل *"><input type="tel" id="gPhone" placeholder="رقم الهاتف *" dir="ltr"><input type="text" id="gPlate" placeholder="رقم اللوحة">
         <div class="upload-card" id="guideUploadCard"><div>📸 صورة المرشد</div><div class="upload-preview" id="guidePreviewWrap" style="display:none;"><img id="guidePreviewImg" class="preview-img"></div><div class="upload-status" id="guideUploadStatus"></div></div>
@@ -224,6 +239,7 @@
         let mediaRecorder = null, recording = false, audioChunks = [];
         let currentAudio = null, floatingMode = false, isPTTLeft = false;
         let onlineUsers = new Set();
+        let pendingAction = null; // لتخزين دالة التأكيد
 
         function toast(msg, isErr = false, action = null) { const t = document.createElement('div'); t.className = 'toast'; t.style.background = isErr ? '#ef4444cc' : '#1e293bcc'; const span = document.createElement('span'); span.textContent = msg; t.appendChild(span); if(action) { const btn = document.createElement('button'); btn.textContent = action.label; btn.className = 'toast-btn'; btn.onclick = () => { action.callback(); t.remove(); }; t.appendChild(btn); } document.body.appendChild(t); setTimeout(() => t.remove(), 5000); }
         function esc(s) { if (!s) return ''; return String(s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
@@ -231,12 +247,28 @@
         function sanitize(s) { return s.replace(/[<>]/g, '').trim(); }
         function vibrate(ms = 15) { if (navigator.vibrate) navigator.vibrate(ms); }
 
-        // رفع الصور إلى Cloudinary
+        // دالة التأكيد العامة
+        function showConfirm(title, message, onConfirm) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            document.getElementById('confirmModal').classList.add('show');
+            pendingAction = onConfirm;
+        }
+        document.getElementById('confirmYesBtn').onclick = () => {
+            document.getElementById('confirmModal').classList.remove('show');
+            if (pendingAction) { pendingAction(); pendingAction = null; }
+        };
+        document.getElementById('confirmNoBtn').onclick = () => {
+            document.getElementById('confirmModal').classList.remove('show');
+            pendingAction = null;
+        };
+
+        // رفع الصور إلى Cloudinary مع تأكيد
         async function uploadToCloudinary(base64) { if (!navigator.onLine) return base64; try { const blob = await fetch(base64).then(r => r.blob()); const fd = new FormData(); fd.append('file', blob, 'img_' + Date.now() + '.jpg'); fd.append('upload_preset', UPLOAD_PRESET); const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd }); if (!res.ok) throw new Error(); const data = await res.json(); return data.secure_url; } catch(e) { return base64; } }
         function handleImage(file, type) { if (!file) return; const statusId = type === 'guide' ? 'guideUploadStatus' : 'busUploadStatus'; const prevId = type === 'guide' ? 'guidePreviewImg' : 'busPreviewImg'; const wrapId = type === 'guide' ? 'guidePreviewWrap' : 'busPreviewWrap'; const status = document.getElementById(statusId); if (status) status.textContent = '⏳ جاري الضغط...'; const reader = new FileReader(); reader.onload = async (e) => { const img = new Image(); img.onload = async () => { const canvas = document.createElement('canvas'); const maxW = 500; let w = img.width, h = img.height; if (w > maxW) { h *= maxW / w; w = maxW; } canvas.width = Math.round(w); canvas.height = Math.round(h); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); const b64 = canvas.toDataURL('image/jpeg', 0.6); if (status) status.textContent = '☁️ جاري الرفع...'; const url = await uploadToCloudinary(b64); const final = url || b64; if (type === 'guide') guidePhotoData = final; else busPhotoData = final; document.getElementById(prevId).src = b64; document.getElementById(wrapId).style.display = 'flex'; if (status) status.textContent = url ? '✅ تم رفع الصورة' : '💾 تم الحفظ محلياً'; }; img.src = e.target.result; }; reader.readAsDataURL(file); }
         function pickImage(type) { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = e => { if (e.target.files[0]) handleImage(e.target.files[0], type); }; inp.click(); }
 
-        // إدارة المرشدين (نفس الكود السابق مع تحسينات طفيفة)
+        // إدارة المرشدين
         async function saveGuide(data) { if (!currentUser) throw new Error('يجب تسجيل الدخول'); const ref = data.id ? db.collection('guides').doc(data.id) : db.collection('guides').doc(); const docData = { userId: currentUser.uid, creatorName: userProfile.displayName || currentUser.email, creatorPhoto: userProfile.photoURL || '', name: sanitize(data.name), phone: data.phone.replace(/\s/g, ''), plateNumber: sanitize(data.plate || ''), guidePhoto: guidePhotoData || null, busPhoto: busPhotoData || null, cardColor: data.color, transportType: sanitize(data.transport || ''), agency: sanitize(data.agency || ''), notes: sanitize(data.notes || ''), favorite: data.fav || false, visibility: data.vis || 'private', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }; if (!data.id) docData.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await ref.set(docData, { merge: true }); }
         let unsubGuides = null;
         function listenGuides() { if (unsubGuides) unsubGuides(); if (!currentUser) return; unsubGuides = db.collection('guides').where('userId', '==', currentUser.uid).onSnapshot(snap => { let mine = []; snap.forEach(d => mine.push({ id: d.id, ...d.data() })); db.collection('guides').where('visibility', '==', 'public').get().then(ps => { let pubs = []; ps.forEach(d => { if (d.data().userId !== currentUser.uid) pubs.push({ id: d.id, ...d.data() }); }); const all = [...mine, ...pubs]; const map = new Map(); all.forEach(g => map.set(g.id, g)); guides = Array.from(map.values()); renderGuides(); }).catch(() => { guides = mine; renderGuides(); }); }); }
@@ -247,62 +279,33 @@
         window.editGuide = id => { const g = guides.find(x=>x.id===id); if(!g || g.userId!==currentUser?.uid) return toast('لا يمكنك تعديل هذا',true); editId=id; document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||''; document.getElementById('gPlate').value=g.plateNumber||''; document.getElementById('gTransport').value=g.transportType||''; document.getElementById('gAgency').value=g.agency||''; document.getElementById('gNotes').value=g.notes||''; document.getElementById('gVisibility').value=g.visibility||'private'; selectedColor=g.cardColor||'#e94560'; guidePhotoData=g.guidePhoto||''; busPhotoData=g.busPhoto||''; if(g.guidePhoto){ document.getElementById('guidePreviewImg').src=g.guidePhoto; document.getElementById('guidePreviewWrap').style.display='flex'; }else document.getElementById('guidePreviewWrap').style.display='none'; if(g.busPhoto){ document.getElementById('busPreviewImg').src=g.busPhoto; document.getElementById('busPreviewWrap').style.display='flex'; }else document.getElementById('busPreviewWrap').style.display='none'; document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.classList.remove('selected')); const sel=document.querySelector(`#colorSelector .color-option[data-color="${selectedColor}"]`); if(sel) sel.classList.add('selected'); document.getElementById('modalTitle').textContent='✏️ تعديل المرشد'; document.getElementById('guideModal').classList.add('show'); };
         window.delGuide = async id => { if(confirm('حذف هذا المرشد؟')){ await db.collection('guides').doc(id).delete(); toast('تم الحذف'); } };
         window.showDetail = id => { const g = guides.find(x=>x.id===id); if(!g) return; detailGuide=g; document.getElementById('detailName').innerHTML=`⭐ ${esc(g.name)}`; document.getElementById('detailContent').innerHTML=`<div style="text-align:center;margin-bottom:12px;">${g.guidePhoto?`<img src="${esc(g.guidePhoto)}" style="width:90px;height:90px;border-radius:50%;cursor:pointer;margin:5px;" onclick="viewImage('${esc(g.guidePhoto)}')">`:'<div style="width:90px;height:90px;border-radius:50%;background:var(--bg-body);display:inline-flex;align-items:center;justify-content:center;">📷</div>'}</div><div style="background:var(--bg-body);padding:14px;border-radius:18px;font-size:13px;"><p>📞 <a href="tel:${esc(g.phone)}" style="color:var(--gold);">${esc(g.phone)}</a></p><p>🚐 ${esc(g.transportType||'—')}</p><p>🚍 <span class="badge badge-plate">${esc(g.plateNumber||'—')}</span></p><p>🏢 ${esc(g.agency||'—')}</p><p>📝 ${esc(g.notes||'—')}</p><p>🔒 ${g.visibility==='public'?'عام':'خاص'}</p></div>`; const visDiv=document.getElementById('detailVisDiv'); if(g.userId===currentUser?.uid){ visDiv.innerHTML=`<button class="btn-save" id="toggleVisBtn" style="background:var(--gold);">${g.visibility==='public'?'🔒 جعله خاصاً':'🌍 نشره للعامة'}</button>`; setTimeout(()=>{ document.getElementById('toggleVisBtn')?.addEventListener('click',async()=>{ const nv=g.visibility==='public'?'private':'public'; await db.collection('guides').doc(g.id).update({ visibility:nv }); toast('تم تحديث الخصوصية'); document.getElementById('detailModal').classList.remove('show'); }); },100); }else visDiv.innerHTML=''; document.getElementById('detailModal').classList.add('show'); };
-        window.openShare = id => { const g = guides.find(x=>x.id===id); if(!g) return; shareGuideId=id; const msg = `*${g.name}*\n📞 ${g.phone}\n🚐 ${g.transportType||''}\n🚍 لوحة: ${g.plateNumber||''}\n🏢 ${g.agency||''}`; document.getElementById('shareMsg').value=msg; document.getElementById('multiShareModal').classList.add('show'); };
+        window.openShare = id => { const g = guides.find(x=>x.id===id); if(!g) return; const msg = `*${g.name}*\n📞 ${g.phone}\n🚐 ${g.transportType||''}\n🚍 لوحة: ${g.plateNumber||''}\n🏢 ${g.agency||''}`; document.getElementById('shareMsg').value=msg; document.getElementById('multiShareModal').classList.add('show'); };
         function resetForm(){ editId=null; selectedColor='#e94560'; guidePhotoData=''; busPhotoData=''; ['gName','gPhone','gPlate','gTransport','gAgency','gNotes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('guidePreviewWrap').style.display='none'; document.getElementById('busPreviewWrap').style.display='none'; document.getElementById('gVisibility').value='private'; document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.classList.remove('selected')); document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected'); document.getElementById('modalTitle').textContent='➕ إضافة مرشد'; }
 
-        // ========== نظام الدردشة: بث عام للمجموعة مع حذف ذكي ==========
+        // ========== نظام الدردشة: بث عام مع حذف ذكي وتأكيد ==========
         let unsubscribeMessages = null;
 
         function listenGroupMessages() {
             if (unsubscribeMessages) unsubscribeMessages();
             if (!currentUser) return;
-            const now = firebase.firestore.Timestamp.now();
             unsubscribeMessages = db.collection('groupMessages')
                 .orderBy('timestamp', 'asc')
                 .onSnapshot(async snapshot => {
-                    const newMsgs = [];
-                    snapshot.docChanges().forEach(change => {
-                        if (change.type === 'added') {
-                            const msg = { id: change.doc.id, ...change.doc.data() };
-                            newMsgs.push(msg);
-                        }
+                    // حذف المنتهية
+                    const now = new Date();
+                    const toDelete = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const expiryOpen = data.openedBy?.[currentUser.uid];
+                        if (expiryOpen && (now - expiryOpen.toDate()) > 5 * 60 * 1000) toDelete.push(doc.id);
+                        else if (!expiryOpen && data.timestamp && (now - data.timestamp.toDate()) > 24 * 60 * 60 * 1000) toDelete.push(doc.id);
                     });
-                    // التحقق من الصلاحية والحذف التلقائي
-                    for (const msg of newMsgs) {
-                        const expiryOpen = msg.openedBy?.[currentUser.uid];
-                        const isOpened = !!expiryOpen;
-                        const nowDate = new Date();
-                        // حذف إذا فتحت منذ أكثر من 5 دقائق
-                        if (isOpened && expiryOpen && (nowDate - expiryOpen.toDate()) > 5 * 60 * 1000) {
-                            await db.collection('groupMessages').doc(msg.id).delete();
-                            continue;
-                        }
-                        // حذف إذا مر 24 ساعة على الإرسال ولم تفتح
-                        if (!isOpened && msg.timestamp && (nowDate - msg.timestamp.toDate()) > 24 * 60 * 60 * 1000) {
-                            await db.collection('groupMessages').doc(msg.id).delete();
-                            continue;
-                        }
-                    }
-                    // إعادة تحميل القائمة النظيفة
+                    for (const id of toDelete) await db.collection('groupMessages').doc(id).delete();
+                    
                     const cleanSnap = await db.collection('groupMessages').orderBy('timestamp', 'asc').get();
                     chatMessages = [];
-                    cleanSnap.forEach(doc => {
-                        const msg = { id: doc.id, ...doc.data() };
-                        const expiryOpen = msg.openedBy?.[currentUser.uid];
-                        if (expiryOpen && (new Date() - expiryOpen.toDate()) > 5 * 60 * 1000) {
-                            db.collection('groupMessages').doc(msg.id).delete();
-                            return;
-                        }
-                        chatMessages.push(msg);
-                    });
+                    cleanSnap.forEach(doc => chatMessages.push({ id: doc.id, ...doc.data() }));
                     renderGroupMessages();
-                    // إشعار فوري للمستخدمين الآخرين
-                    const lastMsg = newMsgs.find(m => m.senderId !== currentUser.uid);
-                    if (lastMsg && document.getElementById('pageChat').classList.contains('active') === false) {
-                        toast(`🔔 رسالة جديدة من ${esc(lastMsg.senderName || 'أحد المستخدمين')}`, false, { label: 'عرض', callback: () => { document.querySelector('.nav-tab[data-page="pageChat"]').click(); } });
-                        unreadCount++;
-                        updateFloatingBadge();
-                    }
                 });
         }
 
@@ -366,9 +369,10 @@
                 openedBy: { [currentUser.uid]: firebase.firestore.FieldValue.serverTimestamp() },
                 ...extra
             });
+            toast('✅ تم إرسال الرسالة للمجموعة');
         }
 
-        // PTT Voice للمجموعة
+        // PTT Voice للمجموعة (مع منع القائمة السياقية)
         async function startGroupRecording() {
             if (recording) return;
             try {
@@ -388,7 +392,7 @@
                 recording = true;
                 document.getElementById('pttMain').classList.add('recording');
                 vibrate(15);
-                toast('🎙️ جاري التسجيل... ارفع إصبعك للإرسال للمجموعة');
+                toast('🎙️ جاري التسجيل... ارفع إصبعك للإرسال');
             } catch (e) { toast('⚠️ يرجى منح صلاحية الميكروفون', true); }
         }
 
@@ -400,7 +404,17 @@
             }
         }
 
-        // إحصائيات المتصلين عبر Realtime Database
+        // منع القائمة السياقية (نسخ/لصق) على زر التسجيل فقط
+        const pttGroupBtn = document.getElementById('pttMain');
+        pttGroupBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+        pttGroupBtn.addEventListener('dragstart', (e) => e.preventDefault());
+        pttGroupBtn.addEventListener('selectstart', (e) => e.preventDefault());
+
+        pttGroupBtn.addEventListener('pointerdown', startGroupRecording);
+        pttGroupBtn.addEventListener('pointerup', stopGroupRecording);
+        pttGroupBtn.addEventListener('pointerleave', stopGroupRecording);
+
+        // إحصائيات المتصلين
         function setupPresence() {
             if (!currentUser) return;
             const userRef = rtdb.ref('presence/' + currentUser.uid);
@@ -409,14 +423,12 @@
             rtdb.ref('presence').on('value', snap => {
                 const data = snap.val();
                 onlineUsers.clear();
-                for (const uid in data) {
-                    if (data[uid]?.online === true && uid !== currentUser.uid) onlineUsers.add(uid);
-                }
+                for (const uid in data) if (data[uid]?.online === true && uid !== currentUser.uid) onlineUsers.add(uid);
                 document.getElementById('onlineCountBadge').innerHTML = `🟢 ${onlineUsers.size + 1} متصل`;
             });
         }
 
-        // ========== باقي وظائف البروفيل والواجهة ==========
+        // ========== باقي وظائف البروفيل والواجهة مع تأكيد ==========
         async function loadProfile() {
             if (!currentUser) return;
             const doc = await db.collection('users').doc(currentUser.uid).get();
@@ -435,7 +447,7 @@
         document.getElementById('profilePicUpload').onclick = () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = async e => { if (e.target.files[0]) { const reader = new FileReader(); reader.onload = async ev => { const url = await uploadToCloudinary(ev.target.result); userProfile.photoURL = url; await db.collection('users').doc(currentUser.uid).set({ photoURL: url }, { merge: true }); updateProfileUI(); toast('✅ تم تحديث الصورة'); }; reader.readAsDataURL(e.target.files[0]); } }; inp.click(); };
         document.getElementById('saveProfileBtn').onclick = async () => { userProfile.displayName = sanitize(document.getElementById('profileName').value.trim()); userProfile.job = sanitize(document.getElementById('profileJob').value.trim()); await db.collection('users').doc(currentUser.uid).set(userProfile, { merge: true }); toast('✅ تم حفظ الملف الشخصي'); document.getElementById('profileModal').classList.remove('show'); };
 
-        // Auth & Start
+        // Auth
         async function login(email, pw) { try { await auth.signInWithEmailAndPassword(email.trim(), pw); } catch (e) { toast(e.message, true); } }
         auth.onAuthStateChanged(async user => {
             if (user) {
@@ -452,7 +464,7 @@
         document.getElementById('loginBtn').onclick = () => login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
         document.getElementById('signOutBtn').onclick = () => { if (confirm('تسجيل الخروج؟')) auth.signOut(); };
 
-        // UI Events
+        // أحداث الواجهة مع تأكيد الإرسال
         document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
         document.getElementById('closeSidebar').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
         document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
@@ -473,22 +485,18 @@
         document.getElementById('togglePttSide').onclick = () => { isPTTLeft = !isPTTLeft; const ptt = document.getElementById('pttMain'); if (isPTTLeft) ptt.style.order = '-1'; else ptt.style.order = ''; localStorage.setItem('pttLeft', isPTTLeft); };
         if (localStorage.getItem('pttLeft') === 'true') { isPTTLeft = true; document.getElementById('pttMain').style.order = '-1'; }
         function enableDrag(el) { let startX, startY, initialX, initialY; el.addEventListener('touchstart', (e) => { const t = e.touches[0]; startX = t.clientX; startY = t.clientY; initialX = el.offsetLeft; initialY = el.offsetTop; el.style.transition = 'none'; }, { passive: false }); el.addEventListener('touchmove', (e) => { e.preventDefault(); const t = e.touches[0]; const dx = t.clientX - startX, dy = t.clientY - startY; el.style.left = Math.max(0, Math.min(window.innerWidth - 60, initialX + dx)) + 'px'; el.style.top = Math.max(0, Math.min(window.innerHeight - 60, initialY + dy)) + 'px'; }, { passive: false }); el.addEventListener('touchend', () => { el.style.transition = ''; }); let longPress; el.addEventListener('touchstart', () => { longPress = setTimeout(() => broadcastSOS(), 1500); }); el.addEventListener('touchend', () => clearTimeout(longPress)); el.addEventListener('click', () => { if (floatingMode) restoreChat(); }); }
-        async function broadcastSOS() { if (!currentUser) return; vibrate([200, 100, 200, 100, 400]); toast('🚨 إرسال استغاثة عاجلة للمجموعة!', true); await sendGroupMessage('text', { text: `🚨 **تنبيه استغاثة من ${userProfile.displayName || currentUser.email}** 🚨\n⏰ ${new Date().toLocaleString()}` }); }
+        async function broadcastSOS() { if (!currentUser) return; vibrate([200, 100, 200, 100, 400]); showConfirm('استغاثة عاجلة', 'هل تريد إرسال تنبيه استغاثة لجميع أفراد المجموعة؟', async () => { await sendGroupMessage('text', { text: `🚨 **تنبيه استغاثة من ${userProfile.displayName || currentUser.email}** 🚨\n⏰ ${new Date().toLocaleString()}` }); }); }
         function restoreChat() { document.getElementById('floatingBubble').classList.remove('show'); floatingMode = false; document.querySelector('.nav-tab[data-page="pageChat"]').click(); toast('💬 تم استعادة الدردشة'); }
         function updateFloatingBadge() { const badge = document.getElementById('floatingBadge'); if (unreadCount > 0) { badge.style.display = 'flex'; badge.textContent = unreadCount > 99 ? '99+' : unreadCount; } else badge.style.display = 'none'; }
 
-        // ربط أحداث الدردشة
+        // ربط أحداث الدردشة مع تأكيد
         document.getElementById('voiceSearchBtn').onclick = () => { if (!('webkitSpeechRecognition' in window)) return toast('غير مدعوم', true); const rec = new webkitSpeechRecognition(); rec.lang = 'ar'; rec.start(); rec.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); }; };
-        document.getElementById('attachImage').onclick = () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = async e => { if (e.target.files[0]) { const reader = new FileReader(); reader.onload = async ev => { toast('📸 جاري رفع الصورة...'); const url = await uploadToCloudinary(ev.target.result); sendGroupMessage('image', { imageUrl: url }); }; reader.readAsDataURL(e.target.files[0]); } }; inp.click(); };
-        document.getElementById('sendLocation').onclick = () => { navigator.geolocation.getCurrentPosition(pos => { sendGroupMessage('location', { lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: '📍 موقع حالي' }); toast('📍 تم إرسال الموقع للمجموعة'); }, () => toast('⚠️ تعذر تحديد الموقع', true)); };
-        const pttGroupBtn = document.getElementById('pttMain');
-        pttGroupBtn.addEventListener('pointerdown', startGroupRecording);
-        pttGroupBtn.addEventListener('pointerup', stopGroupRecording);
-        pttGroupBtn.addEventListener('pointerleave', stopGroupRecording);
+        document.getElementById('attachImage').onclick = () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = async e => { if (e.target.files[0]) { const reader = new FileReader(); reader.onload = async ev => { showConfirm('إرسال صورة', 'هل تريد إرسال هذه الصورة للمجموعة؟', async () => { toast('📸 جاري رفع الصورة...'); const url = await uploadToCloudinary(ev.target.result); await sendGroupMessage('image', { imageUrl: url }); }); }; reader.readAsDataURL(e.target.files[0]); } }; inp.click(); };
+        document.getElementById('sendLocation').onclick = () => { navigator.geolocation.getCurrentPosition(pos => { showConfirm('إرسال الموقع', 'هل تريد إرسال موقعك الحالي للمجموعة؟', async () => { await sendGroupMessage('location', { lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: '📍 موقع حالي' }); }); }, () => toast('⚠️ تعذر تحديد الموقع', true)); };
         const emojiBtnGroup = document.getElementById('emojiBtn');
         const emojiPickerGroup = document.getElementById('emojiPicker');
         emojiBtnGroup.onclick = () => emojiPickerGroup.classList.toggle('show');
-        document.querySelectorAll('#emojiPicker span').forEach(span => { span.onclick = () => { sendGroupMessage('text', { text: span.textContent }); emojiPickerGroup.classList.remove('show'); }; });
+        document.querySelectorAll('#emojiPicker span').forEach(span => { span.onclick = () => { showConfirm('إرسال إيموجي', `هل تريد إرسال "${span.textContent}" للمجموعة؟`, async () => { await sendGroupMessage('text', { text: span.textContent }); emojiPickerGroup.classList.remove('show'); }); }; });
         document.getElementById('guideUploadCard').onclick = () => pickImage('guide');
         document.getElementById('busUploadCard').onclick = () => pickImage('bus');
         document.getElementById('saveGuideBtn').onclick = async () => { const name = document.getElementById('gName').value.trim(), phone = document.getElementById('gPhone').value.trim(); if (!name || !phone) return toast('⚠️ الاسم والهاتف مطلوبان', true); if (!validPhone(phone)) return toast('⚠️ رقم الهاتف غير صالح', true); const data = { id: editId, name, phone, plate: document.getElementById('gPlate').value.trim(), color: selectedColor, transport: document.getElementById('gTransport').value.trim(), agency: document.getElementById('gAgency').value.trim(), notes: document.getElementById('gNotes').value.trim(), fav: editId ? (guides.find(g => g.id === editId)?.favorite || false) : false, vis: document.getElementById('gVisibility').value }; try { await saveGuide(data); toast('✅ تم حفظ المرشد'); document.getElementById('guideModal').classList.remove('show'); resetForm(); } catch (e) { toast('❌ فشل الحفظ: ' + e.message, true); } };
@@ -503,7 +511,7 @@
         document.querySelectorAll('.nav-tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(tab.dataset.page).classList.add('active'); if (tab.dataset.page === 'pageChat') { unreadCount = 0; updateFloatingBadge(); } }); });
         let lastShake = 0;
         window.addEventListener('devicemotion', e => { const acc = e.accelerationIncludingGravity; if (!acc) return; const mag = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z); if (mag > 25 && Date.now() - lastShake > 1000 && recording) { lastShake = Date.now(); if (mediaRecorder && recording) mediaRecorder.stop(); recording = false; document.getElementById('pttMain').classList.remove('recording'); toast('🎤 تم إلغاء التسجيل (هز الهاتف)'); } });
-        console.log('🚀 المجموعة جاهزة - حذف تلقائي للرسائل المفتوحة بعد 5 دقائق وغير المفتوحة بعد 24 ساعة');
+        console.log('✅ النظام جاهز: تأكيد الإرسال، إصلاح الصور والموقع، منع النسخ أثناء التسجيل');
     </script>
 </body>
 </html>
