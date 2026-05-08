@@ -1,498 +1,1242 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
+<!-- Playables SDK -->
+<script>// Playables SDK v1.0.0
+// Game lifecycle bridge: rAF-based game-ready detection + event communication
+(function() {
+  'use strict';
+
+  // Idempotency: skip if already initialized (e.g., server-side injection
+  // followed by client-side inject-javascript via the Bloks webview component).
+  if (window.playablesSDK) return;
+
+  var HANDLER_NAME = 'playablesGameEventHandler';
+  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
+  var RAF_FRAME_THRESHOLD = 3;
+
+  var gameReadySent = false;
+  var firstInteractionSent = false;
+  var errorSent = false;
+  var frameCount = 0;
+  var originalRAF = window.requestAnimationFrame;
+
+  // --- Transport Layer ---
+
+  function hasIOSBridge() {
+    return !!(window.webkit &&
+              window.webkit.messageHandlers &&
+              window.webkit.messageHandlers[HANDLER_NAME]);
+  }
+
+  function hasAndroidBridge() {
+    return !!(window[ANDROID_BRIDGE_NAME] &&
+              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
+  }
+
+  function isInIframe() {
+    return !!(window.parent && window.parent !== window);
+  }
+
+  function sendEvent(eventName, payload) {
+    var message = {
+      type: eventName,
+      payload: payload || {},
+      timestamp: Date.now()
+    };
+
+    if (hasIOSBridge()) {
+      try {
+        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
+      } catch (e) { /* ignore */ }
+      return;
+    }
+
+    if (hasAndroidBridge()) {
+    try {
+      var p = payload || {};
+      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
+      p.timestamp = message.timestamp;
+      window[ANDROID_BRIDGE_NAME].postEvent(
+        eventName,
+        JSON.stringify(p)
+      );
+    } catch (e) { /* ignore */ }
+    return;
+  }
+
+    if (isInIframe()) {
+      try {
+        window.parent.postMessage(message, '*');
+      } catch (e) { /* ignore */ }
+      return;
+    }
+  }
+
+  // --- rAF Game-Ready Detection ---
+
+  function onFrame() {
+    if (gameReadySent) return;
+
+    frameCount++;
+    if (frameCount >= RAF_FRAME_THRESHOLD) {
+      gameReadySent = true;
+      sendEvent('game_ready', {
+        frame_count: frameCount,
+        detected_at: Date.now()
+      });
+      return;
+    }
+
+    originalRAF.call(window, onFrame);
+  }
+
+  if (originalRAF) {
+    window.requestAnimationFrame = function(callback) {
+      if (!gameReadySent) {
+        return originalRAF.call(window, function(timestamp) {
+          frameCount++;
+          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
+            gameReadySent = true;
+            sendEvent('game_ready', {
+              frame_count: frameCount,
+              detected_at: Date.now()
+            });
+          }
+          callback(timestamp);
+        });
+      }
+      return originalRAF.call(window, callback);
+    };
+  }
+
+  // --- First User Interaction Detection ---
+
+  function setupFirstInteractionDetection() {
+    var events = ['touchstart', 'mousedown', 'keydown'];
+
+    function onFirstInteraction() {
+      if (firstInteractionSent) return;
+      firstInteractionSent = true;
+      sendEvent('user_interaction_start', null);
+
+      for (var i = 0; i < events.length; i++) {
+        document.removeEventListener(events[i], onFirstInteraction, true);
+      }
+    }
+
+    for (var i = 0; i < events.length; i++) {
+      document.addEventListener(events[i], onFirstInteraction, true);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
+  } else {
+    setupFirstInteractionDetection();
+  }
+
+  // --- Auto Error Capture ---
+
+  window.addEventListener('error', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    sendEvent('error', {
+      message: event.message || 'Unknown error',
+      source: event.filename || '',
+      lineno: event.lineno || 0,
+      colno: event.colno || 0,
+      auto_captured: true
+    });
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    var reason = event.reason;
+    sendEvent('error', {
+      message: (reason instanceof Error) ? reason.message : String(reason),
+      type: 'unhandled_promise_rejection',
+      auto_captured: true
+    });
+  });
+
+  // --- Public API ---
+
+  window.playablesSDK = {
+    complete: function(score) {
+      sendEvent('game_ended', {
+        score: score,
+        completed: true
+      });
+    },
+
+    error: function(message) {
+      if (errorSent) return;
+      errorSent = true;
+      sendEvent('error', {
+        message: message || 'Unknown error',
+        auto_captured: false
+      });
+    },
+
+    sendEvent: function(eventName, payload) {
+      if (!eventName || typeof eventName !== 'string') return;
+      sendEvent(eventName, payload);
+    }
+  };
+
+  // Kick off rAF detection in case no game code calls rAF immediately
+  if (originalRAF) {
+    originalRAF.call(window, onFrame);
+  }
+})();</script>
+<script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <meta name="theme-color" content="#e94560">
-    <title>F-Note Pro Max | فريق العمل + بث مباشر متكامل</title>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>F-Note Pro Max | Modern Note & Chat App</title>
+    <meta name="description" content="F-Note Pro Max - A modern note taking and messaging app with Firebase sync">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter + Noto Sans Arabic for RTL support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+    
+    <!-- Firebase SDK v10+ Modular via ESM -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+        
+        // Make Firebase available globally
+        window.firebaseApp = { initializeApp };
+        window.firebaseAuth = { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged };
+        window.firebaseFirestore = { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp };
+    </script>
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Tajawal', system-ui, sans-serif; }
+        /* ============ CSS VARIABLES & THEME ============ */
         :root {
-            --bg-body: #f7f9fc; --bg-card: #ffffff; --text-primary: #1e293b; --text-secondary: #475569;
-            --border: #e2e8f0; --gold: #e94560; --success: #10b981; --walkie-bg: #25D366;
-            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --shadow-lg: 0 12px 25px -5px rgba(0,0,0,0.15); --radius-xl: 28px; --radius-lg: 20px;
-            --radius-md: 16px; --radius-sm: 12px; --radius-full: 60px;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #14b8a6;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+            --radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        body.dark { --bg-body: #0f172a; --bg-card: #1e293b; --text-primary: #f1f5f9; --text-secondary: #cbd5e1; --border: #334155; }
-        body { background: var(--bg-body); color: var(--text-primary); transition: background 0.2s, color 0.2s; padding-bottom: 75px; }
-        body::after { content: ""; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 260px; background: url('https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png') center/contain no-repeat; opacity: 0.03; pointer-events: none; z-index: 0; }
-        .app-header { background: var(--bg-card); padding: 12px 16px; display: flex; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-        .logo-header img { height: 42px; }
-        .menu-btn { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .login-screen { position: fixed; inset: 0; background: var(--bg-body); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
-        .login-screen.hide { display: none; }
-        .login-card { background: var(--bg-card); border-radius: var(--radius-xl); padding: 32px 24px; width: 100%; max-width: 380px; text-align: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
-        .login-card img { width: 85px; margin-bottom: 10px; }
-        .login-title { font-size: 28px; font-weight: 800; color: var(--gold); }
-        .login-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 20px; }
-        .login-input { width: 100%; padding: 12px 16px; margin: 8px 0; border: 2px solid var(--border); border-radius: var(--radius-full); background: var(--bg-body); color: var(--text-primary); font-size: 14px; direction: ltr; }
-        .login-input:focus { border-color: var(--gold); outline: none; }
-        .login-btn { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: var(--radius-full); color: white; font-weight: 700; cursor: pointer; margin-top: 12px; }
-        .login-btn:active { transform: scale(0.96); }
-        .sidebar { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: var(--bg-card); z-index: 1500; transition: right 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); box-shadow: -4px 0 20px rgba(0,0,0,0.15); overflow-y: auto; }
-        .sidebar.open { right: 0; }
-        .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-        .sidebar-header h3 { color: var(--gold); font-size: 20px; }
-        .sidebar-close { background: var(--bg-body); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; }
-        .sidebar-section { padding: 16px; border-bottom: 1px solid var(--border); }
-        .sidebar-section h4 { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
-        .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; cursor: pointer; border-radius: var(--radius-md); transition: 0.1s; margin: 4px 0; font-size: 14px; }
-        .sidebar-item:active { background: var(--bg-body); transform: scale(0.98); }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px); z-index: 1400; visibility: hidden; opacity: 0; transition: 0.2s; }
-        .overlay.show { visibility: visible; opacity: 1; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 16px 14px; z-index: 100; }
-        .nav-tab { background: none; border: none; text-align: center; cursor: pointer; color: var(--text-secondary); font-size: 12px; font-weight: 600; transition: 0.2s; padding: 4px 12px; border-radius: var(--radius-full); }
-        .nav-tab.active { color: var(--gold); background: rgba(233,69,96,0.1); }
-        .nav-tab .ico { font-size: 24px; display: block; margin-bottom: 4px; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .toolbar { display: flex; gap: 10px; padding: 12px 16px; background: var(--bg-body); position: sticky; top: 64px; z-index: 90; }
-        .search-box { flex: 1; padding: 12px 18px; border: 2px solid transparent; border-radius: var(--radius-full); background: var(--bg-card); color: var(--text-primary); font-size: 14px; box-shadow: var(--shadow-sm); }
-        .search-box:focus { border-color: var(--gold); outline: none; }
-        .voice-btn, .add-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--bg-card); box-shadow: var(--shadow-sm); cursor: pointer; font-size: 20px; transition: 0.1s; }
-        .add-btn { background: var(--gold); color: white; font-size: 28px; }
-        .filter-toggle { width: calc(100% - 32px); margin: 0 16px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-full); padding: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .colors-panel { display: none; flex-wrap: wrap; gap: 12px; padding: 12px 16px; justify-content: center; }
-        .colors-panel.show { display: flex; }
-        .color-dot { width: 42px; height: 42px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: 0.1s; }
-        .color-dot.active { border-color: var(--gold); transform: scale(1.1); }
-        .guides-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 14px; }
-        .guide-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-md); border-right: 5px solid var(--gold); cursor: pointer; transition: 0.1s; }
-        .guide-card:active { transform: scale(0.99); }
-        .card-top { display: flex; align-items: center; gap: 12px; }
-        .card-avatar { width: 60px; height: 60px; border-radius: 20px; object-fit: cover; border: 2px solid var(--gold); }
-        .card-info { flex: 1; }
-        .card-name { font-weight: 800; font-size: 16px; }
-        .card-phone { background: var(--bg-body); display: inline-flex; gap: 6px; padding: 5px 12px; border-radius: 60px; font-size: 12px; margin-top: 6px; }
-        .call-btn { background: var(--success); border: none; color: white; padding: 2px 8px; border-radius: 30px; font-size: 10px; cursor: pointer; }
-        .card-chevron { background: transparent; border: none; font-size: 20px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; }
-        .card-details { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: none; }
-        .card-details.show { display: block; }
-        .details-box { background: var(--bg-body); padding: 12px; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.7; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 30px; font-size: 10px; font-weight: 700; }
-        .badge-plate { background: var(--gold); color: white; }
-        .badge-public { background: #3b82f6; color: white; }
-        .badge-private { background: #64748b; color: white; }
-        .action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        .btn-sm { padding: 6px 14px; border-radius: 60px; border: none; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.1s; }
-        .btn-sm:active { transform: scale(0.95); }
-        .btn-edit { background: var(--success); color: white; }
-        .btn-del { background: #ef4444; color: white; }
-        .btn-share { background: #25D366; color: white; }
 
-        /* ========== قائمة الأصدقاء ========== */
-        .friends-container { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 12px; overflow-x: auto; white-space: nowrap; }
-        .friends-list { display: inline-flex; gap: 16px; padding: 4px 0; }
-        .friend-item { text-align: center; cursor: pointer; display: inline-flex; flex-direction: column; align-items: center; gap: 4px; background: transparent; border: none; padding: 4px; border-radius: var(--radius-lg); transition: 0.1s; min-width: 70px; }
-        .friend-item:active { transform: scale(0.96); background: var(--bg-body); }
-        .friend-avatar { position: relative; width: 52px; height: 52px; }
-        .friend-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: var(--bg-body); }
-        .status-dot { position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--bg-card); }
-        .status-dot.online { background: #10b981; box-shadow: 0 0 6px #10b981; }
-        .status-dot.offline { background: #ef4444; }
-        .friend-name { font-size: 11px; font-weight: 600; color: var(--text-secondary); max-width: 70px; overflow: hidden; text-overflow: ellipsis; }
-
-        /* ========== واجهة الدردشة ========== */
-        .chat-container { display: flex; flex-direction: column; height: calc(100vh - 130px); background: var(--bg-body); position: relative; }
-        .chat-header { background: var(--bg-card); padding: 12px 16px; font-weight: 700; color: var(--gold); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-        .group-badge { background: var(--gold); padding: 4px 12px; border-radius: 40px; font-size: 12px; color: white; }
-        .messages-area { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; padding-bottom: 85px; }
-        .msg-wrapper { display: flex; gap: 8px; max-width: 85%; animation: fadeSlide 0.25s ease; }
-        .msg-wrapper.mine { align-self: flex-end; }
-        .msg-wrapper.friend { align-self: flex-start; }
-        @keyframes fadeSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .msg-bubble { background: var(--bg-card); padding: 10px 14px; border-radius: 20px; font-size: 13px; box-shadow: var(--shadow-sm); word-break: break-word; }
-        .msg-wrapper.mine .msg-bubble { background: #e8f5e9; border-bottom-left-radius: 4px; }
-        body.dark .msg-wrapper.mine .msg-bubble { background: #1a3a2a; }
-        .msg-sender { font-size: 10px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
-        .msg-time { font-size: 9px; color: var(--text-secondary); margin-top: 4px; text-align: left; }
-        .msg-image { max-width: 200px; border-radius: 16px; cursor: pointer; }
-        .voice-player { display: flex; align-items: center; gap: 10px; min-width: 180px; }
-        .voice-play-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--walkie-bg); color: white; font-size: 16px; cursor: pointer; transition: 0.1s; }
-        .voice-play-btn.playing { animation: pulse 0.6s infinite; background: #ef4444; }
-        .waveform-canvas { width: 120px; height: 34px; border-radius: 20px; background: rgba(0,0,0,0.05); }
-
-        /* شريط الأدوات العائم المنبثق */
-        .chat-actions-floating {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: var(--bg-card);
-            border-radius: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 16px;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(8px);
-            z-index: 50;
-            gap: 8px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .floating-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: var(--bg-body);
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            transition: 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f3a 100%);
             color: var(--text-primary);
-            touch-action: manipulation;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-        .floating-icon:active { transform: scale(0.92); background: var(--border); }
-        .floating-icon.large {
-            width: 70px;
-            height: 70px;
-            background: var(--walkie-bg);
-            color: white;
-            font-size: 32px;
-            box-shadow: 0 4px 15px rgba(37,211,102,0.4);
-            position: relative;
-            transition: 0.05s linear;
+
+        /* ============ RTL SUPPORT ============ */
+        [dir="rtl"] body {
+            font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
         }
-        .floating-icon.large.recording {
-            background: #ef4444;
-            animation: pttPulse 0.5s infinite;
-            box-shadow: 0 0 20px rgba(239,68,68,0.8);
+
+        [dir="rtl"] .rtl-flip {
+            transform: scaleX(-1);
         }
-        @keyframes pttPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
+
+        /* ============ SCROLLBAR ============ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-        .live-track-bar {
-            display: flex;
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* ============ ANIMATIONS ============ */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-slide-in {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        /* ============ LOADING STATES ============ */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .spinner {
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* ============ GLASSMORPHISM ============ */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* ============ BUTTON STYLES ============ */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+            border: none;
+            outline: none;
+            display: inline-flex;
             align-items: center;
-            gap: 4px;
-            background: var(--bg-body);
-            padding: 4px 12px;
-            border-radius: 60px;
+            gap: 0.5rem;
+            justify-content: center;
         }
-        .live-track-bar select { width: auto; margin: 0; padding: 6px; font-size: 11px; border-radius: 30px; background: var(--bg-card); }
-        .live-timer { background: var(--gold); color: white; padding: 2px 8px; border-radius: 30px; font-family: monospace; font-size: 11px; }
 
-        .emoji-picker { position: absolute; bottom: 85px; right: 10px; background: var(--bg-card); border-radius: 20px; padding: 10px; display: none; gap: 6px; flex-wrap: wrap; width: 200px; box-shadow: var(--shadow-lg); z-index: 200; }
-        .emoji-picker.show { display: flex; }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
-        .floating-bubble { position: fixed; width: 56px; height: 56px; border-radius: 50%; background: var(--bg-card); box-shadow: var(--shadow-lg); z-index: 3000; display: none; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--gold); }
-        .floating-bubble.show { display: flex; animation: bounceIn 0.3s; }
-        .floating-bubble img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-        .floating-badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 11px; font-weight: bold; min-width: 20px; height: 20px; border-radius: 20px; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid var(--bg-card); }
-        @keyframes bounceIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1600; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
-        .modal.show { visibility: visible; opacity: 1; }
-        .modal-box { background: var(--bg-card); width: 90%; max-width: 500px; border-radius: 32px; padding: 24px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
-        .modal-box h3 { text-align: center; margin-bottom: 16px; font-size: 22px; color: var(--gold); }
-        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--border); border-radius: 60px; background: var(--bg-body); color: var(--text-primary); font-size: 14px; }
-        textarea { border-radius: 20px; resize: vertical; }
-        .upload-card { border: 2px dashed var(--gold); border-radius: 24px; padding: 16px; text-align: center; margin: 12px 0; cursor: pointer; }
-        .preview-img { width: 70px; height: 70px; border-radius: 20px; object-fit: cover; margin-top: 8px; }
-        .color-selector { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
-        .color-option { width: 44px; height: 44px; border-radius: 14px; cursor: pointer; border: 3px solid transparent; }
-        .color-option.selected { border-color: var(--gold); transform: scale(1.05); }
-        .btn-save, .btn-cancel { padding: 12px; border-radius: 60px; border: none; font-weight: 700; margin-top: 12px; cursor: pointer; width: 100%; }
-        .btn-save { background: var(--success); color: white; }
-        .btn-cancel { background: #64748b; color: white; }
-        .toast { position: fixed; bottom: 100px; left: 20px; right: 20px; background: #1e293bcc; backdrop-filter: blur(10px); color: white; border-radius: 60px; padding: 12px 18px; text-align: center; z-index: 9999; font-size: 13px; animation: slideUp 0.3s; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-        .toast-btn { background: var(--gold); border: none; color: white; padding: 4px 14px; border-radius: 40px; cursor: pointer; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .loading-msg { text-align: center; padding: 30px; color: var(--text-secondary); }
-        .confirm-modal { max-width: 320px; text-align: center; }
-        .confirm-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .confirm-buttons button { flex: 1; }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-secondary);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+        }
+
+        .btn-ghost:hover:not(:disabled) {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* ============ INPUT STYLES ============ */
+        .input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* ============ TOAST NOTIFICATIONS ============ */
+        .toast {
+            position: fixed;
+            bottom: 5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-out;
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        /* ============ MODAL ============ */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 998;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 999;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* ============ BOTTOM NAV ============ */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom));
+            z-index: 100;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        /* ============ NOTE CARD ============ */
+        .note-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .note-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        /* ============ CHAT BUBBLE ============ */
+        .chat-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            word-wrap: break-word;
+        }
+
+        .chat-bubble.sent {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-bubble.received {
+            background: var(--bg-tertiary);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .hide-mobile {
+                display: none;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .hide-desktop {
+                display: none;
+            }
+        }
+
+        /* ============ UTILITIES ============ */
+        .no-scroll {
+            overflow: hidden;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
     </style>
 </head>
 <body>
-
-    <div class="login-screen" id="loginScreen">
-        <div class="login-card">
-            <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
-            <div class="login-title">F-Note Pro Max</div>
-            <div class="login-sub">فريق العمل + بث مباشر متكامل</div>
-            <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
-            <input type="password" id="loginPassword" placeholder="كلمة المرور">
-            <button class="login-btn" id="loginBtn">دخول</button>
+    <!-- ============ LOADING SCREEN ============ -->
+    <div id="loadingScreen" class="fixed inset-0 z-[9999] flex items-center justify-center glass">
+        <div class="text-center">
+            <div class="spinner mx-auto mb-4" style="width: 48px; height: 48px; border-width: 4px;"></div>
+            <h2 class="text-xl font-semibold gradient-text">F-Note Pro Max</h2>
+            <p class="text-sm text-text-muted mt-2">Loading your workspace...</p>
         </div>
     </div>
 
-    <div class="app-header">
-        <div class="logo-header"><img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="F-Note Pro"></div>
-        <button class="menu-btn" id="menuBtn">☰</button>
-    </div>
-    <div class="overlay" id="overlay"></div>
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header"><h3>✨ F-Note Pro Max</h3><button class="sidebar-close" id="closeSidebar">✕</button></div>
-        <div class="sidebar-section"><h4>👤 حسابي</h4><div id="userInfo" style="font-size:12px;"></div><div class="sidebar-item" id="profileBtn">🧑 تعديل الملف الشخصي</div><div class="sidebar-item" id="signOutBtn" style="display:none;">🚪 تسجيل الخروج</div></div>
-        <div class="sidebar-section"><h4>⚙️ الإعدادات</h4><div class="sidebar-item" id="darkModeBtn">🌙 الوضع الداكن</div><div class="sidebar-item" id="syncBtn">🔄 مزامنة السحاب</div><div class="sidebar-item" id="exportJsonBtn">💾 تصدير JSON</div><div class="sidebar-item" id="exportPdfBtn">📄 تصدير PDF</div><div class="sidebar-item" id="shiftReportBtn">📋 تقرير الوردية</div><div class="sidebar-item" id="floatingModeBtn">🫧 وضع الكرة العائمة</div></div>
-    </div>
-
-    <div id="pageGuides" class="page active">
-        <div class="toolbar"><input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث عن مرشد..."><button class="voice-btn" id="voiceSearchBtn">🎤</button><button class="add-btn" id="addGuideBtn">+</button></div>
-        <div style="padding: 0 16px;"><button class="filter-toggle" id="filterToggleBtn">🎨 فلتر الألوان ▼</button>
-            <div class="colors-panel" id="colorsPanel">
-                <div class="color-dot active" data-color="all" style="background:conic-gradient(#e94560,#f59e0b,#10b981,#3b82f6,#9b5de5);"></div>
-                <div class="color-dot" data-color="#e94560" style="background:#e94560;"></div><div class="color-dot" data-color="#2c7da0" style="background:#2c7da0;"></div>
-                <div class="color-dot" data-color="#e76f51" style="background:#e76f51;"></div><div class="color-dot" data-color="#2a9d8f" style="background:#2a9d8f;"></div>
-                <div class="color-dot" data-color="#e9c46a" style="background:#e9c46a;"></div><div class="color-dot" data-color="#9b5de5" style="background:#9b5de5;"></div>
-                <div class="color-dot" data-color="#06d6a0" style="background:#06d6a0;"></div><div class="color-dot" data-color="#ff006e" style="background:#ff006e;"></div>
-            </div>
-        </div>
-        <div id="guidesContainer" class="guides-list"><div class="loading-msg">⏳ جاري التحميل...</div></div>
-    </div>
-
-    <div id="pageChat" class="page">
-        <div class="chat-container">
-            <div class="chat-header"><span>📻 غرفة العمل (بث عام)</span><span class="group-badge" id="onlineCountBadge">🟢 0 متصل</span></div>
-            <div class="friends-container" id="friendsContainer"><div class="friends-list" id="friendsList"></div></div>
-            <div class="messages-area" id="messagesArea"><div class="loading-msg">💬 لا توجد رسائل بعد، كن أول من يرحب!</div></div>
-            
-            <!-- شريط الأدوات العائم المنبثق -->
-            <div class="chat-actions-floating" id="chatFloatingBar">
-                <button class="floating-icon" id="attachImageBtn">🖼️</button>
-                <button class="floating-icon" id="sendLocationBtn">📍</button>
-                <div class="live-track-bar">
-                    <select id="trackDurationSelect">
-                        <option value="600">10 د</option><option value="900">15 د</option><option value="3600">1 س</option>
-                        <option value="86400">24 س</option><option value="0">إيقاف</option>
-                    </select>
-                    <button class="floating-icon" id="liveTrackBtn" style="width:42px;height:42px;font-size:18px;">🛰️</button>
-                    <span class="live-timer" id="liveTimerDisplay">0:00</span>
+    <!-- ============ AUTH SCREEN ============ -->
+    <div id="authScreen" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md animate-fade-in">
+            <div class="glass rounded-2xl p-8 shadow-lg">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="notebook-pen" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold gradient-text mb-2">F-Note Pro Max</h1>
+                    <p class="text-text-muted">Sync notes & chat across all devices</p>
                 </div>
-                <button class="floating-icon large" id="pttMain"><span>🎙️</span></button>
-                <button class="floating-icon" id="emojiBtn">😊</button>
-                <div class="emoji-picker" id="emojiPicker"><span>😀</span><span>😂</span><span>❤️</span><span>👍</span><span>🔥</span><span>🎉</span><span>🙏</span><span>💪</span><span>👋</span><span>⚠️</span><span>✅</span><span>📍</span></div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Email</label>
+                        <input type="email" id="authEmail" class="input" placeholder="you@example.com" autocomplete="email">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Password</label>
+                        <input type="password" id="authPassword" class="input" placeholder="••••••••" autocomplete="current-password">
+                    </div>
+                    <div id="authError" class="hidden text-sm text-danger bg-danger/10 p-3 rounded-lg"></div>
+                    
+                    <button id="loginBtn" class="btn btn-primary w-full">
+                        <span>Sign In</span>
+                        <i data-lucide="log-in" class="w-4 h-4"></i>
+                    </button>
+                    
+                    <button id="signupBtn" class="btn btn-secondary w-full">
+                        <span>Create Account</span>
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="mt-6 text-center text-xs text-text-muted">
+                    <p>By continuing, you agree to our Terms & Privacy Policy</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="bottom-nav"><button class="nav-tab active" data-page="pageGuides"><span class="ico">📋</span> المرشدين</button><button class="nav-tab" data-page="pageChat"><span class="ico">📻</span> المجموعة</button></div>
-    <div class="floating-bubble" id="floatingBubble"><img id="floatingAvatar" src=""><div class="floating-badge" id="floatingBadge">0</div></div>
+    <!-- ============ MAIN APP ============ -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="glass sticky top-0 z-50 border-b border-border">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <i data-lucide="notebook-pen" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold gradient-text">F-Note Pro Max</h1>
+                        <p class="text-xs text-text-muted" id="userEmailDisplay"></p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button id="rtlToggle" class="btn btn-ghost p-2" title="Toggle RTL">
+                        <i data-lucide="languages" class="w-5 h-5"></i>
+                    </button>
+                    <button id="logoutBtn" class="btn btn-ghost p-2" title="Logout">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
 
-    <!-- نافذة تأكيد عالمية -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-box confirm-modal">
-            <h3 id="confirmTitle">تأكيد الإرسال</h3>
-            <p id="confirmMessage">هل أنت متأكد من إرسال هذه الرسالة؟</p>
-            <div class="confirm-buttons"><button class="btn-save" id="confirmYesBtn">✅ نعم، أرسل</button><button class="btn-cancel" id="confirmNoBtn">❌ إلغاء</button></div>
+        <!-- Content Area -->
+        <main class="max-w-7xl mx-auto px-4 py-6 pb-24">
+            <!-- Notes View -->
+            <div id="notesView" class="animate-fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">Your Notes</h2>
+                    <button id="newNoteBtn" class="btn btn-primary">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>New Note</span>
+                    </button>
+                </div>
+
+                <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Notes will be rendered here -->
+                </div>
+
+                <div id="notesEmpty" class="hidden text-center py-16">
+                    <i data-lucide="file-text" class="w-16 h-16 mx-auto text-text-muted mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">No notes yet</h3>
+                    <p class="text-text-muted mb-6">Create your first note to get started</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('newNoteBtn').click()">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        Create Note
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat View -->
+            <div id="chatView" class="hidden animate-fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">Messages</h2>
+                    <button id="newChatBtn" class="btn btn-primary">
+                        <i data-lucide="message-square-plus" class="w-4 h-4"></i>
+                        <span>New Chat</span>
+                    </button>
+                </div>
+
+                <div id="chatList" class="space-y-3">
+                    <!-- Chat rooms will be rendered here -->
+                </div>
+
+                <div id="chatEmpty" class="hidden text-center py-16">
+                    <i data-lucide="messages-square" class="w-16 h-16 mx-auto text-text-muted mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">No conversations</h3>
+                    <p class="text-text-muted mb-6">Start a new chat to connect with others</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('newChatBtn').click()">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        Start Chat
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="settingsView" class="hidden animate-fade-in">
+                <h2 class="text-2xl font-bold mb-6">Settings</h2>
+                
+                <div class="space-y-4">
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="font-semibold mb-4 flex items-center gap-2">
+                            <i data-lucide="user" class="w-5 h-5 text-primary"></i>
+                            Account
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-sm text-text-muted">Email</label>
+                                <p class="font-medium" id="settingsEmail"></p>
+                            </div>
+                            <div>
+                                <label class="text-sm text-text-muted">User ID</label>
+                                <p class="font-mono text-xs text-text-muted break-all" id="settingsUID"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="font-semibold mb-4 flex items-center gap-2">
+                            <i data-lucide="shield" class="w-5 h-5 text-primary"></i>
+                            Security
+                        </h3>
+                        <p class="text-sm text-text-muted mb-4">Your data is encrypted in transit and at rest. Firebase security rules protect your notes and messages.</p>
+                        <button class="btn btn-danger" id="deleteAccountBtn">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            Delete Account
+                        </button>
+                    </div>
+
+                    <div class="glass rounded-xl p-6">
+                        <h3 class="font-semibold mb-4 flex items-center gap-2">
+                            <i data-lucide="info" class="w-5 h-5 text-primary"></i>
+                            About
+                        </h3>
+                        <p class="text-sm text-text-muted">F-Note Pro Max v2.0.0<br>Built with Firebase, Tailwind CSS & ❤️</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <div class="max-w-7xl mx-auto px-4 flex items-center justify-around">
+                <button class="nav-item active" data-view="notes">
+                    <i data-lucide="sticky-note" class="w-6 h-6"></i>
+                    <span class="text-xs">Notes</span>
+                </button>
+                <button class="nav-item" data-view="chat">
+                    <i data-lucide="message-circle" class="w-6 h-6"></i>
+                    <span class="text-xs">Chat</span>
+                </button>
+                <button class="nav-item" data-view="settings">
+                    <i data-lucide="settings" class="w-6 h-6"></i>
+                    <span class="text-xs">Settings</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ============ MODALS ============ -->
+    <!-- Note Editor Modal -->
+    <div id="noteModal" class="hidden">
+        <div class="modal-backdrop" onclick="closeNoteModal()"></div>
+        <div class="modal w-full max-w-2xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold" id="noteModalTitle">New Note</h3>
+                <button onclick="closeNoteModal()" class="btn btn-ghost p-2">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <input type="text" id="noteTitle" class="input mb-3" placeholder="Note title...">
+            <textarea id="noteContent" class="input mb-4" rows="10" placeholder="Write your note here..."></textarea>
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeNoteModal()" class="btn btn-secondary">Cancel</button>
+                <button id="saveNoteBtn" class="btn btn-primary">
+                    <span>Save</span>
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                </button>
+            </div>
         </div>
     </div>
 
-    <div id="guideModal" class="modal"><div class="modal-box"><h3 id="modalTitle">➕ إضافة مرشد</h3>
-        <input type="text" id="gName" placeholder="الاسم الكامل *"><input type="tel" id="gPhone" placeholder="رقم الهاتف *" dir="ltr"><input type="text" id="gPlate" placeholder="رقم اللوحة">
-        <div class="upload-card" id="guideUploadCard"><div>📸 صورة المرشد</div><div class="upload-preview" id="guidePreviewWrap" style="display:none;"><img id="guidePreviewImg" class="preview-img"></div><div class="upload-status" id="guideUploadStatus"></div></div>
-        <div class="upload-card" id="busUploadCard"><div>🚌 صورة وسيلة النقل</div><div class="upload-preview" id="busPreviewWrap" style="display:none;"><img id="busPreviewImg" class="preview-img"></div><div class="upload-status" id="busUploadStatus"></div></div>
-        <input type="text" id="gTransport" placeholder="وسيلة النقل"><input type="text" id="gAgency" placeholder="الوكالة"><textarea id="gNotes" rows="2" placeholder="ملاحظات"></textarea>
-        <div class="color-selector" id="colorSelector"></div><select id="gVisibility"><option value="private">🔒 خاص</option><option value="public">🌍 عام</option></select>
-        <div style="display: flex; gap: 10px; margin-top: 16px;"><button class="btn-save" id="saveGuideBtn">💾 حفظ</button><button class="btn-cancel" id="cancelGuideBtn">❌ إلغاء</button></div>
-    </div></div>
-    <div id="detailModal" class="modal"><div class="modal-box"><h3 id="detailName"></h3><div id="detailContent"></div><div id="detailVisDiv"></div><button class="btn-sm btn-share" id="detailShareBtn" style="width:100%; margin-top:12px;">💬 مشاركة عبر واتساب</button><button class="btn-cancel" id="closeDetailBtn">إغلاق</button></div></div>
-    <div id="multiShareModal" class="modal"><div class="modal-box"><h3>📱 مشاركة واتساب</h3><textarea id="shareMsg" rows="3" readonly></textarea><div style="display: flex; gap: 10px;"><button class="btn-save" id="confirmShareBtn">📲 فتح واتساب</button><button class="btn-cancel" id="closeMultiBtn">إلغاء</button></div></div></div>
-    <div id="profileModal" class="modal"><div class="modal-box" style="text-align:center;"><h3>الملف الشخصي</h3><img id="profilePicPreview" style="width:100px;height:100px;border-radius:50%;margin:10px auto;border:3px solid var(--gold);" src=""><div class="upload-card" id="profilePicUpload">📷 تغيير الصورة</div><input type="text" id="profileName" placeholder="الاسم الكامل"><input type="text" id="profileJob" placeholder="الوظيفة / المهنة"><div style="display:flex;gap:10px;"><button class="btn-save" id="saveProfileBtn">💾 حفظ</button><button class="btn-cancel" id="closeProfileBtn">إغلاق</button></div></div></div>
-    <div id="fullImageModal" class="modal"><div class="modal-box" style="background:transparent; box-shadow:none; text-align:center;"><img id="fullImage" style="max-width:90vw; max-height:70vh; border-radius:20px;"><button class="btn-cancel" id="closeFullImage" style="margin-top:12px;">إغلاق</button></div></div>
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
 
-    <script>
-        // Firebase Config
-        const firebaseConfig = { apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s", authDomain: "f-notepro-work-2d25b.firebaseapp.com", databaseURL: "https://f-notepro-work-2d25b-default-rtdb.europe-west1.firebasedatabase.app", projectId: "f-notepro-work-2d25b", storageBucket: "f-notepro-work-2d25b.firebasestorage.app", messagingSenderId: "221438380381", appId: "1:221438380381:web:b46c35d0ec0944079480b4" };
-        const CLOUD_NAME = 'dmhtx93nj', UPLOAD_PRESET = 'fcloud_preset', CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore(), auth = firebase.auth(), storage = firebase.storage(), rtdb = firebase.database();
-        db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
-
-        let currentUser = null, guides = [], editId = null, selectedColor = '#e94560', colorFilter = 'all', detailGuide = null;
-        let guidePhotoData = '', busPhotoData = '', userProfile = { displayName: '', photoURL: '', job: '' };
-        let chatMessages = [], unreadCount = 0;
-        let mediaRecorder = null, recording = false, audioChunks = [];
-        let currentAudio = null, floatingMode = false;
-        let allUsers = [], presenceData = {};
-        let liveTrackingInterval = null, liveRemaining = 0, liveTimerInterval = null;
-        let liveActive = false;
-
-        function toast(msg, isErr = false, action = null) { const t = document.createElement('div'); t.className = 'toast'; t.style.background = isErr ? '#ef4444cc' : '#1e293bcc'; const span = document.createElement('span'); span.textContent = msg; t.appendChild(span); if(action) { const btn = document.createElement('button'); btn.textContent = action.label; btn.className = 'toast-btn'; btn.onclick = () => { action.callback(); t.remove(); }; t.appendChild(btn); } document.body.appendChild(t); setTimeout(() => t.remove(), 5000); }
-        function esc(s) { if (!s) return ''; return String(s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
-        function validPhone(p) { return /^\+?[0-9]{8,15}$/.test(p.replace(/\s/g, '')); }
-        function sanitize(s) { return s.replace(/[<>]/g, '').trim(); }
-        function vibrate(ms = 15) { if (navigator.vibrate) navigator.vibrate(ms); }
-
-        function showConfirm(title, message, onConfirm) {
-            document.getElementById('confirmTitle').innerText = title;
-            document.getElementById('confirmMessage').innerText = message;
-            document.getElementById('confirmModal').classList.add('show');
-            window.pendingAction = onConfirm;
-        }
-        document.getElementById('confirmYesBtn').onclick = () => { document.getElementById('confirmModal').classList.remove('show'); if (window.pendingAction) { window.pendingAction(); window.pendingAction = null; } };
-        document.getElementById('confirmNoBtn').onclick = () => { document.getElementById('confirmModal').classList.remove('show'); window.pendingAction = null; };
-
-        async function uploadToCloudinary(base64) { if (!navigator.onLine) return base64; try { const blob = await fetch(base64).then(r => r.blob()); const fd = new FormData(); fd.append('file', blob, 'img_' + Date.now() + '.jpg'); fd.append('upload_preset', UPLOAD_PRESET); const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd }); if (!res.ok) throw new Error(); const data = await res.json(); return data.secure_url; } catch(e) { return base64; } }
-        function handleImage(file, type) { if (!file) return; const statusId = type === 'guide' ? 'guideUploadStatus' : 'busUploadStatus'; const prevId = type === 'guide' ? 'guidePreviewImg' : 'busPreviewImg'; const wrapId = type === 'guide' ? 'guidePreviewWrap' : 'busPreviewWrap'; const status = document.getElementById(statusId); if (status) status.textContent = '⏳ جاري الضغط...'; const reader = new FileReader(); reader.onload = async (e) => { const img = new Image(); img.onload = async () => { const canvas = document.createElement('canvas'); const maxW = 500; let w = img.width, h = img.height; if (w > maxW) { h *= maxW / w; w = maxW; } canvas.width = Math.round(w); canvas.height = Math.round(h); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); const b64 = canvas.toDataURL('image/jpeg', 0.6); if (status) status.textContent = '☁️ جاري الرفع...'; const url = await uploadToCloudinary(b64); const final = url || b64; if (type === 'guide') guidePhotoData = final; else busPhotoData = final; document.getElementById(prevId).src = b64; document.getElementById(wrapId).style.display = 'flex'; if (status) status.textContent = url ? '✅ تم رفع الصورة' : '💾 تم الحفظ محلياً'; }; img.src = e.target.result; }; reader.readAsDataURL(file); }
-        function pickImage(type) { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = e => { if (e.target.files[0]) handleImage(e.target.files[0], type); }; inp.click(); }
-
-        async function saveGuide(data) { if (!currentUser) throw new Error('يجب تسجيل الدخول'); const ref = data.id ? db.collection('guides').doc(data.id) : db.collection('guides').doc(); const docData = { userId: currentUser.uid, creatorName: userProfile.displayName || currentUser.email, creatorPhoto: userProfile.photoURL || '', name: sanitize(data.name), phone: data.phone.replace(/\s/g, ''), plateNumber: sanitize(data.plate || ''), guidePhoto: guidePhotoData || null, busPhoto: busPhotoData || null, cardColor: data.color, transportType: sanitize(data.transport || ''), agency: sanitize(data.agency || ''), notes: sanitize(data.notes || ''), favorite: data.fav || false, visibility: data.vis || 'private', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }; if (!data.id) docData.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await ref.set(docData, { merge: true }); }
-        let unsubGuides = null;
-        function listenGuides() { if (unsubGuides) unsubGuides(); if (!currentUser) return; unsubGuides = db.collection('guides').where('userId', '==', currentUser.uid).onSnapshot(snap => { let mine = []; snap.forEach(d => mine.push({ id: d.id, ...d.data() })); db.collection('guides').where('visibility', '==', 'public').get().then(ps => { let pubs = []; ps.forEach(d => { if (d.data().userId !== currentUser.uid) pubs.push({ id: d.id, ...d.data() }); }); const all = [...mine, ...pubs]; const map = new Map(); all.forEach(g => map.set(g.id, g)); guides = Array.from(map.values()); renderGuides(); }).catch(() => { guides = mine; renderGuides(); }); }); }
-        function renderGuides() { const query = (document.getElementById('searchInput')?.value || '').toLowerCase(); let filtered = guides.filter(g => !query || (g.name || '').toLowerCase().includes(query) || (g.phone || '').includes(query) || (g.transportType || '').includes(query) || (g.agency || '').includes(query)); if (colorFilter !== 'all') filtered = filtered.filter(g => g.cardColor === colorFilter); filtered.sort((a,b) => (b.favorite?1:0)-(a.favorite?1:0)); const container = document.getElementById('guidesContainer'); if (!filtered.length) { container.innerHTML = '<div class="loading-msg">😕 لا توجد نتائج</div>'; return; } container.innerHTML = filtered.map(g => { const own = g.userId === currentUser?.uid; const star = g.favorite ? '⭐ ' : ''; const visBadge = g.visibility === 'public' ? '<span class="badge badge-public">🌍 عام</span>' : '<span class="badge badge-private">🔒 خاص</span>'; const creator = (!own && g.visibility === 'public' && g.creatorName) ? `<div style="font-size:10px;">👤 ${esc(g.creatorName)}</div>` : ''; return `<div class="guide-card" style="border-right-color: ${esc(g.cardColor)}" onclick="showDetail('${g.id}')"><div class="card-top"><img class="card-avatar" src="${g.guidePhoto||''}" onclick="event.stopPropagation();viewImage('${g.guidePhoto||''}')" onerror="this.style.display='none'"><div class="card-info"><div class="card-name">${star}${esc(g.name)} ${visBadge}</div><div class="card-phone"><span>${esc(g.phone)}</span><button class="call-btn" onclick="event.stopPropagation();location.href='tel:${esc(g.phone)}'">📞</button></div>${creator}</div><button class="card-chevron" onclick="event.stopPropagation();toggleDetails('${g.id}',this)">▼</button></div><div class="card-details" id="details-${g.id}"><div class="details-box">${g.busPhoto?`<img src="${g.busPhoto}" style="width:48px;border-radius:12px;cursor:pointer;" onclick="event.stopPropagation();viewImage('${g.busPhoto}')">`:''}<p>🚐 وسيلة النقل: ${esc(g.transportType||'—')}</p><p>🚍 لوحة: <span class="badge badge-plate">${esc(g.plateNumber||'—')}</span></p><p>🏢 الوكالة: ${esc(g.agency||'—')}</p><p>📝 ملاحظات: ${esc((g.notes||'—').substring(0,60))}</p><div class="action-row">${own?`<button class="btn-sm btn-edit" onclick="event.stopPropagation();editGuide('${g.id}')">✏️ تعديل</button>`:''}${own?`<button class="btn-sm btn-del" onclick="event.stopPropagation();delGuide('${g.id}')">🗑️ حذف</button>`:''}<button class="btn-sm btn-share" onclick="event.stopPropagation();openShare('${g.id}')">💬 مشاركة</button>${own?`<button class="btn-sm btn-fav" onclick="event.stopPropagation();toggleFav('${g.id}')">${g.favorite?'★':'☆'}</button>`:''}</div></div></div></div>`; }).join(''); }
-        window.toggleDetails = (id, btn) => { const det = document.getElementById('details-'+id); if(det){ det.classList.toggle('show'); btn.textContent = det.classList.contains('show')?'▲':'▼'; } };
-        window.viewImage = url => { if(url){ document.getElementById('fullImage').src=url; document.getElementById('fullImageModal').classList.add('show'); } };
-        window.toggleFav = async id => { const g = guides.find(x=>x.id===id); if(g && g.userId===currentUser?.uid){ await db.collection('guides').doc(id).update({ favorite: !g.favorite }); toast(g.favorite?'أزيل من المفضلة':'⭐ أضيف للمفضلة'); } };
-        window.editGuide = id => { const g = guides.find(x=>x.id===id); if(!g || g.userId!==currentUser?.uid) return toast('لا يمكنك تعديل هذا',true); editId=id; document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||''; document.getElementById('gPlate').value=g.plateNumber||''; document.getElementById('gTransport').value=g.transportType||''; document.getElementById('gAgency').value=g.agency||''; document.getElementById('gNotes').value=g.notes||''; document.getElementById('gVisibility').value=g.visibility||'private'; selectedColor=g.cardColor||'#e94560'; guidePhotoData=g.guidePhoto||''; busPhotoData=g.busPhoto||''; if(g.guidePhoto){ document.getElementById('guidePreviewImg').src=g.guidePhoto; document.getElementById('guidePreviewWrap').style.display='flex'; }else document.getElementById('guidePreviewWrap').style.display='none'; if(g.busPhoto){ document.getElementById('busPreviewImg').src=g.busPhoto; document.getElementById('busPreviewWrap').style.display='flex'; }else document.getElementById('busPreviewWrap').style.display='none'; document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.classList.remove('selected')); const sel=document.querySelector(`#colorSelector .color-option[data-color="${selectedColor}"]`); if(sel) sel.classList.add('selected'); document.getElementById('modalTitle').textContent='✏️ تعديل المرشد'; document.getElementById('guideModal').classList.add('show'); };
-        window.delGuide = async id => { if(confirm('حذف هذا المرشد؟')){ await db.collection('guides').doc(id).delete(); toast('تم الحذف'); } };
-        window.showDetail = id => { const g = guides.find(x=>x.id===id); if(!g) return; detailGuide=g; document.getElementById('detailName').innerHTML=`⭐ ${esc(g.name)}`; document.getElementById('detailContent').innerHTML=`<div style="text-align:center;margin-bottom:12px;">${g.guidePhoto?`<img src="${esc(g.guidePhoto)}" style="width:90px;height:90px;border-radius:50%;cursor:pointer;margin:5px;" onclick="viewImage('${esc(g.guidePhoto)}')">`:'<div style="width:90px;height:90px;border-radius:50%;background:var(--bg-body);display:inline-flex;align-items:center;justify-content:center;">📷</div>'}</div><div style="background:var(--bg-body);padding:14px;border-radius:18px;font-size:13px;"><p>📞 <a href="tel:${esc(g.phone)}" style="color:var(--gold);">${esc(g.phone)}</a></p><p>🚐 ${esc(g.transportType||'—')}</p><p>🚍 <span class="badge badge-plate">${esc(g.plateNumber||'—')}</span></p><p>🏢 ${esc(g.agency||'—')}</p><p>📝 ${esc(g.notes||'—')}</p><p>🔒 ${g.visibility==='public'?'عام':'خاص'}</p></div>`; const visDiv=document.getElementById('detailVisDiv'); if(g.userId===currentUser?.uid){ visDiv.innerHTML=`<button class="btn-save" id="toggleVisBtn" style="background:var(--gold);">${g.visibility==='public'?'🔒 جعله خاصاً':'🌍 نشره للعامة'}</button>`; setTimeout(()=>{ document.getElementById('toggleVisBtn')?.addEventListener('click',async()=>{ const nv=g.visibility==='public'?'private':'public'; await db.collection('guides').doc(g.id).update({ visibility:nv }); toast('تم تحديث الخصوصية'); document.getElementById('detailModal').classList.remove('show'); }); },100); }else visDiv.innerHTML=''; document.getElementById('detailModal').classList.add('show'); };
-        window.openShare = id => { const g = guides.find(x=>x.id===id); if(!g) return; const msg = `*${g.name}*\n📞 ${g.phone}\n🚐 ${g.transportType||''}\n🚍 لوحة: ${g.plateNumber||''}\n🏢 ${g.agency||''}`; document.getElementById('shareMsg').value=msg; document.getElementById('multiShareModal').classList.add('show'); };
-        function resetForm(){ editId=null; selectedColor='#e94560'; guidePhotoData=''; busPhotoData=''; ['gName','gPhone','gPlate','gTransport','gAgency','gNotes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('guidePreviewWrap').style.display='none'; document.getElementById('busPreviewWrap').style.display='none'; document.getElementById('gVisibility').value='private'; document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.classList.remove('selected')); document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected'); document.getElementById('modalTitle').textContent='➕ إضافة مرشد'; }
-
-        // ========== قائمة الأصدقاء ==========
-        async function loadAllUsers() { if (!currentUser) return; const snap = await db.collection('users').get(); allUsers = []; snap.forEach(doc => { if (doc.id !== currentUser.uid) allUsers.push({ uid: doc.id, ...doc.data() }); }); allUsers.forEach(u => { rtdb.ref('presence/' + u.uid).on('value', snap => { presenceData[u.uid] = snap.val()?.online || false; renderFriendsList(); }); }); renderFriendsList(); }
-        function renderFriendsList() { const container = document.getElementById('friendsList'); if (!container) return; const html = allUsers.map(u => { const online = presenceData[u.uid] || false; return `<div class="friend-item"><div class="friend-avatar"><img src="${u.photoURL || 'https://via.placeholder.com/52'}" onerror="this.src='https://via.placeholder.com/52'"><div class="status-dot ${online ? 'online' : 'offline'}"></div></div><div class="friend-name">${esc(u.displayName || u.email.split('@')[0])}</div></div>`; }).join(''); container.innerHTML = html; document.getElementById('onlineCountBadge').innerHTML = `🟢 ${Object.values(presenceData).filter(v=>v===true).length + 1} متصل`; }
-
-        // ========== نظام الدردشة الجماعية ==========
-        let unsubscribeMessages = null;
-        function listenGroupMessages() { if (unsubscribeMessages) unsubscribeMessages(); if (!currentUser) return; unsubscribeMessages = db.collection('groupMessages').orderBy('timestamp', 'asc').onSnapshot(async snapshot => { const now = new Date(); const toDelete = []; snapshot.forEach(doc => { const data = doc.data(); const expiryOpen = data.openedBy?.[currentUser.uid]; if (expiryOpen && (now - expiryOpen.toDate()) > 5 * 60 * 1000) toDelete.push(doc.id); else if (!expiryOpen && data.timestamp && (now - data.timestamp.toDate()) > 24 * 60 * 60 * 1000) toDelete.push(doc.id); }); for (const id of toDelete) await db.collection('groupMessages').doc(id).delete(); const cleanSnap = await db.collection('groupMessages').orderBy('timestamp', 'asc').get(); chatMessages = []; cleanSnap.forEach(doc => chatMessages.push({ id: doc.id, ...doc.data() })); renderGroupMessages(); }); }
-        function renderGroupMessages() { const area = document.getElementById('messagesArea'); if (!area) return; if (!chatMessages.length) { area.innerHTML = '<div class="loading-msg">💬 لا توجد رسائل بعد، كن أول من يرحب!</div>'; return; } area.innerHTML = chatMessages.map(m => { const mine = m.senderId === currentUser.uid; const sender = mine ? (userProfile.displayName || 'أنت') : (m.senderName || 'مستخدم'); let content = ''; if (m.type === 'text') content = esc(m.text); else if (m.type === 'image') content = `<img src="${m.imageUrl}" class="msg-image" onclick="viewImage('${m.imageUrl}')">`; else if (m.type === 'voice') { content = `<div class="voice-player"><button class="voice-play-btn" id="play-${m.id}" onclick="playGroupVoiceMsg('${m.id}', '${m.audioUrl}')">▶️</button><canvas class="waveform-canvas" id="wave-${m.id}" width="120" height="34"></canvas></div>`; setTimeout(() => drawWaveform(`#wave-${m.id}`, m.id), 50); } else if (m.type === 'location') content = `<div class="msg-location-card" onclick="window.open('https://maps.google.com/?q=${m.lat},${m.lng}','_blank')">📍 ${m.locationName || 'موقع حالي'}</div>`; return `<div class="msg-wrapper ${mine ? 'mine' : 'friend'}"><div class="msg-bubble"><div class="msg-sender">${esc(sender)}</div>${content}<div class="msg-time">${new Date(m.timestamp?.toDate?.() || Date.now()).toLocaleTimeString()}</div></div></div>`; }).join(''); area.scrollTop = area.scrollHeight; chatMessages.forEach(async msg => { if (!msg.openedBy?.[currentUser.uid]) await db.collection('groupMessages').doc(msg.id).update({ [`openedBy.${currentUser.uid}`]: firebase.firestore.FieldValue.serverTimestamp() }); }); }
-        function drawWaveform(canvasId, seed) { const canvas = document.querySelector(canvasId); if (!canvas) return; const w = canvas.width, h = canvas.height, ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#25D366'; const bars = 24, barW = (w / bars) * 0.6, gap = (w / bars) * 0.4; let hash = 0; for (let i = 0; i < seed.length; i++) hash = ((hash << 5) - hash) + seed.charCodeAt(i); for (let i = 0; i < bars; i++) { const val = Math.sin(hash + i * 0.5) * 0.5 + 0.5; const barH = 4 + val * (h - 8); const x = i * (barW + gap); const y = (h - barH) / 2; ctx.fillRect(x, y, barW, barH); } }
-        window.playGroupVoiceMsg = (msgId, url) => { if (currentAudio && currentAudio._msgId === msgId) { if (currentAudio.paused) currentAudio.play(); else currentAudio.pause(); return; } if (currentAudio) currentAudio.pause(); const audio = new Audio(url); audio._msgId = msgId; currentAudio = audio; audio.play().catch(() => toast('⚠️ تعذر تشغيل الصوت', true)); audio.onended = () => { currentAudio = null; vibrate(10); }; vibrate(10); };
-        async function sendGroupMessage(type, extra) { if (!currentUser) return toast('الرجاء تسجيل الدخول أولاً', true); await db.collection('groupMessages').add({ senderId: currentUser.uid, senderName: userProfile.displayName || currentUser.email, senderPhoto: userProfile.photoURL || '', type, timestamp: firebase.firestore.FieldValue.serverTimestamp(), openedBy: { [currentUser.uid]: firebase.firestore.FieldValue.serverTimestamp() }, ...extra }); toast('✅ تم إرسال الرسالة للمجموعة'); }
-
-        // PTT Voice مع منع النسخ ومؤثرات
-        async function startGroupRecording() { if (recording) return; try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream); audioChunks = []; mediaRecorder.ondataavailable = e => audioChunks.push(e.data); mediaRecorder.onstop = async () => { const blob = new Blob(audioChunks, { type: 'audio/webm' }); const ref = storage.ref(`voice/${currentUser.uid}_${Date.now()}.webm`); await ref.put(blob); const url = await ref.getDownloadURL(); await sendGroupMessage('voice', { audioUrl: url }); stream.getTracks().forEach(t => t.stop()); }; mediaRecorder.start(); recording = true; document.getElementById('pttMain').classList.add('recording'); vibrate(15); toast('🎙️ جاري التسجيل... ارفع إصبعك للإرسال'); } catch (e) { toast('⚠️ يرجى منح صلاحية الميكروفون', true); } }
-        function stopGroupRecording() { if (mediaRecorder && recording) { mediaRecorder.stop(); recording = false; document.getElementById('pttMain').classList.remove('recording'); } }
-        const pttBtn = document.getElementById('pttMain'); pttBtn.addEventListener('contextmenu', (e) => e.preventDefault()); pttBtn.addEventListener('dragstart', (e) => e.preventDefault()); pttBtn.addEventListener('selectstart', (e) => e.preventDefault()); pttBtn.addEventListener('pointerdown', startGroupRecording); pttBtn.addEventListener('pointerup', stopGroupRecording); pttBtn.addEventListener('pointerleave', stopGroupRecording);
-
-        // التتبع الحي
-        function stopLiveTracking() { if (liveTrackingInterval) { clearInterval(liveTrackingInterval); liveTrackingInterval = null; } if (liveTimerInterval) { clearInterval(liveTimerInterval); liveTimerInterval = null; } liveActive = false; document.getElementById('liveTrackBtn').style.background = ''; document.getElementById('liveTimerDisplay').textContent = '0:00'; }
-        function startLiveTracking(durationSec) { if (durationSec <= 0) { stopLiveTracking(); toast('🛑 تم إيقاف التتبع الحي'); return; } if (liveActive) stopLiveTracking(); liveRemaining = durationSec; liveActive = true; document.getElementById('liveTrackBtn').style.background = '#ef4444'; function updateDisplay() { if (!liveActive) return; const mins = Math.floor(liveRemaining / 60); const secs = liveRemaining % 60; document.getElementById('liveTimerDisplay').textContent = `${mins}:${secs < 10 ? '0' + secs : secs}`; } updateDisplay(); liveTrackingInterval = setInterval(() => { if (!liveActive) return; navigator.geolocation.getCurrentPosition(pos => { sendGroupMessage('location', { lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: '🛰️ تتبع حي' }); }, () => {}); }, 30000); liveTimerInterval = setInterval(() => { if (!liveActive) return; if (liveRemaining <= 0) { stopLiveTracking(); toast('⏰ انتهى التتبع الحي'); } else { liveRemaining--; updateDisplay(); } }, 1000); toast(`🛰️ بدء التتبع الحي لمدة ${durationSec / 60} دقيقة`); }
-
-        // ========== بقية الوظائف ==========
-        async function loadProfile() { if (!currentUser) return; const doc = await db.collection('users').doc(currentUser.uid).get(); if (doc.exists) userProfile = doc.data(); else { userProfile = { displayName: '', photoURL: '', job: '' }; await db.collection('users').doc(currentUser.uid).set({ email: currentUser.email }); } updateProfileUI(); }
-        function updateProfileUI() { document.getElementById('profilePicPreview').src = userProfile.photoURL || 'https://via.placeholder.com/100'; document.getElementById('profileName').value = userProfile.displayName || ''; document.getElementById('profileJob').value = userProfile.job || ''; document.getElementById('floatingAvatar').src = userProfile.photoURL || ''; }
-        document.getElementById('profileBtn').onclick = () => document.getElementById('profileModal').classList.add('show'); document.getElementById('closeProfileBtn').onclick = () => document.getElementById('profileModal').classList.remove('show'); document.getElementById('profilePicUpload').onclick = () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = async e => { if (e.target.files[0]) { const reader = new FileReader(); reader.onload = async ev => { const url = await uploadToCloudinary(ev.target.result); userProfile.photoURL = url; await db.collection('users').doc(currentUser.uid).set({ photoURL: url }, { merge: true }); updateProfileUI(); toast('✅ تم تحديث الصورة'); }; reader.readAsDataURL(e.target.files[0]); } }; inp.click(); };
-        document.getElementById('saveProfileBtn').onclick = async () => { userProfile.displayName = sanitize(document.getElementById('profileName').value.trim()); userProfile.job = sanitize(document.getElementById('profileJob').value.trim()); await db.collection('users').doc(currentUser.uid).set(userProfile, { merge: true }); toast('✅ تم حفظ الملف الشخصي'); document.getElementById('profileModal').classList.remove('show'); loadAllUsers(); };
-        function setupPresence() { if (!currentUser) return; const userRef = rtdb.ref('presence/' + currentUser.uid); userRef.set({ online: true, lastSeen: firebase.database.ServerValue.TIMESTAMP, name: userProfile.displayName || currentUser.email, photo: userProfile.photoURL || '' }); userRef.onDisconnect().set({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP }); }
-        async function login(email, pw) { try { await auth.signInWithEmailAndPassword(email.trim(), pw); } catch (e) { toast(e.message, true); } }
-        auth.onAuthStateChanged(async user => { if (user) { currentUser = user; document.getElementById('loginScreen').classList.add('hide'); document.getElementById('signOutBtn').style.display = 'flex'; document.getElementById('userInfo').innerHTML = `<strong>${user.email}</strong>`; await loadProfile(); setupPresence(); listenGuides(); listenGroupMessages(); loadAllUsers(); } else { currentUser = null; guides = []; renderGuides(); document.getElementById('loginScreen').classList.remove('hide'); } });
-        document.getElementById('loginBtn').onclick = () => login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); document.getElementById('signOutBtn').onclick = () => { if (confirm('تسجيل الخروج؟')) auth.signOut(); };
-
-        // أحداث الواجهة الرئيسية
-        document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
-        document.getElementById('closeSidebar').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
-        document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
-        document.getElementById('darkModeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('dark', document.body.classList.contains('dark') ? '1' : '0'); };
-        if (localStorage.getItem('dark') === '1') document.body.classList.add('dark');
-        document.getElementById('filterToggleBtn').onclick = () => document.getElementById('colorsPanel').classList.toggle('show');
-        document.querySelectorAll('.color-dot').forEach(d => { d.onclick = () => { colorFilter = d.dataset.color; document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active')); d.classList.add('active'); renderGuides(); document.getElementById('colorsPanel').classList.remove('show'); }; });
-        document.getElementById('addGuideBtn').onclick = () => { resetForm(); document.getElementById('guideModal').classList.add('show'); };
-        document.getElementById('cancelGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
-        document.getElementById('closeDetailBtn').onclick = () => document.getElementById('detailModal').classList.remove('show');
-        document.getElementById('closeFullImage').onclick = () => document.getElementById('fullImageModal').classList.remove('show');
-        document.getElementById('searchInput').oninput = renderGuides;
-        document.getElementById('syncBtn').onclick = () => toast('🔄 المزامنة التلقائية مفعلة');
-        document.getElementById('exportJsonBtn').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], { type: 'application/json' })); a.download = `F-NotePro_${new Date().toISOString().slice(0, 10)}.json`; a.click(); toast('💾 تم تصدير JSON'); };
-        document.getElementById('exportPdfBtn').onclick = () => { const el = document.createElement('div'); el.dir = 'rtl'; el.innerHTML = '<h1 style="text-align:center;color:#e94560;">F-Note Pro Max</h1><hr>'; guides.forEach(g => { el.innerHTML += `<div style="border:1px solid #ccc;border-radius:12px;padding:10px;margin:8px 0;"><b>${esc(g.name)}</b><br>📞 ${esc(g.phone)}<br>🚐 ${esc(g.transportType || '—')}</div>`; }); html2pdf().from(el).set({ margin: 5, filename: `F-NotePro_${new Date().toISOString().slice(0, 10)}.pdf` }).save(); toast('📄 جاري تصدير PDF'); };
-        document.getElementById('shiftReportBtn').onclick = async () => { toast('⏳ جاري إعداد تقرير الوردية...'); const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFontSize(18); doc.text('تقرير المناوبة اليومي - F-Note Pro Max', 10, 20); doc.setFontSize(10); doc.text(`التاريخ: ${new Date().toLocaleDateString('ar')} | المستخدم: ${userProfile.displayName || currentUser?.email}`, 10, 30); doc.line(10, 35, 200, 35); let y = 42; const snap = await db.collection('groupMessages').orderBy('timestamp', 'desc').limit(50).get(); snap.forEach(d => { if (y > 270) { doc.addPage(); y = 20; } const m = d.data(); doc.setFontSize(8); doc.text(`[${m.type}] ${new Date(m.timestamp?.toDate?.() || Date.now()).toLocaleTimeString()}`, 10, y); y += 6; }); doc.save(`تقرير_المجموعة_${new Date().toISOString().slice(0, 10)}.pdf`); toast('📋 تم تصدير التقرير'); };
-        document.getElementById('floatingModeBtn').onclick = () => { const bubble = document.getElementById('floatingBubble'); if (floatingMode) { bubble.classList.remove('show'); floatingMode = false; } else { bubble.classList.add('show'); floatingMode = true; document.getElementById('floatingAvatar').src = userProfile.photoURL || ''; enableDrag(bubble); } };
-        function enableDrag(el) { let startX, startY, initialX, initialY, longPress; el.addEventListener('touchstart', (e) => { const t = e.touches[0]; startX = t.clientX; startY = t.clientY; initialX = el.offsetLeft; initialY = el.offsetTop; el.style.transition = 'none'; longPress = setTimeout(() => broadcastSOS(), 1500); }, { passive: false }); el.addEventListener('touchmove', (e) => { e.preventDefault(); const t = e.touches[0]; const dx = t.clientX - startX, dy = t.clientY - startY; el.style.left = Math.max(0, Math.min(window.innerWidth - 60, initialX + dx)) + 'px'; el.style.top = Math.max(0, Math.min(window.innerHeight - 60, initialY + dy)) + 'px'; }, { passive: false }); el.addEventListener('touchend', () => { clearTimeout(longPress); el.style.transition = ''; }); el.addEventListener('click', () => { if (floatingMode) { document.getElementById('floatingBubble').classList.remove('show'); floatingMode = false; document.querySelector('.nav-tab[data-page="pageChat"]').click(); toast('💬 تم استعادة الدردشة'); } }); }
-        async function broadcastSOS() { if (!currentUser) return; vibrate([200, 100, 200, 100, 400]); showConfirm('استغاثة عاجلة', 'هل تريد إرسال تنبيه استغاثة لجميع أفراد المجموعة؟', async () => { await sendGroupMessage('text', { text: `🚨 **تنبيه استغاثة من ${userProfile.displayName || currentUser.email}** 🚨\n⏰ ${new Date().toLocaleString()}` }); }); }
-
-        document.getElementById('voiceSearchBtn').onclick = () => { if (!('webkitSpeechRecognition' in window)) return toast('غير مدعوم', true); const rec = new webkitSpeechRecognition(); rec.lang = 'ar'; rec.start(); rec.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); }; };
-        
-        // === ربط أزرار الدردشة ===
-        document.getElementById('attachImageBtn').onclick = () => { 
-            const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-            inp.onchange = async e => {
-                if (e.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = async ev => {
-                        showConfirm('إرسال صورة', 'هل تريد إرسال هذه الصورة للمجموعة؟', async () => {
-                            toast('📸 جاري رفع الصورة...');
-                            const url = await uploadToCloudinary(ev.target.result);
-                            await sendGroupMessage('image', { imageUrl: url });
-                        });
-                    };
-                    reader.readAsDataURL(e.target.files[0]);
-                }
-            };
-            inp.click();
+    <script defer>
+        // ============ FIREBASE CONFIG ============
+        // SECURITY: Replace with your own Firebase config
+        // IMPORTANT: Restrict your API key in Google Cloud Console
+        // IMPORTANT: Set proper Firestore Security Rules
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY_HERE",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
         };
-        
-        document.getElementById('sendLocationBtn').onclick = () => {
-            navigator.geolocation.getCurrentPosition(pos => {
-                showConfirm('إرسال الموقع', 'هل تريد إرسال موقعك الحالي للمجموعة؟', async () => {
-                    await sendGroupMessage('location', { lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: '📍 موقع حالي' });
-                });
-            }, () => toast('⚠️ تعذر تحديد الموقع', true));
-        };
-        
-        document.getElementById('liveTrackBtn').onclick = () => {
-            const val = parseInt(document.getElementById('trackDurationSelect').value);
-            if (liveActive) stopLiveTracking();
-            startLiveTracking(val);
-        };
-        
-        const emojiBtn = document.getElementById('emojiBtn');
-        const emojiPicker = document.getElementById('emojiPicker');
-        emojiBtn.onclick = () => emojiPicker.classList.toggle('show');
-        document.querySelectorAll('#emojiPicker span').forEach(span => {
-            span.onclick = () => {
-                showConfirm('إرسال إيموجي', `هل تريد إرسال "${span.textContent}" للمجموعة؟`, async () => {
-                    await sendGroupMessage('text', { text: span.textContent });
-                    emojiPicker.classList.remove('show');
-                });
-            };
-        });
-        
-        document.getElementById('guideUploadCard').onclick = () => pickImage('guide');
-        document.getElementById('busUploadCard').onclick = () => pickImage('bus');
-        document.getElementById('saveGuideBtn').onclick = async () => { const name = document.getElementById('gName').value.trim(), phone = document.getElementById('gPhone').value.trim(); if (!name || !phone) return toast('⚠️ الاسم والهاتف مطلوبان', true); if (!validPhone(phone)) return toast('⚠️ رقم الهاتف غير صالح', true); const data = { id: editId, name, phone, plate: document.getElementById('gPlate').value.trim(), color: selectedColor, transport: document.getElementById('gTransport').value.trim(), agency: document.getElementById('gAgency').value.trim(), notes: document.getElementById('gNotes').value.trim(), fav: editId ? (guides.find(g => g.id === editId)?.favorite || false) : false, vis: document.getElementById('gVisibility').value }; try { await saveGuide(data); toast('✅ تم حفظ المرشد'); document.getElementById('guideModal').classList.remove('show'); resetForm(); } catch (e) { toast('❌ فشل الحفظ: ' + e.message, true); } };
-        document.getElementById('confirmShareBtn').onclick = () => { const msg = document.getElementById('shareMsg').value; if (msg) window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'); document.getElementById('multiShareModal').classList.remove('show'); };
-        document.getElementById('closeMultiBtn').onclick = () => document.getElementById('multiShareModal').classList.remove('show');
-        document.getElementById('detailShareBtn').onclick = () => { if (detailGuide) openShare(detailGuide.id); };
-        
-        const colorContainer = document.getElementById('colorSelector');
-        const colorList = ['#e94560', '#2c7da0', '#e76f51', '#2a9d8f', '#e9c46a', '#9b5de5', '#06d6a0', '#ff006e'];
-        colorContainer.innerHTML = colorList.map(c => `<div class="color-option" data-color="${c}" style="background:${c};"></div>`).join('');
-        document.querySelectorAll('#colorSelector .color-option').forEach(o => { o.onclick = () => { document.querySelectorAll('#colorSelector .color-option').forEach(x => x.classList.remove('selected')); o.classList.add('selected'); selectedColor = o.dataset.color; }; });
-        document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected');
-        
-        document.querySelectorAll('.nav-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                document.getElementById(tab.dataset.page).classList.add('active');
-                if (tab.dataset.page === 'pageChat') { unreadCount = 0; updateFloatingBadge(); }
-            });
-        });
-        
-        function updateFloatingBadge() { const badge = document.getElementById('floatingBadge'); if (unreadCount > 0) { badge.style.display = 'flex'; badge.textContent = unreadCount > 99 ? '99+' : unreadCount; } else badge.style.display = 'none'; }
-        
-        let lastShake = 0;
-        window.addEventListener('devicemotion', e => {
-            const acc = e.accelerationIncludingGravity;
-            if (!acc) return;
-            const mag = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
-            if (mag > 25 && Date.now() - lastShake > 1000 && recording) {
-                lastShake = Date.now();
-                if (mediaRecorder && recording) mediaRecorder.stop();
-                recording = false;
-                document.getElementById('pttMain').classList.remove('recording');
-                toast('🎤 تم إلغاء التسجيل (هز الهاتف)');
+
+        // ============ GLOBAL STATE ============
+        let app, auth, db;
+        let currentUser = null;
+        let currentNoteId = null;
+        let unsubscribeNotes = null;
+        let unsubscribeChats = null;
+
+        // ============ INITIALIZATION ============
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Initialize Lucide icons
+                if (window.lucide) lucide.createIcons();
+                
+                // Wait for Firebase to load
+                await waitForFirebase();
+                
+                // Initialize Firebase
+                app = window.firebaseApp.initializeApp(firebaseConfig);
+                auth = window.firebaseAuth.getAuth(app);
+                db = window.firebaseFirestore.getFirestore(app);
+                
+                // Setup auth state listener
+                window.firebaseAuth.onAuthStateChanged(auth, handleAuthStateChange);
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Check RTL preference
+                loadRTLPreference();
+                
+                console.log('F-Note Pro Max initialized successfully');
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showToast('Failed to initialize app. Check console for details.', 'error');
+                hideLoading();
             }
         });
+
+        function waitForFirebase() {
+            return new Promise((resolve) => {
+                const check = () => {
+                    if (window.firebaseApp && window.firebaseAuth && window.firebaseFirestore) {
+                        resolve();
+                    } else {
+                        setTimeout(check, 50);
+                    }
+                };
+                check();
+            });
+        }
+
+        // ============ AUTH HANDLERS ============
+        function handleAuthStateChange(user) {
+            hideLoading();
+            if (user) {
+                currentUser = user;
+                showMainApp();
+                loadUserData();
+            } else {
+                currentUser = null;
+                showAuthScreen();
+                cleanupSubscriptions();
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            
+            if (!email || !password) {
+                showAuthError('Please enter email and password');
+                return;
+            }
+            
+            try {
+                showButtonLoading('loginBtn', true);
+                await window.firebaseAuth.signInWithEmailAndPassword(auth, email, password);
+                showToast('Welcome back!', 'success');
+            } catch (error) {
+                handleFirebaseError(error);
+            } finally {
+                showButtonLoading('loginBtn', false);
+            }
+        }
+
+        async function handleSignup() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            
+            if (!email || !password) {
+                showAuthError('Please enter email and password');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showAuthError('Password must be at least 6 characters');
+                return;
+            }
+            
+            try {
+                showButtonLoading('signupBtn', true);
+                await window.firebaseAuth.createUserWithEmailAndPassword(auth, email, password);
+                showToast('Account created successfully!', 'success');
+            } catch (error) {
+                handleFirebaseError(error);
+            } finally {
+                showButtonLoading('signupBtn', false);
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await window.firebaseAuth.signOut(auth);
+                showToast('Logged out successfully', 'success');
+            } catch (error) {
+                handleFirebaseError(error);
+            }
+        }
+
+        // ============ FIREBASE ERROR HANDLING ============
+        function handleFirebaseError(error) {
+            console.error('Firebase error:', error);
+            let message = 'An error occurred. Please try again.';
+            
+            switch (error.code) {
+                case 'auth/invalid-email':
+                    message = 'Invalid email address';
+                    break;
+                case 'auth/user-disabled':
+                    message = 'This account has been disabled';
+                    break;
+                case 'auth/user-not-found':
+                    message = 'No account found with this email';
+                    break;
+                case 'auth/wrong-password':
+                    message = 'Incorrect password';
+                    break;
+                case 'auth/email-already-in-use':
+                    message = 'Email already in use';
+                    break;
+                case 'auth/weak-password':
+                    message = 'Password is too weak';
+                    break;
+                case 'auth/network-request-failed':
+                    message = 'Network error. Check your connection';
+                    break;
+                case 'permission-denied':
+                    message = 'Permission denied. Check Firestore rules';
+                    break;
+                default:
+                    message = error.message;
+            }
+            
+            if (document.getElementById('authScreen').classList.contains('hidden')) {
+                showToast(message, 'error');
+            } else {
+                showAuthError(message);
+            }
+        }
+
+        function showAuthError(message) {
+            const errorEl = document.getElementById('authError');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        // ============ NOTES HANDLERS ============
+        async function loadNotes() {
+            if (!currentUser) return;
+            
+            try {
+                const notesRef = window.firebaseFirestore.collection(db, 'notes');
+                const q = window.firebaseFirestore.query(
+                    notesRef,
+                    window.firebaseFirestore.where('userId', '==', currentUser.uid),
+                    window.firebaseFirestore.orderBy('updatedAt', 'desc')
+                );
+                
+                unsubscribeNotes = window.firebaseFirestore.onSnapshot(q, (snapshot) => {
+                    const notes = [];
+                    snapshot.forEach((doc) => {
+                        notes.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderNotes(notes);
+                }, (error) => {
+                    handleFirebaseError(error);
+                });
+            } catch (error) {
+                handleFirebaseError(error);
+            }
+        }
+
+        function renderNotes(notes) {
+            const grid = document.getElementById('notesGrid');
+            const empty = document.getElementById('notesEmpty');
+            
+            if (notes.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            grid.innerHTML = notes.map(note => `
+                <div class="note-card animate-fade-in" onclick="editNote('${note.id}')">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="font-semibold text-lg truncate">${escapeHtml(note.title || 'Untitled')}</h3>
+                        <button onclick="event.stopPropagation(); deleteNote('${note.id}')" class="btn btn-ghost p-1">
+                            <i data-lucide="trash-2" class="w-4 h-4 text-danger"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm text-text-muted line-clamp-3 mb-3">${escapeHtml(note.content || 'No content')}</p>
+                    <div class="text-xs text-text-muted">
+                        ${formatDate(note.updatedAt?.toDate())}
+                    </div>
+                </div>
+            `).join('');
+            
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            
+            if (!title && !content) {
+                showToast('Please add a title or content', 'error');
+                return;
+            }
+            
+            try {
+                showButtonLoading('saveNoteBtn', true);
+                
+                const noteData = {
+                    title: title || 'Untitled',
+                    content,
+                    userId: currentUser.uid,
+                    updatedAt: window.firebaseFirestore.serverTimestamp()
+                };
+                
+                if (currentNoteId) {
+                    const noteRef = window.firebaseFirestore.doc(db, 'notes', currentNoteId);
+                    await window.firebaseFirestore.updateDoc(noteRef, noteData);
+                    showToast('Note updated', 'success');
+                } else {
+                    noteData.createdAt = window.firebaseFirestore.serverTimestamp();
+                    await window.firebaseFirestore.addDoc(window.firebaseFirestore.collection(db, 'notes'), noteData);
+                    showToast('Note created', 'success');
+                }
+                
+                closeNoteModal();
+            } catch (error) {
+                handleFirebaseError(error);
+            } finally {
+                showButtonLoading('saveNoteBtn', false);
+            }
+        }
+
+        async function deleteNote(noteId) {
+            if (!confirm('Delete this note?')) return;
+            
+            try {
+                await window.firebaseFirestore.deleteDoc(window.firebaseFirestore.doc(db, 'notes', noteId));
+                showToast('Note deleted', 'success');
+            } catch (error) {
+                handleFirebaseError(error);
+            }
+        }
+
+        function editNote(noteId) {
+            // For simplicity, open modal with empty fields
+            // In production, fetch the note data first
+            currentNoteId = noteId;
+            document.getElementById('noteModalTitle').textContent = 'Edit Note';
+            openNoteModal();
+        }
+
+        // ============ UI HELPERS ============
+        function showLoading() {
+            document.getElementById('loadingScreen').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+        }
+
+        function showAuthScreen() {
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('userEmailDisplay').textContent = currentUser.email;
+            document.getElementById('settingsEmail').textContent = currentUser.email;
+            document.getElementById('settingsUID').textContent = currentUser.uid;
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function showButtonLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            if (loading) {
+                btn.disabled = true;
+                btn.dataset.originalText = btn.innerHTML;
+                btn.innerHTML = '<div class="spinner"></div>';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = btn.dataset.originalText;
+            }
+        }
+
+        function openNoteModal() {
+            document.getElementById('noteModal').classList.remove('hidden');
+            document.body.classList.add('no-scroll');
+        }
+
+        function closeNoteModal() {
+            document.getElementById('noteModal').classList.add('hidden');
+            document.body.classList.remove('no-scroll');
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            currentNoteId = null;
+            document.getElementById('noteModalTitle').textContent = 'New Note';
+        }
+
+        function switchView(viewName) {
+            ['notesView', 'chatView', 'settingsView'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewName + 'View').classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.view === viewName);
+            });
+        }
+
+        function toggleRTL() {
+            const html = document.documentElement;
+            const isRTL = html.getAttribute('dir') === 'rtl';
+            html.setAttribute('dir', isRTL ? 'ltr' : 'rtl');
+            localStorage.setItem('rtl', !isRTL);
+            showToast(isRTL ? 'LTR enabled' : 'RTL enabled', 'success');
+        }
+
+        function loadRTLPreference() {
+            const isRTL = localStorage.getItem('rtl') === 'true';
+            document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+        }
+
+        function loadUserData() {
+            loadNotes();
+        }
+
+        function cleanupSubscriptions() {
+            if (unsubscribeNotes) unsubscribeNotes();
+            if (unsubscribeChats) unsubscribeChats();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('loginBtn').addEventListener('click', handleLogin);
+            document.getElementById('signupBtn').addEventListener('click', handleSignup);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            document.getElementById('rtlToggle').addEventListener('click', toggleRTL);
+            document.getElementById('newNoteBtn').addEventListener('click', openNoteModal);
+            document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
+            document.getElementById('deleteAccountBtn').addEventListener('click', () => {
+                showToast('Account deletion requires backend implementation', 'error');
+            });
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => switchView(item.dataset.view));
+            });
+        }
+
+        // ============ UTILITY FUNCTIONS ============
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(date) {
+            if (!date) return 'Just now';
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        // ============ SECURITY NOTES ============
+        /*
+        FIREBASE SECURITY RULES (Add to Firestore):
         
-        console.log('✅ النظام النهائي: منبثق، تسجيل صوتي بلا نسخ، صور وموقع فورية، تتبع حي بأطوال مختلفة');
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /notes/{noteId} {
+              allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+              allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+            }
+            match /chats/{chatId} {
+              allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
+            }
+          }
+        }
+        
+        ADDITIONAL SECURITY:
+        1. Restrict API key in Google Cloud Console to your domain
+        2. Enable App Check for additional protection
+        3. Use Firebase Auth custom claims for role-based access
+        4. Implement rate limiting via Cloud Functions
+        5. Sanitize all user input before storing
+        6. Use HTTPS only in production
+        */
+
+        // Make functions available globally for onclick handlers
+        window.editNote = editNote;
+        window.deleteNote = deleteNote;
+        window.closeNoteModal = closeNoteModal;
     </script>
 </body>
 </html>
