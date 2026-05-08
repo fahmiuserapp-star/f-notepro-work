@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#e94560">
-    <title>F-Note Pro Max | فريق العمل + تتبع حي + صور</title>
+    <title>F-Note Pro Max | فريق العمل + بث مباشر متكامل</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -320,6 +320,7 @@
         let currentAudio = null, floatingMode = false;
         let allUsers = [], presenceData = {};
         let liveTrackingInterval = null, liveRemaining = 0, liveTimerInterval = null;
+        let liveActive = false;
 
         function toast(msg, isErr = false, action = null) { const t = document.createElement('div'); t.className = 'toast'; t.style.background = isErr ? '#ef4444cc' : '#1e293bcc'; const span = document.createElement('span'); span.textContent = msg; t.appendChild(span); if(action) { const btn = document.createElement('button'); btn.textContent = action.label; btn.className = 'toast-btn'; btn.onclick = () => { action.callback(); t.remove(); }; t.appendChild(btn); } document.body.appendChild(t); setTimeout(() => t.remove(), 5000); }
         function esc(s) { if (!s) return ''; return String(s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
@@ -384,11 +385,19 @@
         auth.onAuthStateChanged(async user => { if (user) { currentUser = user; document.getElementById('loginScreen').classList.add('hide'); document.getElementById('signOutBtn').style.display = 'flex'; document.getElementById('userInfo').innerHTML = `<strong>${user.email}</strong>`; await loadProfile(); setupPresence(); listenGuides(); listenGroupMessages(); loadAllUsers(); } else { currentUser = null; guides = []; renderGuides(); document.getElementById('loginScreen').classList.remove('hide'); } });
         document.getElementById('loginBtn').onclick = () => login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); document.getElementById('signOutBtn').onclick = () => { if (confirm('تسجيل الخروج؟')) auth.signOut(); };
 
-        document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }; document.getElementById('closeSidebar').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }; document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
-        document.getElementById('darkModeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('dark', document.body.classList.contains('dark') ? '1' : '0'); }; if (localStorage.getItem('dark') === '1') document.body.classList.add('dark');
+        // أحداث الواجهة الرئيسية
+        document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
+        document.getElementById('closeSidebar').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+        document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+        document.getElementById('darkModeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('dark', document.body.classList.contains('dark') ? '1' : '0'); };
+        if (localStorage.getItem('dark') === '1') document.body.classList.add('dark');
         document.getElementById('filterToggleBtn').onclick = () => document.getElementById('colorsPanel').classList.toggle('show');
         document.querySelectorAll('.color-dot').forEach(d => { d.onclick = () => { colorFilter = d.dataset.color; document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active')); d.classList.add('active'); renderGuides(); document.getElementById('colorsPanel').classList.remove('show'); }; });
-        document.getElementById('addGuideBtn').onclick = () => { resetForm(); document.getElementById('guideModal').classList.add('show'); }; document.getElementById('cancelGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show'); document.getElementById('closeDetailBtn').onclick = () => document.getElementById('detailModal').classList.remove('show'); document.getElementById('closeFullImage').onclick = () => document.getElementById('fullImageModal').classList.remove('show'); document.getElementById('searchInput').oninput = renderGuides;
+        document.getElementById('addGuideBtn').onclick = () => { resetForm(); document.getElementById('guideModal').classList.add('show'); };
+        document.getElementById('cancelGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
+        document.getElementById('closeDetailBtn').onclick = () => document.getElementById('detailModal').classList.remove('show');
+        document.getElementById('closeFullImage').onclick = () => document.getElementById('fullImageModal').classList.remove('show');
+        document.getElementById('searchInput').oninput = renderGuides;
         document.getElementById('syncBtn').onclick = () => toast('🔄 المزامنة التلقائية مفعلة');
         document.getElementById('exportJsonBtn').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], { type: 'application/json' })); a.download = `F-NotePro_${new Date().toISOString().slice(0, 10)}.json`; a.click(); toast('💾 تم تصدير JSON'); };
         document.getElementById('exportPdfBtn').onclick = () => { const el = document.createElement('div'); el.dir = 'rtl'; el.innerHTML = '<h1 style="text-align:center;color:#e94560;">F-Note Pro Max</h1><hr>'; guides.forEach(g => { el.innerHTML += `<div style="border:1px solid #ccc;border-radius:12px;padding:10px;margin:8px 0;"><b>${esc(g.name)}</b><br>📞 ${esc(g.phone)}<br>🚐 ${esc(g.transportType || '—')}</div>`; }); html2pdf().from(el).set({ margin: 5, filename: `F-NotePro_${new Date().toISOString().slice(0, 10)}.pdf` }).save(); toast('📄 جاري تصدير PDF'); };
@@ -398,19 +407,91 @@
         async function broadcastSOS() { if (!currentUser) return; vibrate([200, 100, 200, 100, 400]); showConfirm('استغاثة عاجلة', 'هل تريد إرسال تنبيه استغاثة لجميع أفراد المجموعة؟', async () => { await sendGroupMessage('text', { text: `🚨 **تنبيه استغاثة من ${userProfile.displayName || currentUser.email}** 🚨\n⏰ ${new Date().toLocaleString()}` }); }); }
 
         document.getElementById('voiceSearchBtn').onclick = () => { if (!('webkitSpeechRecognition' in window)) return toast('غير مدعوم', true); const rec = new webkitSpeechRecognition(); rec.lang = 'ar'; rec.start(); rec.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); }; };
-        document.getElementById('attachImageBtn').onclick = () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = async e => { if (e.target.files[0]) { const reader = new FileReader(); reader.onload = async ev => { showConfirm('إرسال صورة', 'هل تريد إرسال هذه الصورة للمجموعة؟', async () => { toast('📸 جاري رفع الصورة...'); const url = await uploadToCloudinary(ev.target.result); await sendGroupMessage('image', { imageUrl: url }); }); }; reader.readAsDataURL(e.target.files[0]); } }; inp.click(); };
-        document.getElementById('sendLocationBtn').onclick = () => { navigator.geolocation.getCurrentPosition(pos => { showConfirm('إرسال الموقع', 'هل تريد إرسال موقعك الحالي للمجموعة؟', async () => { await sendGroupMessage('location', { lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: '📍 موقع حالي' }); }); }, () => toast('⚠️ تعذر تحديد الموقع', true)); };
-        document.getElementById('liveTrackBtn').onclick = () => { const val = parseInt(document.getElementById('trackDurationSelect').value); if (liveActive) stopLiveTracking(); startLiveTracking(val); };
-        const emojiBtn = document.getElementById('emojiBtn'); const emojiPicker = document.getElementById('emojiPicker'); emojiBtn.onclick = () => emojiPicker.classList.toggle('show'); document.querySelectorAll('#emojiPicker span').forEach(span => { span.onclick = () => { showConfirm('إرسال إيموجي', `هل تريد إرسال "${span.textContent}" للمجموعة؟`, async () => { await sendGroupMessage('text', { text: span.textContent }); emojiPicker.classList.remove('show'); }); }; });
-        document.getElementById('guideUploadCard').onclick = () => pickImage('guide'); document.getElementById('busUploadCard').onclick = () => pickImage('bus');
+        
+        // === ربط أزرار الدردشة ===
+        document.getElementById('attachImageBtn').onclick = () => { 
+            const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+            inp.onchange = async e => {
+                if (e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = async ev => {
+                        showConfirm('إرسال صورة', 'هل تريد إرسال هذه الصورة للمجموعة؟', async () => {
+                            toast('📸 جاري رفع الصورة...');
+                            const url = await uploadToCloudinary(ev.target.result);
+                            await sendGroupMessage('image', { imageUrl: url });
+                        });
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            };
+            inp.click();
+        };
+        
+        document.getElementById('sendLocationBtn').onclick = () => {
+            navigator.geolocation.getCurrentPosition(pos => {
+                showConfirm('إرسال الموقع', 'هل تريد إرسال موقعك الحالي للمجموعة؟', async () => {
+                    await sendGroupMessage('location', { lat: pos.coords.latitude, lng: pos.coords.longitude, locationName: '📍 موقع حالي' });
+                });
+            }, () => toast('⚠️ تعذر تحديد الموقع', true));
+        };
+        
+        document.getElementById('liveTrackBtn').onclick = () => {
+            const val = parseInt(document.getElementById('trackDurationSelect').value);
+            if (liveActive) stopLiveTracking();
+            startLiveTracking(val);
+        };
+        
+        const emojiBtn = document.getElementById('emojiBtn');
+        const emojiPicker = document.getElementById('emojiPicker');
+        emojiBtn.onclick = () => emojiPicker.classList.toggle('show');
+        document.querySelectorAll('#emojiPicker span').forEach(span => {
+            span.onclick = () => {
+                showConfirm('إرسال إيموجي', `هل تريد إرسال "${span.textContent}" للمجموعة؟`, async () => {
+                    await sendGroupMessage('text', { text: span.textContent });
+                    emojiPicker.classList.remove('show');
+                });
+            };
+        });
+        
+        document.getElementById('guideUploadCard').onclick = () => pickImage('guide');
+        document.getElementById('busUploadCard').onclick = () => pickImage('bus');
         document.getElementById('saveGuideBtn').onclick = async () => { const name = document.getElementById('gName').value.trim(), phone = document.getElementById('gPhone').value.trim(); if (!name || !phone) return toast('⚠️ الاسم والهاتف مطلوبان', true); if (!validPhone(phone)) return toast('⚠️ رقم الهاتف غير صالح', true); const data = { id: editId, name, phone, plate: document.getElementById('gPlate').value.trim(), color: selectedColor, transport: document.getElementById('gTransport').value.trim(), agency: document.getElementById('gAgency').value.trim(), notes: document.getElementById('gNotes').value.trim(), fav: editId ? (guides.find(g => g.id === editId)?.favorite || false) : false, vis: document.getElementById('gVisibility').value }; try { await saveGuide(data); toast('✅ تم حفظ المرشد'); document.getElementById('guideModal').classList.remove('show'); resetForm(); } catch (e) { toast('❌ فشل الحفظ: ' + e.message, true); } };
         document.getElementById('confirmShareBtn').onclick = () => { const msg = document.getElementById('shareMsg').value; if (msg) window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'); document.getElementById('multiShareModal').classList.remove('show'); };
-        document.getElementById('closeMultiBtn').onclick = () => document.getElementById('multiShareModal').classList.remove('show'); document.getElementById('detailShareBtn').onclick = () => { if (detailGuide) openShare(detailGuide.id); };
-        const colorContainer = document.getElementById('colorSelector'); const colorList = ['#e94560', '#2c7da0', '#e76f51', '#2a9d8f', '#e9c46a', '#9b5de5', '#06d6a0', '#ff006e']; colorContainer.innerHTML = colorList.map(c => `<div class="color-option" data-color="${c}" style="background:${c};"></div>`).join('');
-        document.querySelectorAll('#colorSelector .color-option').forEach(o => { o.onclick = () => { document.querySelectorAll('#colorSelector .color-option').forEach(x => x.classList.remove('selected')); o.classList.add('selected'); selectedColor = o.dataset.color; }; }); document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected');
-        document.querySelectorAll('.nav-tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(tab.dataset.page).classList.add('active'); if (tab.dataset.page === 'pageChat') { unreadCount = 0; updateFloatingBadge(); } }); });
+        document.getElementById('closeMultiBtn').onclick = () => document.getElementById('multiShareModal').classList.remove('show');
+        document.getElementById('detailShareBtn').onclick = () => { if (detailGuide) openShare(detailGuide.id); };
+        
+        const colorContainer = document.getElementById('colorSelector');
+        const colorList = ['#e94560', '#2c7da0', '#e76f51', '#2a9d8f', '#e9c46a', '#9b5de5', '#06d6a0', '#ff006e'];
+        colorContainer.innerHTML = colorList.map(c => `<div class="color-option" data-color="${c}" style="background:${c};"></div>`).join('');
+        document.querySelectorAll('#colorSelector .color-option').forEach(o => { o.onclick = () => { document.querySelectorAll('#colorSelector .color-option').forEach(x => x.classList.remove('selected')); o.classList.add('selected'); selectedColor = o.dataset.color; }; });
+        document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected');
+        
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(tab.dataset.page).classList.add('active');
+                if (tab.dataset.page === 'pageChat') { unreadCount = 0; updateFloatingBadge(); }
+            });
+        });
+        
         function updateFloatingBadge() { const badge = document.getElementById('floatingBadge'); if (unreadCount > 0) { badge.style.display = 'flex'; badge.textContent = unreadCount > 99 ? '99+' : unreadCount; } else badge.style.display = 'none'; }
-        let lastShake = 0; window.addEventListener('devicemotion', e => { const acc = e.accelerationIncludingGravity; if (!acc) return; const mag = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z); if (mag > 25 && Date.now() - lastShake > 1000 && recording) { lastShake = Date.now(); if (mediaRecorder && recording) mediaRecorder.stop(); recording = false; document.getElementById('pttMain').classList.remove('recording'); toast('🎤 تم إلغاء التسجيل (هز الهاتف)'); } });
+        
+        let lastShake = 0;
+        window.addEventListener('devicemotion', e => {
+            const acc = e.accelerationIncludingGravity;
+            if (!acc) return;
+            const mag = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+            if (mag > 25 && Date.now() - lastShake > 1000 && recording) {
+                lastShake = Date.now();
+                if (mediaRecorder && recording) mediaRecorder.stop();
+                recording = false;
+                document.getElementById('pttMain').classList.remove('recording');
+                toast('🎤 تم إلغاء التسجيل (هز الهاتف)');
+            }
+        });
+        
         console.log('✅ النظام النهائي: منبثق، تسجيل صوتي بلا نسخ، صور وموقع فورية، تتبع حي بأطوال مختلفة');
     </script>
 </body>
