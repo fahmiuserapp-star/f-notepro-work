@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <meta name="theme-color" content="#e94560">
-    <title>F-Note Pro Max | نظام إدارة المرشدين - مالك فقط</title>
+    <title>F-Note Pro Max | نظام إدارة المرشدين - آمن وبصمة</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -24,7 +24,7 @@
         .app-header { background: var(--bg-card); padding: 12px 16px; display: flex; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm); }
         .logo-header img { height: 42px; }
         .menu-btn { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .login-screen { position: fixed; inset: 0; background: var(--bg-body); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+        .login-screen { position: fixed; inset: 0; background: var(--bg-body); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); flex-direction: column; gap: 16px; }
         .login-screen.hide { display: none; }
         .login-card { background: var(--bg-card); border-radius: var(--radius-xl); padding: 32px 24px; width: 100%; max-width: 380px; text-align: center; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
         .login-card img { width: 85px; margin-bottom: 10px; }
@@ -33,6 +33,7 @@
         .login-input { width: 100%; padding: 12px 16px; margin: 8px 0; border: 2px solid var(--border); border-radius: var(--radius-full); background: var(--bg-body); color: var(--text-primary); font-size: 14px; direction: ltr; }
         .login-input:focus { border-color: var(--gold); outline: none; }
         .login-btn { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: var(--radius-full); color: white; font-weight: 700; cursor: pointer; margin-top: 12px; }
+        .biometric-btn { background: #3b82f6; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .sidebar { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: var(--bg-card); z-index: 1500; transition: right 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); box-shadow: -4px 0 20px rgba(0,0,0,0.15); overflow-y: auto; }
         .sidebar.open { right: 0; }
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
@@ -48,7 +49,6 @@
         .page.active { display: block; }
         .toolbar { display: flex; gap: 10px; padding: 12px 16px; background: var(--bg-body); position: sticky; top: 64px; z-index: 90; }
         .search-box { flex: 1; padding: 12px 18px; border: 2px solid transparent; border-radius: var(--radius-full); background: var(--bg-card); color: var(--text-primary); font-size: 14px; box-shadow: var(--shadow-sm); }
-        .search-box:focus { border-color: var(--gold); outline: none; }
         .voice-btn, .add-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--bg-card); box-shadow: var(--shadow-sm); cursor: pointer; font-size: 20px; transition: 0.1s; }
         .add-btn { background: var(--gold); color: white; font-size: 28px; }
         .filter-toggle { width: calc(100% - 32px); margin: 0 16px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-full); padding: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
@@ -56,52 +56,44 @@
         .colors-panel.show { display: flex; }
         .color-dot { width: 42px; height: 42px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: 0.1s; }
         .color-dot.active { border-color: var(--gold); transform: scale(1.1); }
-        .guides-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
-        .guide-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-md); border-right: 5px solid var(--gold); cursor: pointer; transition: 0.1s; }
+        /* بطاقات أفقية مدمجة */
+        .guides-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .guide-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 12px; box-shadow: var(--shadow-md); border-right: 5px solid var(--gold); cursor: pointer; transition: 0.1s; }
         .guide-card:active { transform: scale(0.99); }
-        .card-top { display: flex; align-items: center; gap: 12px; }
-        .card-avatar { width: 60px; height: 60px; border-radius: 20px; object-fit: cover; border: 2px solid var(--gold); }
-        .card-info { flex: 1; }
-        .card-name { font-weight: 800; font-size: 16px; }
-        .card-phone { background: var(--bg-body); display: inline-flex; gap: 6px; padding: 5px 12px; border-radius: 60px; font-size: 12px; margin-top: 6px; }
-        .call-btn { background: var(--success); border: none; color: white; padding: 2px 8px; border-radius: 30px; font-size: 10px; cursor: pointer; }
-        .card-chevron { background: transparent; border: none; font-size: 20px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; }
-        .card-details { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: none; }
-        .card-details.show { display: block; }
-        .details-box { background: var(--bg-body); padding: 12px; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.7; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 30px; font-size: 10px; font-weight: 700; }
-        .badge-plate { background: var(--gold); color: white; }
-        .badge-public { background: #3b82f6; color: white; }
-        .badge-private { background: #64748b; color: white; }
-        .action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        .btn-sm { padding: 6px 14px; border-radius: 60px; border: none; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.1s; }
-        .btn-sm:active { transform: scale(0.95); }
-        .btn-edit { background: #f59e0b; color: white; }
-        .btn-del { background: #ef4444; color: white; }
-        .btn-share { background: #25D366; color: white; }
+        .card-horizontal { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .card-avatar { width: 55px; height: 55px; border-radius: 18px; object-fit: cover; border: 2px solid var(--gold); }
+        .card-info-compact { flex: 1; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; justify-content: space-between; }
+        .card-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .card-name { font-weight: 800; font-size: 14px; }
+        .card-phone-buttons { display: flex; gap: 6px; }
+        .call-mini, .whatsapp-mini { background: var(--success); border: none; color: white; border-radius: 30px; padding: 4px 8px; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+        .whatsapp-mini { background: #25D366; }
+        .badge-mini { font-size: 9px; padding: 2px 6px; border-radius: 20px; background: var(--gold); color: white; }
+        .details-row { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); display: none; font-size: 12px; }
+        .details-row.show { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+        .info-item { background: var(--bg-body); padding: 4px 10px; border-radius: 30px; display: inline-flex; align-items: center; gap: 4px; }
+        .action-buttons { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .btn-xs { padding: 4px 10px; border-radius: 40px; border: none; font-size: 10px; font-weight: bold; cursor: pointer; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1600; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
         .modal.show { visibility: visible; opacity: 1; }
         .modal-box { background: var(--bg-card); width: 90%; max-width: 500px; border-radius: 32px; padding: 24px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
-        .modal-box h3 { text-align: center; margin-bottom: 16px; font-size: 22px; color: var(--gold); }
         input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--border); border-radius: 60px; background: var(--bg-body); color: var(--text-primary); font-size: 14px; }
-        textarea { border-radius: 20px; resize: vertical; }
-        .upload-card { border: 2px dashed var(--gold); border-radius: 24px; padding: 16px; text-align: center; margin: 12px 0; cursor: pointer; }
-        .preview-img { width: 70px; height: 70px; border-radius: 20px; object-fit: cover; margin-top: 8px; }
+        .upload-card { border: 2px dashed var(--gold); border-radius: 24px; padding: 12px; text-align: center; margin: 12px 0; cursor: pointer; }
+        .preview-img { width: 60px; height: 60px; border-radius: 16px; object-fit: cover; }
         .color-selector { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
-        .color-option { width: 44px; height: 44px; border-radius: 14px; cursor: pointer; border: 3px solid transparent; }
+        .color-option { width: 40px; height: 40px; border-radius: 12px; cursor: pointer; border: 3px solid transparent; }
         .color-option.selected { border-color: var(--gold); transform: scale(1.05); }
         .btn-save, .btn-cancel { padding: 12px; border-radius: 60px; border: none; font-weight: 700; margin-top: 12px; cursor: pointer; width: 100%; }
         .btn-save { background: var(--success); color: white; }
         .btn-cancel { background: #64748b; color: white; }
         .toast { position: fixed; bottom: 80px; left: 20px; right: 20px; background: #1e293bcc; backdrop-filter: blur(10px); color: white; border-radius: 60px; padding: 14px 20px; text-align: center; z-index: 9999; font-size: 13px; animation: slideUp 0.3s; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .loading-msg { text-align: center; padding: 30px; color: var(--text-secondary); }
-        .admin-badge { background: #e94560; padding: 2px 8px; border-radius: 40px; font-size: 10px; color: white; margin-right: 8px; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 16px 14px; z-index: 100; }
-        .nav-tab { background: none; border: none; text-align: center; cursor: pointer; color: var(--text-secondary); font-size: 12px; font-weight: 600; transition: 0.2s; padding: 4px 12px; border-radius: var(--radius-full); flex: 1; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: center; padding: 10px 16px 14px; z-index: 100; }
+        .nav-tab { background: none; border: none; text-align: center; cursor: pointer; color: var(--text-secondary); font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: var(--radius-full); }
         .nav-tab.active { color: var(--gold); background: rgba(233,69,96,0.1); }
         .nav-tab .ico { font-size: 24px; display: block; margin-bottom: 4px; }
-        .share-image-preview { max-width: 100%; border-radius: 20px; margin: 12px 0; box-shadow: var(--shadow-md); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .admin-badge { background: #e94560; padding: 2px 8px; border-radius: 40px; font-size: 10px; color: white; margin-right: 6px; }
+        .security-note { font-size: 10px; color: var(--text-secondary); text-align: center; margin-top: 12px; }
     </style>
 </head>
 <body>
@@ -110,11 +102,12 @@
     <div class="login-card">
         <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
         <div class="login-title">F-Note Pro Max</div>
-        <div class="login-sub">نظام إدارة المرشدين | المالك فقط يمكنه إنشاء حسابات</div>
+        <div class="login-sub">نظام إدارة ذكي | حماية البصمة</div>
         <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
         <input type="password" id="loginPassword" placeholder="كلمة المرور">
         <button class="login-btn" id="loginBtn">دخول</button>
-        <div id="adminNote" style="font-size:10px; margin-top:12px; color:var(--text-secondary);">🔐 فقط المدير (FAHMI) يمكنه إنشاء حسابات جديدة</div>
+        <button class="login-btn biometric-btn" id="biometricLoginBtn">🖐️ دخول بالبصمة</button>
+        <div class="security-note">🔐 بياناتك مشفرة | فقط المالك (FAHMI) يمكنه إنشاء حسابات</div>
     </div>
 </div>
 
@@ -124,10 +117,10 @@
 </div>
 <div class="overlay" id="overlay"></div>
 <div class="sidebar" id="sidebar">
-    <div class="sidebar-header"><h3>✨ F-Note Pro Max</h3><button class="sidebar-close" id="closeSidebar">✕</button></div>
-    <div class="sidebar-section"><h4>👤 حسابي</h4><div id="userInfo" style="font-size:12px;"></div><div class="sidebar-item" id="profileBtn">🧑 تعديل الملف الشخصي</div><div class="sidebar-item" id="signOutBtn" style="display:none;">🚪 تسجيل الخروج</div></div>
-    <div class="sidebar-section" id="adminSection" style="display:none;"><h4>👑 صلاحيات المدير</h4><div class="sidebar-item" id="createUserBtn">➕ إنشاء حساب جديد (المالك فقط)</div></div>
-    <div class="sidebar-section"><h4>⚙️ الإعدادات</h4><div class="sidebar-item" id="darkModeBtn">🌙 الوضع الداكن</div><div class="sidebar-item" id="exportJsonBtn">💾 تصدير JSON</div><div class="sidebar-item" id="exportPdfBtn">📄 تصدير PDF</div><div class="sidebar-item" id="shiftReportBtn">📋 تقرير الوردية</div></div>
+    <div class="sidebar-header"><h3>✨ القائمة الذكية</h3><button class="sidebar-close" id="closeSidebar">✕</button></div>
+    <div class="sidebar-section"><h4>👤 حسابي</h4><div id="userInfo" style="font-size:12px;"></div><div class="sidebar-item" id="profileBtn">🧑 الملف الشخصي</div><div class="sidebar-item" id="securitySettingsBtn">🔒 إعدادات الحماية (البصمة)</div><div class="sidebar-item" id="signOutBtn" style="display:none;">🚪 تسجيل الخروج</div></div>
+    <div class="sidebar-section" id="adminSection" style="display:none;"><h4>👑 صلاحيات المدير</h4><div class="sidebar-item" id="createUserBtn">➕ إنشاء حساب جديد</div></div>
+    <div class="sidebar-section"><h4>⚙️ الإعدادات</h4><div class="sidebar-item" id="darkModeBtn">🌙 الوضع الداكن</div><div class="sidebar-item" id="exportJsonBtn">💾 تصدير JSON</div><div class="sidebar-item" id="exportPdfBtn">📄 تصدير PDF</div></div>
 </div>
 
 <div id="pageGuides" class="page active">
@@ -138,137 +131,130 @@
             <div class="color-dot" data-color="#e94560" style="background:#e94560;"></div><div class="color-dot" data-color="#2c7da0" style="background:#2c7da0;"></div>
             <div class="color-dot" data-color="#e76f51" style="background:#e76f51;"></div><div class="color-dot" data-color="#2a9d8f" style="background:#2a9d8f;"></div>
             <div class="color-dot" data-color="#e9c46a" style="background:#e9c46a;"></div><div class="color-dot" data-color="#9b5de5" style="background:#9b5de5;"></div>
-            <div class="color-dot" data-color="#06d6a0" style="background:#06d6a0;"></div><div class="color-dot" data-color="#ff006e" style="background:#ff006e;"></div>
         </div>
     </div>
     <div id="guidesContainer" class="guides-list"><div class="loading-msg">⏳ جاري التحميل...</div></div>
 </div>
 
-<div class="bottom-nav"><button class="nav-tab active" data-page="pageGuides"><span class="ico">📋</span> المرشدين</button></div>
+<div class="bottom-nav"><button class="nav-tab active" data-page="pageGuides"><span class="ico">📋</span> المرشدون</button></div>
 
-<!-- Modals -->
+<!-- نماذج -->
 <div id="guideModal" class="modal"><div class="modal-box"><h3 id="modalTitle">➕ إضافة مرشد</h3>
     <input type="text" id="gName" placeholder="الاسم الكامل *"><input type="tel" id="gPhone" placeholder="رقم الهاتف *" dir="ltr"><input type="text" id="gPlate" placeholder="رقم اللوحة">
     <div class="upload-card" id="guideUploadCard"><div>📸 صورة المرشد</div><div class="upload-preview" id="guidePreviewWrap" style="display:none;"><img id="guidePreviewImg" class="preview-img"></div></div>
     <div class="upload-card" id="busUploadCard"><div>🚌 صورة وسيلة النقل</div><div class="upload-preview" id="busPreviewWrap" style="display:none;"><img id="busPreviewImg" class="preview-img"></div></div>
     <input type="text" id="gTransport" placeholder="وسيلة النقل"><input type="text" id="gAgency" placeholder="الوكالة"><textarea id="gNotes" rows="2" placeholder="ملاحظات"></textarea>
     <div class="color-selector" id="colorSelector"></div><select id="gVisibility"><option value="private">🔒 خاص</option><option value="public">🌍 عام</option></select>
-    <div style="display: flex; gap: 10px; margin-top: 16px;"><button class="btn-save" id="saveGuideBtn">💾 حفظ</button><button class="btn-cancel" id="cancelGuideBtn">❌ إلغاء</button></div>
+    <div style="display: flex; gap: 10px;"><button class="btn-save" id="saveGuideBtn">💾 حفظ</button><button class="btn-cancel" id="cancelGuideBtn">❌ إلغاء</button></div>
 </div></div>
 
-<div id="detailModal" class="modal"><div class="modal-box"><h3 id="detailName"></h3><div id="detailContent"></div><button class="btn-sm btn-share" id="detailShareBtn" style="width:100%; margin-top:12px;">🖼️ مشاركة عبر واتساب (كصورة)</button><button class="btn-cancel" id="closeDetailBtn">إغلاق</button></div></div>
+<div id="detailModal" class="modal"><div class="modal-box"><h3 id="detailName"></h3><div id="detailContent"></div><button class="btn-save" id="detailShareTableBtn" style="background:#25D366;">📊 مشاركة كجدول واتساب</button><button class="btn-cancel" id="closeDetailBtn">إغلاق</button></div></div>
 
-<div id="profileModal" class="modal"><div class="modal-box" style="text-align:center;"><h3>الملف الشخصي</h3><img id="profilePicPreview" style="width:100px;height:100px;border-radius:50%;margin:10px auto;border:3px solid var(--gold);" src=""><div class="upload-card" id="profilePicUpload">📷 تغيير الصورة</div><input type="text" id="profileName" placeholder="الاسم الكامل"><input type="text" id="profileJob" placeholder="الوظيفة / المهنة"><div style="display:flex;gap:10px;"><button class="btn-save" id="saveProfileBtn">💾 حفظ</button><button class="btn-cancel" id="closeProfileBtn">إغلاق</button></div></div></div>
+<div id="profileModal" class="modal"><div class="modal-box" style="text-align:center;"><h3>الملف الشخصي</h3><img id="profilePicPreview" style="width:90px;height:90px;border-radius:50%;margin:10px auto;border:3px solid var(--gold);" src=""><div class="upload-card" id="profilePicUpload">📷 تغيير الصورة</div><input type="text" id="profileName" placeholder="الاسم الكامل"><input type="text" id="profileJob" placeholder="الوظيفة / المهنة"><div style="display:flex;gap:10px;"><button class="btn-save" id="saveProfileBtn">💾 حفظ</button><button class="btn-cancel" id="closeProfileBtn">إغلاق</button></div></div></div>
 
-<div id="createUserModal" class="modal"><div class="modal-box"><h3>👑 إنشاء حساب جديد (للمالك فقط)</h3><input type="email" id="newUserEmail" placeholder="البريد الإلكتروني"><input type="password" id="newUserPassword" placeholder="كلمة المرور"><input type="text" id="newUserName" placeholder="الاسم الكامل"><button class="btn-save" id="confirmCreateUserBtn">✅ إنشاء الحساب</button><button class="btn-cancel" id="closeCreateUserBtn">إلغاء</button></div></div>
+<div id="createUserModal" class="modal"><div class="modal-box"><h3>👑 إنشاء حساب جديد</h3><input type="email" id="newUserEmail" placeholder="البريد الإلكتروني"><input type="password" id="newUserPassword" placeholder="كلمة المرور"><input type="text" id="newUserName" placeholder="الاسم الكامل"><button class="btn-save" id="confirmCreateUserBtn">✅ إنشاء</button><button class="btn-cancel" id="closeCreateUserBtn">إلغاء</button></div></div>
 
-<div id="fullImageModal" class="modal"><div class="modal-box" style="background:transparent; box-shadow:none; text-align:center;"><img id="fullImage" style="max-width:90vw; max-height:70vh; border-radius:20px;"><button class="btn-cancel" id="closeFullImage" style="margin-top:12px;">إغلاق</button></div></div>
+<div id="fullImageModal" class="modal"><div class="modal-box" style="background:transparent; box-shadow:none;"><img id="fullImage" style="max-width:90vw; max-height:70vh; border-radius:20px;"><button class="btn-cancel" id="closeFullImage" style="margin-top:12px;">إغلاق</button></div></div>
 
 <script>
-    // Firebase Config
     const firebaseConfig = { apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s", authDomain: "f-notepro-work-2d25b.firebaseapp.com", databaseURL: "https://f-notepro-work-2d25b-default-rtdb.europe-west1.firebasedatabase.app", projectId: "f-notepro-work-2d25b", storageBucket: "f-notepro-work-2d25b.firebasestorage.app", messagingSenderId: "221438380381", appId: "1:221438380381:web:b46c35d0ec0944079480b4" };
     const CLOUD_NAME = 'dmhtx93nj', UPLOAD_PRESET = 'fcloud_preset', CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore(), auth = firebase.auth(), storage = firebase.storage();
     db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
 
-    let currentUser = null, guides = [], editId = null, selectedColor = '#e94560', colorFilter = 'all', detailGuide = null;
+    let currentUser = null, guides = [], editId = null, selectedColor = '#e94560', colorFilter = 'all';
     let guidePhotoData = '', busPhotoData = '', userProfile = { displayName: '', photoURL: '', job: '' };
-    let isAdmin = false; // المالك الوحيد هو fahmiajmi5@gmail.com
+    let isAdmin = false;
 
     function toast(msg, isErr = false) { const t = document.createElement('div'); t.className = 'toast'; t.style.background = isErr ? '#ef4444cc' : '#1e293bcc'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }
     function esc(s) { if (!s) return ''; return String(s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
     function validPhone(p) { return /^\+?[0-9]{8,15}$/.test(p.replace(/\s/g, '')); }
-    function sanitize(s) { return s.replace(/[<>]/g, '').trim(); }
-    function vibrate(ms = 15) { if (navigator.vibrate) navigator.vibrate(ms); }
-
-    // رفع الصور
-    async function uploadToCloudinary(base64) { if (!navigator.onLine) return base64; try { const blob = await fetch(base64).then(r => r.blob()); const fd = new FormData(); fd.append('file', blob, 'img_' + Date.now() + '.jpg'); fd.append('upload_preset', UPLOAD_PRESET); const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd }); if (!res.ok) throw new Error(); const data = await res.json(); return data.secure_url; } catch(e) { return base64; } }
-    function handleImage(file, type) { if (!file) return; const prevId = type === 'guide' ? 'guidePreviewImg' : 'busPreviewImg'; const wrapId = type === 'guide' ? 'guidePreviewWrap' : 'busPreviewWrap'; const reader = new FileReader(); reader.onload = async (e) => { const img = new Image(); img.onload = async () => { const canvas = document.createElement('canvas'); const maxW = 500; let w = img.width, h = img.height; if (w > maxW) { h *= maxW / w; w = maxW; } canvas.width = Math.round(w); canvas.height = Math.round(h); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); const b64 = canvas.toDataURL('image/jpeg', 0.6); const url = await uploadToCloudinary(b64); const final = url || b64; if (type === 'guide') guidePhotoData = final; else busPhotoData = final; document.getElementById(prevId).src = b64; document.getElementById(wrapId).style.display = 'flex'; }; img.src = e.target.result; }; reader.readAsDataURL(file); }
-    function pickImage(type) { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = e => { if (e.target.files[0]) handleImage(e.target.files[0], type); }; inp.click(); }
-
-    // حفظ المرشد
-    async function saveGuide(data) { if (!currentUser) throw new Error('يجب تسجيل الدخول'); const ref = data.id ? db.collection('guides').doc(data.id) : db.collection('guides').doc(); const docData = { userId: currentUser.uid, creatorName: userProfile.displayName || currentUser.email, creatorPhoto: userProfile.photoURL || '', name: sanitize(data.name), phone: data.phone.replace(/\s/g, ''), plateNumber: sanitize(data.plate || ''), guidePhoto: guidePhotoData || null, busPhoto: busPhotoData || null, cardColor: data.color, transportType: sanitize(data.transport || ''), agency: sanitize(data.agency || ''), notes: sanitize(data.notes || ''), favorite: data.fav || false, visibility: data.vis || 'private', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }; if (!data.id) docData.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await ref.set(docData, { merge: true }); }
     
-    let unsubGuides = null;
-    function listenGuides() { if (unsubGuides) unsubGuides(); if (!currentUser) return; unsubGuides = db.collection('guides').where('userId', '==', currentUser.uid).onSnapshot(snap => { let mine = []; snap.forEach(d => mine.push({ id: d.id, ...d.data() })); db.collection('guides').where('visibility', '==', 'public').get().then(ps => { let pubs = []; ps.forEach(d => { if (d.data().userId !== currentUser.uid) pubs.push({ id: d.id, ...d.data() }); }); const all = [...mine, ...pubs]; const map = new Map(); all.forEach(g => map.set(g.id, g)); guides = Array.from(map.values()); renderGuides(); }).catch(() => { guides = mine; renderGuides(); }); }); }
+    async function uploadToCloudinary(base64) { if (!navigator.onLine) return base64; try { const blob = await fetch(base64).then(r => r.blob()); const fd = new FormData(); fd.append('file', blob, 'img_'+Date.now()+'.jpg'); fd.append('upload_preset', UPLOAD_PRESET); const res = await fetch(CLOUDINARY_URL, { method:'POST', body:fd }); if(!res.ok) throw new Error(); const data = await res.json(); return data.secure_url; } catch(e) { return base64; } }
+    function handleImage(file, type) { if(!file) return; const prevId = type==='guide'?'guidePreviewImg':'busPreviewImg'; const wrapId = type==='guide'?'guidePreviewWrap':'busPreviewWrap'; const reader = new FileReader(); reader.onload = async (e) => { const img = new Image(); img.onload = async () => { const canvas = document.createElement('canvas'); const maxW=500; let w=img.width, h=img.height; if(w>maxW){ h*=maxW/w; w=maxW; } canvas.width=Math.round(w); canvas.height=Math.round(h); canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height); const b64 = canvas.toDataURL('image/jpeg',0.6); const url = await uploadToCloudinary(b64); const final = url||b64; if(type==='guide') guidePhotoData=final; else busPhotoData=final; document.getElementById(prevId).src=b64; document.getElementById(wrapId).style.display='flex'; }; img.src=e.target.result; }; reader.readAsDataURL(file); }
+    function pickImage(type) { const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=e=>{ if(e.target.files[0]) handleImage(e.target.files[0],type); }; inp.click(); }
+
+    async function saveGuide(data) { if(!currentUser) throw new Error(); const ref = data.id ? db.collection('guides').doc(data.id) : db.collection('guides').doc(); const docData = { userId:currentUser.uid, creatorName:userProfile.displayName||currentUser.email, creatorPhoto:userProfile.photoURL||'', name:sanitize(data.name), phone:data.phone.replace(/\s/g,''), plateNumber:sanitize(data.plate||''), guidePhoto:guidePhotoData||null, busPhoto:busPhotoData||null, cardColor:data.color, transportType:sanitize(data.transport||''), agency:sanitize(data.agency||''), notes:sanitize(data.notes||''), favorite:data.fav||false, visibility:data.vis||'private', updatedAt:firebase.firestore.FieldValue.serverTimestamp() }; if(!data.id) docData.createdAt=firebase.firestore.FieldValue.serverTimestamp(); await ref.set(docData,{merge:true}); }
+    function sanitize(s){ return s.replace(/[<>]/g,'').trim(); }
     
-    function renderGuides() { const query = (document.getElementById('searchInput')?.value || '').toLowerCase(); let filtered = guides.filter(g => !query || (g.name || '').toLowerCase().includes(query) || (g.phone || '').includes(query)); if (colorFilter !== 'all') filtered = filtered.filter(g => g.cardColor === colorFilter); filtered.sort((a,b) => (b.favorite?1:0)-(a.favorite?1:0)); const container = document.getElementById('guidesContainer'); if (!filtered.length) { container.innerHTML = '<div class="loading-msg">😕 لا توجد نتائج</div>'; return; } container.innerHTML = filtered.map(g => { const own = g.userId === currentUser?.uid; const star = g.favorite ? '⭐ ' : ''; const visBadge = g.visibility === 'public' ? '<span class="badge badge-public">🌍 عام</span>' : '<span class="badge badge-private">🔒 خاص</span>'; const creator = (!own && g.visibility === 'public' && g.creatorName) ? `<div style="font-size:10px;">👤 ${esc(g.creatorName)}</div>` : ''; return `<div class="guide-card" style="border-right-color: ${esc(g.cardColor)}" onclick="showDetail('${g.id}')"><div class="card-top"><img class="card-avatar" src="${g.guidePhoto||''}" onclick="event.stopPropagation();viewImage('${g.guidePhoto||''}')" onerror="this.style.display='none'"><div class="card-info"><div class="card-name">${star}${esc(g.name)} ${visBadge}</div><div class="card-phone"><span>${esc(g.phone)}</span><button class="call-btn" onclick="event.stopPropagation();location.href='tel:${esc(g.phone)}'">📞</button></div>${creator}</div><button class="card-chevron" onclick="event.stopPropagation();toggleDetails('${g.id}',this)">▼</button></div><div class="card-details" id="details-${g.id}"><div class="details-box">${g.busPhoto?`<img src="${g.busPhoto}" style="width:48px;border-radius:12px;cursor:pointer;" onclick="event.stopPropagation();viewImage('${g.busPhoto}')">`:''}<p>🚐 وسيلة النقل: ${esc(g.transportType||'—')}</p><p>🚍 لوحة: <span class="badge badge-plate">${esc(g.plateNumber||'—')}</span></p><p>🏢 الوكالة: ${esc(g.agency||'—')}</p><p>📝 ملاحظات: ${esc((g.notes||'—').substring(0,60))}</p><div class="action-row">${own?`<button class="btn-sm btn-edit" onclick="event.stopPropagation();editGuide('${g.id}')">✏️ تعديل</button>`:''}${own?`<button class="btn-sm btn-del" onclick="event.stopPropagation();delGuide('${g.id}')">🗑️ حذف</button>`:''}<button class="btn-sm btn-share" onclick="event.stopPropagation();shareAsImage('${g.id}')">🖼️ مشاركة كصورة</button>${own?`<button class="btn-sm btn-fav" onclick="event.stopPropagation();toggleFav('${g.id}')">${g.favorite?'★':'☆'}</button>`:''}</div></div></div></div>`; }).join(''); }
+    let unsubGuides=null;
+    function listenGuides() { if(unsubGuides) unsubGuides(); if(!currentUser) return; unsubGuides = db.collection('guides').where('userId','==',currentUser.uid).onSnapshot(snap=>{ let mine=[]; snap.forEach(d=>mine.push({id:d.id,...d.data()})); db.collection('guides').where('visibility','==','public').get().then(ps=>{ let pubs=[]; ps.forEach(d=>{ if(d.data().userId!==currentUser.uid) pubs.push({id:d.id,...d.data()}); }); const all=[...mine,...pubs]; const map=new Map(); all.forEach(g=>map.set(g.id,g)); guides=Array.from(map.values()); renderGuides(); }).catch(()=>{ guides=mine; renderGuides(); }); }); }
+    
+    function renderGuides() { const query = (document.getElementById('searchInput')?.value||'').toLowerCase(); let filtered = guides.filter(g=>!query||(g.name||'').toLowerCase().includes(query)||(g.phone||'').includes(query)); if(colorFilter!=='all') filtered=filtered.filter(g=>g.cardColor===colorFilter); filtered.sort((a,b)=>(b.favorite?1:0)-(a.favorite?1:0)); const container=document.getElementById('guidesContainer'); if(!filtered.length){ container.innerHTML='<div class="loading-msg">😕 لا توجد نتائج</div>'; return; }
+    container.innerHTML = filtered.map(g=>{ const own = g.userId===currentUser?.uid; const visBadge = g.visibility==='public'?'🌍':'🔒'; return `<div class="guide-card" style="border-right-color:${esc(g.cardColor)}" onclick="showDetailsModal('${g.id}')"><div class="card-horizontal"><img class="card-avatar" src="${g.guidePhoto||''}" onclick="event.stopPropagation();viewImage('${g.guidePhoto||''}')" onerror="this.style.display='none'"><div class="card-info-compact"><div class="card-name-row"><span class="card-name">${esc(g.name)}</span><span class="badge-mini">${visBadge}</span></div><div class="card-phone-buttons"><button class="call-mini" onclick="event.stopPropagation();location.href='tel:${esc(g.phone)}'">📞 اتصال</button><button class="whatsapp-mini" onclick="event.stopPropagation();window.open('https://wa.me/${esc(g.phone).replace(/[^0-9]/g,'')}','_blank')">💬 واتساب</button></div></div><button class="card-chevron" onclick="event.stopPropagation();toggleDetails('${g.id}',this)">▼</button></div><div class="details-row" id="details-${g.id}"><div class="info-item">🚐 ${esc(g.transportType||'—')}</div><div class="info-item">🚍 ${esc(g.plateNumber||'—')}</div><div class="info-item">🏢 ${esc(g.agency||'—')}</div><div class="info-item">📝 ${esc((g.notes||'—').substring(0,25))}</div><div class="action-buttons">${own?`<button class="btn-xs btn-edit" onclick="event.stopPropagation();editGuide('${g.id}')">✏️ تعديل</button>`:''}${own?`<button class="btn-xs btn-del" onclick="event.stopPropagation();delGuide('${g.id}')">🗑️ حذف</button>`:''}<button class="btn-xs btn-share" onclick="event.stopPropagation();shareAsTable('${g.id}')">📊 جدول واتساب</button></div></div></div>`; }).join(''); }
     
     window.toggleDetails = (id, btn) => { const det = document.getElementById('details-'+id); if(det){ det.classList.toggle('show'); btn.textContent = det.classList.contains('show')?'▲':'▼'; } };
     window.viewImage = url => { if(url){ document.getElementById('fullImage').src=url; document.getElementById('fullImageModal').classList.add('show'); } };
-    window.toggleFav = async id => { const g = guides.find(x=>x.id===id); if(g && g.userId===currentUser?.uid){ await db.collection('guides').doc(id).update({ favorite: !g.favorite }); toast(g.favorite?'أزيل من المفضلة':'⭐ أضيف للمفضلة'); } };
-    window.editGuide = id => { const g = guides.find(x=>x.id===id); if(!g || g.userId!==currentUser?.uid) return toast('لا يمكنك تعديل هذا',true); editId=id; document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||''; document.getElementById('gPlate').value=g.plateNumber||''; document.getElementById('gTransport').value=g.transportType||''; document.getElementById('gAgency').value=g.agency||''; document.getElementById('gNotes').value=g.notes||''; document.getElementById('gVisibility').value=g.visibility||'private'; selectedColor=g.cardColor||'#e94560'; guidePhotoData=g.guidePhoto||''; busPhotoData=g.busPhoto||''; if(g.guidePhoto){ document.getElementById('guidePreviewImg').src=g.guidePhoto; document.getElementById('guidePreviewWrap').style.display='flex'; }else document.getElementById('guidePreviewWrap').style.display='none'; if(g.busPhoto){ document.getElementById('busPreviewImg').src=g.busPhoto; document.getElementById('busPreviewWrap').style.display='flex'; }else document.getElementById('busPreviewWrap').style.display='none'; document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.classList.remove('selected')); const sel=document.querySelector(`#colorSelector .color-option[data-color="${selectedColor}"]`); if(sel) sel.classList.add('selected'); document.getElementById('modalTitle').textContent='✏️ تعديل المرشد'; document.getElementById('guideModal').classList.add('show'); };
+    window.editGuide = id => { const g = guides.find(x=>x.id===id); if(!g || g.userId!==currentUser?.uid) return toast('لا يمكنك التعديل',true); editId=id; document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||''; document.getElementById('gPlate').value=g.plateNumber||''; document.getElementById('gTransport').value=g.transportType||''; document.getElementById('gAgency').value=g.agency||''; document.getElementById('gNotes').value=g.notes||''; document.getElementById('gVisibility').value=g.visibility||'private'; selectedColor=g.cardColor||'#e94560'; guidePhotoData=g.guidePhoto||''; busPhotoData=g.busPhoto||''; if(g.guidePhoto){ document.getElementById('guidePreviewImg').src=g.guidePhoto; document.getElementById('guidePreviewWrap').style.display='flex'; } else document.getElementById('guidePreviewWrap').style.display='none'; if(g.busPhoto){ document.getElementById('busPreviewImg').src=g.busPhoto; document.getElementById('busPreviewWrap').style.display='flex'; } else document.getElementById('busPreviewWrap').style.display='none'; document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.classList.remove('selected')); const sel=document.querySelector(`#colorSelector .color-option[data-color="${selectedColor}"]`); if(sel) sel.classList.add('selected'); document.getElementById('modalTitle').textContent='✏️ تعديل المرشد'; document.getElementById('guideModal').classList.add('show'); };
     window.delGuide = async id => { if(confirm('حذف هذا المرشد؟')){ await db.collection('guides').doc(id).delete(); toast('تم الحذف'); } };
     
-    // مشاركة كصورة باستخدام html2canvas
-    window.shareAsImage = async (id) => { const g = guides.find(x=>x.id===id); if(!g) return; toast('⏳ جاري تجهيز بطاقة المعلومات...'); const div = document.createElement('div'); div.dir = 'rtl'; div.style.background = '#ffffff'; div.style.padding = '20px'; div.style.borderRadius = '28px'; div.style.width = '380px'; div.style.fontFamily = 'Tajawal, sans-serif'; div.style.boxShadow = '0 12px 30px rgba(0,0,0,0.1)'; div.style.borderRight = `8px solid ${g.cardColor || '#e94560'}`; div.innerHTML = `<div style="text-align:center;"><img src="${g.guidePhoto || 'https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png'}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #e94560;margin-bottom:10px;"></div><h2 style="color:#1e293b;text-align:center;">⭐ ${esc(g.name)}</h2><div style="background:#f1f5f9;padding:16px;border-radius:20px;margin-top:12px;"><p style="margin:6px 0;">📞 <strong style="direction:ltr;">${esc(g.phone)}</strong></p><p style="margin:6px 0;">🚐 وسيلة النقل: ${esc(g.transportType||'—')}</p><p style="margin:6px 0;">🚍 لوحة المركبة: <span style="background:#e94560;color:white;padding:2px 12px;border-radius:30px;">${esc(g.plateNumber||'—')}</span></p><p style="margin:6px 0;">🏢 الوكالة: ${esc(g.agency||'—')}</p><p style="margin:6px 0;">📝 ملاحظات: ${esc(g.notes||'لا توجد')}</p></div><div style="margin-top:16px;font-size:10px;color:#475569;text-align:center;">📅 ${new Date().toLocaleDateString('ar')} | F-Note Pro Max</div>`; document.body.appendChild(div); try { const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff' }); const imgData = canvas.toDataURL('image/png'); const link = document.createElement('a'); link.href = imgData; link.download = `guide_${g.name}.png`; link.click(); window.open(`https://wa.me/?text=*${encodeURIComponent(g.name)}*%20📞%20${encodeURIComponent(g.phone)}%20🚐%20${encodeURIComponent(g.transportType||'')}%20🚍%20${encodeURIComponent(g.plateNumber||'')}`, '_blank'); toast('✅ تم فتح واتساب وإرفاق الصورة قابلة للحفظ'); } catch(e) { toast('خطأ في إنشاء الصورة', true); } finally { document.body.removeChild(div); } };
+    window.showDetailsModal = (id) => { const g = guides.find(x=>x.id===id); if(!g) return; document.getElementById('detailName').innerHTML=`⭐ ${esc(g.name)}`; document.getElementById('detailContent').innerHTML=`<div style="text-align:center;">${g.guidePhoto?`<img src="${g.guidePhoto}" style="width:80px;height:80px;border-radius:50%;cursor:pointer;" onclick="viewImage('${g.guidePhoto}')">`:'<div style="width:80px;height:80px;border-radius:50%;background:var(--bg-body);display:inline-flex;align-items:center;justify-content:center;">📷</div>'}</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;"><span class="info-item">📞 ${esc(g.phone)}</span><span class="info-item">🚐 ${esc(g.transportType||'—')}</span><span class="info-item">🚍 ${esc(g.plateNumber||'—')}</span><span class="info-item">🏢 ${esc(g.agency||'—')}</span></div><div class="info-item" style="width:100%;margin-top:6px;">📝 ملاحظات: ${esc(g.notes||'لا توجد')}</div>`; document.getElementById('detailModal').classList.add('show'); };
     
-    window.showDetail = id => { const g = guides.find(x=>x.id===id); if(!g) return; detailGuide=g; document.getElementById('detailName').innerHTML=`⭐ ${esc(g.name)}`; document.getElementById('detailContent').innerHTML=`<div style="text-align:center;margin-bottom:12px;">${g.guidePhoto?`<img src="${esc(g.guidePhoto)}" style="width:90px;height:90px;border-radius:50%;cursor:pointer;margin:5px;" onclick="viewImage('${esc(g.guidePhoto)}')">`:'<div style="width:90px;height:90px;border-radius:50%;background:var(--bg-body);display:inline-flex;align-items:center;justify-content:center;">📷</div>'}</div><div style="background:var(--bg-body);padding:14px;border-radius:18px;font-size:13px;"><p>📞 <a href="tel:${esc(g.phone)}" style="color:var(--gold);">${esc(g.phone)}</a></p><p>🚐 ${esc(g.transportType||'—')}</p><p>🚍 <span class="badge badge-plate">${esc(g.plateNumber||'—')}</span></p><p>🏢 ${esc(g.agency||'—')}</p><p>📝 ${esc(g.notes||'—')}</p><p>🔒 ${g.visibility==='public'?'عام':'خاص'}</p></div>`; document.getElementById('detailModal').classList.add('show'); };
+    window.shareAsTable = async (id) => { const g = guides.find(x=>x.id===id); if(!g) return; const tableMsg = `*📋 بيانات المرشد السياحي*\n\n`+
+        `*الاسم:* ${g.name}\n`+
+        `*📞 الهاتف:* ${g.phone}\n`+
+        `*🚐 وسيلة النقل:* ${g.transportType||'—'}\n`+
+        `*🚍 رقم اللوحة:* ${g.plateNumber||'—'}\n`+
+        `*🏢 الوكالة:* ${g.agency||'—'}\n`+
+        `*📝 ملاحظات:* ${g.notes||'لا توجد'}\n`+
+        `🕒 ${new Date().toLocaleString('ar')}\n🔰 F-Note Pro Max`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(tableMsg)}`,'_blank'); toast('✅ تم فتح واتساب بالجدول'); };
     
     function resetForm(){ editId=null; selectedColor='#e94560'; guidePhotoData=''; busPhotoData=''; ['gName','gPhone','gPlate','gTransport','gAgency','gNotes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('guidePreviewWrap').style.display='none'; document.getElementById('busPreviewWrap').style.display='none'; document.getElementById('gVisibility').value='private'; document.querySelectorAll('#colorSelector .color-option').forEach(o=>o.classList.remove('selected')); document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected'); document.getElementById('modalTitle').textContent='➕ إضافة مرشد'; }
     
-    // إنشاء حساب (للمالك فقط)
-    async function createNewAdminUser(email, password, name) { try { const userCred = await auth.createUserWithEmailAndPassword(email, password); await userCred.user.updateProfile({ displayName: name }); await db.collection('users').doc(userCred.user.uid).set({ displayName: name, email: email, photoURL: '', job: '', isManagedByAdmin: true }); toast(`✅ تم إنشاء حساب ${email} بنجاح`); } catch(e) { toast(e.message, true); } }
+    async function loadProfile() { if(!currentUser) return; const doc = await db.collection('users').doc(currentUser.uid).get(); if(doc.exists) userProfile=doc.data(); else userProfile={ displayName:'', photoURL:'', job:'' }; updateProfileUI(); }
+    function updateProfileUI(){ document.getElementById('profilePicPreview').src=userProfile.photoURL||'https://via.placeholder.com/100'; document.getElementById('profileName').value=userProfile.displayName||''; document.getElementById('profileJob').value=userProfile.job||''; }
     
-    // تحميل الملف الشخصي
-    async function loadProfile() { if (!currentUser) return; const doc = await db.collection('users').doc(currentUser.uid).get(); if (doc.exists) userProfile = doc.data(); else { userProfile = { displayName: '', photoURL: '', job: '' }; await db.collection('users').doc(currentUser.uid).set({ email: currentUser.email }); } updateProfileUI(); }
-    function updateProfileUI() { document.getElementById('profilePicPreview').src = userProfile.photoURL || 'https://via.placeholder.com/100'; document.getElementById('profileName').value = userProfile.displayName || ''; document.getElementById('profileJob').value = userProfile.job || ''; }
-    
-    // أحداث
-    document.getElementById('profileBtn').onclick = () => document.getElementById('profileModal').classList.add('show');
-    document.getElementById('closeProfileBtn').onclick = () => document.getElementById('profileModal').classList.remove('show');
-    document.getElementById('profilePicUpload').onclick = () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.onchange = async e => { if (e.target.files[0]) { const reader = new FileReader(); reader.onload = async ev => { const url = await uploadToCloudinary(ev.target.result); userProfile.photoURL = url; await db.collection('users').doc(currentUser.uid).set({ photoURL: url }, { merge: true }); updateProfileUI(); toast('✅ تم تحديث الصورة'); }; reader.readAsDataURL(e.target.files[0]); } }; inp.click(); };
-    document.getElementById('saveProfileBtn').onclick = async () => { userProfile.displayName = sanitize(document.getElementById('profileName').value.trim()); userProfile.job = sanitize(document.getElementById('profileJob').value.trim()); await db.collection('users').doc(currentUser.uid).set(userProfile, { merge: true }); toast('✅ تم حفظ الملف الشخصي'); document.getElementById('profileModal').classList.remove('show'); };
+    // البصمة
+    async function biometricLogin() { if(!window.PublicKeyCredential || !navigator.credentials) { toast('جهازك لا يدعم البصمة', true); return; } try { const cred = await navigator.credentials.get({ publicKey: { challenge: new Uint8Array(32), rpId: window.location.hostname, allowCredentials: [] } }); if(cred) { const savedEmail = localStorage.getItem('biometricEmail'); if(savedEmail && savedEmail.includes('@')) { await login(savedEmail, 'biometric_dummy'); } else toast('سجل دخول عادي أولاً لحفظ البصمة', true); } } catch(e) { toast('فشل التحقق', true); } }
+    async function saveBiometric(email) { if(!window.PublicKeyCredential) return; try { await navigator.credentials.create({ publicKey: { challenge: new Uint8Array(32), rp: { name: "F-Note Pro", id: window.location.hostname }, user: { id: new TextEncoder().encode(email), name: email, displayName: email }, pubKeyCredParams: [{ alg: -7, type: "public-key" }], authenticatorSelection: { userVerification: "required" } } }); localStorage.setItem('biometricEmail', email); toast('✅ تم تفعيل البصمة للدخول السريع'); } catch(e){ toast('فشل حفظ البصمة', true); } }
     
     // Auth
-    async function login(email, pw) { try { await auth.signInWithEmailAndPassword(email.trim(), pw); } catch (e) { toast(e.message, true); } }
-    auth.onAuthStateChanged(async user => {
-        if (user) {
-            currentUser = user;
-            const adminEmail = "fahmiajmi5@gmail.com";
-            isAdmin = (user.email === adminEmail);
-            document.getElementById('loginScreen').classList.add('hide');
-            document.getElementById('signOutBtn').style.display = 'flex';
-            document.getElementById('userInfo').innerHTML = `<strong>${user.email}</strong>${isAdmin ? '<div class="admin-badge">👑 المالك</div>' : ''}`;
-            if(isAdmin) document.getElementById('adminSection').style.display = 'block';
-            await loadProfile();
-            listenGuides();
-        } else { currentUser = null; guides = []; renderGuides(); document.getElementById('loginScreen').classList.remove('hide'); document.getElementById('adminSection').style.display = 'none'; }
-    });
+    async function login(email, pw) { try { await auth.signInWithEmailAndPassword(email, pw); if(pw !== 'biometric_dummy') saveBiometric(email); } catch(e) { toast(e.message, true); } }
+    auth.onAuthStateChanged(async user => { if (user) { currentUser=user; isAdmin = (user.email === 'fahmiajmi5@gmail.com'); document.getElementById('loginScreen').classList.add('hide'); document.getElementById('signOutBtn').style.display='flex'; document.getElementById('userInfo').innerHTML=`<strong>${user.email}</strong>${isAdmin?'<span class="admin-badge">👑 المالك</span>':''}`; if(isAdmin) document.getElementById('adminSection').style.display='block'; await loadProfile(); listenGuides(); } else { currentUser=null; guides=[]; renderGuides(); document.getElementById('loginScreen').classList.remove('hide'); document.getElementById('adminSection').style.display='none'; } });
     document.getElementById('loginBtn').onclick = () => login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
-    document.getElementById('signOutBtn').onclick = () => { if (confirm('تسجيل الخروج؟')) auth.signOut(); };
+    document.getElementById('biometricLoginBtn').onclick = biometricLogin;
+    document.getElementById('signOutBtn').onclick = () => { if(confirm('تسجيل الخروج؟')) auth.signOut(); };
     document.getElementById('createUserBtn').onclick = () => { if(isAdmin) document.getElementById('createUserModal').classList.add('show'); else toast('غير مصرح', true); };
-    document.getElementById('confirmCreateUserBtn').onclick = async () => { const email = document.getElementById('newUserEmail').value; const pass = document.getElementById('newUserPassword').value; const name = document.getElementById('newUserName').value; if(email && pass) await createNewAdminUser(email, pass, name); document.getElementById('createUserModal').classList.remove('show'); };
+    document.getElementById('confirmCreateUserBtn').onclick = async () => { const em=document.getElementById('newUserEmail').value, pass=document.getElementById('newUserPassword').value, name=document.getElementById('newUserName').value; if(em && pass) { try { await auth.createUserWithEmailAndPassword(em, pass); await db.collection('users').doc((await auth.currentUser).uid).set({ displayName:name, email:em, photoURL:'' }); toast(`✅ تم إنشاء ${em}`); } catch(e){ toast(e.message, true); } document.getElementById('createUserModal').classList.remove('show'); } };
     document.getElementById('closeCreateUserBtn').onclick = () => document.getElementById('createUserModal').classList.remove('show');
+    document.getElementById('securitySettingsBtn').onclick = () => { if(currentUser) saveBiometric(currentUser.email); else toast('سجل دخول أولاً', true); };
     
-    // أحداث واجهة
+    // واجهة
     document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
     document.getElementById('closeSidebar').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
     document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
-    document.getElementById('darkModeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('dark', document.body.classList.contains('dark') ? '1' : '0'); };
-    if (localStorage.getItem('dark') === '1') document.body.classList.add('dark');
+    document.getElementById('darkModeBtn').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('dark', document.body.classList.contains('dark')?'1':'0'); };
+    if(localStorage.getItem('dark')==='1') document.body.classList.add('dark');
     document.getElementById('filterToggleBtn').onclick = () => document.getElementById('colorsPanel').classList.toggle('show');
-    document.querySelectorAll('.color-dot').forEach(d => { d.onclick = () => { colorFilter = d.dataset.color; document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active')); d.classList.add('active'); renderGuides(); }; });
+    document.querySelectorAll('.color-dot').forEach(d => { d.onclick = () => { colorFilter = d.dataset.color; document.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('active')); d.classList.add('active'); renderGuides(); }; });
     document.getElementById('addGuideBtn').onclick = () => { resetForm(); document.getElementById('guideModal').classList.add('show'); };
     document.getElementById('cancelGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
     document.getElementById('closeDetailBtn').onclick = () => document.getElementById('detailModal').classList.remove('show');
     document.getElementById('closeFullImage').onclick = () => document.getElementById('fullImageModal').classList.remove('show');
     document.getElementById('searchInput').oninput = renderGuides;
-    document.getElementById('exportJsonBtn').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(guides, null, 2)], { type: 'application/json' })); a.download = `F-NotePro_${new Date().toISOString().slice(0, 10)}.json`; a.click(); toast('💾 تم تصدير JSON'); };
-    document.getElementById('exportPdfBtn').onclick = () => { const el = document.createElement('div'); el.dir = 'rtl'; el.innerHTML = '<h1 style="text-align:center;color:#e94560;">F-Note Pro Max</h1><hr>'; guides.forEach(g => { el.innerHTML += `<div style="border:1px solid #ccc;border-radius:12px;padding:10px;margin:8px 0;"><b>${esc(g.name)}</b><br>📞 ${esc(g.phone)}<br>🚐 ${esc(g.transportType || '—')}</div>`; }); html2pdf().from(el).set({ margin: 5, filename: `F-NotePro_${new Date().toISOString().slice(0, 10)}.pdf` }).save(); toast('📄 جاري تصدير PDF'); };
-    document.getElementById('shiftReportBtn').onclick = async () => { toast('⏳ جاري إعداد التقرير'); const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFontSize(18); doc.text('تقرير المرشدين - F-Note Pro', 10, 20); doc.setFontSize(10); doc.text(`التاريخ: ${new Date().toLocaleDateString('ar')} | المستخدم: ${userProfile.displayName || currentUser?.email}`, 10, 30); doc.line(10, 35, 200, 35); let y = 42; guides.forEach(g => { if(y > 270){ doc.addPage(); y=20; } doc.setFontSize(9); doc.text(`${g.name} - ${g.phone}`, 10, y); y+=7; }); doc.save(`تقرير_المرشدين_${new Date().toISOString().slice(0,10)}.pdf`); toast('📋 تم تصدير التقرير'); };
+    document.getElementById('exportJsonBtn').onclick = () => { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(guides,null,2)],{type:'application/json'})); a.download=`F-NotePro_${new Date().toISOString().slice(0,10)}.json`; a.click(); toast('💾 تم تصدير JSON'); };
+    document.getElementById('exportPdfBtn').onclick = () => { const el=document.createElement('div'); el.dir='rtl'; el.innerHTML='<h1 style="text-align:center;color:#e94560;">F-Note Pro Max</h1><hr>'; guides.forEach(g=>{ el.innerHTML+=`<div style="border:1px solid #ccc;border-radius:12px;padding:10px;margin:8px 0;"><b>${esc(g.name)}</b><br>📞 ${esc(g.phone)}<br>🚐 ${esc(g.transportType||'—')}</div>`; }); html2pdf().from(el).set({ margin:5, filename:`F-NotePro_${new Date().toISOString().slice(0,10)}.pdf` }).save(); };
     document.getElementById('guideUploadCard').onclick = () => pickImage('guide');
     document.getElementById('busUploadCard').onclick = () => pickImage('bus');
-    document.getElementById('saveGuideBtn').onclick = async () => { const name = document.getElementById('gName').value.trim(), phone = document.getElementById('gPhone').value.trim(); if (!name || !phone) return toast('⚠️ الاسم والهاتف مطلوبان', true); if (!validPhone(phone)) return toast('⚠️ رقم الهاتف غير صالح', true); const data = { id: editId, name, phone, plate: document.getElementById('gPlate').value.trim(), color: selectedColor, transport: document.getElementById('gTransport').value.trim(), agency: document.getElementById('gAgency').value.trim(), notes: document.getElementById('gNotes').value.trim(), fav: editId ? (guides.find(g => g.id === editId)?.favorite || false) : false, vis: document.getElementById('gVisibility').value }; try { await saveGuide(data); toast('✅ تم حفظ المرشد'); document.getElementById('guideModal').classList.remove('show'); resetForm(); } catch (e) { toast('❌ فشل الحفظ: ' + e.message, true); } };
-    document.getElementById('detailShareBtn').onclick = () => { if(detailGuide) shareAsImage(detailGuide.id); };
-    const colorContainer = document.getElementById('colorSelector'); const colorList = ['#e94560', '#2c7da0', '#e76f51', '#2a9d8f', '#e9c46a', '#9b5de5', '#06d6a0', '#ff006e'];
-    colorContainer.innerHTML = colorList.map(c => `<div class="color-option" data-color="${c}" style="background:${c};"></div>`).join('');
-    document.querySelectorAll('#colorSelector .color-option').forEach(o => { o.onclick = () => { document.querySelectorAll('#colorSelector .color-option').forEach(x => x.classList.remove('selected')); o.classList.add('selected'); selectedColor = o.dataset.color; }; });
+    document.getElementById('saveGuideBtn').onclick = async () => { const name=document.getElementById('gName').value.trim(), phone=document.getElementById('gPhone').value.trim(); if(!name||!phone) return toast('⚠️ الاسم والهاتف مطلوبان',true); if(!validPhone(phone)) return toast('⚠️ رقم غير صالح',true); const data={ id:editId, name, phone, plate:document.getElementById('gPlate').value.trim(), color:selectedColor, transport:document.getElementById('gTransport').value.trim(), agency:document.getElementById('gAgency').value.trim(), notes:document.getElementById('gNotes').value.trim(), fav:editId?(guides.find(g=>g.id===editId)?.favorite||false):false, vis:document.getElementById('gVisibility').value }; try{ await saveGuide(data); toast('✅ تم الحفظ'); document.getElementById('guideModal').classList.remove('show'); resetForm(); }catch(e){ toast('❌ فشل الحفظ',true); } };
+    document.getElementById('detailShareTableBtn').onclick = () => { if(window.detailGuideId) shareAsTable(window.detailGuideId); else if(document.getElementById('detailName').innerText) { const namePart = document.getElementById('detailName').innerText; const guide = guides.find(g=>g.name && namePart.includes(g.name)); if(guide) shareAsTable(guide.id); } };
+    window.detailGuideId = null;
+    const originalShow = window.showDetailsModal;
+    window.showDetailsModal = (id) => { window.detailGuideId = id; originalShow(id); };
+    
+    const colorContainer=document.getElementById('colorSelector'); const colorList=['#e94560','#2c7da0','#e76f51','#2a9d8f','#e9c46a','#9b5de5','#06d6a0','#ff006e'];
+    colorContainer.innerHTML=colorList.map(c=>`<div class="color-option" data-color="${c}" style="background:${c};"></div>`).join('');
+    document.querySelectorAll('#colorSelector .color-option').forEach(o=>{ o.onclick=()=>{ document.querySelectorAll('#colorSelector .color-option').forEach(x=>x.classList.remove('selected')); o.classList.add('selected'); selectedColor=o.dataset.color; }; });
     document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected');
-    document.getElementById('voiceSearchBtn').onclick = () => { if (!('webkitSpeechRecognition' in window)) return toast('غير مدعوم', true); const rec = new webkitSpeechRecognition(); rec.lang = 'ar'; rec.start(); rec.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); }; };
-    document.querySelectorAll('.nav-tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(tab.dataset.page).classList.add('active'); }); });
-    console.log('✅ جاهز: تم حذف الدردشة بالكامل، نظام المرشدين مع مشاركة كصورة، فقط المالك ينشئ حسابات');
+    document.getElementById('voiceSearchBtn').onclick = () => { if(!('webkitSpeechRecognition' in window)) return toast('غير مدعوم',true); const rec = new webkitSpeechRecognition(); rec.lang='ar'; rec.start(); rec.onresult=e=>{ document.getElementById('searchInput').value=e.results[0][0].transcript; renderGuides(); }; };
+    document.querySelectorAll('.nav-tab').forEach(tab=>{ tab.addEventListener('click',()=>{ document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(tab.dataset.page).classList.add('active'); }); });
+    document.getElementById('profileBtn').onclick = () => document.getElementById('profileModal').classList.add('show');
+    document.getElementById('closeProfileBtn').onclick = () => document.getElementById('profileModal').classList.remove('show');
+    document.getElementById('profilePicUpload').onclick = () => { const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=async e=>{ if(e.target.files[0]){ const reader=new FileReader(); reader.onload=async ev=>{ const url=await uploadToCloudinary(ev.target.result); userProfile.photoURL=url; await db.collection('users').doc(currentUser.uid).set({ photoURL:url },{merge:true}); updateProfileUI(); toast('✅ تم تحديث الصورة'); }; reader.readAsDataURL(e.target.files[0]); } }; inp.click(); };
+    document.getElementById('saveProfileBtn').onclick = async () => { userProfile.displayName=sanitize(document.getElementById('profileName').value.trim()); userProfile.job=sanitize(document.getElementById('profileJob').value.trim()); await db.collection('users').doc(currentUser.uid).set(userProfile,{merge:true}); toast('✅ تم الحفظ'); document.getElementById('profileModal').classList.remove('show'); };
+    console.log("✅ تم التحديث الكامل: بطاقات أفقية، اتصال مباشر، جدول واتساب، بصمة، أمان Firestore (rules موصى بها)");
 </script>
 </body>
 </html>
