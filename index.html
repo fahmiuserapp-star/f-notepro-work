@@ -114,7 +114,6 @@
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .loading-msg { text-align: center; padding: 30px; color: var(--text-secondary); }
         
-        /* نافذة اختيار جهات الاتصال */
         .contacts-list-modal { max-height: 300px; overflow-y: auto; margin: 15px 0; }
         .contact-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--bg-body); border-radius: var(--radius-md); margin-bottom: 8px; cursor: pointer; transition: 0.1s; }
         .contact-item:active { transform: scale(0.98); background: var(--border); }
@@ -132,8 +131,8 @@
             <img src="https://i.ibb.co/KxCpMmmq/1777593015229-removebg-preview.png" alt="logo">
             <div class="login-title">F-Note Pro</div>
             <div class="login-sub">خزنة المرشدين السياحيين</div>
-            <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
-            <input type="password" id="loginPassword" placeholder="كلمة المرور">
+            <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
+            <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
             <button class="login-btn" id="loginBtn">دخول</button>
         </div>
     </div>
@@ -247,7 +246,7 @@
     </div>
 
     <script>
-        // ==================== إعدادات Firebase ====================
+        // ==================== إعدادات Firebase الصحيحة ====================
         const firebaseConfig = {
             apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
             authDomain: "f-notepro-work-2d25b.firebaseapp.com",
@@ -260,11 +259,16 @@
         const CLOUD_NAME = 'dmhtx93nj', UPLOAD_PRESET = 'fcloud_preset';
         const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
+        // تهيئة Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
         const storage = firebase.storage();
-        db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
+        
+        // تمكين التخزين دون اتصال
+        db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+            console.warn("Persistence error:", err);
+        });
 
         let currentUser = null;
         let guides = [];
@@ -508,7 +512,6 @@
         // ==================== مشاركة واتساب مع اختيار جهة الاتصال ====================
         async function loadContacts() {
             if (!currentUser) return;
-            // جلب المستخدمين المسجلين (باستثناء نفس المستخدم)
             const snap = await db.collection('users').get();
             contactList = [];
             snap.forEach(doc => {
@@ -516,7 +519,7 @@
                     contactList.push({ uid: doc.id, ...doc.data() });
                 }
             });
-            // إضافة بعض الأرقام الافتراضية كمثال
+            // أرقام افتراضية للتجربة
             contactList.push({ displayName: 'أحمد محمد', phone: '+21612345678', photoURL: '' });
             contactList.push({ displayName: 'سارة خالد', phone: '+21698765432', photoURL: '' });
             renderContactsList();
@@ -563,7 +566,6 @@
             const guide = guides.find(g => g.id === currentShareGuideId);
             if (!guide) return;
             
-            // بناء رسالة واتساب
             let message = `*${guide.name}*\n`;
             message += `📞 ${guide.phone}\n`;
             if (guide.transportType) message += `🚐 وسيلة النقل: ${guide.transportType}\n`;
@@ -572,19 +574,8 @@
             if (guide.notes) message += `📝 ملاحظات: ${guide.notes}\n`;
             message += `🔗 تمت المشاركة عبر تطبيق F-Note Pro`;
             
-            // فتح واتساب مع إمكانية إرسال الصورة
             const waUrl = `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(message)}`;
-            
-            // إذا كانت هناك صورة للمرشد، نحاول فتحها بعد فتح الواتساب
-            if (guide.guidePhoto) {
-                // فتح الواتساب أولاً
-                window.open(waUrl, '_blank');
-                setTimeout(() => {
-                    toast('📸 تم فتح واتساب - يمكنك إرسال الصورة يدوياً من المعرض', false);
-                }, 500);
-            } else {
-                window.open(waUrl, '_blank');
-            }
+            window.open(waUrl, '_blank');
             
             document.getElementById('contactPickerModal').classList.remove('show');
             toast(`✅ تم توجيهك إلى واتساب للمستخدم ${name || phone}`);
@@ -605,7 +596,6 @@
         function updateProfileUI() {
             document.getElementById('profilePicPreview').src = userProfile.photoURL || 'https://via.placeholder.com/100';
             document.getElementById('profileName').value = userProfile.displayName || '';
-            document.getElementById('floatingAvatar')?.setAttribute('src', userProfile.photoURL || '');
         }
         document.getElementById('profileBtn').onclick = () => document.getElementById('profileModal').classList.add('show');
         document.getElementById('closeProfileBtn').onclick = () => document.getElementById('profileModal').classList.remove('show');
@@ -635,12 +625,36 @@
             document.getElementById('profileModal').classList.remove('show');
         };
 
-        // ==================== المصادقة ====================
-        async function login(email, pw) {
-            try { await auth.signInWithEmailAndPassword(email.trim(), pw); }
-            catch (e) { toast(e.message, true); }
+        // ==================== المصادقة (تم إصلاحها) ====================
+        async function handleLogin(email, password) {
+            const btn = document.getElementById('loginBtn');
+            btn.textContent = '⏳ جاري الدخول...';
+            btn.disabled = true;
+            try {
+                await auth.signInWithEmailAndPassword(email.trim(), password);
+                toast('✅ تم تسجيل الدخول بنجاح');
+            } catch (error) {
+                let msg = 'فشل تسجيل الدخول';
+                if (error.code === 'auth/invalid-credential') msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+                else if (error.code === 'auth/user-not-found') msg = 'لا يوجد حساب بهذا البريد';
+                else if (error.code === 'auth/wrong-password') msg = 'كلمة المرور غير صحيحة';
+                else if (error.code === 'auth/network-request-failed') msg = 'فشل الاتصال بالإنترنت';
+                else msg = error.message;
+                toast(msg, true);
+            } finally {
+                btn.textContent = '🔐 دخول';
+                btn.disabled = false;
+            }
         }
-        auth.onAuthStateChanged(async user => {
+
+        function handleLogout() {
+            if (confirm('تسجيل الخروج؟')) {
+                auth.signOut();
+                toast('تم تسجيل الخروج');
+            }
+        }
+
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('loginScreen').classList.add('hide');
@@ -653,10 +667,20 @@
                 guides = [];
                 renderGuides();
                 document.getElementById('loginScreen').classList.remove('hide');
+                document.getElementById('signOutBtn').style.display = 'none';
             }
         });
-        document.getElementById('loginBtn').onclick = () => login(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
-        document.getElementById('signOutBtn').onclick = () => { if (confirm('تسجيل الخروج؟')) auth.signOut(); };
+
+        document.getElementById('loginBtn').onclick = () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            if (!email || !password) {
+                toast('الرجاء إدخال البريد الإلكتروني وكلمة المرور', true);
+                return;
+            }
+            handleLogin(email, password);
+        };
+        document.getElementById('signOutBtn').onclick = handleLogout;
 
         // ==================== أحداث الواجهة ====================
         document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
