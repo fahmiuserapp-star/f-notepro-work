@@ -48,6 +48,8 @@
         .login-input:focus { border-color: var(--gold); outline: none; }
         .login-btn { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: var(--radius-full); color: white; font-weight: 700; cursor: pointer; margin-top: 12px; }
         .login-btn:active { transform: scale(0.96); }
+        .register-link { margin-top: 15px; font-size: 13px; color: var(--text-secondary); }
+        .register-link span { color: var(--gold); cursor: pointer; font-weight: bold; }
         
         .sidebar { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: var(--bg-card); z-index: 1500; transition: right 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); box-shadow: -4px 0 20px rgba(0,0,0,0.15); overflow-y: auto; }
         .sidebar.open { right: 0; }
@@ -134,6 +136,7 @@
             <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" value="fahmiajmi5@gmail.com">
             <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
             <button class="login-btn" id="loginBtn">دخول</button>
+            <div class="register-link">ليس لديك حساب؟ <span id="registerBtn">إنشاء حساب جديد</span></div>
         </div>
     </div>
 
@@ -265,7 +268,6 @@
         const auth = firebase.auth();
         const storage = firebase.storage();
         
-        // تمكين التخزين دون اتصال
         db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
             console.warn("Persistence error:", err);
         });
@@ -625,24 +627,66 @@
             document.getElementById('profileModal').classList.remove('show');
         };
 
-        // ==================== المصادقة (تم إصلاحها) ====================
+        // ==================== المصادقة (تم إصلاحها بالكامل) ====================
         async function handleLogin(email, password) {
             const btn = document.getElementById('loginBtn');
             btn.textContent = '⏳ جاري الدخول...';
             btn.disabled = true;
             try {
-                await auth.signInWithEmailAndPassword(email.trim(), password);
+                const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
+                currentUser = userCredential.user;
                 toast('✅ تم تسجيل الدخول بنجاح');
+                await loadProfile();
+                listenGuides();
             } catch (error) {
+                console.error("Login error:", error);
                 let msg = 'فشل تسجيل الدخول';
-                if (error.code === 'auth/invalid-credential') msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-                else if (error.code === 'auth/user-not-found') msg = 'لا يوجد حساب بهذا البريد';
-                else if (error.code === 'auth/wrong-password') msg = 'كلمة المرور غير صحيحة';
-                else if (error.code === 'auth/network-request-failed') msg = 'فشل الاتصال بالإنترنت';
-                else msg = error.message;
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+                } else if (error.code === 'auth/network-request-failed') {
+                    msg = 'فشل الاتصال بالإنترنت';
+                } else {
+                    msg = error.message;
+                }
                 toast(msg, true);
             } finally {
                 btn.textContent = '🔐 دخول';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleRegister(email, password) {
+            const btn = document.getElementById('loginBtn');
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ جاري إنشاء الحساب...';
+            btn.disabled = true;
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email.trim(), password);
+                currentUser = userCredential.user;
+                await db.collection('users').doc(currentUser.uid).set({
+                    email: currentUser.email,
+                    displayName: '',
+                    photoURL: '',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                toast('✅ تم إنشاء الحساب بنجاح');
+                await loadProfile();
+                listenGuides();
+            } catch (error) {
+                console.error("Register error:", error);
+                let msg = 'فشل إنشاء الحساب';
+                if (error.code === 'auth/email-already-in-use') {
+                    msg = 'البريد الإلكتروني مستخدم بالفعل';
+                } else if (error.code === 'auth/weak-password') {
+                    msg = 'كلمة المرور ضعيفة (6 أحرف على الأقل)';
+                } else if (error.code === 'auth/invalid-email') {
+                    msg = 'البريد الإلكتروني غير صالح';
+                } else {
+                    msg = error.message;
+                }
+                toast(msg, true);
+            } finally {
+                btn.textContent = originalText;
                 btn.disabled = false;
             }
         }
@@ -680,6 +724,21 @@
             }
             handleLogin(email, password);
         };
+        
+        document.getElementById('registerBtn').onclick = () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            if (!email || !password) {
+                toast('الرجاء إدخال البريد الإلكتروني وكلمة المرور', true);
+                return;
+            }
+            if (password.length < 6) {
+                toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true);
+                return;
+            }
+            handleRegister(email, password);
+        };
+        
         document.getElementById('signOutBtn').onclick = handleLogout;
 
         // ==================== أحداث الواجهة ====================
@@ -768,7 +827,7 @@
         });
         document.querySelector('#colorSelector .color-option[data-color="#e94560"]')?.classList.add('selected');
 
-        console.log('✅ التطبيق جاهز - نظام متكامل لإدارة المرشدين مع مشاركة واتساب');
+        console.log('✅ التطبيق جاهز - نظام متكامل لإدارة المرشدين مع تسجيل الدخول وإنشاء حساب');
     </script>
 </body>
 </html>
