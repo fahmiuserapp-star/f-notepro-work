@@ -1,1103 +1,380 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" data-theme="light">
+<html lang="ar" dir="rtl">
 <head>
-<!-- Playables SDK -->
-<script>// Playables SDK v1.0.0
-// Game lifecycle bridge: rAF-based game-ready detection + event communication
-(function() {
-  'use strict';
-
-  // Idempotency: skip if already initialized (e.g., server-side injection
-  // followed by client-side inject-javascript via the Bloks webview component).
-  if (window.playablesSDK) return;
-
-  var HANDLER_NAME = 'playablesGameEventHandler';
-  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
-  var RAF_FRAME_THRESHOLD = 3;
-
-  var gameReadySent = false;
-  var firstInteractionSent = false;
-  var errorSent = false;
-  var frameCount = 0;
-  var originalRAF = window.requestAnimationFrame;
-
-  // --- Transport Layer ---
-
-  function hasIOSBridge() {
-    return !!(window.webkit &&
-              window.webkit.messageHandlers &&
-              window.webkit.messageHandlers[HANDLER_NAME]);
-  }
-
-  function hasAndroidBridge() {
-    return !!(window[ANDROID_BRIDGE_NAME] &&
-              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
-  }
-
-  function isInIframe() {
-    return !!(window.parent && window.parent !== window);
-  }
-
-  function sendEvent(eventName, payload) {
-    var message = {
-      type: eventName,
-      payload: payload || {},
-      timestamp: Date.now()
-    };
-
-    if (hasIOSBridge()) {
-      try {
-        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
-      } catch (e) { /* ignore */ }
-      return;
-    }
-
-    if (hasAndroidBridge()) {
-    try {
-      var p = payload || {};
-      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
-      p.timestamp = message.timestamp;
-      window[ANDROID_BRIDGE_NAME].postEvent(
-        eventName,
-        JSON.stringify(p)
-      );
-    } catch (e) { /* ignore */ }
-    return;
-  }
-
-    if (isInIframe()) {
-      try {
-        window.parent.postMessage(message, '*');
-      } catch (e) { /* ignore */ }
-      return;
-    }
-  }
-
-  // --- rAF Game-Ready Detection ---
-
-  function onFrame() {
-    if (gameReadySent) return;
-
-    frameCount++;
-    if (frameCount >= RAF_FRAME_THRESHOLD) {
-      gameReadySent = true;
-      sendEvent('game_ready', {
-        frame_count: frameCount,
-        detected_at: Date.now()
-      });
-      return;
-    }
-
-    originalRAF.call(window, onFrame);
-  }
-
-  if (originalRAF) {
-    window.requestAnimationFrame = function(callback) {
-      if (!gameReadySent) {
-        return originalRAF.call(window, function(timestamp) {
-          frameCount++;
-          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
-            gameReadySent = true;
-            sendEvent('game_ready', {
-              frame_count: frameCount,
-              detected_at: Date.now()
-            });
-          }
-          callback(timestamp);
-        });
-      }
-      return originalRAF.call(window, callback);
-    };
-  }
-
-  // --- First User Interaction Detection ---
-
-  function setupFirstInteractionDetection() {
-    var events = ['touchstart', 'mousedown', 'keydown'];
-
-    function onFirstInteraction() {
-      if (firstInteractionSent) return;
-      firstInteractionSent = true;
-      sendEvent('user_interaction_start', null);
-
-      for (var i = 0; i < events.length; i++) {
-        document.removeEventListener(events[i], onFirstInteraction, true);
-      }
-    }
-
-    for (var i = 0; i < events.length; i++) {
-      document.addEventListener(events[i], onFirstInteraction, true);
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
-  } else {
-    setupFirstInteractionDetection();
-  }
-
-  // --- Auto Error Capture ---
-
-  window.addEventListener('error', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    sendEvent('error', {
-      message: event.message || 'Unknown error',
-      source: event.filename || '',
-      lineno: event.lineno || 0,
-      colno: event.colno || 0,
-      auto_captured: true
-    });
-  });
-
-  window.addEventListener('unhandledrejection', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    var reason = event.reason;
-    sendEvent('error', {
-      message: (reason instanceof Error) ? reason.message : String(reason),
-      type: 'unhandled_promise_rejection',
-      auto_captured: true
-    });
-  });
-
-  // --- Public API ---
-
-  window.playablesSDK = {
-    complete: function(score) {
-      sendEvent('game_ended', {
-        score: score,
-        completed: true
-      });
-    },
-
-    error: function(message) {
-      if (errorSent) return;
-      errorSent = true;
-      sendEvent('error', {
-        message: message || 'Unknown error',
-        auto_captured: false
-      });
-    },
-
-    sendEvent: function(eventName, payload) {
-      if (!eventName || typeof eventName !== 'string') return;
-      sendEvent(eventName, payload);
-    }
-  };
-
-  // Kick off rAF detection in case no game code calls rAF immediately
-  if (originalRAF) {
-    originalRAF.call(window, onFrame);
-  }
-})();</script>
-<script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>F-NOTEPRO-WORK — Security Note App</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-  <style>
-    :root {
-      --olive: #4A5D23;
-      --olive-600: #3D4E1C;
-      --olive-100: #E8EDE0;
-      --gold: #C9A227;
-      --gold-600: #B8921F;
-      --bg: #F7F7F2;
-      --card: #FFFFFF;
-      --text: #1F2937;
-      --muted: #6B7280;
-      --border: #E5E7EB;
-      --shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-    }
-    [data-theme="dark"] {
-      --olive: #6F7F45;
-      --olive-600: #5A6A36;
-      --olive-100: #2A2F1E;
-      --gold: #D4B14A;
-      --gold-600: #C9A227;
-      --bg: #121410;
-      --card: #1A1D16;
-      --text: #E5E7EB;
-      --muted: #9CA3AF;
-      --border: #2D3325;
-      --shadow: 0 10px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.4);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <meta name="theme-color" content="#e94560">
+    <title>F-Note Pro Max</title>
     
-    * {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    
-    /* Force Western Arabic numerals 0-9 */
-    html, body, input, textarea, select {
-      font-variant-numeric: lining-nums tabular-nums;
-      font-feature-settings: "lnum" 1, "tnum" 1;
-    }
-    
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 1rem;
-      box-shadow: var(--shadow);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, var(--olive) 0%, var(--olive-600) 100%);
-      color: white;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 14px 0 rgba(74, 93, 35, 0.3);
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px 0 rgba(74, 93, 35, 0.4);
-    }
-    .btn-primary:active {
-      transform: translateY(0);
-    }
-    
-    .btn-gold {
-      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-600) 100%);
-      color: #1F2937;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 14px 0 rgba(201, 162, 39, 0.3);
-    }
-    .btn-gold:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px 0 rgba(201, 162, 39, 0.4);
-    }
-    
-    .input-field {
-      background: var(--bg);
-      border: 2px solid var(--border);
-      color: var(--text);
-      transition: all 0.2s ease;
-      outline: none;
-    }
-    .input-field:focus {
-      border-color: var(--olive);
-      box-shadow: 0 0 0 3px rgba(74, 93, 35, 0.1);
-    }
-    
-    .plate-input {
-      width: 5.5rem;
-      text-align: center;
-      font-weight: 700;
-      font-size: 1.125rem;
-      letter-spacing: 0.1em;
-    }
-    
-    .badge-olive {
-      background: var(--olive-100);
-      color: var(--olive-600);
-      border: 1px solid var(--olive);
-    }
-    
-    [data-theme="dark"] .badge-olive {
-      background: var(--olive-100);
-      color: var(--gold);
-      border: 1px solid var(--olive);
-    }
-    
-    .strip-card {
-      background: linear-gradient(135deg, var(--card) 0%, var(--olive-100) 100%);
-      cursor: pointer;
-      overflow: hidden;
-      position: relative;
-    }
-    .strip-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.05), transparent);
-      transform: translateX(-100%);
-      transition: transform 0.6s ease;
-    }
-    .strip-card:hover::before {
-      transform: translateX(100%);
-    }
-    
-    .thumbnail {
-      width: 48px;
-      height: 48px;
-      border-radius: 0.5rem;
-      object-fit: cover;
-      border: 2px solid var(--gold);
-    }
-    
-    .modal-backdrop {
-      backdrop-filter: blur(8px);
-      background: rgba(0, 0, 0, 0.5);
-    }
-    
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .animate-slide-in {
-      animation: slideIn 0.3s ease-out;
-    }
-    
-    .settings-menu {
-      transform-origin: top left;
-      animation: scaleIn 0.2s ease-out;
-    }
-    
-    [dir="ltr"] .settings-menu {
-      transform-origin: top right;
-    }
-    
-    @keyframes scaleIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-  </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-body: #f7f9fc; --bg-card: #ffffff; --text-primary: #1e293b; --text-secondary: #475569;
+            --text-muted: #64748b; --border: #e2e8f0; --gold: #e94560; --success: #10b981; --whatsapp: #25D366;
+            --olive: #556B2F; --olive-light: #6B842F; --gold-card: #D4AF37; --gold-light: #E5C158;
+        }
+        body.dark { --bg-body: #0f172a; --bg-card: #1e293b; --text-primary: #f1f5f9; --text-secondary: #e2e8f0; --text-muted: #94a3b8; --border: #475569; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg-body); color: var(--text-primary); transition: background 0.2s, color 0.2s; padding-bottom: 20px; position: relative; }
+        body::before { content: ""; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; height: 280px; background: rgba(0,0,0,0.03); border-radius: 50%; z-index: 0; pointer-events: none; }
+        body::after { content: ""; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 250px; background-image: url('https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png'); background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.07; z-index: 0; pointer-events: none; }
+
+        .app-header { background: var(--bg-card); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
+        .logo-header img { height: 44px; }
+        .header-btn { width: 38px; height: 38px; border-radius: 50%; background: transparent; border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 17px; transition: all 0.15s; }
+        .header-btn:active { background: var(--gold); color: white; transform: scale(0.93); }
+
+        .sidebar { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background: var(--bg-card); z-index: 1500; transition: right 0.3s ease; box-shadow: -4px 0 20px rgba(0,0,0,0.15); overflow-y: auto; }
+        .sidebar.open { right: 0; }
+        .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .sidebar-close { background: var(--bg-body); border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+        .sidebar-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+        .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; border-radius: 14px; margin: 3px 0; font-size: 14px; color: var(--text-primary); }
+        .sidebar-item:active { background: var(--bg-body); }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px); z-index: 1400; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .overlay.show { visibility: visible; opacity: 1; }
+
+        .toolbar { display: flex; gap: 10px; padding: 12px 16px; background: var(--bg-body); position: sticky; top: 64px; z-index: 90; }
+        .search-box { flex: 1; padding: 11px 16px; border: 2px solid transparent; border-radius: 60px; background: var(--bg-card); color: var(--text-primary); font-size: 14px; }
+        .search-box:focus { border-color: var(--gold); outline: none; }
+        .add-btn { width: 46px; height: 46px; border-radius: 50%; background: var(--gold); color: white; font-size: 24px; border: none; cursor: pointer; }
+
+        .guides-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
+        .note-card { background: var(--bg-card); border-radius: 20px; padding: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-right: 4px solid var(--gold); cursor: pointer; }
+        .note-card:active { transform: scale(0.99); }
+        .note-body { display: flex; align-items: center; gap: 10px; }
+        .note-img { width: 50px; height: 50px; border-radius: 14px; object-fit: cover; border: 2px solid var(--gold-card); }
+        .note-info { flex: 1; }
+        .note-title { font-weight: 800; font-size: 16px; }
+        .note-subtitle { font-size: 12px; color: var(--text-muted); }
+
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1600; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal.show { visibility: visible; opacity: 1; }
+        .modal-box { background: var(--bg-card); width: 92%; max-width: 650px; border-radius: 32px; padding: 24px; max-height: 90vh; overflow-y: auto; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--olive); }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 11px 14px; border: 2px solid var(--border); border-radius: 16px; background: var(--bg-body); color: var(--text-primary); font-size: 14px; }
+        .upload-area { border: 2px dashed var(--gold-card); border-radius: 20px; padding: 16px; text-align: center; cursor: pointer; margin: 8px 0; }
+        .upload-area:hover { background: rgba(212,175,55,0.05); }
+        .preview-thumb { width: 70px; height: 70px; border-radius: 16px; object-fit: cover; border: 2px solid var(--gold-card); }
+
+        .btn-primary { background: linear-gradient(135deg, var(--olive), #3d4d21); color: white; border: none; padding: 14px; border-radius: 20px; font-weight: 700; width: 100%; cursor: pointer; }
+        .btn-gold { background: linear-gradient(135deg, var(--gold-card), var(--gold-light)); color: white; border: none; padding: 14px; border-radius: 20px; font-weight: 700; cursor: pointer; }
+        .toast { position: fixed; bottom: 30px; left: 20px; right: 20px; background: #1e293b; color: white; border-radius: 60px; padding: 12px 20px; text-align: center; z-index: 9999; font-size: 13px; animation: slideUp 0.3s; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    </style>
 </head>
-<body class="min-h-screen">
-  <div class="max-w-6xl mx-auto p-4 md:p-6">
-    <!-- Header -->
-    <header class="card p-4 md:p-6 mb-6 animate-slide-in">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-xl btn-primary flex items-center justify-center">
-            <i class="fas fa-shield-halved text-xl"></i>
-          </div>
-          <div>
-            <h1 class="text-2xl md:text-3xl font-bold" style="color: var(--olive)" data-i18n="appTitle">F-NOTEPRO-WORK</h1>
-            <p class="text-sm" style="color: var(--muted)" data-i18n="appSubtitle">Security Note Application</p>
-          </div>
-        </div>
-        
-        <div class="flex items-center gap-3">
-          <div class="text-end">
-            <div class="text-xs" style="color: var(--muted)" data-i18n="currentTime">Current Time</div>
-            <div id="dateTime" class="text-sm font-semibold" dir="ltr">--/--/---- --:--:--</div>
-          </div>
-          
-          <!-- Settings Menu Button -->
-          <div class="relative">
-            <button id="settingsBtn" class="px-4 py-2.5 rounded-lg border-2 flex items-center gap-2 hover:scale-105 transition-all" style="border-color: var(--border); background: var(--card)">
-              <i class="fas fa-gear"></i>
-              <span class="hidden sm:inline text-sm" data-i18n="settings">Settings</span>
-            </button>
-            
-            <div id="settingsMenu" class="settings-menu hidden absolute top-full mt-2 end-0 w-64 card p-4 z-50">
-              <div class="mb-4">
-                <label class="text-xs font-semibold mb-2 block" style="color: var(--muted)" data-i18n="language">Language</label>
-                <div class="grid grid-cols-3 gap-2">
-                  <button data-lang="ar" class="lang-btn px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all" style="border-color: var(--olive)">AR</button>
-                  <button data-lang="fr" class="lang-btn px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all" style="border-color: var(--border)">FR</button>
-                  <button data-lang="en" class="lang-btn px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all" style="border-color: var(--border)">EN</button>
-                </div>
-              </div>
-              
-              <div>
-                <label class="text-xs font-semibold mb-2 block" style="color: var(--muted)" data-i18n="theme">Theme</label>
-                <button id="themeToggle" class="w-full px-4 py-2.5 rounded-lg btn-gold flex items-center justify-between">
-                  <span class="text-sm font-medium">
-                    <i class="fas fa-sun" id="themeIcon"></i>
-                    <span class="ms-2" data-i18n="toggleTheme" id="themeText">Light Mode</span>
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
+<body>
 
-    <!-- Main Form -->
-    <div id="noteForm" class="card p-5 md:p-8 mb-6 animate-slide-in">
-      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-        <i class="fas fa-plus-circle" style="color: var(--gold)"></i>
-        <span data-i18n="newNote">New Security Note</span>
-      </h2>
-      
-      <div class="grid md:grid-cols-2 gap-6">
-        <!-- Bus Section -->
-        <div class="space-y-4">
-          <h3 class="font-semibold text-lg flex items-center gap-2 border-b-2 pb-2" style="border-color: var(--olive)">
-            <i class="fas fa-bus" style="color: var(--olive)"></i>
-            <span data-i18n="busInfo">Bus Information</span>
-          </h3>
-          
-          <!-- License Plate -->
-          <div>
-            <label class="text-sm font-medium mb-2 block" data-i18n="licensePlate">License Plate</label>
-            <div id="plateContainer" class="flex items-center gap-2 flex-wrap">
-              <div id="plateTunisian" class="flex items-center gap-2">
-                <input type="text" inputmode="numeric" maxlength="5" id="platePart1" class="input-field plate-input px-3 py-2.5 rounded-lg" placeholder="12345" lang="en-US" />
-                <span class="px-4 py-2.5 rounded-lg badge-olive font-bold">تونس</span>
-                <input type="text" inputmode="numeric" maxlength="3" id="platePart2" class="input-field plate-input px-3 py-2.5 rounded-lg" placeholder="123" lang="en-US" />
-              </div>
-              
-              <div id="plateForeign" class="hidden flex-1">
-                <input type="text" id="plateForeignInput" class="input-field w-full px-4 py-2.5 rounded-lg" placeholder="Foreign Plate Number" lang="en-US" data-i18n-placeholder="foreignPlate" />
-              </div>
-              
-              <button id="plateToggle" class="px-3 py-2.5 rounded-lg border-2 hover:scale-110 transition-all" style="border-color: var(--gold); color: var(--gold)" title="Switch to foreign plate">
-                <i class="fas fa-plus"></i>
-              </button>
-            </div>
-          </div>
-          
-          <!-- Bus Image -->
-          <div>
-            <label class="text-sm font-medium mb-2 block" data-i18n="busImage">Bus Image</label>
-            <div class="flex items-center gap-3">
-              <label class="flex-1 cursor-pointer">
-                <div class="input-field px-4 py-3 rounded-lg flex items-center justify-between hover:border-olive transition-all">
-                  <span class="text-sm" style="color: var(--muted)" id="busImageName" data-i18n="chooseImage">Choose image...</span>
-                  <i class="fas fa-camera" style="color: var(--olive)"></i>
-                </div>
-                <input type="file" id="busImage" accept="image/*" class="hidden" />
-              </label>
-              <img id="busPreview" class="hidden thumbnail" alt="Bus" />
-            </div>
-          </div>
-          
-          <!-- Bus Notes -->
-          <div>
-            <label class="text-sm font-medium mb-2 block" data-i18n="busNotes">Bus Notes</label>
-            <textarea id="busNotes" rows="3" class="input-field w-full px-4 py-3 rounded-lg resize-none" data-i18n-placeholder="busNotesPlaceholder" placeholder="Additional notes about the bus..."></textarea>
-          </div>
-        </div>
-
-        <!-- Guide Section -->
-        <div class="space-y-4">
-          <h3 class="font-semibold text-lg flex items-center gap-2 border-b-2 pb-2" style="border-color: var(--gold)">
-            <i class="fas fa-user-tie" style="color: var(--gold)"></i>
-            <span data-i18n="guideInfo">Guide Information</span>
-          </h3>
-          
-          <!-- Guide Name -->
-          <div>
-            <label class="text-sm font-medium mb-2 block" data-i18n="guideName">Guide Name</label>
-            <input type="text" id="guideName" class="input-field w-full px-4 py-2.5 rounded-lg" data-i18n-placeholder="guideNamePlaceholder" placeholder="Full name" />
-          </div>
-          
-          <!-- Guide Phone -->
-          <div>
-            <label class="text-sm font-medium mb-2 block" data-i18n="guidePhone">Guide Phone</label>
-            <input type="tel" inputmode="tel" id="guidePhone" class="input-field w-full px-4 py-2.5 rounded-lg" placeholder="+216 XX XXX" lang="en-US" dir="ltr" />
-          </div>
-          
-          <!-- Guide Image -->
-          <div>
-            <label class="text-sm font-medium mb-2 block" data-i18n="guideImage">Guide Image</label>
-            <div class="flex items-center gap-3">
-              <label class="flex-1 cursor-pointer">
-                <div class="input-field px-4 py-3 rounded-lg flex items-center justify-between hover:border-olive transition-all">
-                  <span class="text-sm" style="color: var(--muted)" id="guideImageName" data-i18n="chooseImage">Choose image...</span>
-                  <i class="fas fa-id-card" style="color: var(--olive)"></i>
-                </div>
-                <input type="file" id="guideImage" accept="image/*" class="hidden" />
-              </label>
-              <img id="guidePreview" class="hidden thumbnail" alt="Guide" />
-            </div>
-          </div>
-          
-          <!-- Guide Notes -->
-          <div>
-            <label class="text-sm font-medium mb-2 block" data-i18n="guideNotes">Guide Notes</label>
-            <textarea id="guideNotes" rows="3" class="input-field w-full px-4 py-3 rounded-lg resize-none" data-i18n-placeholder="guideNotesPlaceholder" placeholder="Additional notes about the guide..."></textarea>
-          </div>
-        </div>
-      </div>
-      
-      <!-- General Notes -->
-      <div class="mt-6">
-        <label class="text-sm font-medium mb-2 block" data-i18n="generalNotes">General Notes</label>
-        <textarea id="generalNotes" rows="3" class="input-field w-full px-4 py-3 rounded-lg resize-none" data-i18n-placeholder="generalNotesPlaceholder" placeholder="General security notes..."></textarea>
-      </div>
-      
-      <!-- Save Button -->
-      <div class="mt-8 flex justify-end gap-3">
-        <button id="resetBtn" class="px-6 py-3 rounded-lg border-2 font-medium transition-all hover:scale-105" style="border-color: var(--border)">
-          <i class="fas fa-rotate-left me-2"></i>
-          <span data-i18n="reset">Reset</span>
-        </button>
-        <button id="saveBtn" class="btn-primary px-8 py-3 rounded-lg font-semibold">
-          <i class="fas fa-save me-2"></i>
-          <span data-i18n="save">Save</span>
-        </button>
-      </div>
+<div id="loginScreen" style="position:fixed;inset:0;background:var(--bg-body);z-index:2000;display:flex;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border-radius:28px;padding:36px;width:90%;max-width:400px;text-align:center;">
+        <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="height:90px;margin-bottom:16px;">
+        <h2 style="color:var(--gold);">F‑Note Pro Max</h2>
+        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" style="width:100%;margin:12px 0;padding:14px;border:2px solid var(--border);border-radius:60px;" dir="ltr">
+        <input type="password" id="loginPassword" placeholder="كلمة المرور" style="width:100%;margin:12px 0;padding:14px;border:2px solid var(--border);border-radius:60px;">
+        <button id="loginBtn" style="width:100%;padding:14px;background:var(--gold);color:white;border:none;border-radius:60px;font-weight:700;">دخول</button>
+        <p id="loginError" style="color:red;margin-top:8px;"></p>
     </div>
+</div>
 
-    <!-- Saved Notes List -->
-    <div>
-      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-        <i class="fas fa-list-check" style="color: var(--olive)"></i>
-        <span data-i18n="savedNotes">Saved Notes</span>
-        <span id="notesCount" class="text-sm px-3 py-1 rounded-full badge-olive">0</span>
-      </h2>
-      <div id="notesList" class="space-y-3"></div>
-      <div id="emptyState" class="card p-12 text-center">
-        <i class="fas fa-inbox text-5xl mb-4" style="color: var(--muted)"></i>
-        <p class="text-lg font-medium" style="color: var(--muted)" data-i18n="noNotes">No notes saved yet</p>
-        <p class="text-sm mt-2" style="color: var(--muted)" data-i18n="noNotesDesc">Start by creating your first security note above</p>
-      </div>
+<div class="app-header">
+    <div><button class="header-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button></div>
+    <div class="logo-header"><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" alt="logo"></div>
+    <div><button class="header-btn" id="darkModeBtn"><i class="fa-solid fa-moon"></i></button></div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header"><h3 style="color:var(--gold);">✨ F-Note Pro Max</h3><button class="sidebar-close" id="closeSidebar">✕</button></div>
+    <div class="sidebar-section">
+        <div class="sidebar-item" id="signOutBtn" style="display:none;"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</div>
     </div>
-  </div>
+</div>
 
-  <script>
-    // State
-    let currentLang = 'ar';
-    let isForeignPlate = false;
-    let notes = [];
-    let busImageData = null;
-    let guideImageData = null;
-    
-    // i18n Dictionary
-    const i18n = {
-      ar: {
-        appTitle: 'F-NOTEPRO-WORK',
-        appSubtitle: 'تطبيق الملاحظات الأمنية',
-        settings: 'الإعدادات',
-        language: 'اللغة',
-        theme: 'المظهر',
-        toggleTheme: 'الوضع الفاتح',
-        toggleThemeDark: 'الوضع الداكن',
-        currentTime: 'الوقت الحالي',
-        newNote: 'ملاحظة أمنية جديدة',
-        busInfo: 'معلومات الحافلة',
-        licensePlate: 'رقم اللوحة',
-        foreignPlate: 'رقم لوحة أجنبية',
-        busImage: 'صورة الحافلة',
-        chooseImage: 'اختر صورة...',
-        busNotes: 'ملاحظات الحافلة',
-        busNotesPlaceholder: 'ملاحظات إضافية عن الحافلة...',
-        guideInfo: 'معلومات المرشد',
-        guideName: 'اسم المرشد',
-        guideNamePlaceholder: 'الاسم الكامل',
-        guidePhone: 'هاتف المرشد',
-        guideImage: 'صورة المرشد',
-        guideNotes: 'ملاحظات المرشد',
-        guideNotesPlaceholder: 'ملاحظات إضافية عن المرشد...',
-        generalNotes: 'ملاحظات عامة',
-        generalNotesPlaceholder: 'ملاحظات أمنية عامة...',
-        save: 'حفظ',
-        reset: 'إعادة تعيين',
-        savedNotes: 'الملاحظات المحفوظة',
-        noNotes: 'لا توجد ملاحظات محفوظة بعد',
-        noNotesDesc: 'ابدأ بإنشاء أول ملاحظة أمنية أعلاه',
-        viewDetails: 'عرض التفاصيل',
-        delete: 'حذف',
-        bus: 'الحافلة',
-        guide: 'المرشد',
-        savedAt: 'تم الحفظ في'
-      },
-      fr: {
-        appTitle: 'F-NOTEPRO-WORK',
-        appSubtitle: 'Application de Notes de Sécurité',
-        settings: 'Paramètres',
-        language: 'Langue',
-        theme: 'Thème',
-        toggleTheme: 'Mode Clair',
-        toggleThemeDark: 'Mode Sombre',
-        currentTime: 'Heure Actuelle',
-        newNote: 'Nouvelle Note de Sécurité',
-        busInfo: 'Informations du Bus',
-        licensePlate: 'Plaque d\'immatriculation',
-        foreignPlate: 'Plaque étrangère',
-        busImage: 'Image du Bus',
-        chooseImage: 'Choisir une image...',
-        busNotes: 'Notes du Bus',
-        busNotesPlaceholder: 'Notes supplémentaires sur le bus...',
-        guideInfo: 'Informations du Guide',
-        guideName: 'Nom du Guide',
-        guideNamePlaceholder: 'Nom complet',
-        guidePhone: 'Téléphone du Guide',
-        guideImage: 'Image du Guide',
-        guideNotes: 'Notes du Guide',
-        guideNotesPlaceholder: 'Notes supplémentaires sur le guide...',
-        generalNotes: 'Notes Générales',
-        generalNotesPlaceholder: 'Notes de sécurité générales...',
-        save: 'Enregistrer',
-        reset: 'Réinitialiser',
-        savedNotes: 'Notes Enregistrées',
-        noNotes: 'Aucune note enregistrée',
-        noNotesDesc: 'Commencez par créer votre première note de sécurité ci-dessus',
-        viewDetails: 'Voir les Détails',
-        delete: 'Supprimer',
-        bus: 'Bus',
-        guide: 'Guide',
-        savedAt: 'Enregistré le'
-      },
-      en: {
-        appTitle: 'F-NOTEPRO-WORK',
-        appSubtitle: 'Security Note Application',
-        settings: 'Settings',
-        language: 'Language',
-        theme: 'Theme',
-        toggleTheme: 'Light Mode',
-        toggleThemeDark: 'Dark Mode',
-        currentTime: 'Current Time',
-        newNote: 'New Security Note',
-        busInfo: 'Bus Information',
-        licensePlate: 'License Plate',
-        foreignPlate: 'Foreign Plate Number',
-        busImage: 'Bus Image',
-        chooseImage: 'Choose image...',
-        busNotes: 'Bus Notes',
-        busNotesPlaceholder: 'Additional notes about the bus...',
-        guideInfo: 'Guide Information',
-        guideName: 'Guide Name',
-        guideNamePlaceholder: 'Full name',
-        guidePhone: 'Guide Phone',
-        guideImage: 'Guide Image',
-        guideNotes: 'Guide Notes',
-        guideNotesPlaceholder: 'Additional notes about the guide...',
-        generalNotes: 'General Notes',
-        generalNotesPlaceholder: 'General security notes...',
-        save: 'Save',
-        reset: 'Reset',
-        savedNotes: 'Saved Notes',
-        noNotes: 'No notes saved yet',
-        noNotesDesc: 'Start by creating your first security note above',
-        viewDetails: 'View Details',
-        delete: 'Delete',
-        bus: 'Bus',
-        guide: 'Guide',
-        savedAt: 'Saved at'
-      }
+<div id="mainPage">
+    <div class="toolbar">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث...">
+        <button class="add-btn" id="addNoteBtn">+</button>
+    </div>
+    <div id="notesList" class="guides-list"></div>
+</div>
+
+<!-- مودال بطاقة الوفد السياحي -->
+<div id="delegationModal" class="modal">
+    <div class="modal-box">
+        <div id="formSection">
+            <h2 style="text-align:center;color:var(--olive);">بطاقة الوفد السياحي</h2>
+            <p style="text-align:center;font-weight:800;background:linear-gradient(90deg, var(--olive), var(--gold-card));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">HÔTEL LES OLIVIERS PALACE SFAX</p>
+            <div class="input-group"><label>عدد الأفراد *</label><input type="number" id="tcPeople" min="1" value="1"></div>
+            <div class="input-group"><label>الجنسية *</label><input type="text" id="tcNationality" placeholder="الجنسية"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="input-group"><label>من *</label><input type="text" id="tcFrom" placeholder="الانطلاق"></div>
+                <div class="input-group"><label>إلى *</label><input type="text" id="tcTo" placeholder="الوجهة"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="input-group"><label>نوع النقل *</label><select id="tcTransport"><option value="">اختر</option><option>حافلة</option><option>سيارة</option><option>فان</option><option>قطار</option><option>أخرى</option></select></div>
+                <div class="input-group"><label>رقم اللوحة *</label><input type="text" id="tcPlate" placeholder="اللوحة"></div>
+            </div>
+            <div class="input-group"><label>اسم المرشد *</label><input type="text" id="tcGuideName" placeholder="الاسم"></div>
+            <div class="input-group"><label>جوال المرشد *</label><input type="tel" id="tcGuidePhone" placeholder="05xxxxxxxx" dir="ltr"></div>
+            
+            <!-- رفع صورة وسيلة النقل (ستظهر كبيرة) -->
+            <div class="upload-area" id="vehicleUploadArea"><i class="fa-solid fa-bus"></i> صورة وسيلة النقل *<input type="file" id="vehicleImageInput" accept="image/*" hidden></div>
+            <div id="vehiclePreview" style="display:none;"><img id="vehiclePreviewImg" class="preview-thumb" style="width:100px;height:70px;"><button type="button" id="removeVehicle" style="color:red;">إزالة</button></div>
+
+            <!-- رفع صورة المرشد (ستظهر دائرية صغيرة) -->
+            <div class="upload-area" id="guideUploadArea"><i class="fa-solid fa-user"></i> صورة المرشد *<input type="file" id="guideImageInput" accept="image/*" hidden></div>
+            <div id="guidePreview" style="display:none;"><img id="guidePreviewImg" class="preview-thumb" style="border-radius:50%;width:60px;height:60px;"><button type="button" id="removeGuide" style="color:red;">إزالة</button></div>
+
+            <div class="input-group"><label>ملاحظات</label><textarea id="tcNotes" maxlength="200" rows="2" placeholder="ملاحظات إضافية"></textarea><small id="tcCharCount">0/200</small></div>
+
+            <button class="btn-primary" id="generateCardBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> معاينة الكرت</button>
+            <button style="width:100%;margin-top:8px;background:gray;color:white;border:none;padding:12px;border-radius:20px;" id="closeDelegationModal">إلغاء</button>
+        </div>
+
+        <!-- معاينة الكرت -->
+        <div id="previewSection" style="display:none;">
+            <div id="cardToCapture" style="background:white;border-radius:24px;padding:20px;border:3px solid var(--gold-card);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" height="40">
+                        <div><strong style="color:var(--olive);">F‑Note Pro Max</strong><br><small style="color:var(--gold-card);">معلومات الوفد السياحي</small></div>
+                    </div>
+                    <div style="text-align:left;"><span id="cardWeather" style="background:rgba(85,107,47,0.1);padding:4px 10px;border-radius:20px;font-size:12px;"></span><br><small id="cardDateTime" style="color:#666;"></small></div>
+                </div>
+                <p style="text-align:center;font-weight:800;background:linear-gradient(90deg, var(--olive), var(--gold-card));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">HÔTEL LES OLIVIERS PALACE SFAX</p>
+                
+                <!-- صورة وسيلة النقل كبيرة -->
+                <img id="cardVehicleImg" style="width:100%;max-height:220px;object-fit:cover;border-radius:20px;margin:10px 0;">
+                
+                <div style="display:flex;align-items:center;gap:12px;margin:10px 0;">
+                    <!-- صورة المرشد دائرية -->
+                    <img id="cardGuideImg" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid var(--gold-card);">
+                    <div>
+                        <strong id="cardGuideName" style="color:var(--olive);"></strong>
+                        <span dir="ltr" id="cardGuidePhone" style="color:var(--gold-card);"></span>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div><small>الأفراد</small><br><strong id="cardPeople"></strong></div>
+                    <div><small>الجنسية</small><br><strong id="cardNationality"></strong></div>
+                    <div><small>من</small><br><strong id="cardFrom"></strong></div>
+                    <div><small>إلى</small><br><strong id="cardTo"></strong></div>
+                    <div><small>النقل</small><br><strong id="cardTransport"></strong></div>
+                    <div><small>اللوحة</small><br><strong id="cardPlate" dir="ltr"></strong></div>
+                </div>
+                <div id="cardNotesBox" style="display:none;margin-top:8px;background:#f9f9f9;padding:8px;border-radius:12px;"><small>ملاحظات</small><p id="cardNotes"></p></div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button class="btn-gold" id="shareCardBtn" style="flex:1;"><i class="fa-brands fa-whatsapp"></i> مشاركة</button>
+                <button class="btn-primary" id="downloadCardBtn" style="flex:1;"><i class="fa-solid fa-download"></i> تحميل</button>
+                <button style="flex:1;background:#64748b;color:white;border:none;padding:14px;border-radius:20px;" id="backToFormBtn">عودة</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase
+    const firebaseConfig = { apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s", authDomain: "f-notepro-work-2d25b.firebaseapp.com", projectId: "f-notepro-work-2d25b", storageBucket: "f-notepro-work-2d25b.firebasestorage.app", messagingSenderId: "221438380381", appId: "1:221438380381:web:b46c35d0ec0944079480b4" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(), auth = firebase.auth();
+
+    let currentUser = null, notes = [];
+
+    function toast(msg, err=false) {
+        const t = document.createElement('div'); t.className='toast'; t.style.background=err?'#ef4444':'#1e293b'; t.textContent=msg;
+        document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+    }
+
+    // Auth
+    document.getElementById('loginBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value.trim(), pw = document.getElementById('loginPassword').value;
+        try { await auth.signInWithEmailAndPassword(email,pw); } catch(e) { toast('خطأ في الدخول',true); }
     };
-
-    // DOM Elements
-    const elements = {
-      settingsBtn: document.getElementById('settingsBtn'),
-      settingsMenu: document.getElementById('settingsMenu'),
-      themeToggle: document.getElementById('themeToggle'),
-      themeIcon: document.getElementById('themeIcon'),
-      themeText: document.getElementById('themeText'),
-      dateTime: document.getElementById('dateTime'),
-      plateToggle: document.getElementById('plateToggle'),
-      plateTunisian: document.getElementById('plateTunisian'),
-      plateForeign: document.getElementById('plateForeign'),
-      platePart1: document.getElementById('platePart1'),
-      platePart2: document.getElementById('platePart2'),
-      plateForeignInput: document.getElementById('plateForeignInput'),
-      guideName: document.getElementById('guideName'),
-      guidePhone: document.getElementById('guidePhone'),
-      busImage: document.getElementById('busImage'),
-      guideImage: document.getElementById('guideImage'),
-      busPreview: document.getElementById('busPreview'),
-      guidePreview: document.getElementById('guidePreview'),
-      saveBtn: document.getElementById('saveBtn'),
-      resetBtn: document.getElementById('resetBtn'),
-      notesList: document.getElementById('notesList'),
-      emptyState: document.getElementById('emptyState'),
-      notesCount: document.getElementById('notesCount')
-    };
-
-    // Initialize
-    function init() {
-      updateDateTime();
-      setInterval(updateDateTime, 1000);
-      setupEventListeners();
-      loadNotes();
-      applyLanguage('ar');
-      loadTheme();
-    }
-
-    // Date Time - Force Western numerals
-    function updateDateTime() {
-      const now = new Date();
-      const formatted = now.toLocaleString('en-GB', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
-      elements.dateTime.textContent = formatted;
-    }
-
-    // Event Listeners
-    function setupEventListeners() {
-      // Settings menu toggle
-      elements.settingsBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        elements.settingsMenu.classList.toggle('hidden');
-      });
-      
-      document.addEventListener('click', () => {
-        elements.settingsMenu.classList.add('hidden');
-      });
-      
-      elements.settingsMenu.addEventListener('click', (e) => e.stopPropagation());
-
-      // Language switch
-      document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const lang = btn.dataset.lang;
-          applyLanguage(lang);
-          elements.settingsMenu.classList.add('hidden');
-        });
-      });
-
-      // Theme toggle
-      elements.themeToggle.addEventListener('click', toggleTheme);
-
-      // Plate toggle
-      elements.plateToggle.addEventListener('click', togglePlateType);
-
-      // Numeric input validation - only allow 0-9
-      [elements.platePart1, elements.platePart2].forEach(input => {
-        input.addEventListener('input', (e) => {
-          e.target.value = e.target.value.replace(/[^0-9]/g, '');
-        });
-      });
-
-      // Phone input - force numeric
-      elements.guidePhone.addEventListener('input', (e) => {
-        e.target.value = e.target.value.replace(/[^0-9+\s-]/g, '');
-      });
-
-      // Image uploads
-      elements.busImage.addEventListener('change', (e) => handleImageUpload(e, 'bus'));
-      elements.guideImage.addEventListener('change', (e) => handleImageUpload(e, 'guide'));
-
-      // Buttons
-      elements.saveBtn.addEventListener('click', saveNote);
-      elements.resetBtn.addEventListener('click', resetForm);
-    }
-
-    // Language
-    function applyLanguage(lang) {
-      currentLang = lang;
-      document.documentElement.lang = lang;
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      
-      // Update all translatable elements
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.dataset.i18n;
-        if (i18n[lang][key]) el.textContent = i18n[lang][key];
-      });
-      
-      // Update placeholders
-      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.dataset.i18nPlaceholder;
-        if (i18n[lang][key]) el.placeholder = i18n[lang][key];
-      });
-      
-      // Update active lang button
-      document.querySelectorAll('.lang-btn').forEach(btn => {
-        if (btn.dataset.lang === lang) {
-          btn.style.borderColor = 'var(--olive)';
-          btn.style.background = 'var(--olive-100)';
-        } else {
-          btn.style.borderColor = 'var(--border)';
-          btn.style.background = 'transparent';
-        }
-      });
-      
-      updateThemeText();
-    }
-
-    // Theme
-    function toggleTheme() {
-      const html = document.documentElement;
-      const current = html.dataset.theme;
-      const next = current === 'light' ? 'dark' : 'light';
-      html.dataset.theme = next;
-      localStorage.setItem('theme', next);
-      updateThemeText();
-    }
-
-    function loadTheme() {
-      const saved = localStorage.getItem('theme') || 'light';
-      document.documentElement.dataset.theme = saved;
-      updateThemeText();
-    }
-
-    function updateThemeText() {
-      const isDark = document.documentElement.dataset.theme === 'dark';
-      if (isDark) {
-        elements.themeIcon.className = 'fas fa-moon';
-        elements.themeText.textContent = i18n[currentLang].toggleThemeDark;
-      } else {
-        elements.themeIcon.className = 'fas fa-sun';
-        elements.themeText.textContent = i18n[currentLang].toggleTheme;
-      }
-    }
-
-    // Plate Type Toggle
-    function togglePlateType() {
-      isForeignPlate = !isForeignPlate;
-      if (isForeignPlate) {
-        elements.plateTunisian.classList.add('hidden');
-        elements.plateForeign.classList.remove('hidden');
-        elements.plateToggle.innerHTML = '<i class="fas fa-minus"></i>';
-        elements.plateToggle.title = 'Switch to Tunisian plate';
-      } else {
-        elements.plateTunisian.classList.remove('hidden');
-        elements.plateForeign.classList.add('hidden');
-        elements.plateToggle.innerHTML = '<i class="fas fa-plus"></i>';
-        elements.plateToggle.title = 'Switch to foreign plate';
-      }
-    }
-
-    // Image Upload
-    function handleImageUpload(e, type) {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (type === 'bus') {
-          busImageData = event.target.result;
-          elements.busPreview.src = busImageData;
-          elements.busPreview.classList.remove('hidden');
-          document.getElementById('busImageName').textContent = file.name;
-        } else {
-          guideImageData = event.target.result;
-          elements.guidePreview.src = guideImageData;
-          elements.guidePreview.classList.remove('hidden');
-          document.getElementById('guideImageName').textContent = file.name;
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // Save Note
-    function saveNote() {
-      const plateNumber = isForeignPlate 
-        ? elements.plateForeignInput.value.trim()
-        : `${elements.platePart1.value} تونس ${elements.platePart2.value}`;
-      
-      if (!plateNumber || (!isForeignPlate && (!elements.platePart1.value || !elements.platePart2.value))) {
-        alert('Please enter license plate number');
-        return;
-      }
-      
-      if (!elements.guideName.value.trim()) {
-        alert('Please enter guide name');
-        return;
-      }
-
-      const note = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        plate: plateNumber,
-        isForeignPlate,
-        busImage: busImageData,
-        busNotes: document.getElementById('busNotes').value.trim(),
-        guideName: elements.guideName.value.trim(),
-        guidePhone: elements.guidePhone.value.trim(),
-        guideImage: guideImageData,
-        guideNotes: document.getElementById('guideNotes').value.trim(),
-        generalNotes: document.getElementById('generalNotes').value.trim(),
-        expanded: false
-      };
-      
-      notes.unshift(note);
-      renderNotes();
-      resetForm();
-      
-      // Scroll to notes
-      elements.notesList.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    // Reset Form
-    function resetForm() {
-      elements.platePart1.value = '';
-      elements.platePart2.value = '';
-      elements.plateForeignInput.value = '';
-      elements.guideName.value = '';
-      elements.guidePhone.value = '';
-      document.getElementById('busNotes').value = '';
-      document.getElementById('guideNotes').value = '';
-      document.getElementById('generalNotes').value = '';
-      elements.busImage.value = '';
-      elements.guideImage.value = '';
-      busImageData = null;
-      guideImageData = null;
-      elements.busPreview.classList.add('hidden');
-      elements.guidePreview.classList.add('hidden');
-      document.getElementById('busImageName').textContent = i18n[currentLang].chooseImage;
-      document.getElementById('guideImageName').textContent = i18n[currentLang].chooseImage;
-    }
-
-    // Render Notes
-    function renderNotes() {
-      elements.notesCount.textContent = notes.length;
-      
-      if (notes.length === 0) {
-        elements.emptyState.classList.remove('hidden');
-        elements.notesList.innerHTML = '';
-        return;
-      }
-      
-      elements.emptyState.classList.add('hidden');
-      elements.notesList.innerHTML = notes.map(note => createNoteHTML(note)).join('');
-      
-      // Attach event listeners
-      notes.forEach(note => {
-        const stripEl = document.getElementById(`strip-${note.id}`);
-        const deleteBtn = document.getElementById(`delete-${note.id}`);
-        
-        if (stripEl) {
-          stripEl.addEventListener('click', () => toggleExpand(note.id));
-        }
-        if (deleteBtn) {
-          deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteNote(note.id);
-          });
-        }
-      });
-    }
-
-    function createNoteHTML(note) {
-      const time = new Date(note.timestamp).toLocaleString('en-GB', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      if (!note.expanded) {
-        // Compact Strip View
-        return `
-          <div id="strip-${note.id}" class="strip-card card p-4 animate-slide-in">
-            <div class="flex items-center gap-3">
-              ${note.busImage ? `<img src="${note.busImage}" class="thumbnail" alt="Bus" />` : `<div class="thumbnail bg-gradient-to-br from-olive-100 to-gold flex items-center justify-center"><i class="fas fa-bus text-xl" style="color: var(--olive)"></i></div>`}
-              ${note.guideImage ? `<img src="${note.guideImage}" class="thumbnail" alt="Guide" />` : `<div class="thumbnail bg-gradient-to-br from-gold to-olive-100 flex items-center justify-center"><i class="fas fa-user text-xl" style="color: var(--olive)"></i></div>`}
-              
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <i class="fas fa-id-card" style="color: var(--gold)"></i>
-                  <span class="font-bold text-sm" dir="ltr">${note.plate}</span>
-                </div>
-                <div class="flex items-center gap-4 text-sm">
-                  <span class="flex items-center gap-1">
-                    <i class="fas fa-user text-xs" style="color: var(--muted)"></i>
-                    <span class="truncate">${note.guideName}</span>
-                  </span>
-                  ${note.guidePhone ? `<span class="flex items-center gap-1" dir="ltr"><i class="fas fa-phone text-xs" style="color: var(--muted)"></i><span>${note.guidePhone}</span></span>` : ''}
-                </div>
-              </div>
-              
-              <div class="flex items-center gap-2">
-                <span class="text-xs px-2 py-1 rounded badge-olive">${time}</span>
-                <button id="delete-${note.id}" class="p-2 rounded-lg hover:bg-red-100 transition-colors" style="color: #DC2626">
-                  <i class="fas fa-trash"></i>
-                </button>
-                <i class="fas fa-chevron-down text-sm" style="color: var(--muted)"></i>
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        // Expanded View
-        return `
-          <div id="strip-${note.id}" class="card p-6 animate-slide-in">
-            <div class="flex items-start justify-between mb-4">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg btn-primary flex items-center justify-center">
-                  <i class="fas fa-file-lines"></i>
-                </div>
-                <div>
-                  <h3 class="font-bold text-lg">${i18n[currentLang].savedAt}</h3>
-                  <p class="text-sm" style="color: var(--muted)" dir="ltr">${time}</p>
-                </div>
-              </div>
-              <button id="delete-${note.id}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105" style="background: #FEE2E2; color: #DC2626">
-                <i class="fas fa-trash me-2"></i>${i18n[currentLang].delete}
-              </button>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-6">
-              <div>
-                <h4 class="font-semibold mb-3 flex items-center gap-2">
-                  <i class="fas fa-bus" style="color: var(--olive)"></i>
-                  ${i18n[currentLang].bus}
-                </h4>
-                <div class="space-y-3">
-                  <div class="flex items-center gap-3">
-                    <span class="text-sm" style="color: var(--muted)">${i18n[currentLang].licensePlate}:</span>
-                    <span class="font-bold" dir="ltr">${note.plate}</span>
-                  </div>
-                  ${note.busImage ? `<img src="${note.busImage}" class="w-full h-48 object-cover rounded-lg border-2" style="border-color: var(--gold)" alt="Bus" />` : ''}
-                  ${note.busNotes ? `<p class="text-sm p-3 rounded-lg" style="background: var(--bg)">${note.busNotes}</p>` : ''}
-                </div>
-              </div>
-              
-              <div>
-                <h4 class="font-semibold mb-3 flex items-center gap-2">
-                  <i class="fas fa-user-tie" style="color: var(--gold)"></i>
-                  ${i18n[currentLang].guide}
-                </h4>
-                <div class="space-y-3">
-                  <div class="flex items-center gap-3">
-                    <span class="text-sm" style="color: var(--muted)">${i18n[currentLang].guideName}:</span>
-                    <span class="font-semibold">${note.guideName}</span>
-                  </div>
-                  ${note.guidePhone ? `<div class="flex items-center gap-3"><span class="text-sm" style="color: var(--muted)">${i18n[currentLang].guidePhone}:</span><span dir="ltr">${note.guidePhone}</span></div>` : ''}
-                  ${note.guideImage ? `<img src="${note.guideImage}" class="w-full h-48 object-cover rounded-lg border-2" style="border-color: var(--gold)" alt="Guide" />` : ''}
-                  ${note.guideNotes ? `<p class="text-sm p-3 rounded-lg" style="background: var(--bg)">${note.guideNotes}</p>` : ''}
-                </div>
-              </div>
-            </div>
-            
-            ${note.generalNotes ? `
-              <div class="mt-6 pt-6 border-t" style="border-color: var(--border)">
-                <h4 class="font-semibold mb-2 flex items-center gap-2">
-                  <i class="fas fa-note-sticky" style="color: var(--olive)"></i>
-                  ${i18n[currentLang].generalNotes}
-                </h4>
-                <p class="text-sm p-4 rounded-lg" style="background: var(--bg)">${note.generalNotes}</p>
-              </div>
-            ` : ''}
-            
-            <div class="mt-6 text-center">
-              <button onclick="toggleExpand(${note.id})" class="text-sm px-4 py-2 rounded-lg transition-all hover:scale-105" style="color: var(--olive)">
-                <i class="fas fa-chevron-up me-2"></i>Collapse
-              </button>
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    function toggleExpand(id) {
-      const note = notes.find(n => n.id === id);
-      if (note) {
-        note.expanded = !note.expanded;
-        renderNotes();
-      }
-    }
-
-    function deleteNote(id) {
-      if (confirm('Are you sure you want to delete this note?')) {
-        notes = notes.filter(n => n.id !== id);
-        renderNotes();
-      }
-    }
+    auth.onAuthStateChanged(async u => {
+        if(u) { currentUser = u; document.getElementById('loginScreen').style.display='none'; document.getElementById('signOutBtn').style.display='flex'; loadNotes(); }
+        else { currentUser = null; notes = []; renderNotes(); document.getElementById('loginScreen').style.display='flex'; }
+    });
+    document.getElementById('signOutBtn').onclick = () => auth.signOut();
 
     function loadNotes() {
-      renderNotes();
+        db.collection('notes').where('userId','==',currentUser.uid).onSnapshot(snap => {
+            notes = []; snap.forEach(d => notes.push({id:d.id,...d.data()}));
+            db.collection('notes').where('visibility','==','public').get().then(pub => {
+                pub.forEach(d => { if(d.data().userId !== currentUser.uid) notes.push({id:d.id,...d.data()}); });
+                renderNotes();
+            }).catch(()=> renderNotes());
+        });
     }
 
-    // Global function for inline onclick
-    window.toggleExpand = toggleExpand;
+    function renderNotes() {
+        const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+        let filtered = notes.filter(n => !q || (n.description||'').includes(q) || (n.guideName||'').includes(q));
+        const container = document.getElementById('notesList');
+        if(!filtered.length) { container.innerHTML = '<p style="text-align:center;color:var(--text-muted);">لا توجد ملاحظات</p>'; return; }
+        container.innerHTML = filtered.map(n => {
+            const thumb = n.vehicleImage || n.guideImage || '';
+            return `<div class="note-card" onclick="shareNote('${n.id}')">
+                <div class="note-body">
+                    <img class="note-img" src="${thumb}" onerror="this.style.display='none'">
+                    <div class="note-info">
+                        <div class="note-title">${n.guideName||'وفد'} ${n.nationality ? ' - '+n.nationality : ''}</div>
+                        <div class="note-subtitle">${n.from||''} ➔ ${n.to||''} | ${n.people||''} أفراد</div>
+                    </div>
+                    <i class="fa-brands fa-whatsapp" style="color:var(--whatsapp);"></i>
+                </div>
+            </div>`;
+        }).join('');
+    }
 
-    // Start App
-    init();
-  </script>
+    window.shareNote = (id) => {
+        const n = notes.find(x=>x.id===id); if(!n) return;
+        const text = `*معلومات الوفد*\n👥 ${n.people}\n🌍 ${n.nationality}\n📍 ${n.from} ➔ ${n.to}\n🚌 ${n.transport}\n🔢 ${n.plate}\n👤 ${n.guideName}\n📞 ${n.guidePhone}\n📝 ${n.notes||''}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+    };
+
+    // ---- بطاقة الوفد ----
+    let vehicleImageData = null, guideImageData = null;
+    const modal = document.getElementById('delegationModal');
+    const formSection = document.getElementById('formSection');
+    const previewSection = document.getElementById('previewSection');
+
+    document.getElementById('addNoteBtn').addEventListener('click', ()=> {
+        vehicleImageData = guideImageData = null;
+        document.getElementById('vehiclePreview').style.display='none';
+        document.getElementById('guidePreview').style.display='none';
+        document.querySelectorAll('#formSection input, #formSection select, #formSection textarea').forEach(el => el.value = '');
+        document.getElementById('tcPeople').value = 1;
+        document.getElementById('tcCharCount').textContent = '0/200';
+        formSection.style.display='block'; previewSection.style.display='none';
+        modal.classList.add('show');
+    });
+    document.getElementById('closeDelegationModal').onclick = ()=> modal.classList.remove('show');
+
+    // رفع الصور
+    document.getElementById('vehicleUploadArea').onclick = ()=> document.getElementById('vehicleImageInput').click();
+    document.getElementById('vehicleImageInput').onchange = e => {
+        const f = e.target.files[0]; if(!f) return;
+        const r = new FileReader(); r.onload = ev => { vehicleImageData = ev.target.result; document.getElementById('vehiclePreviewImg').src = vehicleImageData; document.getElementById('vehiclePreview').style.display='block'; }; r.readAsDataURL(f);
+    };
+    document.getElementById('removeVehicle').onclick = (e)=> { e.stopPropagation(); vehicleImageData=null; document.getElementById('vehiclePreview').style.display='none'; };
+
+    document.getElementById('guideUploadArea').onclick = ()=> document.getElementById('guideImageInput').click();
+    document.getElementById('guideImageInput').onchange = e => {
+        const f = e.target.files[0]; if(!f) return;
+        const r = new FileReader(); r.onload = ev => { guideImageData = ev.target.result; document.getElementById('guidePreviewImg').src = guideImageData; document.getElementById('guidePreview').style.display='block'; }; r.readAsDataURL(f);
+    };
+    document.getElementById('removeGuide').onclick = (e)=> { e.stopPropagation(); guideImageData=null; document.getElementById('guidePreview').style.display='none'; };
+
+    document.getElementById('tcNotes').oninput = function() { document.getElementById('tcCharCount').textContent = this.value.length+'/200'; };
+
+    // طقس
+    async function weatherString() {
+        try {
+            const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=34.74&longitude=10.76&current_weather=true');
+            const d = await r.json();
+            if(d.current_weather) {
+                const t = d.current_weather.temperature;
+                const code = d.current_weather.weathercode;
+                const day = d.current_weather.is_day;
+                return `${day?'☀️':'🌙'} ${t}°C ${code<=3?'صافي':(code<=48?'غائم':'ممطر')}`;
+            }
+        } catch(e) {}
+        return new Date().getHours()>=6 && new Date().getHours()<18 ? '☀️ نهار' : '🌙 ليل';
+    }
+
+    document.getElementById('generateCardBtn').onclick = async () => {
+        if(!document.getElementById('tcPeople').value || !document.getElementById('tcNationality').value || !document.getElementById('tcFrom').value || !document.getElementById('tcTo').value || !document.getElementById('tcTransport').value || !document.getElementById('tcPlate').value || !document.getElementById('tcGuideName').value || !document.getElementById('tcGuidePhone').value) return toast('املأ الحقول المطلوبة',true);
+        if(!vehicleImageData || !guideImageData) return toast('صور وسيلة النقل والمرشد مطلوبة',true);
+
+        document.getElementById('cardPeople').textContent = document.getElementById('tcPeople').value;
+        document.getElementById('cardNationality').textContent = document.getElementById('tcNationality').value;
+        document.getElementById('cardFrom').textContent = document.getElementById('tcFrom').value;
+        document.getElementById('cardTo').textContent = document.getElementById('tcTo').value;
+        document.getElementById('cardTransport').textContent = document.getElementById('tcTransport').value;
+        document.getElementById('cardPlate').textContent = document.getElementById('tcPlate').value;
+        document.getElementById('cardGuideName').textContent = document.getElementById('tcGuideName').value;
+        document.getElementById('cardGuidePhone').textContent = document.getElementById('tcGuidePhone').value;
+        document.getElementById('cardVehicleImg').src = vehicleImageData;
+        document.getElementById('cardGuideImg').src = guideImageData;
+        const notesVal = document.getElementById('tcNotes').value.trim();
+        if(notesVal) { document.getElementById('cardNotes').textContent = notesVal; document.getElementById('cardNotesBox').style.display='block'; }
+        else document.getElementById('cardNotesBox').style.display='none';
+
+        const now = new Date();
+        document.getElementById('cardDateTime').textContent = now.toLocaleDateString('ar-TN',{year:'numeric',month:'long',day:'numeric'}) + ' ' + now.toLocaleTimeString('ar-TN',{hour:'2-digit',minute:'2-digit'});
+        document.getElementById('cardWeather').textContent = await weatherString();
+
+        formSection.style.display='none'; previewSection.style.display='block';
+    };
+
+    document.getElementById('backToFormBtn').onclick = ()=> { previewSection.style.display='none'; formSection.style.display='block'; };
+
+    async function getCardBlob() {
+        const canvas = await html2canvas(document.getElementById('cardToCapture'), {scale:2, backgroundColor:'#ffffff'});
+        return new Promise(res => canvas.toBlob(res, 'image/png'));
+    }
+
+    async function saveNote() {
+        const data = {
+            userId: currentUser.uid,
+            type: 'delegation',
+            description: `وفد ${document.getElementById('tcNationality').value} ${document.getElementById('tcFrom').value} ➔ ${document.getElementById('tcTo').value}`,
+            people: document.getElementById('tcPeople').value,
+            nationality: document.getElementById('tcNationality').value,
+            from: document.getElementById('tcFrom').value,
+            to: document.getElementById('tcTo').value,
+            transport: document.getElementById('tcTransport').value,
+            plate: document.getElementById('tcPlate').value,
+            guideName: document.getElementById('tcGuideName').value,
+            guidePhone: document.getElementById('tcGuidePhone').value,
+            notes: document.getElementById('tcNotes').value.trim(),
+            vehicleImage: vehicleImageData,
+            guideImage: guideImageData,
+            visibility: 'private',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await db.collection('notes').add(data);
+        toast('تم حفظ الملاحظة');
+        modal.classList.remove('show');
+    }
+
+    document.getElementById('downloadCardBtn').onclick = async ()=> {
+        const blob = await getCardBlob();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'بطاقة_وفد.png'; a.click();
+        await saveNote();
+    };
+
+    document.getElementById('shareCardBtn').onclick = async ()=> {
+        const blob = await getCardBlob();
+        const file = new File([blob], 'بطاقة_وفد.png', {type:'image/png'});
+        const text = `*معلومات الوفد*\n👥 ${document.getElementById('tcPeople').value}\n🌍 ${document.getElementById('tcNationality').value}\n📍 ${document.getElementById('tcFrom').value} ➔ ${document.getElementById('tcTo').value}\n🚌 ${document.getElementById('tcTransport').value}\n🔢 ${document.getElementById('tcPlate').value}\n👤 ${document.getElementById('tcGuideName').value}\n📞 ${document.getElementById('tcGuidePhone').value}\n📝 ${document.getElementById('tcNotes').value}`;
+        if(navigator.canShare && navigator.canShare({files:[file]})) {
+            try { await navigator.share({files:[file], text}); } catch(e) { if(e.name!=='AbortError') toast('تعذرت المشاركة',true); }
+        } else {
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'بطاقة_وفد.png'; a.click();
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+        }
+        await saveNote();
+    };
+
+    // Sidebar
+    document.getElementById('menuBtn').onclick = ()=> { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
+    document.getElementById('closeSidebar').onclick = ()=> { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+    document.getElementById('overlay').onclick = ()=> { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+    document.getElementById('darkModeBtn').onclick = ()=> document.body.classList.toggle('dark');
+    document.getElementById('searchInput').oninput = renderNotes;
+    document.querySelectorAll('.modal').forEach(m=> m.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('show'); }));
+</script>
 </body>
 </html>
