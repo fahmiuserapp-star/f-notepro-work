@@ -1,13 +1,470 @@
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /guides/{docId} {
-      allow read: if request.auth != null;
-      allow create, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-    match /users/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
-    match /groupMessages/{msgId} { allow read, write: if request.auth != null; }
-    match /radio_broadcasts/{msgId} { allow read, write: if request.auth != null; }
-    match /groupMembers/{memberId} { allow read, write: if request.auth != null; }
-  }
-}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>F-Note Pro Max</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f7f9fc; --card: #fff; --text: #1e293b; --text2: #475569; --text3: #94a3b8;
+            --border: #e2e8f0; --accent: #0f766e; --success: #10b981; --wa: #25D366;
+            --shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --text2: #cbd5e1; --text3: #64748b; --border: #334155; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: var(--text); transition: 0.2s; min-height: 100vh; }
+        @media (min-width: 768px) { body { max-width: 500px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); } }
+        
+        /* شاشة الدخول */
+        .login-screen { position: fixed; inset:0; background: var(--bg); z-index: 9999; display:flex; align-items:center; justify-content:center; }
+        .login-screen.hide { display:none; }
+        .login-card { background: var(--card); border-radius: 28px; padding: 32px 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .login-card img { width: 100px; margin-bottom: 12px; }
+        .login-card h1 { font-size: 28px; font-weight: 900; color: var(--accent); }
+        .login-input { width: 100%; padding: 12px 16px; margin: 8px 0; border: 2px solid var(--border); border-radius: 14px; background: var(--bg); color: var(--text); font-size: 15px; direction: ltr; }
+        .login-input:focus { border-color: var(--accent); outline: none; }
+        .login-btn { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 14px; color: white; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 12px; }
+        .error-msg { color: #ef4444; font-size: 13px; margin-top: 8px; display: none; }
+        .error-msg.show { display: block; }
+        
+        /* الهيدر */
+        .header { background: var(--card); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
+        .header img { height: 38px; }
+        .header button { background: none; border: 1px solid var(--border); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 18px; cursor: pointer; }
+        .header button:active { background: var(--accent); color: white; }
+        
+        /* القائمة الجانبية */
+        .sidebar { position: fixed; top: 0; right: -320px; width: 280px; height: 100%; background: var(--card); z-index: 200; transition: 0.3s; box-shadow: -4px 0 20px rgba(0,0,0,0.2); overflow-y: auto; }
+        .sidebar.open { right: 0; }
+        .sidebar .close { text-align: left; padding: 16px; }
+        .sidebar .close button { background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; color: var(--text); }
+        .sidebar-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+        .sidebar-section h4 { font-size: 11px; color: var(--text3); margin-bottom: 8px; }
+        .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; border-radius: 14px; margin: 3px 0; font-size: 14px; color: var(--text); }
+        .sidebar-item:active { background: var(--bg); }
+        .lang-row { display: flex; gap: 6px; }
+        .lang-btn { flex:1; padding: 6px 4px; text-align: center; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 12px; cursor: pointer; }
+        .lang-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .overlay { position: fixed; inset:0; background: rgba(0,0,0,0.4); z-index: 150; display: none; }
+        .overlay.show { display: block; }
+        
+        /* شريط البحث */
+        .toolbar { display: flex; gap: 8px; padding: 10px 16px; background: var(--bg); position: sticky; top: 58px; z-index: 90; }
+        .search-box { flex:1; padding: 10px 16px; border: 2px solid var(--border); border-radius: 60px; background: var(--card); color: var(--text); font-size: 14px; }
+        .search-box:focus { border-color: var(--accent); outline: none; }
+        .icon-btn { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--card); color: var(--text2); font-size: 18px; cursor: pointer; }
+        .icon-btn.accent { background: var(--accent); color: white; font-size: 24px; }
+        
+        /* قائمة المرشدين */
+        .guides { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .guide-card { background: var(--card); border-radius: 16px; padding: 12px; box-shadow: var(--shadow); border-right: 4px solid var(--accent); cursor: pointer; }
+        .card-row { display: flex; align-items: center; gap: 10px; }
+        .card-avatar { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 2px solid var(--accent); }
+        .card-bus { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+        .card-info { flex:1; min-width:0; }
+        .card-name { font-weight: 800; font-size: 15px; }
+        .card-phone { color: var(--accent); font-weight: 600; direction: ltr; font-size: 13px; }
+        .card-details { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: none; }
+        .card-details.show { display: block; }
+        .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .btn-xs { padding: 4px 10px; border-radius: 20px; border: none; font-size: 11px; font-weight: 700; cursor: pointer; color: white; }
+        .btn-call { background: var(--success); } .btn-wa { background: var(--wa); } .btn-card { background: var(--accent); }
+        .btn-edit { background: #3b82f6; } .btn-del { background: #ef4444; }
+        
+        /* مودال */
+        .modal { position: fixed; inset:0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal.show { visibility: visible; opacity: 1; }
+        .modal-box { background: var(--card); border-radius: 24px; padding: 24px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+        .modal-box h3 { text-align: center; color: var(--accent); margin-bottom: 16px; }
+        .form-input, .form-textarea { width:100%; padding:10px; margin:6px 0; border:2px solid var(--border); border-radius:14px; background:var(--bg); color:var(--text); font-size:14px; }
+        .form-textarea { resize:vertical; min-height: 70px; }
+        .upload-area { border:2px dashed var(--accent); border-radius:14px; padding:12px; text-align:center; cursor:pointer; margin:10px 0; }
+        .btn-submit { width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:14px; font-weight:700; font-size:15px; cursor:pointer; margin-top:10px; }
+        .btn-close { width:100%; padding:12px; background:#64748b; color:white; border:none; border-radius:14px; font-weight:700; cursor:pointer; margin-top:6px; }
+        
+        /* مجموعة المحادثة */
+        .group-panel { position: fixed; top:0; right:-100%; width:100%; max-width:500px; height:100%; background:var(--card); z-index:250; transition:0.3s; display:flex; flex-direction:column; }
+        .group-panel.open { right:0; }
+        .group-header { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+        .group-messages { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
+        .msg { max-width:80%; padding:10px 14px; border-radius:18px; font-size:14px; line-height:1.5; }
+        .msg.mine { align-self:flex-end; background:var(--accent); color:white; border-bottom-right-radius:4px; }
+        .msg.other { align-self:flex-start; background:var(--bg); border-bottom-left-radius:4px; }
+        .msg-sender { font-size:11px; font-weight:700; margin-bottom:2px; color:var(--accent); }
+        .group-input-area { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border); }
+        .group-input { flex:1; padding:10px 14px; border:2px solid var(--border); border-radius:24px; background:var(--bg); color:var(--text); font-size:14px; }
+        .walkie-btn { position:fixed; bottom:20px; left:20px; width:56px; height:56px; border-radius:50%; background:var(--wa); border:none; color:white; font-size:24px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:400; cursor:pointer; }
+        .walkie-btn.recording { background:#ef4444; animation: pulse 0.8s infinite; }
+        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.7)} 50%{box-shadow:0 0 0 14px rgba(239,68,68,0)} }
+        .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1e293b; color:white; padding:10px 24px; border-radius:30px; font-size:13px; z-index:999; }
+    </style>
+</head>
+<body>
+    <!-- شاشة الدخول -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" alt="logo">
+            <h1>F‑Note Pro Max</h1>
+            <input type="email" id="loginEmail" class="login-input" placeholder="البريد الإلكتروني" dir="ltr">
+            <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
+            <button class="login-btn" id="loginBtn">دخول</button>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- القائمة الجانبية -->
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="close"><button onclick="closeSidebar()">✕</button></div>
+        <div class="sidebar-section">
+            <h4>الحساب</h4>
+            <div id="userInfo" style="font-size:12px;color:var(--text3)"></div>
+            <div class="sidebar-item" id="signOutBtn" style="display:none"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</div>
+        </div>
+        <div class="sidebar-section" id="adminSection" style="display:none">
+            <h4>المدير</h4>
+            <div class="sidebar-item" id="createUserBtn"><i class="fa-solid fa-user-plus"></i> إنشاء حساب</div>
+        </div>
+        <div class="sidebar-section">
+            <h4>اللغة</h4>
+            <div class="lang-row">
+                <button class="lang-btn active" data-lang="auto" onclick="setLang('auto')">تلقائي</button>
+                <button class="lang-btn" data-lang="ar" onclick="setLang('ar')">AR</button>
+                <button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <h4>أدوات</h4>
+            <div class="sidebar-item" id="syncBtn"><i class="fa-solid fa-rotate"></i> مزامنة</div>
+            <div class="sidebar-item" id="exportJsonBtn"><i class="fa-solid fa-file-export"></i> تصدير JSON</div>
+            <div class="sidebar-item" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> تصدير PDF</div>
+        </div>
+    </div>
+
+    <!-- الهيدر -->
+    <div id="appContainer" style="display:none">
+        <div class="header">
+            <button onclick="openSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" alt="logo">
+            <button id="darkToggle"><i class="fa-solid fa-moon"></i></button>
+        </div>
+
+        <!-- شريط البحث -->
+        <div class="toolbar">
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث عن مرشد...">
+            <button class="icon-btn" id="voiceSearchBtn"><i class="fa-solid fa-microphone"></i></button>
+            <button class="icon-btn accent" id="addBtn">+</button>
+            <button class="icon-btn" onclick="openGroupChat()"><i class="fa-solid fa-comments"></i></button>
+        </div>
+
+        <!-- قائمة المرشدين -->
+        <div id="guidesContainer" class="guides"></div>
+
+        <!-- زر اللاسلكي -->
+        <button class="walkie-btn" id="walkieBtn"><i class="fa-solid fa-microphone"></i></button>
+    </div>
+
+    <!-- مجموعة المحادثة -->
+    <div class="group-panel" id="groupPanel">
+        <div class="group-header">
+            <button class="icon-btn" onclick="closeGroupChat()"><i class="fa-solid fa-arrow-right"></i></button>
+            <span style="font-weight:700;">محادثة المجموعة</span>
+        </div>
+        <div class="group-messages" id="groupMessages"></div>
+        <div class="group-input-area">
+            <button class="icon-btn" id="voiceGroupBtn"><i class="fa-solid fa-microphone"></i></button>
+            <input type="text" class="group-input" id="groupInput" placeholder="اكتب رسالة...">
+            <button class="icon-btn accent" onclick="sendGroupMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- المودالات -->
+    <div class="modal" id="guideModal"><div class="modal-box">
+        <h3 id="modalTitle">إضافة مرشد</h3>
+        <input type="text" class="form-input" id="gName" placeholder="الاسم *">
+        <input type="tel" class="form-input" id="gPhone" placeholder="الهاتف *" dir="ltr">
+        <input type="text" class="form-input" id="gPlate" placeholder="رقم اللوحة">
+        <div class="upload-area" id="guideUploadCard"><i class="fa-solid fa-user"></i> 📸 صورة المرشد</div>
+        <div class="upload-area" id="busUploadCard"><i class="fa-solid fa-bus"></i> 🚌 صورة الحافلة</div>
+        <input type="text" class="form-input" id="gTransport" placeholder="وسيلة النقل">
+        <input type="text" class="form-input" id="gAgency" placeholder="الوكالة">
+        <textarea class="form-textarea" id="gNotes" placeholder="ملاحظات"></textarea>
+        <select class="form-input" id="gVisibility"><option value="private">🔒 خاص</option><option value="public">🌍 عام</option></select>
+        <button class="btn-submit" id="saveGuideBtn">💾 حفظ</button>
+        <button class="btn-close" id="cancelGuideBtn">إلغاء</button>
+    </div></div>
+
+    <!-- باقي المودالات مختصرة للتركيز -->
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
+            authDomain: "f-notepro-work-2d25b.firebaseapp.com",
+            projectId: "f-notepro-work-2d25b",
+            storageBucket: "f-notepro-work-2d25b.firebasestorage.app",
+            messagingSenderId: "221438380381",
+            appId: "1:221438380381:web:b46c35d0ec0944079480b4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(), auth = firebase.auth();
+        const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dmhtx93nj/image/upload';
+        const UPLOAD_PRESET = 'ml_default';
+
+        let currentUser = null, guides = [], guidePhoto = '', busPhoto = '', currentLang = 'auto', isRecording = false;
+
+        // اللغة
+        const t = (key) => (currentLang === 'fr' ? { loginEmail:'Email', loginPassword:'Mot de passe', loginBtn:'Connexion', search:'🔍 Rechercher...', add:'➕ Ajouter', edit:'✏️ Modifier' } : { loginEmail:'البريد الإلكتروني', loginPassword:'كلمة المرور', loginBtn:'دخول', search:'🔍 بحث عن مرشد...', add:'➕ إضافة', edit:'✏️ تعديل' })[key] || key;
+        function setLang(lang) {
+            currentLang = lang;
+            if (lang === 'auto') currentLang = navigator.language.startsWith('fr') ? 'fr' : 'ar';
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+            document.getElementById('loginEmail').placeholder = t('loginEmail');
+            document.getElementById('loginPassword').placeholder = t('loginPassword');
+            document.getElementById('loginBtn').textContent = t('loginBtn');
+            document.getElementById('searchInput').placeholder = t('search');
+            document.getElementById('modalTitle').textContent = t('add');
+            if (currentUser) renderGuides();
+        }
+        setLang('auto');
+
+        // Toast
+        function toast(msg) { const el = document.createElement('div'); el.className='toast'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),2500); }
+
+        // Auth
+        document.getElementById('loginBtn').onclick = async () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const err = document.getElementById('loginError');
+            if(!email||!password){ err.textContent='أدخل البريد وكلمة المرور'; err.classList.add('show'); return; }
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch(e) {
+                err.textContent = 'فشل الدخول: ' + e.message; err.classList.add('show');
+            }
+        };
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                currentUser = user;
+                document.getElementById('loginScreen').classList.add('hide');
+                document.getElementById('appContainer').style.display = 'block';
+                document.getElementById('signOutBtn').style.display = 'flex';
+                document.getElementById('userInfo').innerHTML = user.email;
+                if(user.email === 'fahmiajmi5@gmail.com') document.getElementById('adminSection').style.display = 'block';
+                loadGuides();
+                setLang(currentLang);
+            } else {
+                currentUser = null;
+                document.getElementById('loginScreen').classList.remove('hide');
+                document.getElementById('appContainer').style.display = 'none';
+                document.getElementById('signOutBtn').style.display = 'none';
+                document.getElementById('adminSection').style.display = 'none';
+            }
+        });
+        document.getElementById('signOutBtn').onclick = () => auth.signOut();
+
+        // Guides
+        function loadGuides() {
+            db.collection('guides').where('userId','==',currentUser.uid).onSnapshot(snap => {
+                guides = []; snap.forEach(d => guides.push({id:d.id, ...d.data()}));
+                db.collection('guides').where('visibility','==','public').get().then(ps => {
+                    ps.forEach(d => { if(d.data().userId !== currentUser.uid) guides.push({id:d.id, ...d.data()}); });
+                    renderGuides();
+                }).catch(() => renderGuides());
+            });
+        }
+        function renderGuides() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = guides.filter(g => !q || g.name?.toLowerCase().includes(q));
+            const container = document.getElementById('guidesContainer');
+            container.innerHTML = filtered.map(g => {
+                const own = g.userId === currentUser.uid;
+                return `<div class="guide-card">
+                    <div class="card-row">
+                        ${g.guidePhoto ? `<img class="card-avatar" src="${g.guidePhoto}">` : ''}
+                        ${g.busPhoto ? `<img class="card-bus" src="${g.busPhoto}">` : ''}
+                        <div class="card-info">
+                            <div class="card-name">${g.name} ${g.visibility==='public'?'🌍':'🔒'}</div>
+                            <div class="card-phone">${g.phone}</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down" onclick="this.closest('.guide-card').querySelector('.card-details').classList.toggle('show')"></i>
+                    </div>
+                    <div class="card-details">
+                        <div>🚐 ${g.transportType||'—'} | 🏢 ${g.agency||'—'} | 🚍 ${g.plateNumber||'—'}</div>
+                        <div class="actions">
+                            <button class="btn-xs btn-call" onclick="location.href='tel:${g.phone}'">📞</button>
+                            <button class="btn-xs btn-wa" onclick="window.open('https://wa.me/${g.phone.replace(/[^0-9]/g,'')}')">💬</button>
+                            <button class="btn-xs btn-card" onclick="generateCard('${g.id}')">🪪</button>
+                            ${own ? `<button class="btn-xs btn-edit" onclick="editGuide('${g.id}')">✏️</button>
+                                     <button class="btn-xs btn-del" onclick="deleteGuide('${g.id}')">🗑️</button>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // رفع الصور
+        function pickImage(type) {
+            const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+            inp.onchange = async e => {
+                if(e.target.files[0]) {
+                    const fd = new FormData(); fd.append('file', e.target.files[0]); fd.append('upload_preset', UPLOAD_PRESET);
+                    const res = await fetch(CLOUDINARY_URL, {method:'POST', body:fd});
+                    const data = await res.json();
+                    if(type==='guide') guidePhoto = data.secure_url;
+                    else busPhoto = data.secure_url;
+                    toast('✅ تم رفع الصورة');
+                }
+            };
+            inp.click();
+        }
+        document.getElementById('guideUploadCard').onclick = () => pickImage('guide');
+        document.getElementById('busUploadCard').onclick = () => pickImage('bus');
+
+        // إضافة/تعديل
+        let editId = null;
+        document.getElementById('addBtn').onclick = () => {
+            editId = null; guidePhoto=''; busPhoto='';
+            document.getElementById('gName').value=''; document.getElementById('gPhone').value=''; document.getElementById('gPlate').value='';
+            document.getElementById('gTransport').value=''; document.getElementById('gAgency').value=''; document.getElementById('gNotes').value='';
+            document.getElementById('modalTitle').textContent = t('add');
+            document.getElementById('guideModal').classList.add('show');
+        };
+        window.editGuide = (id) => {
+            const g = guides.find(x=>x.id===id);
+            if(!g || g.userId !== currentUser.uid) return toast('لا يمكنك تعديل هذا المرشد');
+            editId = id;
+            document.getElementById('gName').value = g.name; document.getElementById('gPhone').value = g.phone;
+            document.getElementById('gPlate').value = g.plateNumber||''; document.getElementById('gTransport').value = g.transportType||'';
+            document.getElementById('gAgency').value = g.agency||''; document.getElementById('gNotes').value = g.notes||'';
+            guidePhoto = g.guidePhoto||''; busPhoto = g.busPhoto||'';
+            document.getElementById('modalTitle').textContent = t('edit');
+            document.getElementById('guideModal').classList.add('show');
+        };
+        window.deleteGuide = async (id) => {
+            if(confirm('حذف؟')) { await db.collection('guides').doc(id).delete(); toast('تم الحذف'); }
+        };
+        document.getElementById('saveGuideBtn').onclick = async () => {
+            const name = document.getElementById('gName').value.trim();
+            const phone = document.getElementById('gPhone').value.trim();
+            if(!name||!phone) return toast('الاسم والهاتف مطلوبان');
+            const data = {
+                userId: currentUser.uid,
+                name, phone,
+                plateNumber: document.getElementById('gPlate').value.trim(),
+                guidePhoto, busPhoto,
+                image: guidePhoto, vehicleImage: busPhoto,
+                transportType: document.getElementById('gTransport').value.trim(),
+                agency: document.getElementById('gAgency').value.trim(),
+                notes: document.getElementById('gNotes').value.trim(),
+                visibility: document.getElementById('gVisibility').value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            const ref = editId ? db.collection('guides').doc(editId) : db.collection('guides').doc();
+            await ref.set(data, {merge:true});
+            toast('✅ تم الحفظ');
+            document.getElementById('guideModal').classList.remove('show');
+        };
+        document.getElementById('cancelGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
+
+        // المجموعة
+        function openGroupChat() {
+            document.getElementById('groupPanel').classList.add('open');
+            db.collection('groupMessages').orderBy('createdAt').onSnapshot(snap => {
+                const container = document.getElementById('groupMessages');
+                container.innerHTML = '';
+                snap.forEach(d => {
+                    const msg = d.data();
+                    container.innerHTML += `<div class="msg ${msg.senderId===currentUser.uid?'mine':'other'}">
+                        ${msg.senderId!==currentUser.uid ? `<div class="msg-sender">${msg.senderName||'مستخدم'}</div>` : ''}
+                        ${msg.text}
+                    </div>`;
+                });
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+        function closeGroupChat() { document.getElementById('groupPanel').classList.remove('open'); }
+        async function sendGroupMessage() {
+            const input = document.getElementById('groupInput');
+            const text = input.value.trim();
+            if(!text) return;
+            await db.collection('groupMessages').add({
+                senderId: currentUser.uid,
+                senderName: currentUser.email,
+                text,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            input.value = '';
+        }
+        document.getElementById('groupInput').addEventListener('keydown', e => { if(e.key==='Enter') sendGroupMessage(); });
+
+        // لاسلكي (تبسيط)
+        const walkieBtn = document.getElementById('walkieBtn');
+        walkieBtn.onpointerdown = async () => {
+            if(isRecording) return;
+            const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+            const mediaRecorder = new MediaRecorder(stream);
+            const chunks = [];
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(chunks, {type:'audio/webm'});
+                const fd = new FormData(); fd.append('file', blob); fd.append('upload_preset', 'ml_default');
+                const res = await fetch('https://api.cloudinary.com/v1_1/dmhtx93nj/raw/upload', {method:'POST', body:fd});
+                const data = await res.json();
+                await db.collection('radio_broadcasts').add({url: data.secure_url, sender: currentUser.uid, timestamp: firebase.firestore.FieldValue.serverTimestamp()});
+                stream.getTracks().forEach(t => t.stop());
+                walkieBtn.classList.remove('recording');
+                isRecording = false;
+            };
+            mediaRecorder.start();
+            walkieBtn.classList.add('recording');
+            isRecording = true;
+            walkieBtn.onpointerup = () => { if(mediaRecorder.state==='recording') mediaRecorder.stop(); };
+            walkieBtn.onpointerleave = () => { if(mediaRecorder.state==='recording') mediaRecorder.stop(); };
+        };
+
+        // بطاقة واتساب
+        window.generateCard = (id) => {
+            const g = guides.find(x=>x.id===id);
+            if(!g) return;
+            const canvas = document.createElement('canvas'); canvas.width=1080; canvas.height=1350;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createLinearGradient(0,0,0,1350); gradient.addColorStop(0,'#0f766e'); gradient.addColorStop(1,'#14b8a6');
+            ctx.fillStyle=gradient; ctx.fillRect(0,0,1080,1350);
+            ctx.fillStyle='#fff'; ctx.beginPath(); ctx.roundRect(60,60,960,1230,40); ctx.fill();
+            if(g.guidePhoto){ const img=new Image(); img.crossOrigin='anonymous'; img.src=g.guidePhoto; img.onload=()=>{ ctx.save(); ctx.beginPath(); ctx.roundRect(100,120,880,400,24); ctx.clip(); ctx.drawImage(img,100,120,880,400); ctx.restore(); drawText(); }; } else drawText();
+            function drawText(){
+                ctx.fillStyle='#1e293b'; ctx.font='800 52px Cairo'; ctx.textAlign='right'; ctx.fillText(g.name,980,580);
+                ctx.fillStyle='#64748b'; ctx.font='400 30px Cairo'; ctx.fillText(g.notes?.substring(0,50)||'',980,630);
+                ctx.fillStyle='#0f766e'; ctx.font='600 36px Cairo';
+                ctx.fillText('📞 '+g.phone,980,730); ctx.fillText('🚐 '+(g.transportType||''),980,800); ctx.fillText('🏢 '+(g.agency||''),980,870); ctx.fillText('🚍 '+(g.plateNumber||''),980,940);
+                ctx.fillStyle='#94a3b8'; ctx.font='24px Cairo'; ctx.textAlign='center'; ctx.fillText('F-Note Pro Max',540,1200);
+                canvas.toBlob(blob => {
+                    const file = new File([blob], 'بطاقة.png', {type:'image/png'});
+                    if(navigator.share) navigator.share({files:[file], title:g.name}).catch(()=>{});
+                    else { const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='بطاقة.png'; a.click(); }
+                });
+            }
+        };
+
+        // باقي الأحداث
+        document.getElementById('searchInput').oninput = renderGuides;
+        document.getElementById('darkToggle').onclick = () => { document.body.classList.toggle('dark'); };
+        document.getElementById('syncBtn').onclick = () => { loadGuides(); toast('تمت المزامنة'); };
+        document.getElementById('exportJsonBtn').onclick = () => { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(guides)])); a.download='data.json'; a.click(); };
+        document.getElementById('exportPdfBtn').onclick = () => { const el=document.createElement('div'); el.innerHTML='<h1>F-Note Pro Max</h1>'; guides.forEach(g=>el.innerHTML+=`<p>${g.name} - ${g.phone}</p>`); html2pdf().from(el).save(); };
+        document.getElementById('createUserBtn').onclick = async () => {
+            const email=prompt('البريد الإلكتروني'), pass=prompt('كلمة المرور'), name=prompt('الاسم');
+            if(email&&pass&&name) { try { await auth.createUserWithEmailAndPassword(email,pass); await db.collection('users').doc().set({email,name}); toast('تم الإنشاء'); } catch(e) { toast('خطأ: '+e.message); } }
+        };
+        function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
+        function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+        document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',function(e){ if(e.target===this) this.classList.remove('show'); }));
+    </script>
+</body>
+</html>
