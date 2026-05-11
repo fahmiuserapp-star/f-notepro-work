@@ -3,58 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>F-Note Pro Max | بطاقة المرشد المصورة</title>
+    <title>F-Note Pro Max | بطاقة المرشد السياحي</title>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f8fafc; --card: #ffffff; --txt: #0f172a; --txt2: #475569; --txt3: #94a3b8;
-            --border: #e2e8f0; --accent: #0f766e; --accent2: #14b8a6; --err: #ef4444;
-            --ok: #10b981; --wa: #25D366; --r: 16px;
+            --olive: #556B2F; --gold: #D4AF37; --olive-dark: #3d4d21; --gold-light: #e8c456;
+            --bg: #f5f7fa; --card: #ffffff; --txt: #1e293b; --txt2: #475569; --txt3: #94a3b8;
+            --border: #e2e8f0; --err: #ef4444; --ok: #10b981; --wa: #25D366; --r: 16px;
         }
         .dark { --bg: #0f172a; --card: #1e293b; --txt: #f1f5f9; --txt2: #cbd5e1; --txt3: #64748b; --border: #334155; }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo',sans-serif; }
-        body { background:var(--bg); color:var(--txt); min-height:100vh; }
+        body { background:var(--bg); color:var(--txt); min-height:100vh; transition:0.2s; }
         @media(min-width:768px) { body { max-width:500px; margin:auto; border-left:1px solid var(--border); border-right:1px solid var(--border); } }
         button { cursor:pointer; border:none; background:none; font-family:'Cairo',sans-serif; transition:0.15s; }
         button:active { transform:scale(0.96); }
         input, textarea, select { width:100%; padding:12px 14px; border:2px solid var(--border); border-radius:14px; background:var(--bg); color:var(--txt); font-size:14px; outline:none; font-family:'Cairo',sans-serif; margin:5px 0; }
         textarea { resize:vertical; min-height:70px; }
-
         .header { background:var(--card); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; border-bottom:1px solid var(--border); }
         .header img { height:36px; }
         .h-btn { width:38px; height:38px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--txt2); font-size:17px; }
-
         .toolbar { display:flex; gap:8px; padding:10px 14px; background:var(--bg); position:sticky; top:56px; z-index:40; }
         .search { flex:1; padding:10px 14px; border:2px solid var(--border); border-radius:60px; background:var(--card); color:var(--txt); font-size:13px; }
         .t-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--txt2); font-size:16px; background:var(--card); }
-        .t-btn.accent { background:var(--accent); color:white; border-color:var(--accent); font-size:20px; }
-
+        .t-btn.accent { background:var(--olive); color:white; border-color:var(--olive); font-size:20px; }
         .guides { padding:10px 14px; display:flex; flex-direction:column; gap:10px; padding-bottom:80px; }
-        .card { background:var(--card); border-radius:18px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05); border:1px solid var(--border); }
+        .guide-card { background:var(--card); border-radius:18px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05); border:1px solid var(--border); }
         .card-top { display:flex; gap:10px; padding:12px; }
-        .avatar { width:56px; height:56px; border-radius:14px; object-fit:cover; border:2px solid var(--accent); flex-shrink:0; background:var(--bg); }
-        .bus-avatar { width:52px; height:52px; border-radius:12px; object-fit:cover; border:2px solid var(--accent2); flex-shrink:0; background:var(--bg); }
+        .avatar { width:56px; height:56px; border-radius:14px; object-fit:cover; border:2px solid var(--olive); flex-shrink:0; background:var(--bg); }
+        .bus-avatar { width:52px; height:52px; border-radius:12px; object-fit:cover; border:2px solid var(--gold); flex-shrink:0; background:var(--bg); }
         .card-mid { flex:1; min-width:0; }
-        .name { font-weight:800; font-size:16px; }
-        .spec { font-size:11px; color:var(--accent); background:rgba(15,118,110,0.1); padding:2px 8px; border-radius:10px; display:inline-block; margin:2px 0; }
-        .phone { font-size:13px; color:var(--accent); font-weight:700; direction:ltr; }
+        .name { font-weight:800; font-size:16px; } .phone { font-size:13px; color:var(--olive); font-weight:700; direction:ltr; }
         .card-bottom { display:flex; gap:4px; padding:8px 12px; border-top:1px solid var(--border); background:var(--bg); flex-wrap:wrap; }
         .c-btn { padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; color:white; display:inline-flex; align-items:center; gap:4px; }
-        .c-call { background:var(--ok); } .c-wa { background:var(--wa); } .c-card { background:var(--accent); }
-        .c-edit { background:#3b82f6; } .c-del { background:var(--err); }
+        .c-call { background:var(--ok); } .c-wa { background:var(--wa); } .c-card { background:var(--olive); } .c-edit { background:#3b82f6; } .c-del { background:var(--err); }
 
         .modal { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:300; display:flex; align-items:center; justify-content:center; visibility:hidden; opacity:0; transition:0.2s; }
         .modal.show { visibility:visible; opacity:1; }
-        .modal-box { background:var(--card); border-radius:24px; padding:24px; width:92%; max-width:480px; max-height:85vh; overflow-y:auto; }
-        .modal-box h3 { text-align:center; color:var(--accent); margin-bottom:16px; }
-        .upload-area { border:2px dashed var(--accent); border-radius:16px; padding:14px; text-align:center; margin:8px 0; cursor:pointer; }
+        .modal-box { background:var(--card); border-radius:24px; padding:24px; width:92%; max-width:500px; max-height:88vh; overflow-y:auto; }
+        .modal-box h3 { text-align:center; color:var(--olive); margin-bottom:16px; font-size:19px; }
+        .upload-area { border:2px dashed var(--olive); border-radius:16px; padding:14px; text-align:center; margin:8px 0; cursor:pointer; transition:0.3s; }
+        .upload-area:hover { background:rgba(85,107,47,0.03); }
         .upload-area img { width:60px; height:60px; object-fit:cover; border-radius:12px; margin-top:6px; }
         .btn-primary { width:100%; padding:12px; background:var(--ok); color:white; border-radius:14px; font-weight:700; font-size:15px; margin-top:10px; }
         .btn-secondary { width:100%; padding:12px; background:var(--txt3); color:white; border-radius:14px; font-weight:700; margin-top:6px; }
+        .btn-gold { width:100%; padding:12px; background:linear-gradient(135deg,var(--gold),var(--gold-light)); color:#1e293b; border-radius:14px; font-weight:700; font-size:15px; margin-top:10px; }
+        .btn-olive { width:100%; padding:12px; background:linear-gradient(135deg,var(--olive),var(--olive-dark)); color:white; border-radius:14px; font-weight:700; font-size:15px; margin-top:10px; }
+
+        /* تصميم بطاقة السائح - مطابق للكود الأصلي */
+        #touristCard {
+            background: linear-gradient(145deg, #ffffff 0%, #fafbfa 100%);
+            border: 3px solid var(--gold);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        #touristCard .card-stripe-top {
+            position: absolute; top:0; left:0; width:100%; height:4px;
+            background: linear-gradient(90deg, var(--olive) 0%, var(--gold) 100%);
+        }
+        #touristCard .card-stripe-bottom {
+            position: absolute; bottom:0; left:0; width:100%; height:4px;
+            background: linear-gradient(90deg, var(--gold) 0%, var(--olive) 100%);
+        }
         .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#1e293b; color:white; padding:10px 22px; border-radius:30px; font-size:13px; z-index:999; }
     </style>
 </head>
@@ -62,11 +79,14 @@
 
 <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;">
     <div style="background:var(--card);border-radius:24px;padding:32px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-        <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:90px;margin-bottom:16px;">
-        <h1 style="color:var(--accent);font-size:26px;font-weight:900;margin-bottom:20px;">F‑Note Pro Max</h1>
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--olive),var(--olive-dark));display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
+            <i class="fas fa-id-card text-3xl" style="color:var(--gold);"></i>
+        </div>
+        <h1 style="color:var(--olive);font-size:26px;font-weight:900;margin-bottom:8px;">F‑Note Pro Max</h1>
+        <p style="color:var(--gold);font-size:14px;font-weight:600;margin-bottom:20px;">بطاقة المرشد السياحي</p>
         <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr">
         <input type="password" id="loginPassword" placeholder="كلمة المرور">
-        <button id="loginBtn" style="width:100%;padding:14px;background:var(--accent);color:white;border-radius:14px;font-weight:700;font-size:16px;margin-top:12px;">دخول</button>
+        <button id="loginBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--olive),var(--olive-dark));color:white;border-radius:14px;font-weight:700;font-size:16px;margin-top:12px;">دخول</button>
         <button id="offlineBtn" style="width:100%;padding:14px;background:var(--txt3);color:white;border-radius:14px;font-weight:700;font-size:14px;margin-top:8px;">🔄 بدون إنترنت</button>
         <div id="loginError" style="color:var(--err);font-size:13px;margin-top:8px;display:none;"></div>
     </div>
@@ -75,7 +95,12 @@
 <div id="appContainer" style="display:none;">
     <div class="header">
         <button class="h-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
-        <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" alt="Logo">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--olive),var(--olive-dark));display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-id-card text-sm" style="color:var(--gold);"></i>
+            </div>
+            <span style="font-weight:900;color:var(--olive);font-size:16px;">F‑Note Pro</span>
+        </div>
         <button class="h-btn" id="darkToggle"><i class="fa-solid fa-moon"></i></button>
     </div>
     <div class="toolbar">
@@ -86,24 +111,74 @@
     <div id="guidesContainer" class="guides"><div style="text-align:center;padding:40px;color:var(--txt3);">⏳ جاري التحميل...</div></div>
 </div>
 
-<!-- مودال الإضافة -->
+<!-- مودال إضافة/تعديل مرشد -->
 <div class="modal" id="guideModal">
     <div class="modal-box">
-        <h3 id="modalTitle">➕ إضافة مرشد</h3>
-        <input type="text" id="gName" placeholder="الاسم الكامل *">
-        <input type="tel" id="gPhone" placeholder="رقم الهاتف *" dir="ltr">
-        <div style="display:flex;gap:8px;">
-            <input type="text" id="gSpecialty" placeholder="التخصص (عربي/فرنسي/انجليزي)" style="flex:1;">
-            <input type="text" id="gLocation" placeholder="الموقع (جدة/تونس...)" style="flex:1;">
+        <h3 id="modalTitle">➕ إضافة مرشد جديد</h3>
+        <input type="text" id="gName" placeholder="اسم المرشد *">
+        <input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr">
+        <div style="display:flex;gap:6px;">
+            <input type="text" id="gNationality" placeholder="الجنسية" style="flex:1;">
+            <input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1;" min="1">
         </div>
+        <select id="gTransport"><option value="">نوع النقل</option><option value="باص">باص</option><option value="سيارة">سيارة</option><option value="فان">فان</option><option value="أخرى">أخرى</option></select>
         <input type="text" id="gPlate" placeholder="رقم اللوحة">
-        <div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> 📸 صورة المرشد <img id="guidePreview" src="" style="display:none;"></div>
-        <div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> 🚌 صورة الحافلة <img id="busPreview" src="" style="display:none;"></div>
-        <input type="text" id="gTransport" placeholder="وسيلة النقل (حافلة/سيارة...)">
+        <div style="display:flex;gap:6px;">
+            <input type="text" id="gFrom" placeholder="من (نقطة الانطلاق)" style="flex:1;">
+            <input type="text" id="gTo" placeholder="إلى (الوجهة)" style="flex:1;">
+        </div>
+        <div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-image"></i> 📸 صورة البطاقة/الوفد <img id="guidePreview" src="" style="display:none;"></div>
+        <div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> 🚌 صورة وسيلة النقل <img id="busPreview" src="" style="display:none;"></div>
         <input type="text" id="gAgency" placeholder="الوكالة">
         <textarea id="gNotes" placeholder="ملاحظات"></textarea>
-        <button class="btn-primary" id="saveGuideBtn">💾 حفظ</button>
+        <button class="btn-primary" id="saveGuideBtn">💾 حفظ المرشد</button>
         <button class="btn-secondary" id="closeGuideBtn">إلغاء</button>
+    </div>
+</div>
+
+<!-- مودال بطاقة السائح الاحترافية -->
+<div class="modal" id="cardModal">
+    <div class="modal-box" style="max-width:550px;">
+        <h3>📱 بطاقة السائح السياحية</h3>
+        <div id="touristCard">
+            <div class="card-stripe-top"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:2px solid var(--gold);">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:44px;height:44px;border-radius:50%;background:var(--olive);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-id-card text-xl" style="color:var(--gold);"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size:18px;font-weight:900;color:var(--olive);">NOTE PRO WORK</h3>
+                        <p style="font-size:10px;font-weight:600;color:var(--gold);">بطاقة سائح سياحية</p>
+                    </div>
+                </div>
+                <div style="text-align:left;"><p style="font-size:10px;color:#6b7280;">التاريخ</p><p style="font-size:13px;font-weight:700;color:var(--olive);" id="cardDate"></p></div>
+            </div>
+            <div style="margin-bottom:12px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                <img id="cardImage" style="width:100%;max-height:200px;object-fit:cover;" alt="صورة الوفد">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                <div style="background:#f9fafb;border-radius:10px;padding:8px;"><span style="font-size:10px;color:#6b7280;">عدد الأفراد</span><br><span style="font-weight:700;color:var(--olive);" id="cardPeopleCount"></span></div>
+                <div style="background:#f9fafb;border-radius:10px;padding:8px;"><span style="font-size:10px;color:#6b7280;">الجنسية</span><br><span style="font-weight:700;color:var(--olive);" id="cardNationality"></span></div>
+                <div style="background:#f9fafb;border-radius:10px;padding:8px;"><span style="font-size:10px;color:#6b7280;">نوع النقل</span><br><span style="font-weight:700;color:var(--olive);" id="cardTransport"></span></div>
+                <div style="background:#f9fafb;border-radius:10px;padding:8px;"><span style="font-size:10px;color:#6b7280;">رقم اللوحة</span><br><span style="font-weight:700;color:var(--olive);" id="cardPlate" dir="ltr"></span></div>
+                <div style="background:#f9fafb;border-radius:10px;padding:8px;"><span style="font-size:10px;color:#6b7280;">من</span><br><span style="font-weight:700;color:var(--olive);" id="cardFrom"></span></div>
+                <div style="background:#f9fafb;border-radius:10px;padding:8px;"><span style="font-size:10px;color:#6b7280;">إلى</span><br><span style="font-weight:700;color:var(--olive);" id="cardTo"></span></div>
+            </div>
+            <div style="background:linear-gradient(to left,#f9fafb,#fff);border-radius:10px;padding:10px;border-right:4px solid var(--gold);margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div><span style="font-size:10px;color:#6b7280;">المرشد السياحي</span><br><span style="font-weight:700;color:var(--olive);" id="cardGuideName"></span></div>
+                    <div style="text-align:left;"><span style="font-size:10px;color:#6b7280;">الجوال</span><br><span style="font-weight:700;color:var(--olive);" id="cardGuidePhone" dir="ltr"></span></div>
+                </div>
+            </div>
+            <div id="cardNotesRow" style="background:#f9fafb;border-radius:10px;padding:10px;border-right:4px solid var(--gold);display:none;">
+                <span style="font-size:10px;color:#6b7280;">ملاحظات</span><br><span style="font-size:12px;color:var(--olive);" id="cardNotes"></span>
+            </div>
+            <div class="card-stripe-bottom"></div>
+        </div>
+        <button class="btn-gold" id="shareCardAsImageBtn"><i class="fab fa-whatsapp text-xl"></i> مشاركة البطاقة على واتساب</button>
+        <button class="btn-olive" id="downloadCardBtn"><i class="fas fa-download"></i> تحميل صورة البطاقة</button>
+        <button class="btn-secondary" id="closeCardBtn">إغلاق</button>
     </div>
 </div>
 
@@ -122,7 +197,6 @@
     const auth = firebase.auth();
     db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
-    // ==================== LOCAL DB ====================
     const LDB = {
         get(k) { try { return JSON.parse(localStorage.getItem('fnote_'+k) || 'null'); } catch(e) { return null; } },
         set(k, v) { try { localStorage.setItem('fnote_'+k, JSON.stringify(v)); } catch(e) {} },
@@ -130,15 +204,12 @@
         saveGuides(arr) { this.set('guides', arr); }
     };
 
-    let currentUser = null;
-    let guides = LDB.getGuides();
-    let editId = null;
+    let currentUser = null, guides = LDB.getGuides(), editId = null;
     let guidePhotoB64 = '', busPhotoB64 = '';
 
     function toast(m) { const e = document.createElement('div'); e.className='toast'; e.textContent=m; document.body.appendChild(e); setTimeout(()=>e.remove(), 2500); }
 
-    // ==================== ضغط الصور ====================
-    function compressImg(file, maxW=400, q=0.5) {
+    function compressImg(file, maxW=500, q=0.6) {
         return new Promise(res => {
             const r = new FileReader();
             r.onload = function(ev) {
@@ -192,25 +263,24 @@
     // ==================== RENDER ====================
     function renderGuides() {
         const q = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = guides.filter(g => !q || (g.name||'').toLowerCase().includes(q) || (g.phone||'').includes(q) || (g.specialty||'').toLowerCase().includes(q) || (g.location||'').toLowerCase().includes(q));
+        const filtered = guides.filter(g => !q || (g.name||'').toLowerCase().includes(q) || (g.phone||'').includes(q) || (g.nationality||'').toLowerCase().includes(q));
         const c = document.getElementById('guidesContainer');
         if(!filtered.length) { c.innerHTML='<div style="text-align:center;padding:40px;color:var(--txt3);">😕 لا توجد نتائج</div>'; return; }
         c.innerHTML = filtered.map(g => `
-            <div class="card">
+            <div class="guide-card">
                 <div class="card-top">
                     <img class="avatar" src="${g.guidePhoto||''}" onerror="this.style.display='none'">
                     ${g.busPhoto ? `<img class="bus-avatar" src="${g.busPhoto}">` : ''}
                     <div class="card-mid">
-                        <div class="name">${g.name||''}</div>
-                        <span class="spec">${g.specialty||g.transportType||'مرشد سياحي'}</span>
-                        ${g.location ? `<span class="spec" style="background:rgba(59,130,246,0.1);color:#3b82f6;">📍 ${g.location}</span>` : ''}
+                        <div class="name">${g.name||''} ${g.nationality?'('+g.nationality+')':''}</div>
+                        <div style="font-size:11px;color:var(--txt3);">🚐 ${g.transportType||'—'} | 🚍 ${g.plateNumber||'—'} | 👥 ${g.peopleCount||'—'}</div>
                         <div class="phone">📞 ${g.phone||''}</div>
                     </div>
                 </div>
                 <div class="card-bottom">
                     <button class="c-btn c-call" onclick="event.stopPropagation();location.href='tel:${g.phone}'">📞 اتصال</button>
                     <button class="c-btn c-wa" onclick="event.stopPropagation();window.open('https://wa.me/${(g.phone||'').replace(/[^0-9]/g,'')}')">💬 واتساب</button>
-                    <button class="c-btn c-card" onclick="event.stopPropagation();shareAsImage('${g.id}')">🪪 بطاقة</button>
+                    <button class="c-btn c-card" onclick="event.stopPropagation();showTouristCard('${g.id}')">🪪 بطاقة</button>
                     <button class="c-btn c-edit" onclick="event.stopPropagation();editGuide('${g.id}')">✏️</button>
                     <button class="c-btn c-del" onclick="event.stopPropagation();deleteGuide('${g.id}')">🗑️</button>
                 </div>
@@ -229,8 +299,9 @@
         const g = guides.find(x=>x.id===id); if(!g) return;
         editId=id;
         document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||'';
-        document.getElementById('gSpecialty').value=g.specialty||''; document.getElementById('gLocation').value=g.location||'';
-        document.getElementById('gPlate').value=g.plateNumber||''; document.getElementById('gTransport').value=g.transportType||'';
+        document.getElementById('gNationality').value=g.nationality||''; document.getElementById('gPeopleCount').value=g.peopleCount||'';
+        document.getElementById('gTransport').value=g.transportType||''; document.getElementById('gPlate').value=g.plateNumber||'';
+        document.getElementById('gFrom').value=g.fromLocation||''; document.getElementById('gTo').value=g.toLocation||'';
         document.getElementById('gAgency').value=g.agency||''; document.getElementById('gNotes').value=g.notes||'';
         guidePhotoB64=g.guidePhoto||''; busPhotoB64=g.busPhoto||'';
         document.getElementById('guidePreview').src=guidePhotoB64; document.getElementById('guidePreview').style.display=guidePhotoB64?'block':'none';
@@ -244,7 +315,7 @@
         const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
         inp.onchange = async function(e) {
             const file = e.target.files[0]; if(!file) return;
-            const b64 = await compressImg(file, 400, 0.5);
+            const b64 = await compressImg(file, 500, 0.6);
             document.getElementById(previewId).src=b64;
             document.getElementById(previewId).style.display='block';
             setB64(b64);
@@ -258,9 +329,9 @@
     // ==================== حفظ ====================
     document.getElementById('addGuideBtn').onclick = () => {
         editId=null; guidePhotoB64=''; busPhotoB64='';
-        ['gName','gPhone','gSpecialty','gLocation','gPlate','gTransport','gAgency','gNotes'].forEach(id=>document.getElementById(id).value='');
+        ['gName','gPhone','gNationality','gPeopleCount','gTransport','gPlate','gFrom','gTo','gAgency','gNotes'].forEach(id=>document.getElementById(id).value='');
         document.getElementById('guidePreview').style.display='none'; document.getElementById('busPreview').style.display='none';
-        document.getElementById('modalTitle').textContent='➕ إضافة مرشد';
+        document.getElementById('modalTitle').textContent='➕ إضافة مرشد جديد';
         document.getElementById('guideModal').classList.add('show');
     };
     document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
@@ -273,12 +344,14 @@
             userId: currentUser?currentUser.uid:'offline',
             creatorName: currentUser?currentUser.email:'مستخدم',
             name, phone,
-            specialty: document.getElementById('gSpecialty').value.trim(),
-            location: document.getElementById('gLocation').value.trim(),
+            nationality: document.getElementById('gNationality').value.trim(),
+            peopleCount: document.getElementById('gPeopleCount').value,
+            transportType: document.getElementById('gTransport').value,
             plateNumber: document.getElementById('gPlate').value.trim(),
+            fromLocation: document.getElementById('gFrom').value.trim(),
+            toLocation: document.getElementById('gTo').value.trim(),
             guidePhoto: guidePhotoB64 || null,
             busPhoto: busPhotoB64 || null,
-            transportType: document.getElementById('gTransport').value.trim(),
             agency: document.getElementById('gAgency').value.trim(),
             notes: document.getElementById('gNotes').value.trim(),
             updatedAt: new Date().toISOString()
@@ -298,101 +371,72 @@
         }
     };
 
-    // ==================== مشاركة كصورة ====================
-    window.shareAsImage = function(id) {
+    // ==================== عرض بطاقة السائح الاحترافية ====================
+    window.showTouristCard = function(id) {
         const g = guides.find(x=>x.id===id); if(!g) return;
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 800;
-        canvas.height = 1000;
-
-        // خلفية
-        const grad = ctx.createLinearGradient(0,0,0,1000);
-        grad.addColorStop(0,'#0f766e'); grad.addColorStop(1,'#14b8a6');
-        ctx.fillStyle = grad; ctx.fillRect(0,0,800,1000);
-
-        // بطاقة بيضاء
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath(); ctx.roundRect(30,30,740,940,30); ctx.fill();
-
-        let y = 80;
-        // صورة المرشد
-        if(g.guidePhoto) {
-            const img = new Image(); img.crossOrigin='anonymous'; img.src = g.guidePhoto;
-            img.onload = function() {
-                ctx.save(); ctx.beginPath(); ctx.roundRect(50,y,700,280,20); ctx.clip();
-                ctx.drawImage(img,50,y,700,280); ctx.restore();
-                y = 400;
-                drawText();
-            };
-            img.onerror = function() { drawText(); };
-        } else { drawText(); }
-
-        function drawText() {
-            // شارة
-            ctx.fillStyle = '#0f766e'; ctx.beginPath(); ctx.roundRect(50,y,160,40,20); ctx.fill();
-            ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Cairo'; ctx.textAlign='center';
-            ctx.fillText('🚐 مرشد سياحي', 130, y+28);
-            y += 60;
-
-            // الاسم
-            ctx.fillStyle = '#1e293b'; ctx.font = 'bold 36px Cairo'; ctx.textAlign='right';
-            ctx.fillText(g.name||'', 750, y); y += 50;
-
-            // خط
-            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth=2;
-            ctx.beginPath(); ctx.moveTo(60,y); ctx.lineTo(740,y); ctx.stroke();
-            y += 30;
-
-            // المعلومات
-            const rows = [
-                { icon:'📞', text: g.phone||'' },
-                { icon:'🎓', text: g.specialty||'—' },
-                { icon:'📍', text: g.location||'—' },
-                { icon:'🚐', text: g.transportType||'—' },
-                { icon:'🚍', text: g.plateNumber||'—' },
-                { icon:'🏢', text: g.agency||'—' }
-            ];
-            ctx.fillStyle = '#0f172a'; ctx.font = '22px Cairo'; ctx.textAlign='right';
-            rows.forEach(r => {
-                ctx.fillText(r.icon+'  '+r.text, 750, y);
-                y += 40;
-            });
-            y += 20;
-
-            // صورة الحافلة
-            if(g.busPhoto) {
-                const busImg = new Image(); busImg.crossOrigin='anonymous'; busImg.src = g.busPhoto;
-                busImg.onload = function() {
-                    ctx.save(); ctx.beginPath(); ctx.roundRect(50,y,700,200,16); ctx.clip();
-                    ctx.drawImage(busImg,50,y,700,200); ctx.restore();
-                    y += 220;
-                    finalize();
-                };
-                busImg.onerror = function() { finalize(); };
-            } else { finalize(); }
-
-            function finalize() {
-                ctx.fillStyle = '#94a3b8'; ctx.font = '16px Cairo'; ctx.textAlign='center';
-                ctx.fillText('F‑Note Pro Max', 400, y+20);
-
-                canvas.toBlob(blob => {
-                    const file = new File([blob], 'بطاقة-'+g.name+'.png', {type:'image/png'});
-                    if(navigator.share && navigator.canShare({files:[file]})) {
-                        navigator.share({files:[file], title:g.name}).catch(()=>{});
-                    } else {
-                        const a = document.createElement('a');
-                        a.href = URL.createObjectURL(blob);
-                        a.download = 'بطاقة-'+g.name+'.png';
-                        a.click();
-                        toast('تم تحميل البطاقة');
-                    }
-                }, 'image/png', 0.9);
-            }
+        document.getElementById('cardImage').src = g.guidePhoto || '';
+        document.getElementById('cardPeopleCount').textContent = g.peopleCount || '—';
+        document.getElementById('cardNationality').textContent = g.nationality || '—';
+        document.getElementById('cardTransport').textContent = g.transportType || '—';
+        document.getElementById('cardPlate').textContent = g.plateNumber || '—';
+        document.getElementById('cardFrom').textContent = g.fromLocation || '—';
+        document.getElementById('cardTo').textContent = g.toLocation || '—';
+        document.getElementById('cardGuideName').textContent = g.name || '—';
+        document.getElementById('cardGuidePhone').textContent = g.phone || '—';
+        const notes = g.notes;
+        if(notes) {
+            document.getElementById('cardNotes').textContent = notes;
+            document.getElementById('cardNotesRow').style.display = 'block';
+        } else {
+            document.getElementById('cardNotesRow').style.display = 'none';
         }
+        const now = new Date();
+        document.getElementById('cardDate').textContent = now.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+        document.getElementById('cardModal').classList.add('show');
     };
 
-    // ==================== أحداث ====================
+    // ==================== مشاركة البطاقة كصورة ====================
+    async function captureAndShare() {
+        const card = document.getElementById('touristCard');
+        const btn = document.getElementById('shareCardAsImageBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
+        try {
+            const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            const file = new File([blob], 'بطاقة_سائح_NPWork.png', { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: 'NOTE PRO WORK', text: 'بطاقة سائح سياحية' });
+                toast('✅ تمت المشاركة بنجاح');
+            } else {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'بطاقة_سائح_NPWork.png';
+                a.click();
+                toast('📥 تم تحميل البطاقة - شاركها عبر واتساب');
+            }
+        } catch(err) {
+            if(err.name !== 'AbortError') toast('❌ حدث خطأ في المشاركة');
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fab fa-whatsapp text-xl"></i> مشاركة البطاقة على واتساب';
+    }
+
+    async function downloadCard() {
+        const card = document.getElementById('touristCard');
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = 'بطاقة_سائح_NPWork.png';
+        a.click();
+        toast('✅ تم تحميل البطاقة');
+    }
+
+    document.getElementById('shareCardAsImageBtn').onclick = captureAndShare;
+    document.getElementById('downloadCardBtn').onclick = downloadCard;
+    document.getElementById('closeCardBtn').onclick = () => document.getElementById('cardModal').classList.remove('show');
+
+    // ==================== أحداث عامة ====================
     document.getElementById('searchInput').oninput = renderGuides;
     document.getElementById('darkToggle').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('dark',document.body.classList.contains('dark')); };
     if(localStorage.getItem('dark')==='true') document.body.classList.add('dark');
