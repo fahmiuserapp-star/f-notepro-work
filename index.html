@@ -12,201 +12,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-  // Idempotency: skip if already initialized (e.g., server-side injection
-  // followed by client-side inject-javascript via the Bloks webview component).
-  if (window.playablesSDK) return;
-
-  var HANDLER_NAME = 'playablesGameEventHandler';
-  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
-  var RAF_FRAME_THRESHOLD = 3;
-
-  var gameReadySent = false;
-  var Firebase firstInteractionSent = false;
-  var errorSent = false;
-  var frameCount = 0;
-  var originalRAF = window.requestAnimationFrame;
-
-  // --- Transport Layer ---
-
-  function hasIOSBridge() {
-    return !!(window.webkit &&
-              window.webkit.messageHandlers &&
-              window.webkit.messageHandlers[HANDLER_NAME]);
-  }
-
-  function hasAndroidBridge() {
-    return !!(window[ANDROID_BRIDGE_NAME] &&
-              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
-  }
-
-  function isInIframe() {
-    return !!(window.parent && window.parent !== window);
-  }
-
-  function sendEvent(eventName, payload) {
-    var message = {
-      type: eventName,
-      payload: payload || {},
-      timestamp: Date.now()
-    };
-
-    if (hasIOSBridge()) {
-      try {
-        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
-      } catch (e) { /* ignore */ }
-      return;
-    }
-
-    if (hasAndroidBridge()) {
-    try {
-      var p = payload || {};
-      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
-      p.timestamp = message.timestamp;
-      window[ANDROID_BRIDGE_NAME].postEvent(
-        eventName,
-        JSON.stringify(p)
-      );
-    } catch (e) { /* ignore */ }
-    return;
-  }
-
-    if (isInIframe()) {
-      try {
-        window.parent.postMessage(message, '*');
-      } catch (e) { /* ignore */ }
-      return;
-    }
-  }
-
-  // --- rAF Game-Ready Detection ---
-
-  function onFrame() {
-    if (gameReadySent) return;
-
-    frameCount++;
-    if (frameCount >= RAF_FRAME_THRESHOLD) {
-      gameReadySent = true;
-      sendEvent('game_ready', {
-        frame_count: frameCount,
-        detected_at: Date.now()
-      });
-      return;
-    }
-
-    originalRAF.call(window, onFrame);
-  }
-
-  if (originalRAF) {
-    window.requestAnimationFrame = function(callback) {
-      if (!gameReadySent) {
-        return originalRAF.call(window, function(timestamp) {
-          frameCount++;
-          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
-            gameReadySent = true;
-            sendEvent('game_ready', {
-              frame_count: frameCount,
-              detected_at: Date.now()
-            });
-          }
-          callback(timestamp);
-        });
-      }
-      return originalRAF.call(window, callback);
-    };
-  }
-
-  // --- First User Interaction Detection ---
-
-  function setupFirstInteractionDetection() {
-    var events = ['touchstart', 'mousedown', 'keydown'];
-
-    function onFirstInteraction() {
-      if (firstInteractionSent) return;
-      firstInteractionSent = true;
-      sendEvent('user_interaction_start', null);
-
-      for (var i = 0; i < events.length; i++) {
-        document.removeEventListener(events[i], onFirstInteraction, true);
-      }
-    }
-
-    for (var i = 0; i < events.length; i++) {
-      document.addEventListener(events[i], onFirstInteraction, true);
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
-  } else {
-    setupFirstInteractionDetection();
-  }
-
-  // --- Auto Error Capture ---
-
-  window.addEventListener('error', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    sendEvent('error', {
-      message: event.message || 'Unknown error',
-      source: event.filename || '',
-      lineno: event.lineno || 0,
-      colno: event.colno || 0,
-      auto_captured: true
-    });
-  });
-
-  window.addEventListener('unhandledrejection', function(event) {
-    if (errorSent) return;
-    errorSent = true;
-    var reason = event.reason;
-    sendEvent('error', {
-      message: (reason instanceof Error) ? reason.message : String(reason),
-      type: 'unhandled_promise_rejection',
-      auto_captured: true
-    });
-  });
-
-  // --- Public API ---
-
-  window.playablesSDK = {
-    complete: function(score) {
-      sendEvent('game_ended', {
-        score: score,
-        completed: true
-      });
-    },
-
-    error: function(message) {
-      if (errorSent) return;
-      errorSent = true;
-      sendEvent('error', {
-        message: message || 'Unknown error',
-        auto_captured: false
-      });
-    },
-
-    sendEvent: function(eventName, payload) {
-      if (!eventName || typeof eventName !== 'string') return;
-      sendEvent(eventName, payload);
-    }
-  };
-
-  // Kick off rAF detection in case no game code calls rAF immediately
-  if (originalRAF) {
-    originalRAF.call(window, onFrame);
-  }
-})();</script>
-<script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>F-Note Pro Max | بطاقة المرشد السياحي</title>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
         :root {
             --olive: #556B2F; --gold: #D4AF37; --olive-dark: #3d4d21; --gold-light: #e8c456;
             --bg: #f5f7fa; --card: #ffffff; --txt: #1e293b; --txt2: #475569; --txt3: #94a3b8;
@@ -218,538 +23,460 @@
         @media(min-width:768px) { body { max-width:520px; margin:auto; border-left:1px solid var(--border); border-right:1px solid var(--border); } }
         button { cursor:pointer; border:none; background:none; font-family:'Cairo',sans-serif; transition:0.15s; }
         button:active { transform:scale(0.96); }
-        input, textarea, select { width:100%; padding:12px 14px; border:2px solid var(--border); border-radius:14px; background:var(--bg); color:var(--txt); font-size:14px; outline:none; margin:5px 0; }
-        input:focus, textarea:focus, select:focus { border-color:var(--olive); }
+        input, textarea, select { width:100%; padding:12px 14px; border:2px solid var(--border); border-radius:14px; background:var(--bg); color:var(--txt); font-size:14px; outline:none; font-family:'Cairo',sans-serif; margin:5px 0; }
         textarea { resize:vertical; min-height:70px; }
-        .header { background:var(--card); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; border-bottom:1px solid var(--border); }
+
+        /* Header */
+        .header { background:var(--card); padding:8px 14px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; border-bottom:1px solid var(--border); }
+        .header .logo-area { display:flex; align-items:center; gap:8px; }
+        .header .logo-area img { height:38px; }
+        .header .logo-text { font-weight:900; font-size:18px; color:var(--olive); }
         .h-btn { width:38px; height:38px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--txt2); font-size:17px; }
-        .toolbar { display:flex; gap:8px; padding:10px 14px; background:var(--bg); position:sticky; top:57px; z-index:40; }
+
+        /* Sidebar */
+        .sidebar { position:fixed; top:0; right:-320px; width:280px; height:100%; background:var(--card); z-index:200; transition:0.3s; box-shadow:-4px 0 20px rgba(0,0,0,0.2); overflow-y:auto; padding:20px; }
+        .sidebar.open { right:0; }
+        .sidebar h2 { color:var(--olive); font-size:20px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .sidebar h2 img { width:30px; }
+        .s-item { display:flex; align-items:center; gap:10px; padding:12px; border-radius:14px; cursor:pointer; color:var(--txt); font-size:14px; margin:4px 0; }
+        .s-item:active { background:var(--bg); }
+        .s-item i { width:22px; text-align:center; color:var(--olive); }
+        .lang-row { display:flex; gap:6px; margin:10px 0; }
+        .lang-btn { flex:1; padding:8px; text-align:center; border-radius:14px; border:1px solid var(--border); background:var(--bg); color:var(--txt2); font-size:12px; }
+        .lang-btn.active { background:var(--olive); color:white; border-color:var(--olive); }
+        .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:150; display:none; }
+        .overlay.show { display:block; }
+
+        /* Toolbar */
+        .toolbar { display:flex; gap:8px; padding:10px 14px; background:var(--bg); position:sticky; top:56px; z-index:40; }
         .search { flex:1; padding:10px 14px; border:2px solid var(--border); border-radius:60px; background:var(--card); color:var(--txt); font-size:13px; }
         .t-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--txt2); font-size:16px; background:var(--card); }
         .t-btn.accent { background:var(--olive); color:white; border-color:var(--olive); font-size:20px; }
+
+        /* Guides List */
         .guides { padding:10px 14px; display:flex; flex-direction:column; gap:10px; padding-bottom:80px; }
         .guide-card { background:var(--card); border-radius:18px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05); border:1px solid var(--border); }
-        .card-top { display:flex; gap:10px; padding:12px; align-items:center; }
-        .avatar { width:56px; height:56px; border-radius:14px; object-fit:cover; border:2px solid var(--olive); flex-shrink:0; background:var(--bg); }
-        .bus-avatar { width:52px; height:52px; border-radius:12px; object-fit:cover; border:2px solid var(--gold); flex-shrink:0; background:var(--bg); }
+        .card-top { display:flex; gap:10px; padding:12px; }
+        .avatar { width:52px; height:52px; border-radius:14px; object-fit:cover; border:2px solid var(--olive); flex-shrink:0; background:var(--bg); }
         .card-mid { flex:1; min-width:0; }
-        .name { font-weight:800; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .phone { font-size:13px; color:var(--olive); font-weight:700; direction:ltr; text-align:right; }
-        .card-bottom { display:flex; gap:6px; padding:8px 12px; border-top:1px solid var(--border); background:var(--bg); flex-wrap:wrap; }
-        .c-btn { padding:6px 12px; border-radius:20px; font-size:12px; font-weight:700; color:white; display:inline-flex; align-items:center; gap:5px; }
+        .name { font-weight:800; font-size:16px; } .phone { font-size:13px; color:var(--olive); font-weight:700; direction:ltr; }
+        .card-bottom { display:flex; gap:4px; padding:8px 12px; border-top:1px solid var(--border); background:var(--bg); flex-wrap:wrap; }
+        .c-btn { padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; color:white; display:inline-flex; align-items:center; gap:4px; }
         .c-call { background:var(--ok); } .c-wa { background:var(--wa); } .c-card { background:var(--olive); } .c-edit { background:#3b82f6; } .c-del { background:var(--err); }
 
-        .modal { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); z-index:300; display:flex; align-items:center; justify-content:center; visibility:hidden; opacity:0; transition:0.2s; padding:16px; }
+        /* Modal */
+        .modal { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:300; display:flex; align-items:center; justify-content:center; visibility:hidden; opacity:0; transition:0.2s; }
         .modal.show { visibility:visible; opacity:1; }
-        .modal-box { background:var(--card); border-radius:24px; padding:22px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; }
-        .modal-box h3 { text-align:center; color:var(--olive); margin-bottom:16px; font-size:20px; font-weight:900; }
-        .upload-area { border:2px dashed var(--olive); border-radius:16px; padding:14px; text-align:center; margin:8px 0; cursor:pointer; transition:0.3s; }
-        .upload-area:hover { background:rgba(85,107,47,0.05); }
-        .upload-area img { width:70px; height:70px; object-fit:cover; border-radius:12px; margin-top:8px; border:1px solid var(--border); }
-        .btn-primary { width:100%; padding:13px; background:var(--ok); color:white; border-radius:14px; font-weight:800; font-size:15px; margin-top:10px; }
+        .modal-box { background:var(--card); border-radius:24px; padding:24px; width:92%; max-width:500px; max-height:88vh; overflow-y:auto; }
+        .modal-box h3 { text-align:center; color:var(--olive); margin-bottom:16px; }
+        .upload-area { border:2px dashed var(--olive); border-radius:16px; padding:14px; text-align:center; margin:8px 0; cursor:pointer; }
+        .upload-area img { width:60px; height:60px; object-fit:cover; border-radius:12px; margin-top:6px; }
+        .btn-primary { width:100%; padding:12px; background:var(--ok); color:white; border-radius:14px; font-weight:700; font-size:15px; margin-top:10px; }
         .btn-secondary { width:100%; padding:12px; background:var(--txt3); color:white; border-radius:14px; font-weight:700; margin-top:6px; }
-        .btn-gold { width:100%; padding:13px; background:linear-gradient(135deg,var(--gold),var(--gold-light)); color:#1e293b; border-radius:14px; font-weight:800; font-size:15px; margin-top:10px; }
-        .btn-olive { width:100%; padding:13px; background:linear-gradient(135deg,var(--olive),var(--olive-dark)); color:white; border-radius:14px; font-weight:800; font-size:15px; margin-top:8px; }
 
-        /* بطاقة منظمة */
-        #touristCard {
-            background: var(--card);
-            border: 3px solid var(--gold);
-            border-radius: 22px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-            margin: 12px 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        /* تصميم بطاقة السائح الجديدة */
+        #touristCard { background: #fff; border-radius: 20px; padding: 20px; border: 3px solid var(--gold); position: relative; overflow: hidden; }
+        #touristCard .stripe-top { position: absolute; top:0; left:0; width:100%; height:5px; background: linear-gradient(90deg, var(--olive), var(--gold)); }
+        #touristCard .stripe-bottom { position: absolute; bottom:0; left:0; width:100%; height:5px; background: linear-gradient(90deg, var(--gold), var(--olive)); }
+        .info-box { background: #f9fafb; border-radius: 12px; padding: 12px; border: 1px solid #e5e7eb; height: 100%; }
+        .info-box .label { font-size: 10px; color: #6b7280; margin-bottom: 4px; }
+        .info-box .value { font-weight: 800; color: var(--olive); font-size: 16px; }
+        /* لوحة السيارة التونسية */
+        .tunisian-plate {
+            background: #1e293b;
+            color: white;
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Cairo', sans-serif;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            font-weight: 800;
+            direction: ltr;
         }
-        .dark #touristCard { background:#1e293b; }
-        #touristCard .card-stripe-top, #touristCard .card-stripe-bottom {
-            position: absolute; left:0; width:100%; height:5px;
-            background: linear-gradient(90deg, var(--olive) 0%, var(--gold) 50%, var(--olive) 100%);
-        }
-        #touristCard .card-stripe-top { top:0; }
-        #touristCard .card-stripe-bottom { bottom:0; }
-        .card-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-        .card-item { background:var(--bg); border-radius:12px; padding:10px; border:1px solid var(--border); }
-        .dark .card-item { background:#0f172a; }
-        .card-label { font-size:11px; color:var(--txt3); margin-bottom:2px; }
-        .card-value { font-weight:800; color:var(--olive); font-size:15px; }
-        .plate-tn { font-family:monospace; direction:ltr; background:#111; color:#fff; padding:4px 8px; border-radius:6px; border:2px solid var(--gold); display:inline-block; }
-        .plate-foreign { font-family:monospace; direction:ltr; background:#003399; color:#fff; padding:4px 8px; border-radius:6px; display:inline-block; }
-
-        .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#1e293b; color:white; padding:11px 24px; border-radius:30px; font-size:13px; z-index:999; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
-        .plate-inputs { display:none; gap:6px; margin:5px 0; }
-        .plate-inputs.active { display:flex; }
-        .hint { font-size:11px; color:var(--txt3); margin-top:-2px; margin-bottom:6px; }
+        .tunisian-plate .plate-num { background: white; color: #1e293b; padding: 4px 8px; border-radius: 4px; }
+        .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#1e293b; color:white; padding:10px 22px; border-radius:30px; font-size:13px; z-index:999; }
     </style>
 </head>
 <body>
 
+<!-- شاشة الدخول -->
 <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;">
     <div style="background:var(--card);border-radius:24px;padding:32px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--olive),var(--olive-dark));display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
-            <i class="fas fa-id-card" style="color:var(--gold);font-size:32px;"></i>
-        </div>
-        <h1 style="color:var(--olive);font-size:26px;font-weight:900;margin-bottom:8px;">F-Note Pro Max</h1>
-        <p style="color:var(--gold);font-size:14px;font-weight:600;margin-bottom:20px;">بطاقة المرشد السياحي</p>
+        <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:80px;margin-bottom:16px;">
+        <h1 style="color:var(--olive);font-size:26px;font-weight:900;">F‑Note Pro Max</h1>
         <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr">
         <input type="password" id="loginPassword" placeholder="كلمة المرور">
-        <button id="loginBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--olive),var(--olive-dark));color:white;border-radius:14px;font-weight:700;font-size:16px;margin-top:12px;">دخول</button>
+        <button id="loginBtn" style="width:100%;padding:14px;background:var(--olive);color:white;border-radius:14px;font-weight:700;font-size:16px;margin-top:12px;">دخول</button>
         <button id="offlineBtn" style="width:100%;padding:14px;background:var(--txt3);color:white;border-radius:14px;font-weight:700;font-size:14px;margin-top:8px;">🔄 بدون إنترنت</button>
         <div id="loginError" style="color:var(--err);font-size:13px;margin-top:8px;display:none;"></div>
     </div>
 </div>
 
+<!-- التطبيق الرئيسي -->
 <div id="appContainer" style="display:none;">
     <div class="header">
-        <button class="h-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
-        <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--olive),var(--olive-dark));display:flex;align-items:center;justify-content:center;">
-                <i class="fas fa-id-card" style="color:var(--gold);font-size:14px;"></i>
-            </div>
-            <span style="font-weight:900;color:var(--olive);font-size:16px;">F-Note Pro</span>
+        <div class="logo-area">
+            <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" alt="Logo">
+            <span class="logo-text">F‑Note Pro</span>
         </div>
-        <button class="h-btn" id="darkToggle"><i class="fa-solid fa-moon"></i></button>
+        <div style="display:flex;gap:8px;">
+            <button class="h-btn" id="darkToggle"><i class="fa-solid fa-moon"></i></button>
+            <button class="h-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
+        </div>
     </div>
+
+    <!-- القائمة الجانبية -->
+    <div class="overlay" id="overlay"></div>
+    <div class="sidebar" id="sidebar">
+        <h2><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png"> F‑Note Pro</h2>
+        <div id="sidebarUserInfo" style="font-size:12px;color:var(--txt3);margin-bottom:12px;"></div>
+        <div class="s-item" id="profileBtn"><i class="fa-solid fa-user"></i> الملف الشخصي</div>
+        <div class="s-item" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</div>
+        <div style="margin-top:16px;"><strong style="font-size:12px;color:var(--txt3);">🌐 اللغة</strong></div>
+        <div class="lang-row">
+            <button class="lang-btn active" data-lang="ar">AR</button>
+            <button class="lang-btn" data-lang="fr">FR</button>
+        </div>
+        <div style="margin-top:16px;"><strong style="font-size:12px;color:var(--txt3);">⚙️ أدوات</strong></div>
+        <div class="s-item" id="syncBtn"><i class="fa-solid fa-cloud-arrow-up"></i> مزامنة</div>
+        <div class="s-item" id="exportJsonBtn"><i class="fa-solid fa-file-export"></i> تصدير JSON</div>
+        <div class="s-item" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> تصدير PDF</div>
+    </div>
+
+    <!-- شريط البحث -->
     <div class="toolbar">
         <input type="text" id="searchInput" class="search" placeholder="🔍 بحث عن مرشد...">
-        <button class="t-btn" id="voiceSearchBtn" title="بحث صوتي"><i class="fa-solid fa-microphone"></i></button>
-        <button class="t-btn accent" id="addGuideBtn" title="إضافة">+</button>
+        <button class="t-btn" id="voiceSearchBtn"><i class="fa-solid fa-microphone"></i></button>
+        <button class="t-btn accent" id="addGuideBtn">+</button>
     </div>
+
+    <!-- قائمة المرشدين -->
     <div id="guidesContainer" class="guides"><div style="text-align:center;padding:40px;color:var(--txt3);">⏳ جاري التحميل...</div></div>
 </div>
 
-<!-- مودال إضافة/تعديل -->
+<!-- مودال إضافة/تعديل مرشد -->
 <div class="modal" id="guideModal">
     <div class="modal-box">
         <h3 id="modalTitle">➕ إضافة مرشد جديد</h3>
         <input type="text" id="gName" placeholder="اسم المرشد *">
-        <input type="tel" id="gPhone" placeholder="رقم الجوال * (مثال: +216...)" dir="ltr">
+        <input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr">
         <div style="display:flex;gap:6px;">
             <input type="text" id="gNationality" placeholder="الجنسية" style="flex:1;">
             <input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1;" min="1">
         </div>
-        <select id="gTransport"><option value="">نوع النقل</option><option>باص</option><option>سيارة</option><option>فان</option><option>ميني باص</option><option>أخرى</option></select>
-        
-        <!-- نوع اللوحة -->
-        <select id="gPlateType">
-            <option value="tunisian">🇹🇳 لوحة تونسية</option>
-            <option value="tunisian_rental">🇹🇳 لوحة تونسية كراء (زرقاء)</option>
-            <option value="foreign">🌍 لوحة أجنبية</option>
-            <option value="rs">🛃 نظام توقيفي RS</option>
-        </select>
-        
-        <!-- لوحة تونسية -->
-        <div id="plateTunisian" class="plate-inputs active">
-            <input type="number" id="gPlateSeries" placeholder="سلسلة" min="1" max="999" style="flex:0.8;" dir="ltr">
-            <select id="gPlateGov" style="flex:1.5;">
-                <option>تونس</option><option>أريانة</option><option>بن عروس</option><option>منوبة</option>
-                <option>نابل</option><option>زغوان</option><option>بنزرت</option><option>باجة</option>
-                <option>جندوبة</option><option>الكاف</option><option>سليانة</option><option>سوسة</option>
-                <option>المنستير</option><option>المهدية</option><option>صفاقس</option><option>القيروان</option>
-                <option>القصرين</option><option>سيدي بوزيد</option><option>قابس</option><option>مدنين</option>
-                <option>تطاوين</option><option>قفصة</option><option>توزر</option><option>قبلي</option>
-            </select>
-            <input type="number" id="gPlateNumber" placeholder="رقم" min="1" max="9999" style="flex:1;" dir="ltr">
+        <select id="gTransport"><option value="">نوع النقل</option><option value="باص">باص</option><option value="سيارة">سيارة</option><option value="فان">فان</option><option value="أخرى">أخرى</option></select>
+        <!-- لوحة السيارة التونسية -->
+        <div style="display:flex;align-items:center;gap:6px;margin:8px 0;">
+            <input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2; text-align:center; font-weight:800; font-size:16px;" maxlength="5">
+            <span style="font-weight:900; color:var(--olive); padding:8px 0;">🇹🇳 تونس</span>
+            <input type="text" id="gPlate2" placeholder="XXX" style="flex:1; text-align:center; font-weight:800; font-size:16px;" maxlength="3">
         </div>
-        <div id="hintTunisian" class="hint">الصيغة: 123 تونس 4567</div>
-
-        <!-- لوحة أجنبية -->
-        <div id="plateForeign" class="plate-inputs">
-            <input type="text" id="gPlateForeign" placeholder="مثال: AA-123-BB أو 1234 ABC 56" dir="ltr" style="flex:1;">
-        </div>
-        <div id="hintForeign" class="hint" style="display:none;">أدخل رقم اللوحة الأجنبية كاملاً</div>
-
         <div style="display:flex;gap:6px;">
-            <input type="text" id="gFrom" placeholder="من (الانطلاق)" style="flex:1;">
-            <input type="text" id="gTo" placeholder="إلى (الوجهة)" style="flex:1;">
+            <input type="text" id="gFrom" placeholder="من" style="flex:1;">
+            <input type="text" id="gTo" placeholder="إلى" style="flex:1;">
         </div>
-        <div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-image"></i> 📸 صورة الوفد/البطاقة <img id="guidePreview" src="" style="display:none;"></div>
+        <div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-image"></i> 📸 صورة البطاقة/الوفد <img id="guidePreview" src="" style="display:none;"></div>
         <div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> 🚌 صورة وسيلة النقل <img id="busPreview" src="" style="display:none;"></div>
-        <input type="text" id="gAgency" placeholder="اسم الوكالة">
-        <textarea id="gNotes" placeholder="ملاحظات إضافية"></textarea>
+        <input type="text" id="gAgency" placeholder="الوكالة">
+        <textarea id="gNotes" placeholder="ملاحظات"></textarea>
         <button class="btn-primary" id="saveGuideBtn">💾 حفظ المرشد</button>
         <button class="btn-secondary" id="closeGuideBtn">إلغاء</button>
     </div>
 </div>
 
-<!-- مودال البطاقة المنظمة -->
+<!-- مودال بطاقة السائح -->
 <div class="modal" id="cardModal">
-    <div class="modal-box" style="max-width:560px;">
+    <div class="modal-box" style="max-width:550px; background: #f3f4f6;">
         <h3>📱 بطاقة السائح السياحية</h3>
         <div id="touristCard">
-            <div class="card-stripe-top"></div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid var(--gold);">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:46px;height:46px;border-radius:50%;background:var(--olive);display:flex;align-items:center;justify-content:center;">
-                        <i class="fas fa-id-card" style="color:var(--gold);font-size:20px;"></i>
-                    </div>
+            <div class="stripe-top"></div>
+            <!-- رأس البطاقة -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:36px;">
                     <div>
-                        <h3 style="font-size:19px;font-weight:900;color:var(--olive);margin:0;">NOTE PRO WORK</h3>
-                        <p style="font-size:11px;font-weight:600;color:var(--gold);margin:0;">بطاقة مرشد سياحي معتمد</p>
+                        <h4 style="color:var(--olive); font-size:16px; font-weight:900;">NOTE PRO WORK</h4>
+                        <span style="font-size:10px; color:var(--gold);">بطاقة سائح سياحية</span>
                     </div>
                 </div>
-                <div style="text-align:left;"><p style="font-size:10px;color:var(--txt3);margin:0;">التاريخ</p><p style="font-size:13px;font-weight:700;color:var(--olive);margin:0;" id="cardDate"></p></div>
+                <span style="font-size:12px; color:#6b7280;" id="cardDate"></span>
             </div>
             
-            <div id="cardImageWrap" style="margin-bottom:12px;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:none;">
-                <img id="cardImage" style="width:100%;max-height:210px;object-fit:cover;" alt="صورة الوفد">
+            <!-- صورة الوفد -->
+            <div style="margin-bottom:16px; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                <img id="cardImage" style="width:100%; max-height:180px; object-fit:cover;">
             </div>
 
-            <div class="card-grid">
-                <div class="card-item"><div class="card-label">عدد الأفراد</div><div class="card-value" id="cardPeopleCount">—</div></div>
-                <div class="card-item"><div class="card-label">الجنسية</div><div class="card-value" id="cardNationality">—</div></div>
-                <div class="card-item"><div class="card-label">نوع النقل</div><div class="card-value" id="cardTransport">—</div></div>
-                <div class="card-item"><div class="card-label">رقم اللوحة</div><div class="card-value" id="cardPlate" dir="ltr">—</div></div>
-                <div class="card-item"><div class="card-label">من</div><div class="card-value" id="cardFrom">—</div></div>
-                <div class="card-item"><div class="card-label">إلى</div><div class="card-value" id="cardTo">—</div></div>
+            <!-- صف 1: عدد الأفراد - الجنسية -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                <div class="info-box"><span class="label">عدد الأفراد</span><br><span class="value" id="cardPeopleCount"></span></div>
+                <div class="info-box"><span class="label">الجنسية</span><br><span class="value" id="cardNationality"></span></div>
             </div>
-
-            <div style="background:var(--bg);border-radius:12px;padding:12px;border-right:4px solid var(--gold);margin-top:10px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                    <div><div class="card-label">المرشد السياحي</div><div class="card-value" id="cardGuideName">—</div></div>
-                    <div style="text-align:left;"><div class="card-label">الجوال</div><div class="card-value" id="cardGuidePhone" dir="ltr">—</div></div>
+            <!-- صف 2: نوع النقل - لوحة السيارة -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                <div class="info-box"><span class="label">نوع النقل</span><br><span class="value" id="cardTransport"></span></div>
+                <div class="info-box" style="display:flex; flex-direction:column; justify-content:center;">
+                    <span class="label" style="margin-bottom:4px;">رقم اللوحة</span>
+                    <div class="tunisian-plate">
+                        <span class="plate-num" id="cardPlate1"></span>
+                        <span style="color:var(--gold); font-size:12px;">تونس</span>
+                        <span class="plate-num" id="cardPlate2"></span>
+                    </div>
                 </div>
-                <div id="cardAgencyWrap" style="margin-top:6px;display:none;"><div class="card-label">الوكالة</div><div style="font-weight:700;color:var(--txt2);font-size:13px;" id="cardAgency"></div></div>
             </div>
-            
-            <div id="cardNotesRow" style="background:var(--bg);border-radius:12px;padding:10px;border-right:4px solid var(--olive);margin-top:8px;display:none;">
-                <div class="card-label">ملاحظات</div><div style="font-size:13px;color:var(--txt);" id="cardNotes"></div>
+            <!-- صف 3: من - إلى -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                <div class="info-box"><span class="label">من</span><br><span class="value" id="cardFrom"></span></div>
+                <div class="info-box"><span class="label">إلى</span><br><span class="value" id="cardTo"></span></div>
             </div>
-            <div class="card-stripe-bottom"></div>
+            <!-- مستطيل المرشد -->
+            <div class="info-box" style="margin-bottom:8px; background: #f0fdf4; border-color: var(--olive);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><span class="label">المرشد السياحي</span><br><span class="value" id="cardGuideName"></span></div>
+                    <div style="text-align:left;"><span class="label">الجوال</span><br><span class="value" id="cardGuidePhone" dir="ltr"></span></div>
+                </div>
+            </div>
+            <!-- ملاحظات -->
+            <div class="info-box" id="cardNotesRow" style="display:none;">
+                <span class="label">ملاحظات</span><br><span style="font-size:13px; color:var(--txt2);" id="cardNotes"></span>
+            </div>
+            <div class="stripe-bottom"></div>
         </div>
-        <button class="btn-gold" id="shareCardAsImageBtn"><i class="fab fa-whatsapp"></i> مشاركة على واتساب</button>
-        <button class="btn-olive" id="downloadCardBtn"><i class="fas fa-download"></i> تحميل صورة البطاقة</button>
+        <button class="btn-primary" style="background:#25D366; margin-top:12px;" id="shareCardBtn"><i class="fab fa-whatsapp"></i> مشاركة البطاقة</button>
         <button class="btn-secondary" id="closeCardBtn">إغلاق</button>
     </div>
 </div>
 
 <script>
-   ==================== FIREBASE CONFIG ====================
-    const firebaseConfig = {
-        apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
-        authDomain: "f-notepromax-work.firebaseapp.com",
-        projectId: "f-notepromax-work",
-        storageBucket: "f-notepromax-work.firebasestorage.app",
-        messagingSenderId: "125749698617",
-        appId: "1:125749698617:web:ff9709a863fd5a5053ede8"
+    // Firebase Config
+    const fbConfig = {
+        apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
+        authDomain: "f-notepro-work-2d25b.firebaseapp.com",
+        projectId: "f-notepro-work-2d25b",
+        storageBucket: "f-notepro-work-2d25b.firebasestorage.app",
+        messagingSenderId: "221438380381",
+        appId: "1:221438380381:web:b46c35d0ec0944079480b4"
     };
-    try {
-        firebase.initializeApp(fbConfig);
-        db = firebase.firestore();
-        auth = firebase.auth();
-        db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
-        firebaseReady = true;
-        console.log('Firebase جاهز');
-    } catch(e) {
-        console.warn('Firebase غير متاح:', e);
-        firebaseReady = false;
-    }
+    firebase.initializeApp(fbConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
     const LDB = {
-        get(k){ try{ return JSON.parse(localStorage.getItem('fnote_'+k)||'null'); }catch(e){return null;} },
-        set(k,v){ try{ localStorage.setItem('fnote_'+k, JSON.stringify(v)); }catch(e){} },
-        getGuides(){ return this.get('guides')||[]; },
-        saveGuides(a){ this.set('guides', a); }
+        get(k) { try { return JSON.parse(localStorage.getItem('fnote_'+k) || 'null'); } catch(e) { return null; } },
+        set(k, v) { try { localStorage.setItem('fnote_'+k, JSON.stringify(v)); } catch(e) {} },
+        getGuides() { return this.get('guides') || []; },
+        saveGuides(arr) { this.set('guides', arr); }
     };
 
-    let currentUser=null, guides=LDB.getGuides(), editId=null;
-    let guidePhotoB64='', busPhotoB64='';
+    let currentUser = null, guides = LDB.getGuides(), editId = null;
+    let guidePhotoB64 = '', busPhotoB64 = '';
+    function toast(m) { const e = document.createElement('div'); e.className='toast'; e.textContent=m; document.body.appendChild(e); setTimeout(()=>e.remove(), 2500); }
 
-    function toast(m){ const e=document.createElement('div'); e.className='toast'; e.textContent=m; document.body.appendChild(e); setTimeout(()=>e.remove(),2600); }
-
-    function compressImg(file, maxW=800, q=0.7){
-        return new Promise(res=>{
-            const r=new FileReader();
-            r.onload=ev=>{
-                const img=new Image();
-                img.onload=()=>{
-                    const c=document.createElement('canvas');
+    function compressImg(file, maxW=500, q=0.6) {
+        return new Promise(res => {
+            const r = new FileReader();
+            r.onload = function(ev) {
+                const img = new Image();
+                img.onload = function() {
+                    const c = document.createElement('canvas');
                     let w=img.width, h=img.height;
-                    if(w>maxW){ h*=maxW/w; w=maxW; }
+                    if(w>maxW) { h*=maxW/w; w=maxW; }
                     c.width=w; c.height=h;
                     c.getContext('2d').drawImage(img,0,0,w,h);
                     res(c.toDataURL('image/jpeg', q));
                 };
-                img.src=ev.target.result;
+                img.src = ev.target.result;
             };
             r.readAsDataURL(file);
         });
     }
 
-    // AUTH
-    document.getElementById('loginBtn').onclick=async()=>{
-        const email=document.getElementById('loginEmail').value.trim();
-        const pass=document.getElementById('loginPassword').value;
-        const err=document.getElementById('loginError');
-        err.style.display='none';
-        if(!email||!pass){ err.textContent='أدخل البريد وكلمة المرور'; err.style.display='block'; return; }
-        if(!firebaseReady || !auth){ 
-            err.textContent='⚠️ السيرفر غير متاح حالياً - استخدم وضع بدون إنترنت'; 
-            err.style.display='block'; 
-            return; 
-        }
-        try{ 
-            err.textContent='جاري تسجيل الدخول...'; err.style.display='block'; err.style.color='var(--olive)';
-            await auth.signInWithEmailAndPassword(email,pass); 
-        }
-        catch(e){ 
-            err.style.color='var(--err)';
-            const errors = {
-                'auth/invalid-credential': 'البريد أو كلمة المرور غير صحيحة',
-                'auth/user-not-found': 'الحساب غير موجود',
-                'auth/wrong-password': 'كلمة المرور خاطئة',
-                'auth/invalid-email': 'صيغة البريد غير صحيحة',
-                'auth/network-request-failed': 'لا يوجد اتصال بالإنترنت',
-                'auth/too-many-requests': 'محاولات كثيرة - حاول لاحقاً',
-                'auth/configuration-not-found': 'إعدادات Firebase غير مفعلة'
-            };
-            err.textContent='خطأ: '+(errors[e.code] || e.message); 
-            err.style.display='block'; 
-        }
+    // ==================== Auth & Sidebar ====================
+    document.getElementById('loginBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        const pass = document.getElementById('loginPassword').value;
+        if(!email||!pass) return toast('أدخل البريد وكلمة المرور');
+        try { await auth.signInWithEmailAndPassword(email, pass); } catch(e) { toast('خطأ: '+e.message); }
     };
-    document.getElementById('offlineBtn').onclick=()=>{
-        currentUser={uid:'offline',email:'offline@local'};
+    document.getElementById('offlineBtn').onclick = () => {
+        currentUser = { uid:'offline', email:'offline@local' };
         document.getElementById('loginScreen').style.display='none';
         document.getElementById('appContainer').style.display='block';
-        renderGuides(); toast('🔄 تعمل بدون إنترنت');
+        document.getElementById('sidebarUserInfo').textContent = 'وضع بدون إنترنت';
+        renderGuides();
     };
-    if(firebaseReady && auth){
-        auth.onAuthStateChanged(async u=>{
-            if(u){
-                currentUser=u;
-                document.getElementById('loginScreen').style.display='none';
-                document.getElementById('appContainer').style.display='block';
-                try{
-                    const s=await db.collection('guides').where('userId','==',u.uid).get();
-                    let cloud=[]; s.forEach(d=>cloud.push({id:d.id,...d.data()}));
-                    const local=LDB.getGuides();
-                    const merged=[...cloud];
-                    local.forEach(l=>{ if(!merged.find(m=>m.id===l.id)) merged.push(l); });
-                    guides=merged; LDB.saveGuides(guides);
-                }catch(e){ guides=LDB.getGuides(); }
-                renderGuides();
-            }
-        });
-    }
-
-    // Plate type toggle
-    const plateTypeEl=document.getElementById('gPlateType');
-    plateTypeEl.onchange=()=>{
-        const v=plateTypeEl.value;
-        const isTunisian=v.startsWith('tunisian')||v==='rs';
-        document.getElementById('plateTunisian').classList.toggle('active', isTunisian);
-        document.getElementById('plateForeign').classList.toggle('active', !isTunisian);
-        document.getElementById('hintTunisian').style.display=isTunisian?'block':'none';
-        document.getElementById('hintForeign').style.display=!isTunisian?'block':'none';
+    auth.onAuthStateChanged(async u => {
+        if(u) {
+            currentUser = u;
+            document.getElementById('loginScreen').style.display='none';
+            document.getElementById('appContainer').style.display='block';
+            document.getElementById('sidebarUserInfo').textContent = u.email;
+            db.collection('guides').where('userId','==',u.uid).get().then(s => {
+                let cloud = []; s.forEach(d => cloud.push({id:d.id,...d.data()}));
+                const merged = [...cloud, ...LDB.getGuides().filter(l=>!cloud.find(c=>c.id===l.id))];
+                guides = merged; LDB.saveGuides(guides); renderGuides();
+            }).catch(() => { guides = LDB.getGuides(); renderGuides(); });
+            renderGuides();
+        }
+    });
+    document.getElementById('signOutBtn').onclick = () => auth.signOut();
+    
+    // Sidebar toggle
+    document.getElementById('menuBtn').onclick = () => {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('overlay').classList.add('show');
     };
+    document.getElementById('overlay').onclick = () => {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('overlay').classList.remove('show');
+    };
+    document.getElementById('darkToggle').onclick = () => document.body.classList.toggle('dark');
 
-    // RENDER
-    function renderGuides(){
-        const q=document.getElementById('searchInput').value.toLowerCase();
-        const filtered=guides.filter(g=>!q||(g.name||'').toLowerCase().includes(q)||(g.phone||'').includes(q)||(g.nationality||'').toLowerCase().includes(q)||(g.plateNumber||'').toLowerCase().includes(q));
-        const c=document.getElementById('guidesContainer');
-        if(!filtered.length){ c.innerHTML='<div style="text-align:center;padding:40px;color:var(--txt3);">😕 لا توجد نتائج</div>'; return; }
-        c.innerHTML=filtered.map(g=>`
+    // ==================== Guides ====================
+    function renderGuides() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = guides.filter(g => !q || (g.name||'').toLowerCase().includes(q));
+        const c = document.getElementById('guidesContainer');
+        if(!filtered.length) { c.innerHTML='<div style="text-align:center;padding:40px;color:var(--txt3);">😕 لا توجد نتائج</div>'; return; }
+        c.innerHTML = filtered.map(g => `
             <div class="guide-card">
                 <div class="card-top">
-                    ${g.guidePhoto?`<img class="avatar" src="${g.guidePhoto}" alt="">`:'<div class="avatar" style="display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-user" style="color:var(--txt3)"></i></div>'}
-                    ${g.busPhoto?`<img class="bus-avatar" src="${g.busPhoto}" alt="">`:''}
+                    <img class="avatar" src="${g.guidePhoto||''}" onerror="this.style.display='none'">
                     <div class="card-mid">
-                        <div class="name">${g.name||''} ${g.nationality?`(${g.nationality})`:''}</div>
-                        <div style="font-size:11px;color:var(--txt3);margin:2px 0;">🚐 ${g.transportType||'—'} | 🚍 ${g.plateNumber||'—'} | 👥 ${g.peopleCount||'—'}</div>
+                        <div class="name">${g.name||''} ${g.nationality?'('+g.nationality+')':''}</div>
+                        <div style="font-size:11px;color:var(--txt3);">🚐 ${g.transportType||'—'} | 👥 ${g.peopleCount||'—'}</div>
                         <div class="phone">📞 ${g.phone||''}</div>
                     </div>
+                </div>
                 <div class="card-bottom">
-                    <button class="c-btn c-call" onclick="location.href='tel:${g.phone}'">📞 اتصال</button>
-                    <button class="c-btn c-wa" onclick="window.open('https://wa.me/${(g.phone||'').replace(/[^0-9]/g,'')}')">💬 واتساب</button>
-                    <button class="c-btn c-card" onclick="showTouristCard('${g.id}')">🪪 بطاقة</button>
-                    <button class="c-btn c-edit" onclick="editGuide('${g.id}')">✏️</button>
-                    <button class="c-btn c-del" onclick="deleteGuide('${g.id}')">🗑️</button>
+                    <button class="c-btn c-call" onclick="event.stopPropagation();location.href='tel:${g.phone}'">📞</button>
+                    <button class="c-btn c-wa" onclick="event.stopPropagation();window.open('https://wa.me/${(g.phone||'').replace(/[^0-9]/g,'')}')">💬</button>
+                    <button class="c-btn c-card" onclick="event.stopPropagation();showTouristCard('${g.id}')">🪪 بطاقة</button>
+                    <button class="c-btn c-edit" onclick="event.stopPropagation();editGuide('${g.id}')">✏️</button>
+                    <button class="c-btn c-del" onclick="event.stopPropagation();deleteGuide('${g.id}')">🗑️</button>
                 </div>
             </div>
         `).join('');
     }
 
-    window.deleteGuide=id=>{
-        if(!confirm('هل تريد الحذف؟')) return;
-        guides=guides.filter(g=>g.id!==id);
+    window.deleteGuide = function(id) {
+        if(!confirm('حذف؟')) return;
+        guides = guides.filter(g=>g.id!==id);
         LDB.saveGuides(guides); renderGuides();
-        if(db&&currentUser&&!id.startsWith('local_')) db.collection('guides').doc(id).delete().catch(()=>{});
+        if(db && currentUser && !id.startsWith('local_')) db.collection('guides').doc(id).delete().catch(()=>{});
         toast('تم الحذف');
     };
 
-    window.editGuide=id=>{
-        const g=guides.find(x=>x.id===id); if(!g) return;
+    window.editGuide = function(id) {
+        const g = guides.find(x=>x.id===id); if(!g) return;
         editId=id;
-        document.getElementById('gName').value=g.name||'';
-        document.getElementById('gPhone').value=g.phone||'';
-        document.getElementById('gNationality').value=g.nationality||'';
-        document.getElementById('gPeopleCount').value=g.peopleCount||'';
+        document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||'';
+        document.getElementById('gNationality').value=g.nationality||''; document.getElementById('gPeopleCount').value=g.peopleCount||'';
         document.getElementById('gTransport').value=g.transportType||'';
-        document.getElementById('gFrom').value=g.fromLocation||'';
-        document.getElementById('gTo').value=g.toLocation||'';
-        document.getElementById('gAgency').value=g.agency||'';
-        document.getElementById('gNotes').value=g.notes||'';
-        // plate parse
-        if(g.plateType){
-            document.getElementById('gPlateType').value=g.plateType;
-            plateTypeEl.onchange();
-            if(g.plateType.startsWith('tunisian')||g.plateType==='rs'){
-                document.getElementById('gPlateSeries').value=g.plateSeries||'';
-                document.getElementById('gPlateGov').value=g.plateGov||'تونس';
-                document.getElementById('gPlateNumber').value=g.plateNumberRaw||'';
-            }else{
-                document.getElementById('gPlateForeign').value=g.plateNumber||'';
-            }
-        }else{
-            document.getElementById('gPlateForeign').value=g.plateNumber||'';
-        }
+        document.getElementById('gPlate1').value=g.plate1||''; document.getElementById('gPlate2').value=g.plate2||'';
+        document.getElementById('gFrom').value=g.fromLocation||''; document.getElementById('gTo').value=g.toLocation||'';
+        document.getElementById('gAgency').value=g.agency||''; document.getElementById('gNotes').value=g.notes||'';
         guidePhotoB64=g.guidePhoto||''; busPhotoB64=g.busPhoto||'';
-        const gp=document.getElementById('guidePreview'); gp.src=guidePhotoB64; gp.style.display=guidePhotoB64?'block':'none';
-        const bp=document.getElementById('busPreview'); bp.src=busPhotoB64; bp.style.display=busPhotoB64?'block':'none';
+        document.getElementById('guidePreview').src=guidePhotoB64; document.getElementById('guidePreview').style.display=guidePhotoB64?'block':'none';
+        document.getElementById('busPreview').src=busPhotoB64; document.getElementById('busPreview').style.display=busPhotoB64?'block':'none';
         document.getElementById('modalTitle').textContent='✏️ تعديل مرشد';
         document.getElementById('guideModal').classList.add('show');
     };
 
-    function pickImg(previewId, setB64){
-        const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
-        inp.onchange=async e=>{
-            const file=e.target.files[0]; if(!file) return;
-            const b64=await compressImg(file);
+    // ==================== Image Upload ====================
+    function pickImg(previewId, setB64) {
+        const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+        inp.onchange = async function(e) {
+            const file = e.target.files[0]; if(!file) return;
+            const b64 = await compressImg(file, 500, 0.6);
             document.getElementById(previewId).src=b64;
             document.getElementById(previewId).style.display='block';
-            setB64(b64); toast('✅ تم تحميل الصورة');
+            setB64(b64);
+            toast('✅ الصورة جاهزة');
         };
         inp.click();
     }
-    document.getElementById('guideUploadBtn').onclick=()=>pickImg('guidePreview', b=>guidePhotoB64=b);
-    document.getElementById('busUploadBtn').onclick=()=>pickImg('busPreview', b=>busPhotoB64=b);
+    document.getElementById('guideUploadBtn').onclick = () => pickImg('guidePreview', b64=>{ guidePhotoB64=b64; });
+    document.getElementById('busUploadBtn').onclick = () => pickImg('busPreview', b64=>{ busPhotoB64=b64; });
 
-    document.getElementById('addGuideBtn').onclick=()=>{
+    // ==================== Save Guide ====================
+    document.getElementById('addGuideBtn').onclick = () => {
         editId=null; guidePhotoB64=''; busPhotoB64='';
-        ['gName','gPhone','gNationality','gPeopleCount','gFrom','gTo','gAgency','gNotes','gPlateSeries','gPlateNumber','gPlateForeign'].forEach(id=>document.getElementById(id).value='');
-        document.getElementById('gTransport').value=''; document.getElementById('gPlateType').value='tunisian'; document.getElementById('gPlateGov').value='تونس';
-        plateTypeEl.onchange();
+        ['gName','gPhone','gNationality','gPeopleCount','gTransport','gPlate1','gPlate2','gFrom','gTo','gAgency','gNotes'].forEach(id=>document.getElementById(id).value='');
         document.getElementById('guidePreview').style.display='none'; document.getElementById('busPreview').style.display='none';
         document.getElementById('modalTitle').textContent='➕ إضافة مرشد جديد';
         document.getElementById('guideModal').classList.add('show');
     };
-    document.getElementById('closeGuideBtn').onclick=()=>document.getElementById('guideModal').classList.remove('show');
-
-    document.getElementById('saveGuideBtn').onclick=async function(){
-        const name=document.getElementById('gName').value.trim();
-        const phone=document.getElementById('gPhone').value.trim();
+    document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
+    document.getElementById('saveGuideBtn').onclick = async function() {
+        const name = document.getElementById('gName').value.trim();
+        const phone = document.getElementById('gPhone').value.trim();
         if(!name||!phone) return toast('الاسم والهاتف مطلوبان');
-
-        const plateType=document.getElementById('gPlateType').value;
-        let plateNumber='', plateSeries='', plateGov='', plateNumberRaw='';
-        if(plateType.startsWith('tunisian')||plateType==='rs'){
-            plateSeries=document.getElementById('gPlateSeries').value.trim();
-            plateGov=document.getElementById('gPlateGov').value;
-            plateNumberRaw=document.getElementById('gPlateNumber').value.trim();
-            if(!plateSeries||!plateNumberRaw) return toast('أدخل سلسلة ورقم اللوحة التونسية');
-            plateNumber=`${plateSeries} ${plateGov} ${plateNumberRaw}`;
-            if(plateType==='tunisian_rental') plateNumber+=' (كراء)';
-            if(plateType==='rs') plateNumber=`RS ${plateNumber}`;
-        }else{
-            plateNumber=document.getElementById('gPlateForeign').value.trim();
-            if(!plateNumber) return toast('أدخل رقم اللوحة الأجنبية');
-        }
-
-        const data={
-            id: editId||'local_'+Date.now(),
+        const data = {
+            id: editId || 'local_'+Date.now(),
             userId: currentUser?currentUser.uid:'offline',
-            creatorName: currentUser?currentUser.email:'مستخدم',
             name, phone,
             nationality: document.getElementById('gNationality').value.trim(),
             peopleCount: document.getElementById('gPeopleCount').value,
             transportType: document.getElementById('gTransport').value,
-            plateType, plateSeries, plateGov, plateNumberRaw,
-            plateNumber,
+            plate1: document.getElementById('gPlate1').value.trim(),
+            plate2: document.getElementById('gPlate2').value.trim(),
             fromLocation: document.getElementById('gFrom').value.trim(),
             toLocation: document.getElementById('gTo').value.trim(),
-            guidePhoto: guidePhotoB64||null,
-            busPhoto: busPhotoB64||null,
+            guidePhoto: guidePhotoB64 || null,
+            busPhoto: busPhotoB64 || null,
             agency: document.getElementById('gAgency').value.trim(),
             notes: document.getElementById('gNotes').value.trim(),
             updatedAt: new Date().toISOString()
         };
-        if(editId) guides=guides.map(g=>g.id===editId?data:g); else guides.unshift(data);
+        if(editId) guides = guides.map(g => g.id===editId ? data : g);
+        else guides.unshift(data);
         LDB.saveGuides(guides); renderGuides();
         document.getElementById('guideModal').classList.remove('show');
         toast('✅ تم الحفظ');
-        if(db&&currentUser){
-            const doc={...data}; delete doc.id;
-            try{
-                if(!data.id.startsWith('local_')) await db.collection('guides').doc(data.id).set(doc,{merge:true});
-                else { const ref=await db.collection('guides').add(doc); data.id=ref.id; LDB.saveGuides(guides); }
-            }catch(e){}
-        }
     };
 
-    // عرض البطاقة المنظمة
-    window.showTouristCard=id=>{
-        const g=guides.find(x=>x.id===id); if(!g) return;
-        const imgWrap=document.getElementById('cardImageWrap');
-        if(g.guidePhoto){ document.getElementById('cardImage').src=g.guidePhoto; imgWrap.style.display='block'; } else { imgWrap.style.display='none'; }
-        document.getElementById('cardPeopleCount').textContent=g.peopleCount||'—';
-        document.getElementById('cardNationality').textContent=g.nationality||'—';
-        document.getElementById('cardTransport').textContent=g.transportType||'—';
-        document.getElementById('cardPlate').textContent=g.plateNumber||'—';
-        // style plate
-        const plateEl=document.getElementById('cardPlate');
-        plateEl.className='card-value';
-        if(g.plateType&&g.plateType.startsWith('tunisian')) plateEl.classList.add('plate-tn');
-        else if(g.plateType==='foreign') plateEl.classList.add('plate-foreign');
-        document.getElementById('cardFrom').textContent=g.fromLocation||'—';
-        document.getElementById('cardTo').textContent=g.toLocation||'—';
-        document.getElementById('cardGuideName').textContent=g.name||'—';
-        document.getElementById('cardGuidePhone').textContent=g.phone||'—';
-        if(g.agency){ document.getElementById('cardAgency').textContent=g.agency; document.getElementById('cardAgencyWrap').style.display='block'; }
-        else document.getElementById('cardAgencyWrap').style.display='none';
-        if(g.notes){ document.getElementById('cardNotes').textContent=g.notes; document.getElementById('cardNotesRow').style.display='block'; }
-        else document.getElementById('cardNotesRow').style.display='none';
-        document.getElementById('cardDate').textContent=new Date().toLocaleDateString('ar-TN',{year:'numeric',month:'long',day:'numeric'});
+    // ==================== عرض بطاقة السائح ====================
+    window.showTouristCard = function(id) {
+        const g = guides.find(x=>x.id===id); if(!g) return;
+        document.getElementById('cardImage').src = g.guidePhoto || '';
+        document.getElementById('cardPeopleCount').textContent = g.peopleCount || '—';
+        document.getElementById('cardNationality').textContent = g.nationality || '—';
+        document.getElementById('cardTransport').textContent = g.transportType || '—';
+        document.getElementById('cardPlate1').textContent = g.plate1 || '—';
+        document.getElementById('cardPlate2').textContent = g.plate2 || '—';
+        document.getElementById('cardFrom').textContent = g.fromLocation || '—';
+        document.getElementById('cardTo').textContent = g.toLocation || '—';
+        document.getElementById('cardGuideName').textContent = g.name || '—';
+        document.getElementById('cardGuidePhone').textContent = g.phone || '—';
+        if(g.notes) {
+            document.getElementById('cardNotes').textContent = g.notes;
+            document.getElementById('cardNotesRow').style.display = 'block';
+        } else document.getElementById('cardNotesRow').style.display = 'none';
+        document.getElementById('cardDate').textContent = new Date().toLocaleDateString('ar-TN');
         document.getElementById('cardModal').classList.add('show');
     };
 
-    async function captureAndShare(){
-        const card=document.getElementById('touristCard');
-        const btn=document.getElementById('shareCardAsImageBtn');
-        btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
-        try{
-            const bg=getComputedStyle(document.body).getPropertyValue('--card').trim()||'#ffffff';
-            const canvas=await html2canvas(card,{scale:2,backgroundColor:bg,useCORS:true,logging:false});
-            const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
-            const file=new File([blob],'بطاقة_سائح.png',{type:'image/png'});
-            if(navigator.canShare&&navigator.canShare({files:[file]})){
-                await navigator.share({files:[file],title:'بطاقة سائح',text:'NOTE PRO WORK'});
-                toast('✅ تمت المشاركة');
-            }else{
-                const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='بطاقة_سائح.png'; a.click();
-                toast('📥 تم التحميل');
-            }
-        }catch(e){ toast('❌ خطأ في المشاركة'); }
-        btn.disabled=false; btn.innerHTML='<i class="fab fa-whatsapp"></i> مشاركة على واتساب';
-    }
-    async function downloadCard(){
-        const card=document.getElementById('touristCard');
-        const bg=getComputedStyle(document.body).getPropertyValue('--card').trim()||'#ffffff';
-        const canvas=await html2canvas(card,{scale:2,backgroundColor:bg,useCORS:true});
-        const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='بطاقة_سائح.png'; a.click(); toast('✅ تم التحميل');
-    }
-    document.getElementById('shareCardAsImageBtn').onclick=captureAndShare;
-    document.getElementById('downloadCardBtn').onclick=downloadCard;
-    document.getElementById('closeCardBtn').onclick=()=>document.getElementById('cardModal').classList.remove('show');
+    // مشاركة البطاقة
+    document.getElementById('shareCardBtn').onclick = async function() {
+        const card = document.getElementById('touristCard');
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        const file = new File([blob], 'بطاقة_سائح.png', { type: 'image/png' });
+        if(navigator.share && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: 'بطاقة سياحية' });
+        } else {
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'بطاقة_سائح.png'; a.click();
+        }
+    };
+    document.getElementById('closeCardBtn').onclick = () => document.getElementById('cardModal').classList.remove('show');
 
-    // عام
-    document.getElementById('searchInput').oninput=renderGuides;
-    document.getElementById('darkToggle').onclick=()=>{ document.body.classList.toggle('dark'); localStorage.setItem('dark',document.body.classList.contains('dark')); };
-    if(localStorage.getItem('dark')==='true') document.body.classList.add('dark');
-    document.getElementById('voiceSearchBtn').onclick=()=>{ if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)) return toast('غير مدعوم'); const R=window.SpeechRecognition||window.webkitSpeechRecognition; const r=new R(); r.lang='ar-TN'; r.start(); r.onresult=e=>{document.getElementById('searchInput').value=e.results[0][0].transcript; renderGuides();}; };
-    document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m) m.classList.remove('show');}));
-    document.getElementById('menuBtn').onclick=()=>toast('القائمة قريباً');
+    document.getElementById('searchInput').oninput = renderGuides;
     renderGuides();
 </script>
 </body>
