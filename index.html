@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>F-Note Pro Max | معلومات الوفد السياحي</title>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js">
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js">
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase Storage -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link
@@ -162,7 +159,6 @@
             right: 0;
         }
 
-        /* كرت الملف الشخصي في الأعلى */
         .sidebar-profile-card {
             background: linear-gradient(135deg, var(--olive), var(--olive-dark));
             padding: 24px 16px 20px;
@@ -203,7 +199,6 @@
             margin-top: 6px;
         }
 
-        /* أقسام السايدبار */
         .sidebar-content {
             padding: 12px 16px;
         }
@@ -750,7 +745,6 @@ style="margin-top:14px;background:#fff3cd;border-radius:10px;padding:8px 12px;fo
         </div>
 
         <div class="sidebar-content">
-            <!-- القسم الأول: الحساب الشخصي -->
             <div class="sidebar-section">
                 <h3>👤 حسابي</h3>
                 <div class="s-item" id="profileEditBtn"><i class="fa-solid fa-user-pen"></i> تعديل
@@ -759,7 +753,6 @@ style="margin-top:14px;background:#fff3cd;border-radius:10px;padding:8px 12px;fo
                 class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</div>
             </div>
 
-            <!-- القسم الثاني: إدارة المطور (يظهر للمدير فقط) -->
             <div class="sidebar-section" id="adminSection" style="display:none;">
                 <h3>🛡️ أدوات المدير</h3>
                 <div class="s-item" id="createAccountBtn"><i class="fa-solid fa-user-plus"></i> إنشاء
@@ -770,7 +763,6 @@ style="margin-top:14px;background:#fff3cd;border-radius:10px;padding:8px 12px;fo
             المرشدين</div>
         </div>
 
-        <!-- القسم الثالث: اللغة -->
         <div class="sidebar-section">
             <h3>🌐 اللغة</h3>
             <div class="lang-row">
@@ -779,7 +771,6 @@ style="margin-top:14px;background:#fff3cd;border-radius:10px;padding:8px 12px;fo
             </div>
         </div>
 
-        <!-- القسم الرابع: البيانات والنسخ الاحتياطي -->
         <div class="sidebar-section">
             <h3>💾 البيانات</h3>
             <div class="s-item" id="syncBtn"><i class="fa-solid fa-cloud-arrow-up"></i> مزامنة
@@ -908,7 +899,6 @@ style="margin-top:14px;background:#fff3cd;border-radius:10px;padding:8px 12px;fo
                     class="value" id="cardGuidePhone" dir="ltr"></span></div>
                 </div>
             </div>
-            <!-- قسم الطقس والوقت -->
             <div class="weather-box" id="weatherBox" style="display:none;">
                 <div class="weather-icon" id="weatherIcon">☀️</div>
                 <div class="weather-info">
@@ -1015,6 +1005,7 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
+    const storage = firebase.storage(); // ← Firebase Storage
     db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
     const LDB = {
@@ -1043,7 +1034,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         document.body.appendChild(e);
         setTimeout(() => e.remove(), 2500); }
 
-    // تحديث واجهة السايدبار
     function updateSidebar() {
         const avatarEl = document.getElementById('sidebarAvatar');
         const nameEl = document.getElementById('sidebarName');
@@ -1070,7 +1060,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         }
     }
 
-    // Weather codes mapping
     const weatherCodes = {
         0: 'سماء صافية',
         1: 'غائم جزئيًا',
@@ -1141,7 +1130,8 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         });
     }
 
-    function compressImage(file, maxW = 800, quality = 0.7) {
+    // ضغط الصورة بقوة أكبر (maxW=400، جودة 0.5)
+    function compressImage(file, maxW = 400, quality = 0.5) {
         return new Promise(resolve => {
             const reader = new FileReader();
             reader.onload = function(ev) {
@@ -1163,6 +1153,14 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         });
     }
 
+    // رفع إلى Firebase Storage (أساسي)
+    async function uploadToFirebaseStorage(blob, path) {
+        const storageRef = storage.ref(path);
+        const snapshot = await storageRef.put(blob);
+        return await snapshot.ref.getDownloadURL();
+    }
+
+    // رفع إلى Cloudinary (احتياطي)
     async function uploadToCloudinary(blob) {
         const formData = new FormData();
         formData.append('file', blob, 'image.jpg');
@@ -1173,7 +1171,36 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         return (await response.json()).secure_url;
     }
 
-    async function pickAndUploadImg(previewId, uploadAreaId, setUrlFn, setBlobFn) {
+    // رفع صورة بشكل ذكي: Firebase أولاً، ثم Cloudinary احتياطي
+    async function smartUploadImage(blob, folder) {
+        if (!navigator.onLine) {
+            // حفظ محلي Base64
+            return await new Promise(res => {
+                const r = new FileReader();
+                r.onload = () => res(r.result);
+                r.readAsDataURL(blob);
+            });
+        }
+        try {
+            const path = `${folder}/${Date.now()}_${Math.random().toString(36).substring(2,8)}.jpg`;
+            const url = await uploadToFirebaseStorage(blob, path);
+            return url;
+        } catch (fbError) {
+            console.warn('Firebase Storage فشل، جاري محاولة Cloudinary...', fbError);
+            try {
+                return await uploadToCloudinary(blob);
+            } catch (cloudError) {
+                console.warn('Cloudinary أيضاً فشل، حفظ محلي');
+                return await new Promise(res => {
+                    const r = new FileReader();
+                    r.onload = () => res(r.result);
+                    r.readAsDataURL(blob);
+                });
+            }
+        }
+    }
+
+    async function pickAndUploadImg(previewId, uploadAreaId, setUrlFn, setBlobFn, folder) {
         const inp = document.createElement('input');
         inp.type = 'file';
         inp.accept = 'image/*';
@@ -1185,38 +1212,46 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
             previewEl.src = URL.createObjectURL(file);
             previewEl.style.display = 'block';
             try {
-                const compressedBlob = await compressImage(file, 800, 0.7);
+                const compressedBlob = await compressImage(file);
                 setBlobFn(compressedBlob);
+
                 if (navigator.onLine) {
                     uploadArea.classList.add('uploading');
-                    const cloudUrl = await uploadToCloudinary(compressedBlob);
+                    const cloudUrl = await smartUploadImage(compressedBlob, folder);
                     setUrlFn(cloudUrl);
                     previewEl.src = cloudUrl;
                     uploadArea.classList.remove('uploading');
                     toast('✅ تم رفع الصورة');
                 } else {
-                    const base64 = await new Promise(res => { const r = new FileReader();
+                    const base64 = await new Promise(res => {
+                        const r = new FileReader();
                         r.onload = () => res(r.result);
-                        r.readAsDataURL(compressedBlob); });
+                        r.readAsDataURL(compressedBlob);
+                    });
                     setUrlFn(base64);
-                    toast('⚠️ حفظ محلي');
+                    toast('⚠️ حفظ محلي (غير متصل)');
                 }
             } catch (err) {
                 uploadArea.classList.remove('uploading');
-                const base64 = await new Promise(res => { const r = new FileReader();
+                console.error(err);
+                toast('⚠️ فشل الرفع، سيتم الحفظ محلياً');
+                const base64 = await new Promise(res => {
+                    const r = new FileReader();
                     r.onload = () => res(r.result);
-                    r.readAsDataURL(compressedBlob || file); });
+                    r.readAsDataURL(file);
+                });
                 setUrlFn(base64);
-                toast('⚠️ فشل الرفع – حفظ محلي');
             }
         };
         inp.click();
     }
 
-    document.getElementById('guideUploadBtn').onclick = () => pickAndUploadImg('guidePreview',
-        'guideUploadBtn', url => { guidePhotoUrl = url; }, blob => { guidePhotoBlob = blob; });
-    document.getElementById('busUploadBtn').onclick = () => pickAndUploadImg('busPreview', 'busUploadBtn',
-        url => { busPhotoUrl = url; }, blob => { busPhotoBlob = blob; });
+    document.getElementById('guideUploadBtn').onclick = () =>
+        pickAndUploadImg('guidePreview', 'guideUploadBtn', url => { guidePhotoUrl = url; }, blob => {
+            guidePhotoBlob = blob; }, 'guides');
+    document.getElementById('busUploadBtn').onclick = () =>
+        pickAndUploadImg('busPreview', 'busUploadBtn', url => { busPhotoUrl = url; }, blob => {
+            busPhotoBlob = blob; }, 'buses');
 
     // Auth
     document.getElementById('loginBtn').onclick = async () => {
@@ -1267,12 +1302,10 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         }
         try {
             let cloudGuides = [];
-            // المدير يرى كل المرشدين
             if (isAdmin && viewingAllGuides) {
                 const s = await db.collection('guides').orderBy('updatedAt', 'desc').get();
                 s.forEach(d => cloudGuides.push({ id: d.id, ...d.data() }));
             } else {
-                // المستخدم العادي يرى مرشديه + المرشدين العامين
                 const s1 = await db.collection('guides').where('userId', '==', currentUser.uid).get();
                 s1.forEach(d => cloudGuides.push({ id: d.id, ...d.data() }));
                 const s2 = await db.collection('guides').where('visibility', '==', 'public').get();
@@ -1282,7 +1315,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
                     }
                 });
             }
-            // دمج مع المحلي
             const localGuides = LDB.getGuides().filter(l => !cloudGuides.find(c => c.id === l.id));
             guides = [...cloudGuides, ...localGuides];
             LDB.saveGuides(guides);
@@ -1296,19 +1328,19 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
     document.getElementById('signOutBtn').onclick = () => auth.signOut();
 
     // Sidebar
-    document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList
-        .add('open');
-        document.getElementById('overlay').classList.add('show'); };
-    document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList
-        .remove('open');
-        document.getElementById('overlay').classList.remove('show'); };
+    document.getElementById('menuBtn').onclick = () => {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('overlay').classList.add('show');
+    };
+    document.getElementById('overlay').onclick = () => {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('overlay').classList.remove('show');
+    };
     document.getElementById('darkToggle').onclick = () => { document.body.classList.toggle('dark'); };
 
-    // مزامنة
     document.getElementById('syncBtn').onclick = async () => {
         if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ المزامنة تحتاج إنترنت');
         try {
-            // رفع كل المرشدين المحليين إلى السحابة
             for (const g of LDB.getGuides()) {
                 if (g.userId === currentUser.uid || (isAdmin && g.userId === 'offline')) {
                     const { id, ...data } = g;
@@ -1324,7 +1356,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         }
     };
 
-    // عرض كل المرشدين (للمدير)
     document.getElementById('viewAllGuidesBtn').onclick = async () => {
         viewingAllGuides = !viewingAllGuides;
         document.getElementById('viewAllGuidesBtn').innerHTML = viewingAllGuides ?
@@ -1341,13 +1372,16 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         const filtered = guides.filter(g => !q || (g.name || '').toLowerCase().includes(q) || (g
             .nationality || '').toLowerCase().includes(q));
         const c = document.getElementById('guidesContainer');
-        if (!filtered.length) { c.innerHTML =
-            '<div style="text-align:center;padding:40px;color:var(--txt3);">😕 لا توجد نتائج</div>';
-            return; }
+        if (!filtered.length) {
+            c.innerHTML = '<div style="text-align:center;padding:40px;color:var(--txt3);">😕 لا توجد نتائج</div>';
+            return;
+        }
         c.innerHTML = filtered.map(g => {
             const isOwner = g.userId === currentUser?.uid || isAdmin;
             const visibilityIcon = g.visibility === 'public' ? '🌍' : '🔒';
-            const ownerLabel = g.userId !== currentUser?.uid ? `<span style="font-size:10px;color:var(--txt3);">بواسطة: ${g.creatorName||'مستخدم'}</span>` : '';
+            const ownerLabel = g.userId !== currentUser?.uid ?
+                `<span style="font-size:10px;color:var(--txt3);">بواسطة: ${g.creatorName||'مستخدم'}</span>` :
+                '';
             return `
             <div class="guide-card">
                 <div class="card-top">
@@ -1377,7 +1411,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
             guides = guides.filter(g => g.id !== id);
             LDB.saveGuides(guides);
             renderGuides();
-            // حذف من السحابة إذا كان متصلاً
             if (currentUser && currentUser.uid !== 'offline') {
                 db.collection('guides').doc(id).delete().catch(() => {});
             }
@@ -1425,7 +1458,7 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         document.getElementById('guideModal').classList.add('show');
     };
     document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal')
-    .classList.remove('show');
+        .classList.remove('show');
     document.getElementById('saveGuideBtn').onclick = async function() {
         const name = document.getElementById('gName').value.trim(),
             phone = document.getElementById('gPhone').value.trim();
@@ -1438,10 +1471,10 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
                 finalBusPhoto = busPhotoUrl;
             if (navigator.onLine && guidePhotoBlob && (!guidePhotoUrl || guidePhotoUrl.startsWith(
                 'data:'))) {
-                try { finalGuidePhoto = await uploadToCloudinary(guidePhotoBlob); } catch (e) {}
+                try { finalGuidePhoto = await smartUploadImage(guidePhotoBlob, 'guides'); } catch (e) {}
             }
             if (navigator.onLine && busPhotoBlob && (!busPhotoUrl || busPhotoUrl.startsWith('data:'))) {
-                try { finalBusPhoto = await uploadToCloudinary(busPhotoBlob); } catch (e) {}
+                try { finalBusPhoto = await smartUploadImage(busPhotoBlob, 'buses'); } catch (e) {}
             }
             const data = {
                 id: editId || 'local_' + Date.now(),
@@ -1466,7 +1499,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
             if (editId) guides = guides.map(g => g.id === editId ? data : g);
             else guides.unshift(data);
             LDB.saveGuides(guides);
-            // حفظ في السحابة
             if (currentUser && currentUser.uid !== 'offline') {
                 const { id, ...cloudData } = data;
                 cloudData.userId = currentUser.uid;
@@ -1475,11 +1507,12 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
             renderGuides();
             document.getElementById('guideModal').classList.remove('show');
             toast('✅ تم الحفظ');
-        } catch (err) { toast('❌ خطأ: ' + err.message); } finally { saveBtn.disabled = false;
-            saveBtn.innerHTML = '💾 حفظ المرشد'; }
+        } catch (err) { toast('❌ خطأ: ' + err.message); } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '💾 حفظ المرشد';
+        }
     };
 
-    // عرض معلومات الوفد
     window.showTouristCard = async function(id) {
         const g = guides.find(x => x.id === id);
         if (!g) return;
@@ -1494,9 +1527,10 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         document.getElementById('cardTo').textContent = g.toLocation || '—';
         document.getElementById('cardGuideName').textContent = g.name || '—';
         document.getElementById('cardGuidePhone').textContent = g.phone || '—';
-        if (g.notes) { document.getElementById('cardNotes').textContent = g.notes;
-            document.getElementById('cardNotesRow').style.display = 'block'; } else document
-            .getElementById('cardNotesRow').style.display = 'none';
+        if (g.notes) {
+            document.getElementById('cardNotes').textContent = g.notes;
+            document.getElementById('cardNotesRow').style.display = 'block';
+        } else document.getElementById('cardNotesRow').style.display = 'none';
         document.getElementById('cardDate').textContent = new Date().toLocaleDateString('ar-TN');
 
         const weatherBox = document.getElementById('weatherBox');
@@ -1510,7 +1544,7 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         } else {
             document.getElementById('weatherTemp').textContent = weatherData.temp + '°C';
             document.getElementById('weatherDesc').textContent = weatherCodes[weatherData.code] ||
-                'غير معروف';
+            'غير معروف';
             document.getElementById('weatherIcon').textContent = getWeatherIcon(weatherData.code,
                 weatherData.isDay);
             const ind = document.getElementById('dayNightIndicator');
@@ -1537,9 +1571,8 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
             a.click(); }
     };
     document.getElementById('closeCardBtn').onclick = () => document.getElementById('cardModal')
-    .classList.remove('show');
+        .classList.remove('show');
 
-    // Chat
     document.getElementById('openChatBtn').onclick = () => {
         if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ المحادثة تحتاج تسجيل دخول');
         document.getElementById('chatModal').classList.add('show');
@@ -1556,7 +1589,7 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         });
     };
     document.getElementById('closeChatBtn').onclick = () => document.getElementById('chatModal')
-    .classList.remove('show');
+        .classList.remove('show');
     async function sendMsg() {
         const input = document.getElementById('chatInput');
         const text = input.value.trim();
@@ -1581,7 +1614,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
             renderGuides(); };
     };
 
-    // تصدير JSON
     document.getElementById('exportJsonBtn').onclick = () => {
         const exportData = {
             exportedAt: new Date().toISOString(),
@@ -1596,7 +1628,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         toast('📥 تم تصدير ملف JSON');
     };
 
-    // استيراد JSON
     document.getElementById('importJsonBtn').onclick = () => {
         const inp = document.createElement('input');
         inp.type = 'file';
@@ -1610,8 +1641,9 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
                 if (!imported.guides || !Array.isArray(imported.guides)) {
                     return toast('❌ ملف غير صالح');
                 }
-                if (confirm(`تم العثور على ${imported.guides.length} مرشد. هل تريد دمجهم مع البيانات الحالية؟\n\nاختر "موافق" للدمج، أو "إلغاء" للاستبدال الكامل.`)) {
-                    // دمج
+                if (confirm(
+                    `تم العثور على ${imported.guides.length} مرشد. هل تريد دمجهم مع البيانات الحالية؟\n\nاختر "موافق" للدمج، أو "إلغاء" للاستبدال الكامل.`
+                    )) {
                     const existingIds = new Set(guides.map(g => g.id));
                     for (const g of imported.guides) {
                         if (!existingIds.has(g.id)) {
@@ -1619,12 +1651,10 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
                         }
                     }
                 } else {
-                    // استبدال
                     guides = imported.guides;
                 }
                 LDB.saveGuides(guides);
                 renderGuides();
-                // مزامنة مع السحابة
                 if (currentUser && currentUser.uid !== 'offline') {
                     for (const g of guides) {
                         if (g.userId === currentUser.uid || (isAdmin && g.userId === 'offline')) {
@@ -1643,7 +1673,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         inp.click();
     };
 
-    // تصدير PDF
     document.getElementById('exportPdfBtn').onclick = () => {
         const el = document.createElement('div');
         el.style.padding = '20px';
@@ -1665,7 +1694,7 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         toast('📄 تم تصدير PDF');
     };
 
-    // --- الملف الشخصي ---
+    // الملف الشخصي
     document.getElementById('profileEditBtn').onclick = () => {
         document.getElementById('profileDisplayName').value = userProfile.displayName || '';
         document.getElementById('profileAvatarPreview').src = userProfile.photoURL ||
@@ -1685,7 +1714,7 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
             const file = e.target.files[0];
             if (!file) return;
             document.getElementById('profileAvatarPreview').src = URL.createObjectURL(file);
-            profileAvatarBlob = await compressImage(file, 400, 0.7);
+            profileAvatarBlob = await compressImage(file, 400, 0.5);
         };
         inp.click();
     };
@@ -1696,11 +1725,7 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         try {
             let photoURL = userProfile.photoURL;
             if (profileAvatarBlob && navigator.onLine) {
-                try { photoURL = await uploadToCloudinary(profileAvatarBlob); } catch (e) {
-                    photoURL = await new Promise(res => { const r = new FileReader();
-                        r.onload = () => res(r.result);
-                        r.readAsDataURL(profileAvatarBlob); });
-                }
+                photoURL = await smartUploadImage(profileAvatarBlob, 'avatars');
             } else if (profileAvatarBlob) {
                 photoURL = await new Promise(res => { const r = new FileReader();
                     r.onload = () => res(r.result);
@@ -1719,7 +1744,7 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
             btn.innerHTML = '💾 حفظ التعديلات'; }
     };
 
-    // --- أدوات المدير ---
+    // أدوات المدير
     document.getElementById('createAccountBtn').onclick = () => {
         document.getElementById('createAccountModal').classList.add('show');
         document.getElementById('sidebar').classList.remove('open');
@@ -1735,9 +1760,7 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         const btn = this;
         btn.disabled = true;
         try {
-            // إنشاء حساب في Firebase Auth
             const result = await auth.createUserWithEmailAndPassword(email, pass);
-            // حفظ بيانات المستخدم
             await db.collection('users').doc(result.user.uid).set({
                 displayName: name || email,
                 photoURL: '',
@@ -1745,7 +1768,6 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
                 role: 'user',
                 createdAt: new Date().toISOString()
             });
-            // تسجيل الخروج من الحساب الجديد (نعود للحساب الأصلي لاحقاً)
             toast('✅ تم إنشاء الحساب: ' + email);
             document.getElementById('createAccountModal').classList.remove('show');
             document.getElementById('newAccountEmail').value = '';
@@ -1794,15 +1816,11 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
             await db.collection('users').doc(uid).delete();
             toast('🗑️ تم حذف الحساب');
             document.getElementById('manageAccountsBtn').click();
-            document.getElementById('manageAccountsBtn').click();
-            document.getElementById('manageAccountsModal').classList.add('show');
-            document.getElementById('manageAccountsBtn').onclick();
         } catch (e) {
             toast('❌ خطأ: ' + e.message);
         }
     };
 
-    // حذف الحساب الشخصي
     document.getElementById('deleteAccountBtn').onclick = async () => {
         if (!confirm(
                 '⚠️ تحذير: هذا سيحذف حسابك وكل بياناتك نهائياً. هل أنت متأكد؟\n\nاكتب "حذف" للتأكيد.')) return;
@@ -1810,24 +1828,19 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         if (confirmInput !== 'حذف') return toast('تم الإلغاء');
         try {
             if (currentUser && currentUser.uid !== 'offline') {
-                // حذف بيانات المرشدين
                 const snapshot = await db.collection('guides').where('userId', '==', currentUser.uid)
-                .get();
+                    .get();
                 const batch = db.batch();
                 snapshot.forEach(doc => batch.delete(doc.ref));
                 await batch.commit();
-                // حذف بيانات المستخدم
                 await db.collection('users').doc(currentUser.uid).delete();
-                // حذف الحساب
                 await currentUser.delete();
             }
-            // مسح المحلي
             localStorage.clear();
             toast('👋 تم حذف الحساب. وداعاً!');
             setTimeout(() => location.reload(), 2000);
         } catch (e) {
-            toast('❌ خطأ: ' + e.message +
-                '. قد تحتاج لتسجيل الدخول مجدداً قبل الحذف.');
+            toast('❌ خطأ: ' + e.message + '. قد تحتاج لتسجيل الدخول مجدداً قبل الحذف.');
             if (e.message.includes('requires-recent-login')) {
                 auth.signOut();
                 setTimeout(() => location.reload(), 1500);
@@ -1835,20 +1848,16 @@ class="fab fa-whatsapp"></i> مشاركة المعلومات</button>
         }
     };
 
-    // إغلاق المودالات
-    document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', function(e) { if (e
-            .target === this) this.classList.remove('show'); }));
+    document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('show');
+    }));
 
-    // تبديل اللغة
     document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove(
-            'active'));
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            const lang = this.dataset.lang;
-            if (lang === 'fr') {
+            if (this.dataset.lang === 'fr') {
                 toast('🇫🇷 Version française bientôt disponible');
-                // يمكن إضافة الترجمة هنا لاحقاً
             }
         });
     });
