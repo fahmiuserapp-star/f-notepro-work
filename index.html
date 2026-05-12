@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>F-Note Pro Max | بطاقة المرشد السياحي</title>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js">
     </script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js">
@@ -597,7 +597,7 @@
 </head>
 <body>
 
-    <!-- ═══════════════ شاشة الدخول ═══════════════ -->
+    <!-- شاشة الدخول -->
     <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;">
         <div style="background:var(--card);border-radius:24px;padding:36px 28px;max-width:400px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.1);">
             <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" class="logo-pulse" style="width:120px;margin-bottom:20px;border-radius:24px;">
@@ -615,7 +615,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════ التطبيق الرئيسي ═══════════════ -->
+    <!-- التطبيق الرئيسي -->
     <div id="appContainer" style="display:none;">
         <div class="header">
             <div class="logo-area">
@@ -662,7 +662,7 @@
         <button class="chat-float-btn" id="openChatBtn"><i class="fa-solid fa-comments"></i></button>
     </div>
 
-    <!-- ═══════════════ مودال الإضافة / التعديل ═══════════════ -->
+    <!-- مودال الإضافة / التعديل -->
     <div class="modal" id="guideModal">
         <div class="modal-box">
             <h3 id="modalTitle">➕ إضافة مرشد جديد</h3>
@@ -709,7 +709,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════ مودال بطاقة السائح ═══════════════ -->
+    <!-- مودال بطاقة السائح -->
     <div class="modal" id="cardModal">
         <div class="modal-box" style="background:#f3f4f6;max-width:550px;">
             <h3>📱 بطاقة السائح السياحية</h3>
@@ -758,7 +758,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════ مودال المحادثة ═══════════════ -->
+    <!-- مودال المحادثة -->
     <div class="modal" id="chatModal">
         <div class="modal-box" style="display:flex;flex-direction:column;height:70vh;">
             <h3>💬 محادثة المجموعة</h3>
@@ -773,17 +773,18 @@
 
     <script>
         // ╔══════════════════════════════════════════════════════════════╗
-        // ║               FIREBASE CONFIGURATION                        ║
-        // ║   تأكد من تقييد API Key من لوحة تحكم Firebase               ║
-        // ║   (Authentication > Settings > Authorized Domains)          ║
+        // ║           FIREBASE CONFIGURATION (المشروع الجديد)          ║
+        // ║   تأكد من تقييد API Key من لوحة تحكم Firebase              ║
         // ╚══════════════════════════════════════════════════════════════╝
         const firebaseConfig = {
-            apiKey: "AIzaSyC4vYbhHGfAWMSh-fRl4NlG1WiEyS6Ez9s",
-            authDomain: "f-notepro-work-2d25b.firebaseapp.com",
-            projectId: "f-notepro-work-2d25b",
-            storageBucket: "f-notepro-work-2d25b.firebasestorage.app",
-            messagingSenderId: "221438380381",
-            appId: "1:221438380381:web:b46c35d0ec0944079480b4"
+            apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
+            authDomain: "f-notepromax-work.firebaseapp.com",
+            databaseURL: "https://f-notepromax-work-default-rtdb.firebaseio.com",
+            projectId: "f-notepromax-work",
+            storageBucket: "f-notepromax-work.firebasestorage.app",
+            messagingSenderId: "125749698617",
+            appId: "1:125749698617:web:ff9709a863fd5a5053ede8",
+            measurementId: "G-W5BPRWGRYC"
         };
 
         // ╔══════════════════════════════════════════════════════════════╗
@@ -791,7 +792,6 @@
         // ║   Cloud Name: dmhtx93nj                                     ║
         // ║   Upload Preset: fcloud_preset (unsigned)                   ║
         // ║   API Key: 734876922389567                                  ║
-        // ║   (API Secret يُستخدم فقط من السيرفر – غير مكشوف هنا)      ║
         // ╚══════════════════════════════════════════════════════════════╝
         const CLOUDINARY_CONFIG = {
             cloudName: 'dmhtx93nj',
@@ -802,32 +802,30 @@
 
         // تهيئة Firebase
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const db = firebase.firestore();   // تأكد من تفعيل Firestore في مشروع Firebase
         const auth = firebase.auth();
         db.enablePersistence({ synchronizeTabs: true }).catch(() => {
             console.warn('⚠️ Firestore persistence غير متاح – قد يكون المتصفح في وضع التصفح الخاص.');
         });
 
-        // ═══════════════ التخزين المحلي ═══════════════
+        // التخزين المحلي
         const LDB = {
-            get(k) { try { return JSON.parse(localStorage.getItem('fnote_' + k) || 'null'); } catch (
-                e) { return null; } },
+            get(k) { try { return JSON.parse(localStorage.getItem('fnote_' + k) || 'null'); } catch (e) { return null; } },
             set(k, v) { try { localStorage.setItem('fnote_' + k, JSON.stringify(v)); } catch (e) {} },
             getGuides() { return this.get('guides') || []; },
             saveGuides(arr) { this.set('guides', arr); }
         };
 
-        // ═══════════════ الحالة العامة ═══════════════
+        // الحالة العامة
         let currentUser = null,
             guides = LDB.getGuides(),
             editId = null;
         let guidePhotoUrl = '',
-            busPhotoUrl = ''; // روابط Cloudinary (أو base64 للنسخ الاحتياطي)
+            busPhotoUrl = '';
         let guidePhotoBlob = null,
-            busPhotoBlob = null; // لحفظ الملفات المضغوطة مؤقتاً
+            busPhotoBlob = null;
         let userProfile = { displayName: '', photoURL: '' };
 
-        // ═══════════════ تنبيه توست ═══════════════
         function toast(m) {
             const e = document.createElement('div');
             e.className = 'toast';
@@ -838,7 +836,6 @@
             setTimeout(() => e.remove(), 2600);
         }
 
-        // ═══════════════ ضغط الصورة قبل الرفع ═══════════════
         function compressImage(file, maxW = 800, quality = 0.7) {
             return new Promise(resolve => {
                 const reader = new FileReader();
@@ -862,28 +859,23 @@
             });
         }
 
-        // ═══════════════ رفع صورة إلى Cloudinary ═══════════════
         async function uploadToCloudinary(blob) {
             const formData = new FormData();
             formData.append('file', blob, 'image.jpg');
             formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
             formData.append('api_key', CLOUDINARY_CONFIG.apiKey);
-
             const response = await fetch(CLOUDINARY_CONFIG.uploadUrl, {
                 method: 'POST',
                 body: formData
             });
-
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
                 throw new Error(errData.error?.message || 'فشل رفع الصورة إلى Cloudinary');
             }
-
             const data = await response.json();
             return data.secure_url;
         }
 
-        // ═══════════════ اختيار ورفع صورة ═══════════════
         async function pickAndUploadImg(previewId, uploadAreaId, setUrlFn, setBlobFn) {
             const inp = document.createElement('input');
             inp.type = 'file';
@@ -891,30 +883,22 @@
             inp.onchange = async function(e) {
                 const file = e.target.files[0];
                 if (!file) return;
-
                 const previewEl = document.getElementById(previewId);
                 const uploadArea = document.getElementById(uploadAreaId);
-
-                // عرض معاينة محلية فورية
                 const localPreviewUrl = URL.createObjectURL(file);
                 previewEl.src = localPreviewUrl;
                 previewEl.style.display = 'block';
-
                 try {
-                    // ضغط الصورة
                     const compressedBlob = await compressImage(file, 800, 0.7);
                     setBlobFn(compressedBlob);
-
-                    // محاولة الرفع إلى Cloudinary
                     if (navigator.onLine) {
                         uploadArea.classList.add('uploading');
                         const cloudUrl = await uploadToCloudinary(compressedBlob);
                         setUrlFn(cloudUrl);
-                        previewEl.src = cloudUrl; // تحديث المعاينة بالرابط السحابي
+                        previewEl.src = cloudUrl;
                         uploadArea.classList.remove('uploading');
                         toast('✅ تم رفع الصورة إلى السحابة');
                     } else {
-                        // وضع غير متصل – تخزين base64 محلياً
                         const base64 = await new Promise(res => {
                             const r = new FileReader();
                             r.onload = () => res(r.result);
@@ -926,7 +910,6 @@
                 } catch (err) {
                     console.error('Upload error:', err);
                     uploadArea.classList.remove('uploading');
-                    // الرجوع إلى base64 عند الفشل
                     const base64 = await new Promise(res => {
                         const r = new FileReader();
                         r.onload = () => res(r.result);
@@ -939,7 +922,6 @@
             inp.click();
         }
 
-        // ربط أزرار رفع الصور
         document.getElementById('guideUploadBtn').onclick = () => {
             pickAndUploadImg('guidePreview', 'guideUploadBtn',
                 url => { guidePhotoUrl = url; },
@@ -953,7 +935,7 @@
             );
         };
 
-        // ═══════════════ AUTH ═══════════════
+        // AUTH
         document.getElementById('loginBtn').onclick = async () => {
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPassword').value;
@@ -982,21 +964,16 @@
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
                 document.getElementById('sidebarUserInfo').textContent = '👤 ' + u.email;
-
-                // جلب الملف الشخصي
                 const d = await db.collection('users').doc(u.uid).get();
                 if (d.exists) userProfile = d.data();
                 else {
                     userProfile = { displayName: u.email, photoURL: '' };
                     await db.collection('users').doc(u.uid).set(userProfile);
                 }
-
-                // مزامنة المرشدين من Firestore
                 db.collection('guides').where('userId', '==', u.uid).get().then(s => {
                     let cloud = [];
                     s.forEach(d => cloud.push({ id: d.id, ...d.data() }));
-                    const merged = [...cloud, ...LDB.getGuides().filter(l => !cloud.find(c => c
-                        .id === l.id))];
+                    const merged = [...cloud, ...LDB.getGuides().filter(l => !cloud.find(c => c.id === l.id))];
                     guides = merged;
                     LDB.saveGuides(guides);
                     renderGuides();
@@ -1006,7 +983,6 @@
                 });
                 renderGuides();
             } else {
-                // مستخدم غير مسجل
                 currentUser = null;
                 document.getElementById('appContainer').style.display = 'none';
                 document.getElementById('loginScreen').style.display = 'flex';
@@ -1015,7 +991,7 @@
 
         document.getElementById('signOutBtn').onclick = () => auth.signOut();
 
-        // ═══════════════ القائمة الجانبية ═══════════════
+        // Sidebar
         document.getElementById('menuBtn').onclick = () => {
             document.getElementById('sidebar').classList.add('open');
             document.getElementById('overlay').classList.add('show');
@@ -1027,14 +1003,9 @@
         document.getElementById('darkToggle').onclick = () => {
             document.body.classList.toggle('dark');
             const icon = document.querySelector('#darkToggle i');
-            if (document.body.classList.contains('dark')) {
-                icon.className = 'fa-solid fa-sun';
-            } else {
-                icon.className = 'fa-solid fa-moon';
-            }
+            icon.className = document.body.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
         };
 
-        // زر المزامنة
         document.getElementById('syncBtn').onclick = async () => {
             if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ المزامنة تتطلب اتصالاً بالإنترنت');
             try {
@@ -1051,15 +1022,12 @@
             }
         };
 
-        // ═══════════════ عرض المرشدين ═══════════════
         function renderGuides() {
             const q = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = guides.filter(g => !q || (g.name || '').toLowerCase().includes(q) || (g.phone || '')
-                .toLowerCase().includes(q));
+            const filtered = guides.filter(g => !q || (g.name || '').toLowerCase().includes(q) || (g.phone || '').toLowerCase().includes(q));
             const c = document.getElementById('guidesContainer');
             if (!filtered.length) {
-                c.innerHTML =
-                    '<div style="text-align:center;padding:40px;color:var(--txt3);">😕 لا توجد نتائج</div>';
+                c.innerHTML = '<div style="text-align:center;padding:40px;color:var(--txt3);">😕 لا توجد نتائج</div>';
                 return;
             }
             c.innerHTML = filtered.map(g => `
@@ -1083,7 +1051,6 @@
             `).join('');
         }
 
-        // ═══════════════ حذف مرشد ═══════════════
         window.deleteGuide = function(id) {
             if (confirm('هل أنت متأكد من حذف هذا المرشد؟')) {
                 guides = guides.filter(g => g.id !== id);
@@ -1093,7 +1060,6 @@
             }
         };
 
-        // ═══════════════ تعديل مرشد ═══════════════
         window.editGuide = function(id) {
             const g = guides.find(x => x.id === id);
             if (!g) return;
@@ -1127,16 +1093,13 @@
             document.getElementById('guideModal').classList.add('show');
         };
 
-        // ═══════════════ فتح مودال الإضافة ═══════════════
         document.getElementById('addGuideBtn').onclick = () => {
             editId = null;
             guidePhotoUrl = '';
             busPhotoUrl = '';
             guidePhotoBlob = null;
             busPhotoBlob = null;
-            ['gName', 'gPhone', 'gNationality', 'gPeopleCount', 'gTransport', 'gPlate1', 'gPlate2', 'gFrom', 'gTo',
-                'gAgency', 'gNotes'
-            ].forEach(id => document.getElementById(id).value = '');
+            ['gName', 'gPhone', 'gNationality', 'gPeopleCount', 'gTransport', 'gPlate1', 'gPlate2', 'gFrom', 'gTo', 'gAgency', 'gNotes'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('gVisibility').value = 'private';
             document.getElementById('guidePreview').style.display = 'none';
             document.getElementById('busPreview').style.display = 'none';
@@ -1144,10 +1107,8 @@
             document.getElementById('guideModal').classList.add('show');
         };
 
-        document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove(
-            'show');
+        document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
 
-        // ═══════════════ حفظ المرشد ═══════════════
         document.getElementById('saveGuideBtn').onclick = async function() {
             const name = document.getElementById('gName').value.trim();
             const phone = document.getElementById('gPhone').value.trim();
@@ -1158,22 +1119,16 @@
             saveBtn.innerHTML = '<span class="spinner-small"></span> جاري الحفظ...';
 
             try {
-                // إذا كانت هناك صور مضغوطة لم تُرفع بعد (وضع offline سابقاً)، حاول رفعها الآن
                 let finalGuidePhoto = guidePhotoUrl;
                 let finalBusPhoto = busPhotoUrl;
 
-                if (navigator.onLine && guidePhotoBlob && (!guidePhotoUrl || guidePhotoUrl.startsWith(
-                        'data:'))) {
-                    try {
-                        finalGuidePhoto = await uploadToCloudinary(guidePhotoBlob);
-                        guidePhotoUrl = finalGuidePhoto;
-                    } catch (e) { /* يبقى base64 */ }
+                if (navigator.onLine && guidePhotoBlob && (!guidePhotoUrl || guidePhotoUrl.startsWith('data:'))) {
+                    try { finalGuidePhoto = await uploadToCloudinary(guidePhotoBlob);
+                        guidePhotoUrl = finalGuidePhoto; } catch (e) {}
                 }
                 if (navigator.onLine && busPhotoBlob && (!busPhotoUrl || busPhotoUrl.startsWith('data:'))) {
-                    try {
-                        finalBusPhoto = await uploadToCloudinary(busPhotoBlob);
-                        busPhotoUrl = finalBusPhoto;
-                    } catch (e) { /* يبقى base64 */ }
+                    try { finalBusPhoto = await uploadToCloudinary(busPhotoBlob);
+                        busPhotoUrl = finalBusPhoto; } catch (e) {}
                 }
 
                 const data = {
@@ -1205,13 +1160,8 @@
 
                 LDB.saveGuides(guides);
 
-                // مزامنة مع Firestore إذا كان المستخدم متصلاً
                 if (currentUser && currentUser.uid !== 'offline' && navigator.onLine) {
-                    try {
-                        await db.collection('guides').doc(data.id).set(data, { merge: true });
-                    } catch (e) {
-                        console.warn('لم تتم المزامنة مع Firestore:', e.message);
-                    }
+                    try { await db.collection('guides').doc(data.id).set(data, { merge: true }); } catch (e) {}
                 }
 
                 renderGuides();
@@ -1225,7 +1175,6 @@
             }
         };
 
-        // ═══════════════ عرض بطاقة السائح ═══════════════
         window.showTouristCard = function(id) {
             const g = guides.find(x => x.id === id);
             if (!g) return;
@@ -1250,12 +1199,10 @@
             document.getElementById('cardModal').classList.add('show');
         };
 
-        // ═══════════════ مشاركة البطاقة ═══════════════
         document.getElementById('shareCardBtn').onclick = async () => {
             const card = document.getElementById('touristCard');
             try {
-                const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true,
-                    allowTaint: true });
+                const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true, allowTaint: true });
                 const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
                 const file = new File([blob], 'بطاقة_سائح.png', { type: 'image/png' });
                 if (navigator.share && navigator.canShare({ files: [file] })) {
@@ -1271,10 +1218,9 @@
                 toast('⚠️ تعذرت المشاركة: ' + err.message);
             }
         };
-        document.getElementById('closeCardBtn').onclick = () => document.getElementById('cardModal').classList.remove(
-            'show');
+        document.getElementById('closeCardBtn').onclick = () => document.getElementById('cardModal').classList.remove('show');
 
-        // ═══════════════ المحادثة الجماعية ═══════════════
+        // Chat
         document.getElementById('openChatBtn').onclick = () => {
             if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ المحادثة تتطلب تسجيل الدخول');
             document.getElementById('chatModal').classList.add('show');
@@ -1284,16 +1230,12 @@
                 snap.forEach(d => {
                     const m = d.data();
                     const isMine = m.senderId === currentUser?.uid;
-                    c.innerHTML +=
-                        `<div class="msg-bubble ${isMine ? 'msg-mine' : 'msg-other'}"><span class="msg-sender">${m.senderName || 'مستخدم'}</span><br>${m.text}</div>`;
+                    c.innerHTML += `<div class="msg-bubble ${isMine ? 'msg-mine' : 'msg-other'}"><span class="msg-sender">${m.senderName || 'مستخدم'}</span><br>${m.text}</div>`;
                 });
                 c.scrollTop = c.scrollHeight;
-            }, err => {
-                toast('⚠️ تعذر تحميل المحادثة');
-            });
+            }, err => { toast('⚠️ تعذر تحميل المحادثة'); });
         };
-        document.getElementById('closeChatBtn').onclick = () => document.getElementById('chatModal').classList.remove(
-            'show');
+        document.getElementById('closeChatBtn').onclick = () => document.getElementById('chatModal').classList.remove('show');
 
         async function sendMsg() {
             const input = document.getElementById('chatInput');
@@ -1307,29 +1249,21 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 input.value = '';
-            } catch (e) {
-                toast('❌ فشل الإرسال');
-            }
+            } catch (e) { toast('❌ فشل الإرسال'); }
         }
         window.sendMsg = sendMsg;
 
-        // ═══════════════ بحث صوتي ═══════════════
         document.getElementById('voiceSearchBtn').onclick = () => {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                return toast('⚠️ البحث الصوتي غير مدعوم في متصفحك');
-            }
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return toast('⚠️ البحث الصوتي غير مدعوم');
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const r = new SpeechRecognition();
             r.lang = 'ar-TN';
             r.start();
-            r.onresult = e => {
-                document.getElementById('searchInput').value = e.results[0][0].transcript;
-                renderGuides();
-            };
+            r.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript;
+                renderGuides(); };
             r.onerror = () => toast('⚠️ لم يتم التعرف على الصوت');
         };
 
-        // ═══════════════ تصدير JSON ═══════════════
         document.getElementById('exportJsonBtn').onclick = () => {
             const blob = new Blob([JSON.stringify(guides, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
@@ -1339,44 +1273,30 @@
             toast('📄 تم تصدير JSON');
         };
 
-        // ═══════════════ تصدير PDF ═══════════════
         document.getElementById('exportPdfBtn').onclick = () => {
             const el = document.createElement('div');
             el.style.padding = '20px';
             el.style.fontFamily = 'Cairo, sans-serif';
-            el.innerHTML = '<h1 style="color:#556B2F;">F-Note Pro Max</h1><hr>' +
-                guides.map(g =>
-                    `<p><strong>${g.name}</strong> – ${g.phone} | ${g.nationality||''} | ${g.transportType||''}</p>`)
-                .join('');
+            el.innerHTML = '<h1 style="color:#556B2F;">F-Note Pro Max</h1><hr>' + guides.map(g => `<p><strong>${g.name}</strong> – ${g.phone} | ${g.nationality||''} | ${g.transportType||''}</p>`).join('');
             html2pdf().from(el).save('guides.pdf');
             toast('📕 تم تصدير PDF');
         };
 
-        // ═══════════════ البحث النصي ═══════════════
         document.getElementById('searchInput').oninput = renderGuides;
 
-        // ═══════════════ إغلاق المودالات بالنقر خارجها ═══════════════
-        document.querySelectorAll('.modal').forEach(m => {
-            m.addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('show');
-            });
-        });
+        document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('show'); }));
 
-        // ═══════════════ تبديل اللغة ═══════════════
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove(
-                'active'));
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 toast('🌐 اللغة: ' + (this.dataset.lang === 'ar' ? 'العربية' : 'Français'));
             });
         });
 
-        // ═══════════════ عرض أولي ═══════════════
         renderGuides();
-
         console.log('✅ F-Note Pro Max جاهز');
-        console.log('☁️  Cloudinary:', CLOUDINARY_CONFIG.cloudName);
+        console.log('☁️ Cloudinary:', CLOUDINARY_CONFIG.cloudName);
         console.log('🔥 Firebase:', firebaseConfig.projectId);
     </script>
 </body>
