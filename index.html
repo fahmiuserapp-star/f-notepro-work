@@ -27,10 +27,18 @@
         textarea { resize:vertical; min-height:70px; }
         .pin-input { font-size:24px; text-align:center; letter-spacing:10px; width:200px; }
         .header { background:var(--card); padding:8px 14px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; border-bottom:1px solid var(--border); }
-        .header .logo-area { display:flex; align-items:center; gap:8px; }
-        .header .logo-area img { height:38px; }
+        .header-left { display:flex; align-items:center; gap:6px; }
+        .header-right { display:flex; align-items:center; gap:8px; }
+        .logo-area { display:flex; align-items:center; gap:8px; }
+        .logo-area img { height:38px; }
         .logo-text { font-weight:900; font-size:18px; color:var(--olive); }
         .h-btn { width:38px; height:38px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--txt2); }
+        .header-actions { display:flex; gap:4px; }
+        .header-actions button { width:34px; height:34px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--txt2); background:var(--card); font-size:15px; }
+        .weather-bar { display:flex; align-items:center; justify-content:space-between; padding:6px 14px; background:var(--card); border-bottom:1px solid var(--border); font-size:12px; color:var(--txt2); }
+        .weather-left { display:flex; align-items:center; gap:6px; }
+        .weather-icon { font-size:18px; color:var(--gold); }
+        .time-box { font-weight:700; color:var(--olive); }
         .sidebar { position:fixed; top:0; right:-320px; width:280px; height:100%; background:var(--card); z-index:200; transition:0.3s; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; box-shadow:-4px 0 20px rgba(0,0,0,0.2); }
         .sidebar.open { right:0; }
         .menu-section { background:var(--bg); border-radius:14px; padding:12px; border:1px solid var(--border); }
@@ -41,7 +49,7 @@
         .lang-row { display:flex; gap:6px; }
         .lang-btn { flex:1; padding:8px; border-radius:14px; border:1px solid var(--border); background:var(--bg); color:var(--txt2); font-size:12px; }
         .lang-btn.active { background:var(--olive); color:white; border-color:var(--olive); }
-        .toolbar { display:flex; gap:8px; padding:10px 14px; background:var(--bg); position:sticky; top:56px; z-index:40; }
+        .toolbar { display:flex; gap:8px; padding:10px 14px; background:var(--bg); position:sticky; top:106px; z-index:40; }
         .search { flex:1; padding:10px; border-radius:60px; }
         .t-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; background:var(--card); }
         .t-btn.accent { background:var(--olive); color:white; border-color:var(--olive); font-size:20px; }
@@ -83,9 +91,9 @@
 <!-- PIN Lock -->
 <div id="pinLockScreen" style="display:none;align-items:center;justify-content:center;min-height:100vh;">
     <div style="background:var(--card);border-radius:24px;padding:32px;text-align:center;">
-        <h3>🔒 أدخل الرمز</h3>
+        <h3 data-translate="pinTitle">🔒 أدخل الرمز</h3>
         <input type="password" id="lockPinInput" class="pin-input" maxlength="4" inputmode="numeric">
-        <button id="unlockBtn" class="btn-primary">فتح</button>
+        <button id="unlockBtn" class="btn-primary" data-translate="unlockBtn">فتح</button>
     </div>
 </div>
 
@@ -94,57 +102,74 @@
     <div style="background:var(--card);border-radius:24px;padding:32px;max-width:380px;text-align:center;">
         <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:80px;margin-bottom:16px;">
         <h1 style="color:var(--olive);">F‑NOTEPRO WORK</h1>
-        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr">
-        <input type="password" id="loginPassword" placeholder="كلمة المرور">
-        <button id="loginBtn" class="btn-primary">دخول</button>
-        <button id="offlineBtn" class="btn-secondary">🔄 بدون إنترنت</button>
+        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr" data-translate-placeholder="emailPlaceholder">
+        <input type="password" id="loginPassword" placeholder="كلمة المرور" data-translate-placeholder="passwordPlaceholder">
+        <button id="loginBtn" class="btn-primary" data-translate="loginBtn">دخول</button>
+        <button id="offlineBtn" class="btn-secondary" data-translate="offlineBtn">🔄 بدون إنترنت</button>
     </div>
 </div>
 
 <!-- Main App -->
 <div id="appContainer" style="display:none;">
     <div class="header">
-        <div class="logo-area"><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png"><span class="logo-text">F‑NOTEPRO WORK</span></div>
-        <div style="display:flex;gap:8px;">
+        <div class="header-left">
+            <div class="logo-area"><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png"><span class="logo-text">F‑NOTEPRO WORK</span></div>
+        </div>
+        <div class="header-right">
+            <div class="header-actions" id="headerActions" style="display:none;">
+                <button id="headerBackBtn" title="رجوع"><i class="fa-solid fa-arrow-left"></i></button>
+                <button id="headerSaveBtn" title="حفظ"><i class="fa-solid fa-floppy-disk"></i></button>
+            </div>
             <button class="h-btn" id="darkToggle"><i class="fa-solid fa-moon"></i></button>
             <button class="h-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
         </div>
     </div>
+    <!-- Weather Bar -->
+    <div class="weather-bar" id="weatherBar">
+        <div class="weather-left">
+            <i class="fa-solid fa-sun weather-icon" id="weatherIcon"></i>
+            <span id="weatherTemp">--°</span>
+        </div>
+        <div>
+            <span class="time-box" id="currentDateTime"></span>
+        </div>
+    </div>
+
     <div class="overlay" id="overlay"></div>
     <div class="sidebar" id="sidebar">
         <h2><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:30px;"> F‑NOTEPRO WORK</h2>
         <div class="menu-section">
-            <div class="section-title"><i class="fa-solid fa-id-card"></i> الملف الشخصي</div>
+            <div class="section-title"><i class="fa-solid fa-id-card"></i> <span data-translate="profileSection">الملف الشخصي</span></div>
             <div id="sidebarUserInfo" style="font-size:12px;color:var(--txt3);margin-bottom:8px;"></div>
-            <div class="s-item" id="editProfileBtn"><i class="fa-solid fa-user-pen"></i> تعديل الملف</div>
-            <div class="s-item" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> خروج</div>
+            <div class="s-item" id="editProfileBtn"><i class="fa-solid fa-user-pen"></i> <span data-translate="editProfile">تعديل الملف</span></div>
+            <div class="s-item" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> <span data-translate="signOut">خروج</span></div>
         </div>
         <div class="menu-section">
-            <div class="section-title"><i class="fa-solid fa-globe"></i> اللغة</div>
+            <div class="section-title"><i class="fa-solid fa-globe"></i> <span data-translate="langSection">اللغة</span></div>
             <div class="lang-row">
                 <button class="lang-btn active" data-lang="ar">عربي</button>
                 <button class="lang-btn" data-lang="fr">Français</button>
             </div>
         </div>
         <div class="menu-section">
-            <div class="section-title"><i class="fa-solid fa-toolbox"></i> أدوات</div>
-            <div class="s-item" id="syncBtn"><i class="fa-solid fa-cloud-arrow-up"></i> مزامنة</div>
-            <div class="s-item" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> تصدير PDF</div>
-            <div class="s-item" id="backupBtn"><i class="fa-solid fa-floppy-disk"></i> نسخ احتياطي</div>
-            <div class="s-item" id="restoreBtn"><i class="fa-solid fa-upload"></i> استيراد</div>
-            <div class="s-item" id="activityLogBtn"><i class="fa-solid fa-clock-rotate-left"></i> سجل العمليات</div>
-            <div class="s-item" id="setPinBtn"><i class="fa-solid fa-lock"></i> تغيير PIN</div>
+            <div class="section-title"><i class="fa-solid fa-toolbox"></i> <span data-translate="toolsSection">أدوات</span></div>
+            <div class="s-item" id="syncBtn"><i class="fa-solid fa-cloud-arrow-up"></i> <span data-translate="sync">مزامنة</span></div>
+            <div class="s-item" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> <span data-translate="exportPdf">تصدير PDF</span></div>
+            <div class="s-item" id="backupBtn"><i class="fa-solid fa-floppy-disk"></i> <span data-translate="backup">نسخ احتياطي</span></div>
+            <div class="s-item" id="restoreBtn"><i class="fa-solid fa-upload"></i> <span data-translate="restore">استيراد</span></div>
+            <div class="s-item" id="activityLogBtn"><i class="fa-solid fa-clock-rotate-left"></i> <span data-translate="activityLog">سجل العمليات</span></div>
+            <div class="s-item" id="setPinBtn"><i class="fa-solid fa-lock"></i> <span data-translate="changePin">تغيير PIN</span></div>
         </div>
     </div>
     <div class="toolbar">
-        <input type="text" id="searchInput" class="search" placeholder="🔍 بحث عن مرشد...">
+        <input type="text" id="searchInput" class="search" placeholder="🔍 بحث عن مرشد..." data-translate-placeholder="searchPlaceholder">
         <button class="t-btn" id="voiceSearchBtn"><i class="fa-solid fa-microphone"></i></button>
         <button class="t-btn accent" id="addGuideBtn">+</button>
     </div>
     <div id="multiToolbar" style="display:none; gap:6px; padding:6px 14px;">
-        <button id="selectAllBtn" style="background:var(--olive);color:white;border-radius:14px;padding:4px 12px;">تحديد الكل</button>
-        <button id="deleteSelectedBtn" style="background:var(--err);color:white;border-radius:14px;padding:4px 12px;">حذف المحدد</button>
-        <button id="cancelSelectBtn" style="background:var(--txt3);color:white;border-radius:14px;padding:4px 12px;">إلغاء</button>
+        <button id="selectAllBtn" style="background:var(--olive);color:white;border-radius:14px;padding:4px 12px;" data-translate="selectAll">تحديد الكل</button>
+        <button id="deleteSelectedBtn" style="background:var(--err);color:white;border-radius:14px;padding:4px 12px;" data-translate="deleteSelected">حذف المحدد</button>
+        <button id="cancelSelectBtn" style="background:var(--txt3);color:white;border-radius:14px;padding:4px 12px;" data-translate="cancelSelect">إلغاء</button>
     </div>
     <div class="stats-bar" id="statsBar"></div>
     <div id="guidesContainer" class="guides"></div>
@@ -156,15 +181,15 @@
         <div class="close-btn" id="closeGuideBtn2">&times;</div>
         <h3 id="modalTitle">➕ إضافة مرشد</h3>
         <button id="voiceAddBtn" style="background:var(--gold);color:white;border-radius:14px;padding:6px 12px;margin-bottom:8px;">🎤 إضافة بالصوت</button>
-        <input type="text" id="gName" placeholder="الاسم *">
-        <input type="tel" id="gPhone" placeholder="رقم الهاتف *" dir="ltr">
-        <input type="tel" id="gClientPhone" placeholder="رقم العميل">
+        <input type="text" id="gName" placeholder="الاسم *" data-translate-placeholder="namePlaceholder">
+        <input type="tel" id="gPhone" placeholder="رقم الهاتف *" dir="ltr" data-translate-placeholder="phonePlaceholder">
+        <input type="tel" id="gClientPhone" placeholder="رقم العميل" data-translate-placeholder="clientPhonePlaceholder">
         <div style="display:flex;gap:6px;">
-            <input type="text" id="gNationality" placeholder="الجنسية" style="flex:1">
-            <input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1" min="1">
+            <input type="text" id="gNationality" placeholder="الجنسية" style="flex:1" data-translate-placeholder="nationalityPlaceholder">
+            <input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1" min="1" data-translate-placeholder="peopleCountPlaceholder">
         </div>
         <select id="gTransport">
-            <option value="">نوع النقل</option>
+            <option value="" data-translate="transportDefault">نوع النقل</option>
             <option value="حافلة كبيرة">حافلة كبيرة</option>
             <option value="حافلة صغيرة">حافلة صغيرة</option>
             <option value="ميكروبيس">ميكروبيس</option>
@@ -183,15 +208,15 @@
             <button onclick="document.getElementById('gTo').value='سوسة'">سوسة</button>
         </div>
         <div style="display:flex;gap:6px;">
-            <input type="text" id="gFrom" placeholder="من" style="flex:1">
-            <input type="text" id="gTo" placeholder="إلى" style="flex:1">
+            <input type="text" id="gFrom" placeholder="من" style="flex:1" data-translate-placeholder="fromPlaceholder">
+            <input type="text" id="gTo" placeholder="إلى" style="flex:1" data-translate-placeholder="toPlaceholder">
         </div>
-        <input type="datetime-local" id="gTripDate">
+        <input type="datetime-local" id="gTripDate" data-translate-placeholder="tripDatePlaceholder">
         <div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-image"></i> صورة المرشد <img id="guidePreview" style="display:none;width:40px;height:40px;"></div>
         <div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> صورة النقل <img id="busPreview" style="display:none;width:40px;height:40px;"></div>
-        <input type="text" id="gAgency" placeholder="الوكالة">
+        <input type="text" id="gAgency" placeholder="الوكالة" data-translate-placeholder="agencyPlaceholder">
         <div style="display:flex; gap:6px;">
-            <textarea id="gPublicSummary" placeholder="ملخص عام" style="flex:1;"></textarea>
+            <textarea id="gPublicSummary" placeholder="ملخص عام" style="flex:1;" data-translate-placeholder="summaryPlaceholder"></textarea>
             <button id="autoSummaryBtn" style="background:var(--gold);color:white;border-radius:14px;padding:8px;">إنشاء ملخص</button>
         </div>
         <button class="btn-primary" id="saveGuideBtn">💾 حفظ</button>
@@ -212,26 +237,26 @@
                 <div class="main-image"><img id="cardMainImage"><div class="guide-avatar-overlay" id="cardAvatarOverlay" style="display:none;"><img id="cardGuideAvatar"></div></div>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                <div class="info-box"><span class="label">عدد الأفراد</span><br><span class="value" id="cardPeopleCount"></span></div>
-                <div class="info-box"><span class="label">الجنسية</span><br><span class="value" id="cardNationality"></span></div>
-                <div class="info-box"><span class="label">النقل</span><br><span class="value" id="cardTransport"></span></div>
+                <div class="info-box"><span class="label" data-translate="peopleCount">عدد الأفراد</span><br><span class="value" id="cardPeopleCount"></span></div>
+                <div class="info-box"><span class="label" data-translate="nationality">الجنسية</span><br><span class="value" id="cardNationality"></span></div>
+                <div class="info-box"><span class="label" data-translate="transportType">النقل</span><br><span class="value" id="cardTransport"></span></div>
                 <div class="info-box" style="cursor:pointer;" onclick="identifyPlateCountry()">
-                    <span class="label">رقم اللوحة</span><br>
+                    <span class="label" data-translate="plateNumber">رقم اللوحة</span><br>
                     <div class="tunisian-plate">
                         <span class="plate-num" id="cardPlate1"></span>
-                        <span class="sep">تونس</span>
+                        <span class="sep" data-translate="tunisiaShort">تونس</span>
                         <span class="plate-num" id="cardPlate2"></span>
                     </div>
                 </div>
-                <div class="info-box"><span class="label">من</span><br><span class="value" id="cardFrom"></span></div>
-                <div class="info-box"><span class="label">إلى</span><br><span class="value" id="cardTo"></span></div>
+                <div class="info-box"><span class="label" data-translate="from">من</span><br><span class="value" id="cardFrom"></span></div>
+                <div class="info-box"><span class="label" data-translate="to">إلى</span><br><span class="value" id="cardTo"></span></div>
             </div>
             <div class="info-box" style="margin-top:8px; background:#f0fdf4;">
-                <span class="label">المرشد</span><br><span class="value" id="cardGuideName"></span> | <span class="value" id="cardGuidePhone" dir="ltr"></span>
+                <span class="label" data-translate="guide">المرشد</span><br><span class="value" id="cardGuideName"></span> | <span class="value" id="cardGuidePhone" dir="ltr"></span>
             </div>
-            <div class="info-box" id="cardClientRow" style="display:none;"><span class="label">العميل</span><br><span class="value" id="cardClientPhone"></span></div>
-            <div class="info-box" id="cardPublicRow" style="display:none;"><span class="label">الملخص</span><br><span id="cardPublicSummary"></span></div>
-            <div class="info-box" id="cardTripDateRow" style="display:none;"><span class="label">الموعد</span><br><span id="cardTripDate"></span> <span id="countdown" style="color:var(--err);font-weight:700;"></span></div>
+            <div class="info-box" id="cardClientRow" style="display:none;"><span class="label" data-translate="client">العميل</span><br><span class="value" id="cardClientPhone"></span></div>
+            <div class="info-box" id="cardPublicRow" style="display:none;"><span class="label" data-translate="summary">الملخص</span><br><span id="cardPublicSummary"></span></div>
+            <div class="info-box" id="cardTripDateRow" style="display:none;"><span class="label" data-translate="tripDate">الموعد</span><br><span id="cardTripDate"></span> <span id="countdown" style="color:var(--err);font-weight:700;"></span></div>
             <div class="stripe-bottom"></div>
         </div>
         <div style="display:flex; gap:6px; margin-top:12px;">
@@ -246,10 +271,10 @@
 <div class="modal" id="profileModal">
     <div class="modal-box">
         <div class="close-btn" id="closeProfileBtn">&times;</div>
-        <h3>تعديل الملف الشخصي</h3>
-        <input type="text" id="profileDisplayName" placeholder="الاسم الظاهر">
-        <button id="updateProfileBtn" class="btn-primary">حفظ الاسم</button>
-        <button id="changePasswordBtn" class="btn-secondary">تغيير كلمة المرور</button>
+        <h3 data-translate="editProfileTitle">تعديل الملف الشخصي</h3>
+        <input type="text" id="profileDisplayName" placeholder="الاسم الظاهر" data-translate-placeholder="displayNamePlaceholder">
+        <button id="updateProfileBtn" class="btn-primary" data-translate="saveName">حفظ الاسم</button>
+        <button id="changePasswordBtn" class="btn-secondary" data-translate="changePassword">تغيير كلمة المرور</button>
     </div>
 </div>
 
@@ -281,8 +306,180 @@
 
     let currentUser = null, guides = LDB.getGuides(), editId = null, guidePhotoUrl = '', busPhotoUrl = '';
     let selectedGuides = new Set();
+    let currentLang = 'ar';
+
+    const translations = {
+        ar: {
+            pinTitle: '🔒 أدخل الرمز',
+            unlockBtn: 'فتح',
+            emailPlaceholder: 'البريد الإلكتروني',
+            passwordPlaceholder: 'كلمة المرور',
+            loginBtn: 'دخول',
+            offlineBtn: '🔄 بدون إنترنت',
+            profileSection: 'الملف الشخصي',
+            editProfile: 'تعديل الملف',
+            signOut: 'خروج',
+            langSection: 'اللغة',
+            toolsSection: 'أدوات',
+            sync: 'مزامنة',
+            exportPdf: 'تصدير PDF',
+            backup: 'نسخ احتياطي',
+            restore: 'استيراد',
+            activityLog: 'سجل العمليات',
+            changePin: 'تغيير PIN',
+            searchPlaceholder: '🔍 بحث عن مرشد...',
+            selectAll: 'تحديد الكل',
+            deleteSelected: 'حذف المحدد',
+            cancelSelect: 'إلغاء',
+            namePlaceholder: 'الاسم *',
+            phonePlaceholder: 'رقم الهاتف *',
+            clientPhonePlaceholder: 'رقم العميل',
+            nationalityPlaceholder: 'الجنسية',
+            peopleCountPlaceholder: 'عدد الأفراد',
+            transportDefault: 'نوع النقل',
+            fromPlaceholder: 'من',
+            toPlaceholder: 'إلى',
+            tripDatePlaceholder: 'تاريخ الرحلة',
+            agencyPlaceholder: 'الوكالة',
+            summaryPlaceholder: 'ملخص عام',
+            peopleCount: 'عدد الأفراد',
+            nationality: 'الجنسية',
+            transportType: 'النقل',
+            plateNumber: 'رقم اللوحة',
+            tunisiaShort: 'تونس',
+            from: 'من',
+            to: 'إلى',
+            guide: 'المرشد',
+            client: 'العميل',
+            summary: 'الملخص',
+            tripDate: 'الموعد',
+            editProfileTitle: 'تعديل الملف الشخصي',
+            displayNamePlaceholder: 'الاسم الظاهر',
+            saveName: 'حفظ الاسم',
+            changePassword: 'تغيير كلمة المرور',
+            addGuideTitle: '➕ إضافة مرشد',
+            editGuideTitle: '✏️ تعديل مرشد',
+            voiceAdd: '🎤 إضافة بالصوت',
+            autoSummary: 'إنشاء ملخص',
+            save: '💾 حفظ'
+        },
+        fr: {
+            pinTitle: '🔒 Entrez le code',
+            unlockBtn: 'Déverrouiller',
+            emailPlaceholder: 'E-mail',
+            passwordPlaceholder: 'Mot de passe',
+            loginBtn: 'Connexion',
+            offlineBtn: '🔄 Hors ligne',
+            profileSection: 'Profil',
+            editProfile: 'Modifier le profil',
+            signOut: 'Déconnexion',
+            langSection: 'Langue',
+            toolsSection: 'Outils',
+            sync: 'Synchroniser',
+            exportPdf: 'Exporter PDF',
+            backup: 'Sauvegarde',
+            restore: 'Importer',
+            activityLog: 'Journal',
+            changePin: 'Changer PIN',
+            searchPlaceholder: '🔍 Rechercher un guide...',
+            selectAll: 'Tout sélectionner',
+            deleteSelected: 'Supprimer sélection',
+            cancelSelect: 'Annuler',
+            namePlaceholder: 'Nom *',
+            phonePlaceholder: 'Téléphone *',
+            clientPhonePlaceholder: 'Téléphone client',
+            nationalityPlaceholder: 'Nationalité',
+            peopleCountPlaceholder: 'Nombre de personnes',
+            transportDefault: 'Type de transport',
+            fromPlaceholder: 'De',
+            toPlaceholder: 'Vers',
+            tripDatePlaceholder: 'Date du voyage',
+            agencyPlaceholder: 'Agence',
+            summaryPlaceholder: 'Résumé public',
+            peopleCount: 'Personnes',
+            nationality: 'Nationalité',
+            transportType: 'Transport',
+            plateNumber: 'Plaque',
+            tunisiaShort: 'Tunis',
+            from: 'De',
+            to: 'Vers',
+            guide: 'Guide',
+            client: 'Client',
+            summary: 'Résumé',
+            tripDate: 'Date',
+            editProfileTitle: 'Modifier le profil',
+            displayNamePlaceholder: 'Nom affiché',
+            saveName: 'Enregistrer le nom',
+            changePassword: 'Changer le mot de passe',
+            addGuideTitle: '➕ Ajouter un guide',
+            editGuideTitle: '✏️ Modifier le guide',
+            voiceAdd: '🎤 Ajout vocal',
+            autoSummary: 'Générer résumé',
+            save: '💾 Enregistrer'
+        }
+    };
+
+    function applyLanguage(lang) {
+        currentLang = lang;
+        document.querySelectorAll('[data-translate]').forEach(el => {
+            const key = el.getAttribute('data-translate');
+            if (translations[lang][key]) el.textContent = translations[lang][key];
+        });
+        document.querySelectorAll('[data-translate-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-translate-placeholder');
+            if (translations[lang][key]) el.placeholder = translations[lang][key];
+        });
+        // Update dynamic texts
+        if (document.getElementById('guideModal').classList.contains('show')) {
+            document.getElementById('modalTitle').textContent = editId ? translations[lang].editGuideTitle : translations[lang].addGuideTitle;
+        }
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.lang-btn[data-lang="${lang}"]`).classList.add('active');
+    }
 
     function toast(m) { const e=document.createElement('div'); e.className='toast'; e.textContent=m; document.body.appendChild(e); setTimeout(()=>e.remove(),2500); }
+
+    // ---------- Weather & Time ----------
+    async function updateWeather() {
+        try {
+            const resp = await fetch('https://api.open-meteo.com/v1/forecast?latitude=36.8&longitude=10.18&current_weather=true');
+            const data = await resp.json();
+            const temp = data.current_weather.temperature;
+            const code = data.current_weather.weathercode;
+            document.getElementById('weatherTemp').textContent = `${temp}°`;
+            const iconMap = { 0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️', 51: '🌦️', 53: '🌦️', 55: '🌧️', 61: '🌧️', 63: '🌧️', 65: '🌧️', 71: '❄️', 73: '❄️', 75: '❄️', 77: '❄️', 80: '🌧️', 81: '🌧️', 82: '🌧️', 85: '🌨️', 86: '🌨️', 95: '⛈️', 96: '⛈️', 99: '⛈️' };
+            document.getElementById('weatherIcon').textContent = iconMap[code] || '🌡️';
+        } catch(e) { document.getElementById('weatherTemp').textContent = '--'; }
+    }
+    function updateDateTime() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString(currentLang==='ar'?'ar-TN':'fr-FR', { weekday:'short', day:'numeric', month:'short' });
+        const timeStr = now.toLocaleTimeString(currentLang==='ar'?'ar-TN':'fr-FR', { hour:'2-digit', minute:'2-digit' });
+        document.getElementById('currentDateTime').textContent = `${dateStr} | ${timeStr}`;
+    }
+    updateWeather();
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+    setInterval(updateWeather, 600000);
+
+    // ---------- Header Actions ----------
+    function showHeaderActions() {
+        document.getElementById('headerActions').style.display = 'flex';
+    }
+    function hideHeaderActions() {
+        document.getElementById('headerActions').style.display = 'none';
+    }
+    document.getElementById('headerBackBtn').onclick = () => {
+        document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
+        hideHeaderActions();
+    };
+    document.getElementById('headerSaveBtn').onclick = () => {
+        if (document.getElementById('guideModal').classList.contains('show')) {
+            document.getElementById('saveGuideBtn').click();
+        } else if (document.getElementById('profileModal').classList.contains('show')) {
+            document.getElementById('updateProfileBtn').click();
+        }
+    };
 
     // ---------- Image Upload ----------
     async function uploadImg(file) {
@@ -330,7 +527,6 @@
                 guides = [...cloud, ...LDB.getGuides().filter(l => !cloud.find(c=>c.id===l.id))];
                 LDB.saveGuides(guides); renderGuides();
             }).catch(()=>{ guides = LDB.getGuides(); renderGuides(); });
-            // Load display name from Firestore if exists
             const userDoc = await db.collection('users').doc(u.uid).get();
             if(userDoc.exists) document.getElementById('profileDisplayName').value = userDoc.data().displayName || '';
         }
@@ -359,6 +555,11 @@
     document.getElementById('overlay').onclick = () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); };
     document.getElementById('darkToggle').onclick = () => document.body.classList.toggle('dark');
     if(window.matchMedia('(prefers-color-scheme:dark)').matches) document.body.classList.add('dark');
+
+    // Language
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', function() { applyLanguage(this.dataset.lang); });
+    });
 
     // Sync
     document.getElementById('syncBtn').onclick = async () => {
@@ -425,8 +626,9 @@
         editId=null; guidePhotoUrl=''; busPhotoUrl='';
         ['gName','gPhone','gClientPhone','gNationality','gPeopleCount','gTransport','gPlate1','gPlate2','gFrom','gTo','gAgency','gPublicSummary','gTripDate'].forEach(id=>document.getElementById(id).value='');
         guidePreview.style.display='none'; busPreview.style.display='none';
-        modalTitle.textContent='➕ إضافة مرشد';
+        modalTitle.textContent = translations[currentLang].addGuideTitle;
         guideModal.classList.add('show');
+        showHeaderActions();
     };
     function editGuide(id) {
         const g = guides.find(x=>x.id===id); if(!g) return;
@@ -444,10 +646,11 @@
         guidePhotoUrl=g.guidePhoto||''; busPhotoUrl=g.busPhoto||'';
         guidePreview.src=guidePhotoUrl; guidePreview.style.display=guidePhotoUrl?'block':'none';
         busPreview.src=busPhotoUrl; busPreview.style.display=busPhotoUrl?'block':'none';
-        modalTitle.textContent='✏️ تعديل مرشد';
+        modalTitle.textContent = translations[currentLang].editGuideTitle;
         guideModal.classList.add('show');
+        showHeaderActions();
     }
-    document.getElementById('closeGuideBtn2').onclick = () => guideModal.classList.remove('show');
+    document.getElementById('closeGuideBtn2').onclick = () => { guideModal.classList.remove('show'); hideHeaderActions(); };
     document.getElementById('guideUploadBtn').onclick = () => pickImg('guidePreview', url=>guidePhotoUrl=url);
     document.getElementById('busUploadBtn').onclick = () => pickImg('busPreview', url=>busPhotoUrl=url);
     document.getElementById('autoSummaryBtn').onclick = () => {
@@ -489,7 +692,7 @@
         if(editId) guides = guides.map(g=>g.id===editId?data:g);
         else guides.unshift(data);
         LDB.saveGuides(guides); LDB.addLog(editId?'edit':'add', data.id, name);
-        renderGuides(); guideModal.classList.remove('show');
+        renderGuides(); guideModal.classList.remove('show'); hideHeaderActions();
     };
 
     // ---------- Plate Country Detection ----------
@@ -555,8 +758,9 @@
         };
         directionsBtn.onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(g.fromLocation)}&destination=${encodeURIComponent(g.toLocation)}`);
         cardModal.classList.add('show');
+        showHeaderActions();
     }
-    document.getElementById('closeCardBtn2').onclick = () => cardModal.classList.remove('show');
+    document.getElementById('closeCardBtn2').onclick = () => { cardModal.classList.remove('show'); hideHeaderActions(); };
     document.getElementById('shareCardBtn').onclick = async function() {
         const canvas = await html2canvas(document.getElementById('touristCard'),{scale:2});
         const blob = await new Promise(r=>canvas.toBlob(r,'image/png'));
@@ -569,15 +773,13 @@
     document.getElementById('editProfileBtn').onclick = () => {
         if(currentUser && currentUser.uid!=='offline') {
             profileModal.classList.add('show');
-            // Load current display name
+            showHeaderActions();
             db.collection('users').doc(currentUser.uid).get().then(doc => {
                 if(doc.exists) document.getElementById('profileDisplayName').value = doc.data().displayName || '';
             });
-        } else {
-            toast('يجب تسجيل الدخول');
-        }
+        } else toast('يجب تسجيل الدخول');
     };
-    document.getElementById('closeProfileBtn').onclick = () => profileModal.classList.remove('show');
+    document.getElementById('closeProfileBtn').onclick = () => { profileModal.classList.remove('show'); hideHeaderActions(); };
     document.getElementById('updateProfileBtn').onclick = async () => {
         const name = document.getElementById('profileDisplayName').value.trim();
         if(!name) return toast('الرجاء إدخال اسم');
@@ -588,9 +790,7 @@
     };
     document.getElementById('changePasswordBtn').onclick = () => {
         if(currentUser) {
-            auth.sendPasswordResetEmail(currentUser.email).then(() => {
-                toast('تم إرسال رابط تغيير كلمة المرور لبريدك');
-            }).catch(e => toast('فشل: '+e.message));
+            auth.sendPasswordResetEmail(currentUser.email).then(() => toast('تم إرسال رابط تغيير كلمة المرور لبريدك')).catch(e => toast('فشل: '+e.message));
         }
     };
 
@@ -633,9 +833,10 @@
     document.addEventListener('keydown', e => {
         if(e.ctrlKey && e.key==='k') { e.preventDefault(); searchInput.focus(); }
         if(e.ctrlKey && e.key==='n') { e.preventDefault(); addGuideBtn.click(); }
-        if(e.key==='Escape') document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'));
+        if(e.key==='Escape') { document.querySelectorAll('.modal.show').forEach(m=>{ m.classList.remove('show'); }); hideHeaderActions(); }
     });
     if('Notification' in window) Notification.requestPermission();
+    applyLanguage('ar');
     renderGuides();
 </script>
 </body>
