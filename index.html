@@ -3,21 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>F‑NOTEPRO WORK | بطاقة المرشد السياحي</title>
-    <!-- PWA -->
-    <link rel="manifest" href="data:application/json,{}">
+    <title>F-NOTEPRO WORK | بطاقة المرشد السياحي</title>
+    <link rel="manifest" href="data:application/json,{"name":"F-NOTEPRO WORK","short_name":"F-NOTE","start_url":".","display":"standalone","background_color":"#f5f7fa","theme_color":"#556B2F","icons":[{"src":"https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png","sizes":"192x192","type":"image/png"}]}">
     <meta name="theme-color" content="#556B2F">
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <!-- Fonts & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --olive: #556B2F; --gold: #D4AF37; --bg: #f5f7fa; --card: #ffffff; --txt: #1e293b;
@@ -53,7 +49,6 @@
         .lang-row { display:flex; gap:6px; } .lang-btn { flex:1; padding:8px; border-radius:14px; border:1px solid var(--border); background:var(--bg); color:var(--txt2); font-size:12px; } .lang-btn.active { background:var(--olive); color:white; border-color:var(--olive); }
         .toolbar { display:flex; gap:8px; padding:10px 14px; background:var(--bg); position:sticky; top:106px; z-index:40; } .search { flex:1; padding:10px; border-radius:60px; }
         .t-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; background:var(--card); } .t-btn.accent { background:var(--olive); color:white; border-color:var(--olive); font-size:20px; }
-        .stats-bar { display:flex; gap:8px; padding:8px 14px; }
         .guides { padding:10px 14px; display:flex; flex-direction:column; gap:10px; padding-bottom:80px; }
         .guide-card { background:var(--card); border-radius:18px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05); border:1px solid var(--border); position:relative; }
         .card-bus-img { width:100%; height:140px; object-fit:cover; background:#e5e7eb; }
@@ -75,10 +70,10 @@
     <div style="background:var(--card);border-radius:24px;padding:32px;max-width:380px;text-align:center;">
         <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:80px;">
         <h1 style="color:var(--olive);">F‑NOTEPRO WORK</h1>
-        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr" data-translate-placeholder="email">
-        <input type="password" id="loginPassword" placeholder="كلمة المرور" data-translate-placeholder="password">
-        <button id="loginBtn" class="btn-primary" data-translate="login">دخول</button>
-        <button id="offlineBtn" class="btn-secondary" data-translate="offline">🔄 بدون إنترنت</button>
+        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr">
+        <input type="password" id="loginPassword" placeholder="كلمة المرور">
+        <button id="loginBtn" class="btn-primary">دخول</button>
+        <button id="offlineBtn" class="btn-secondary">🔄 بدون إنترنت</button>
     </div>
 </div>
 
@@ -87,15 +82,15 @@
         <div class="logo-area"><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png"><span class="logo-text">F‑NOTEPRO WORK</span></div>
         <div style="display:flex;gap:8px;">
             <div class="header-actions" id="headerActions" style="display:none;">
-                <button class="back-btn" id="headerBackBtn"><i class="fa-solid fa-arrow-right"></i> <span data-translate="back">رجوع</span></button>
-                <button class="save-btn" id="headerSaveBtn"><i class="fa-solid fa-check"></i> <span data-translate="save">حفظ</span></button>
+                <button class="back-btn" id="headerBackBtn"><i class="fa-solid fa-arrow-right"></i> رجوع</button>
+                <button class="save-btn" id="headerSaveBtn"><i class="fa-solid fa-check"></i> حفظ</button>
             </div>
             <button class="h-btn" id="darkToggle"><i class="fa-solid fa-moon"></i></button>
             <button class="h-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
         </div>
     </div>
 
-    <div class="weather-widget" id="weatherWidget">
+    <div class="weather-widget">
         <div class="weather-left"><span class="weather-icon" id="weatherIcon">☀️</span><span class="temp" id="weatherTemp">--°</span></div>
         <div class="time-right"><div class="current-time" id="currentTime">00:00</div><div class="current-date" id="currentDate"></div></div>
     </div>
@@ -104,14 +99,14 @@
     <div class="sidebar" id="sidebar">
         <span class="sidebar-close" id="sidebarCloseBtn">&times;</span>
         <h2>F‑NOTEPRO WORK</h2>
-        <details class="menu-section" open><summary class="section-title"><i class="fa-solid fa-id-card"></i> <span data-translate="profile">الملف الشخصي</span></summary><div id="sidebarUserInfo" style="font-size:12px;color:var(--txt3);margin-bottom:8px;"></div><div class="s-item" id="editProfileBtn"><i class="fa-solid fa-user-pen"></i> <span data-translate="edit_profile">تعديل الملف</span></div><div class="s-item" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> <span data-translate="signout">خروج</span></div></details>
-        <details class="menu-section" open><summary class="section-title"><i class="fa-solid fa-toolbox"></i> <span data-translate="dev_tools">أدوات</span></summary><div class="s-item" id="syncBtn"><i class="fa-solid fa-cloud-arrow-up"></i> <span data-translate="sync">مزامنة</span></div><div class="s-item" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> <span data-translate="pdf">تصدير PDF</span></div><div class="s-item" id="backupBtn"><i class="fa-solid fa-floppy-disk"></i> <span data-translate="backup">نسخ احتياطي</span></div><div class="s-item" id="restoreBtn"><i class="fa-solid fa-upload"></i> <span data-translate="restore">استيراد</span></div><div class="s-item" id="weeklyBtn"><i class="fa-solid fa-calendar-week"></i> <span data-translate="weekly">جدول أسبوعي</span></div></details>
-        <details class="menu-section" open><summary class="section-title"><i class="fa-solid fa-globe"></i> <span data-translate="language">اللغة</span></summary><div class="lang-row"><button class="lang-btn active" data-lang="ar">عربي</button><button class="lang-btn" data-lang="fr">Français</button><button class="lang-btn" data-lang="en">English</button></div></details>
-        <div class="s-item" id="setPinBtn"><i class="fa-solid fa-lock"></i> <span data-translate="change_pin">تغيير PIN</span></div>
+        <details class="menu-section" open><summary class="section-title"><i class="fa-solid fa-id-card"></i> الملف الشخصي</summary><div id="sidebarUserInfo" style="font-size:12px;color:var(--txt3);margin-bottom:8px;"></div><div class="s-item" id="editProfileBtn"><i class="fa-solid fa-user-pen"></i> تعديل الملف</div><div class="s-item" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> خروج</div></details>
+        <details class="menu-section" open><summary class="section-title"><i class="fa-solid fa-toolbox"></i> الأدوات</summary><div class="s-item" id="syncBtn"><i class="fa-solid fa-cloud-arrow-up"></i> مزامنة</div><div class="s-item" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> تصدير PDF</div><div class="s-item" id="backupBtn"><i class="fa-solid fa-floppy-disk"></i> نسخ احتياطي</div><div class="s-item" id="restoreBtn"><i class="fa-solid fa-upload"></i> استيراد</div><div class="s-item" id="weeklyBtn"><i class="fa-solid fa-calendar-week"></i> جدول أسبوعي</div></details>
+        <details class="menu-section" open><summary class="section-title"><i class="fa-solid fa-globe"></i> اللغة</summary><div class="lang-row"><button class="lang-btn active" data-lang="ar">عربي</button><button class="lang-btn" data-lang="fr">Français</button><button class="lang-btn" data-lang="en">English</button></div></details>
+        <div class="s-item" id="setPinBtn"><i class="fa-solid fa-lock"></i> تغيير PIN</div>
     </div>
 
     <div class="toolbar">
-        <input type="text" id="searchInput" class="search" placeholder="🔍 بحث..." data-translate-placeholder="search">
+        <input type="text" id="searchInput" class="search" placeholder="🔍 بحث عن مرشد...">
         <button class="t-btn" id="voiceSearchBtn"><i class="fa-solid fa-microphone"></i></button>
         <button class="t-btn accent" id="addGuideBtn">+</button>
     </div>
@@ -120,13 +115,13 @@
     <div id="guidesContainer" class="guides"></div>
 </div>
 
-<!-- Modal: Add/Edit Guide -->
+<!-- Add/Edit Guide Modal -->
 <div class="modal" id="guideModal">
     <div class="modal-box">
         <div class="close-btn" id="closeGuideBtn2">&times;</div>
         <h3 id="modalTitle" style="color:var(--olive);">➕ إضافة مرشد</h3>
-        <input type="text" id="gName" placeholder="اسم المرشد *" data-translate-placeholder="guide_name">
-        <input type="tel" id="gPhone" placeholder="رقم الهاتف *" dir="ltr" data-translate-placeholder="phone">
+        <input type="text" id="gName" placeholder="اسم المرشد *">
+        <input type="tel" id="gPhone" placeholder="رقم الهاتف *" dir="ltr">
         <div style="display:flex;gap:6px;"><input type="text" id="gNationality" placeholder="الجنسية" style="flex:1"><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1" min="1"></div>
         <select id="gTransport"><option value="">نوع النقل</option><option value="حافلة كبيرة">حافلة كبيرة</option><option value="حافلة صغيرة">حافلة صغيرة</option><option value="ميكروبيس">ميكروبيس</option><option value="سيارة">سيارة</option><option value="باخرة">باخرة</option></select>
         <div id="tunisiaPlateSection"><label>🇹🇳 اللوحة التونسية</label><div style="display:flex;align-items:center;gap:6px;"><input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2;text-align:center;" maxlength="5"><span>تونس</span><input type="text" id="gPlate2" placeholder="XXX" style="flex:1;text-align:center;" maxlength="3"></div></div>
@@ -147,18 +142,59 @@
     </div>
 </div>
 
-<!-- Card & Status modals identical to previous but with updated translations -->
-<!-- ... (same as previous final code, truncated for brevity) ... -->
+<!-- Status Modal -->
+<div class="modal" id="statusModal">
+    <div class="modal-box" style="max-width:400px;">
+        <div class="close-btn" id="closeStatusBtn">&times;</div>
+        <h3 style="color:var(--olive);">📢 تحديث الحالة</h3>
+        <div id="statusGuideInfo" style="text-align:center;margin:10px 0;"></div>
+        <textarea id="statusMessage" placeholder="اكتب الحالة... مثلاً: الوفد وصل، في الطريق إلى الحمامات"></textarea>
+        <button id="shareStatusBtn" style="background:#25D366;color:white;padding:12px;border-radius:14px;font-weight:700;width:100%;"><i class="fab fa-whatsapp"></i> مشاركة الحالة</button>
+    </div>
+</div>
+
+<!-- Card Modal -->
+<div class="modal" id="cardModal">
+    <div class="modal-box" style="max-width:550px; background:#f3f4f6;">
+        <div class="close-btn" id="closeCardBtn2">&times;</div>
+        <div id="touristCard">
+            <div class="stripe-top"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div><h4 style="color:var(--olive);">F‑NOTEPRO WORK</h4><span style="font-size:10px;color:var(--gold);">بطاقة سائح سياحية</span></div>
+                <div style="text-align:right;"><span id="cardDate"></span><div style="font-size:10px;color:var(--txt3);"><span id="cardWeatherIcon">☀️</span> <span id="cardTemp">--°</span></div></div>
+            </div>
+            <div class="card-image-section" style="position:relative;margin-bottom:16px;">
+                <img id="cardMainImage" class="main-bus-image" src="" alt="صورة النقل">
+                <div class="guide-avatar-overlay" id="cardAvatarOverlay"><img id="cardGuideAvatar" src="" style="display:none;"><div class="default-avatar" id="defaultAvatar"><i class="fa-solid fa-user"></i></div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="info-box"><span class="label">عدد الأفراد</span><br><span class="value" id="cardPeopleCount"></span></div>
+                <div class="info-box"><span class="label">الجنسية</span><br><span class="value" id="cardNationality"></span></div>
+                <div class="info-box"><span class="label">النقل</span><br><span class="value" id="cardTransport"></span></div>
+                <div class="info-box" onclick="showPlateInfo()"><span class="label">رقم اللوحة</span><br><div class="plate-display" id="cardPlateDisplay"><span class="plate-num" id="cardPlate1"></span><span style="color:var(--gold);margin:0 3px;">تونس</span><span class="plate-num" id="cardPlate2"></span></div></div>
+                <div class="info-box"><span class="label">من</span><br><span class="value" id="cardFrom"></span></div>
+                <div class="info-box"><span class="label">إلى</span><br><span class="value" id="cardTo"></span></div>
+            </div>
+            <div class="info-box" style="margin-top:8px;background:#f0fdf4;"><span class="label">المرشد</span><br><span class="value" id="cardGuideName"></span> | <span class="value" id="cardGuidePhone" dir="ltr"></span></div>
+            <div class="info-box" id="cardSummaryRow"><span class="label">الملخص</span><br><span id="cardPublicSummary"></span></div>
+            <div class="stripe-bottom"></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:12px;">
+            <button id="shareCardBtn" style="flex:1;background:#25D366;padding:12px;border-radius:14px;color:white;"><i class="fas fa-share-alt"></i> مشاركة</button>
+            <button id="whatsappCardBtn" style="flex:1;background:#25D366;padding:12px;border-radius:14px;color:white;"><i class="fab fa-whatsapp"></i> واتساب</button>
+            <button id="directionsBtn" style="flex:1;background:var(--olive);padding:12px;border-radius:14px;color:white;"><i class="fa-solid fa-map"></i> اتجاهات</button>
+        </div>
+    </div>
+</div>
 
 <script>
-    // Firebase & ImgBB config
-    const IMGBB_KEY = "4e65916ca5e764d97e1f5348c6515666";
+    // Firebase
     firebase.initializeApp({apiKey:"AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",authDomain:"f-notepromax-work.firebaseapp.com",projectId:"f-notepromax-work",storageBucket:"f-notepromax-work.firebasestorage.app",messagingSenderId:"125749698617",appId:"1:125749698617:web:ff9709a863fd5a5053ede8"});
     const db = firebase.firestore();
     const auth = firebase.auth();
     db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+    const IMGBB_KEY = "4e65916ca5e764d97e1f5348c6515666";
 
-    // LocalStorage helpers
     const LDB = {
         get(k) { try { return JSON.parse(localStorage.getItem('fnote_'+k)); } catch { return null; } },
         set(k,v) { localStorage.setItem('fnote_'+k, JSON.stringify(v)); },
@@ -169,57 +205,12 @@
         getUserName() { return this.get('userName') || 'عامل'; }
     };
 
-    // State
     let currentUser = null, guides = LDB.getGuides(), editGuideId = null;
     let busPhotoUrl = '', guidePhotoUrl = '';
     let isForeignPlate = false, currentLang = localStorage.getItem('lang') || 'ar';
     let currentWeather = { icon: '☀️', temp: '--' };
     let notificationTimers = [];
 
-    // Translations
-    const translations = {
-        ar: {
-            email:'البريد الإلكتروني', password:'كلمة المرور', login:'دخول', offline:'🔄 بدون إنترنت',
-            back:'رجوع', save:'حفظ',
-            profile:'الملف الشخصي', edit_profile:'تعديل الملف', signout:'خروج',
-            dev_tools:'أدوات المطور', sync:'مزامنة', pdf:'تصدير PDF', backup:'نسخ احتياطي', restore:'استيراد',
-            language:'اللغة', change_pin:'تغيير PIN', weekly:'جدول أسبوعي',
-            search:'🔍 بحث...', guide_name:'اسم المرشد *', phone:'رقم الهاتف *',
-            toggle_plate:'تبديل إلى لوحة أجنبية', ocr:'استخراج من صورة',
-            people:'عدد الأفراد', transport:'نوع النقل', from:'من', to:'إلى', agency:'الوكالة',
-            summary:'ملخص عام', auto_summary:'إنشاء ملخص', share:'مشاركة', whatsapp:'واتساب', directions:'اتجاهات',
-            plate:'رقم اللوحة', guide:'المرشد'
-        },
-        fr: { /* ... same keys French ... */ },
-        en: { /* ... same keys English ... */ }
-    };
-
-    function applyLanguage(lang) {
-        currentLang = lang;
-        localStorage.setItem('lang', lang);
-        document.querySelectorAll('[data-translate]').forEach(el => {
-            const key = el.getAttribute('data-translate');
-            if(translations[lang]?.[key]) el.textContent = translations[lang][key];
-        });
-        document.querySelectorAll('[data-translate-placeholder]').forEach(el => {
-            const key = el.getAttribute('data-translate-placeholder');
-            if(translations[lang]?.[key]) el.placeholder = translations[lang][key];
-        });
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector(`.lang-btn[data-lang="${lang}"]`)?.classList.add('active');
-    }
-
-    // Dark mode
-    const darkPref = localStorage.getItem('darkMode');
-    if (darkPref === 'enabled' || (!darkPref && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.body.classList.add('dark');
-    }
-    document.getElementById('darkToggle').onclick = () => {
-        document.body.classList.toggle('dark');
-        localStorage.setItem('darkMode', document.body.classList.contains('dark') ? 'enabled' : 'disabled');
-    };
-
-    // Toast
     function toast(m) { const e=document.createElement('div'); e.className='toast'; e.textContent=m; document.body.appendChild(e); setTimeout(()=>e.remove(),2500); }
 
     // Image upload
@@ -252,148 +243,326 @@
         }; inp.click();
     }
 
-    // OCR: extract date from image using Tesseract
-    document.getElementById('ocrBtn').onclick = () => document.getElementById('ocrFileInput').click();
-    document.getElementById('ocrFileInput').onchange = async function() {
-        const file = this.files[0];
-        if(!file) return;
-        toast('⏳ جاري تحليل الصورة...');
-        try {
-            const { data: { text } } = await Tesseract.recognize(file, 'ara+eng+fra', { logger: m => console.log(m) });
-            const datePatterns = [
-                /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/g,
-                /(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/g,
-                /(\d{1,2})\s+(يناير|فبراير|مارس|أبريل|ماي|يونيو|يوليوز|غشت|شتنبر|أكتوبر|نونبر|دجنبر|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{2,4})/gi
-            ];
-            let extractedDate = null;
-            for(let pattern of datePatterns) {
-                const match = text.match(pattern);
-                if(match) {
-                    const d = new Date(match[0]);
-                    if(!isNaN(d.getTime())) { extractedDate = d; break; }
-                }
-            }
-            if(extractedDate) {
-                document.getElementById('gTripDate').value = extractedDate.toISOString().slice(0,16);
-                toast('✅ تم استخراج التاريخ: '+extractedDate.toLocaleDateString('ar-TN'));
-            } else {
-                toast('❌ لم نجد تاريخاً في الصورة');
-            }
-        } catch(e) { toast('فشل التحليل'); }
-    };
+    // Auth
+    auth.onAuthStateChanged(async u => {
+        if(u) {
+            currentUser = u;
+            document.getElementById('loginScreen').style.display='none';
+            document.getElementById('appContainer').style.display='block';
+            document.getElementById('sidebarUserInfo').textContent = u.email;
+            const userDoc = await db.collection('users').doc(u.uid).get().catch(()=>{});
+            LDB.set('userName', userDoc?.data()?.displayName || u.email);
+            loadFromCloud();
+        }
+    });
+    document.getElementById('loginBtn').onclick = () => auth.signInWithEmailAndPassword(loginEmail.value, loginPassword.value).catch(e=>toast(e.message));
+    document.getElementById('offlineBtn').onclick = () => { currentUser={uid:'offline'}; loginScreen.style.display='none'; appContainer.style.display='block'; guides=LDB.getGuides(); renderGuides(); };
+    document.getElementById('signOutBtn').onclick = () => auth.signOut();
 
-    // Notification scheduling
-    function scheduleNotification(guide) {
-        if(!guide.tripDate) return;
-        const tripTime = new Date(guide.tripDate).getTime();
-        const now = Date.now();
-        if(tripTime <= now) return;
-        const delay = tripTime - now;
-        const timer = setTimeout(() => {
-            if(Notification.permission === 'granted') {
-                new Notification('تذكير برحلة', { body: `المرشد: ${guide.name} - الوجهة: ${guide.toLocation}`, icon: 'https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png' });
-            }
-        }, delay);
-        notificationTimers.push({ id: guide.id, timer });
-    }
-
-    function cancelNotification(guideId) {
-        const idx = notificationTimers.findIndex(n => n.id === guideId);
-        if(idx !== -1) { clearTimeout(notificationTimers[idx].timer); notificationTimers.splice(idx,1); }
-    }
-
-    function scheduleAllNotifications() {
-        notificationTimers.forEach(n => clearTimeout(n.timer));
-        notificationTimers = [];
-        guides.forEach(g => scheduleNotification(g));
-    }
-
-    // Load guides & schedule
     async function loadFromCloud() {
         const snap = await db.collection('guides').where('userId','==',currentUser.uid).get();
         let cloud = []; snap.forEach(d => cloud.push({id:d.id,...d.data()}));
         guides = [...cloud, ...LDB.getGuides().filter(l=>!cloud.find(c=>c.id===l.id))];
-        LDB.saveGuides(guides);
-        renderGuides();
-        scheduleAllNotifications();
+        LDB.saveGuides(guides); renderGuides(); scheduleAllNotifications();
     }
 
-    // Weekly view
-    function showWeeklyView() {
-        const now = new Date();
-        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 1));
-        const endOfWeek = new Date(startOfWeek.getTime() + 7*86400000);
-        const weekly = guides.filter(g => g.tripDate && new Date(g.tripDate) >= startOfWeek && new Date(g.tripDate) < endOfWeek)
-            .sort((a,b) => new Date(a.tripDate) - new Date(b.tripDate));
-        const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-        let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
-        for(let i=0;i<7;i++) {
-            const dayGuides = weekly.filter(g => new Date(g.tripDate).getDay() === i);
-            html += `<div style="font-weight:700;color:var(--olive);">${days[i]}</div>`;
-            if(dayGuides.length) {
-                dayGuides.forEach(g => html += `<div style="background:var(--card);padding:8px;border-radius:12px;">${g.name} - ${g.toLocation} (${new Date(g.tripDate).toLocaleTimeString('ar-TN',{hour:'2-digit',minute:'2-digit'})})</div>`);
-            } else html += '<div style="color:var(--txt3);">لا توجد رحلات</div>';
-        }
-        html += '</div>';
-        const modal = document.createElement('div');
-        modal.className = 'modal show';
-        modal.innerHTML = `<div class="modal-box"><div class="close-btn" onclick="this.closest('.modal').remove()">&times;</div><h3>الجدول الأسبوعي</h3>${html}</div>`;
-        document.body.appendChild(modal);
+    // Sidebar
+    document.getElementById('menuBtn').onclick = () => { sidebar.classList.add('open'); overlay.style.display='block'; };
+    document.getElementById('sidebarCloseBtn').onclick = () => { sidebar.classList.remove('open'); overlay.style.display='none'; };
+    document.getElementById('overlay').onclick = () => { sidebar.classList.remove('open'); overlay.style.display='none'; };
+
+    // Dark mode
+    const darkPref = localStorage.getItem('darkMode');
+    if (darkPref === 'enabled' || (!darkPref && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark');
+    document.getElementById('darkToggle').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('darkMode', document.body.classList.contains('dark') ? 'enabled' : 'disabled'); };
+
+    // Language
+    const translations = {
+        ar: { back:'رجوع', save:'حفظ', weekly:'جدول أسبوعي' },
+        fr: { back:'Retour', save:'Enregistrer', weekly:'Hebdomadaire' },
+        en: { back:'Back', save:'Save', weekly:'Weekly' }
+    };
+    function applyLanguage(lang) {
+        currentLang = lang; localStorage.setItem('lang', lang);
+        document.querySelectorAll('[data-translate]').forEach(el => { const k=el.getAttribute('data-translate'); if(translations[lang]?.[k]) el.textContent=translations[lang][k]; });
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.lang-btn[data-lang="${lang}"]`)?.classList.add('active');
     }
-
-    document.getElementById('weeklyBtn').onclick = showWeeklyView;
-    document.getElementById('syncBtn').onclick = async () => { /* sync logic */ };
-    // ... rest of previous functions (auth, sidebar, renderGuides, showCard, openStatus, etc) adapted with translations ...
-
+    document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', ()=>applyLanguage(b.dataset.lang)));
     applyLanguage(currentLang);
-    // Request notification permission
-    if('Notification' in window) Notification.requestPermission();
-    // Weather & time updates
-    async function updateWeather() {
-        try {
-            const resp = await fetch('https://api.open-meteo.com/v1/forecast?latitude=36.8&longitude=10.18&current_weather=true');
-            const data = await resp.json();
-            const temp = Math.round(data.current_weather.temperature) + '°';
-            const icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌧️',81:'🌧️',82:'🌧️',85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️'};
-            currentWeather = { icon: icons[data.current_weather.weathercode] || '🌡️', temp };
-            document.getElementById('weatherTemp').textContent = temp;
-            document.getElementById('weatherIcon').textContent = currentWeather.icon;
-        } catch(e) {}
-    }
-    function updateDateTime() {
-        const now = new Date();
-        document.getElementById('currentTime').textContent = now.toLocaleTimeString('ar-TN', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
-        document.getElementById('currentDate').textContent = now.toLocaleDateString('ar-TN', {weekday:'long', day:'numeric', month:'long'});
-    }
-    updateWeather(); updateDateTime();
-    setInterval(updateDateTime, 1000);
-    setInterval(updateWeather, 600000);
 
-    // Render guides (simplified version, full one includes bus img, avatar, etc)
+    // Toggle plate
+    document.getElementById('togglePlateBtn').onclick = () => {
+        isForeignPlate = !isForeignPlate;
+        document.getElementById('tunisiaPlateSection').style.display = isForeignPlate ? 'none' : 'block';
+        document.getElementById('foreignPlateSection').style.display = isForeignPlate ? 'block' : 'none';
+    };
+
+    // Upload
+    document.getElementById('busUploadBtn').onclick = () => pickImg('busPreview', url=>busPhotoUrl=url);
+    document.getElementById('guideUploadBtn').onclick = () => pickImg('guidePreview', url=>guidePhotoUrl=url);
+
+    // OCR
+    document.getElementById('ocrBtn').onclick = () => document.getElementById('ocrFileInput').click();
+    document.getElementById('ocrFileInput').onchange = async function() {
+        const file = this.files[0]; if(!file) return;
+        toast('⏳ تحليل الصورة...');
+        try {
+            const { data: { text } } = await Tesseract.recognize(file, 'ara+eng+fra');
+            const found = text.match(/\d{1,4}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}/);
+            if(found) {
+                const d = new Date(found[0]); if(!isNaN(d.getTime())) {
+                    document.getElementById('gTripDate').value = d.toISOString().slice(0,16);
+                    toast('✅ التاريخ: '+d.toLocaleDateString('ar-TN'));
+                }
+            } else toast('❌ لم يتم العثور على تاريخ');
+        } catch(e) { toast('فشل التحليل'); }
+    };
+
+    // Auto summary
+    document.getElementById('autoSummaryBtn').onclick = () => {
+        const nat = document.getElementById('gNationality').value||'عالمي';
+        const cnt = document.getElementById('gPeopleCount').value||'0';
+        document.getElementById('gPublicSummary').value = `زيارة وفد ${nat} مكون من ${cnt} فرداً`;
+    };
+
+    // Save guide
+    document.getElementById('saveGuideBtn').onclick = async () => {
+        const name = document.getElementById('gName').value.trim();
+        const phone = document.getElementById('gPhone').value.trim();
+        if(!name||!phone) return toast('الاسم والهاتف مطلوبان');
+        const data = {
+            id: editGuideId || 'local_'+Date.now(),
+            userId: currentUser?.uid||'offline', name, phone,
+            nationality: document.getElementById('gNationality').value.trim(),
+            peopleCount: document.getElementById('gPeopleCount').value,
+            transportType: document.getElementById('gTransport').value,
+            plate1: isForeignPlate ? '' : document.getElementById('gPlate1').value.trim(),
+            plate2: isForeignPlate ? '' : document.getElementById('gPlate2').value.trim(),
+            foreignPlate: isForeignPlate ? document.getElementById('gForeignPlate').value.trim() : '',
+            isForeignPlate,
+            fromLocation: document.getElementById('gFrom').value.trim(),
+            toLocation: document.getElementById('gTo').value.trim(),
+            tripDate: document.getElementById('gTripDate').value,
+            busPhoto: busPhotoUrl, guidePhoto: guidePhotoUrl,
+            agency: document.getElementById('gAgency').value.trim(),
+            publicSummary: document.getElementById('gPublicSummary').value.trim(),
+            createdBy: LDB.getUserName(),
+            updatedAt: new Date().toISOString()
+        };
+        if(editGuideId) guides = guides.map(g=>g.id===editGuideId?data:g);
+        else guides.unshift(data);
+        LDB.saveGuides(guides); renderGuides(); scheduleAllNotifications();
+        document.getElementById('guideModal').classList.remove('show');
+    };
+
+    // Render guides
     function renderGuides() {
         const q = document.getElementById('searchInput').value.toLowerCase();
         const filtered = guides.filter(g => !q || g.name?.toLowerCase().includes(q));
         document.getElementById('guidesContainer').innerHTML = filtered.map(g => `
             <div class="guide-card">
                 <img class="card-bus-img" src="${g.busPhoto||''}" onerror="this.style.background='#d1d5db';this.src='';">
-                <div class="creator-circle" title="${g.createdBy||''}">${(g.createdBy||'?')[0]}</div>
+                <div class="creator-circle" title="${g.createdBy||''}" style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${(g.createdBy||'?')[0]}</div>
                 <div class="card-content">
-                    <div class="guide-mini-avatar">${g.guidePhoto?`<img src="${g.guidePhoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`:'<i class="fa-solid fa-user"></i>'}</div>
-                    <div class="card-info"><div class="name">${g.name}</div><div class="phone">📞 ${g.phone}</div></div>
+                    <div class="guide-mini-avatar">${g.guidePhoto ? `<img src="${g.guidePhoto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : '<i class="fa-solid fa-user"></i>'}</div>
+                    <div class="card-info" style="flex:1;"><div class="name">${g.name}</div><div class="phone">📞 ${g.phone}</div></div>
                     <div style="display:flex;gap:4px;">
-                        <button class="c-btn c-call" onclick="location.href='tel:${g.phone}'">📞</button>
-                        <button class="c-btn c-wa" onclick="window.open('https://wa.me/${g.phone.replace(/[^0-9]/g,'')}')">💬</button>
-                        <button class="c-btn c-card" onclick="showCard('${g.id}')">🪪</button>
-                        <button class="c-btn c-status" onclick="openStatus('${g.id}')">📢</button>
-                        <button class="c-btn c-edit" onclick="editGuide('${g.id}')">✏️</button>
+                        <button class="c-btn c-call" onclick="event.stopPropagation();location.href='tel:${g.phone}'">📞</button>
+                        <button class="c-btn c-wa" onclick="event.stopPropagation();window.open('https://wa.me/${g.phone.replace(/[^0-9]/g,'')}')">💬</button>
+                        <button class="c-btn c-card" onclick="event.stopPropagation();showCard('${g.id}')">🪪</button>
+                        <button class="c-btn c-status" onclick="event.stopPropagation();openStatus('${g.id}')">📢</button>
+                        <button class="c-btn c-edit" onclick="event.stopPropagation();editGuide('${g.id}')">✏️</button>
                     </div>
                 </div>
             </div>`).join('');
         document.getElementById('statsBar').innerHTML = `<div class="stat-item"><span class="big">${guides.length}</span><br>مرشدين</div>`;
     }
 
-    // Initial render
-    if(!currentUser) { /* show login */ } else { renderGuides(); scheduleAllNotifications(); }
+    // Show tourist card
+    function showCard(id) {
+        const g = guides.find(x=>x.id===id); if(!g) return;
+        document.getElementById('cardMainImage').src = g.busPhoto || '';
+        document.getElementById('cardMainImage').onerror = function(){ this.src=''; this.style.background='#d1d5db'; };
+        if(g.guidePhoto) {
+            document.getElementById('cardGuideAvatar').src = g.guidePhoto;
+            document.getElementById('cardGuideAvatar').style.display='block';
+            document.getElementById('defaultAvatar').style.display='none';
+        } else {
+            document.getElementById('cardGuideAvatar').style.display='none';
+            document.getElementById('defaultAvatar').style.display='flex';
+        }
+        document.getElementById('cardPeopleCount').textContent = g.peopleCount||'—';
+        document.getElementById('cardNationality').textContent = g.nationality||'—';
+        document.getElementById('cardTransport').textContent = g.transportType||'—';
+        document.getElementById('cardFrom').textContent = g.fromLocation||'—';
+        document.getElementById('cardTo').textContent = g.toLocation||'—';
+        document.getElementById('cardGuideName').textContent = g.name||'—';
+        document.getElementById('cardGuidePhone').textContent = g.phone||'—';
+        document.getElementById('cardDate').textContent = new Date().toLocaleDateString('ar-TN');
+        document.getElementById('cardWeatherIcon').textContent = currentWeather.icon;
+        document.getElementById('cardTemp').textContent = currentWeather.temp;
+        const pd = document.getElementById('cardPlateDisplay');
+        if(g.isForeignPlate && g.foreignPlate) {
+            pd.innerHTML = `<span style="background:white;color:#1e293b;padding:3px 8px;border-radius:4px;">${g.foreignPlate}</span>`;
+        } else {
+            pd.innerHTML = `<span class="plate-num">${g.plate1||'—'}</span><span style="color:var(--gold);margin:0 3px;">تونس</span><span class="plate-num">${g.plate2||'—'}</span>`;
+        }
+        document.getElementById('cardPublicSummary').textContent = g.publicSummary || 'لا يوجد';
+        document.getElementById('cardModal').classList.add('show');
+        document.getElementById('headerActions').style.display='flex';
+        document.getElementById('whatsappCardBtn').onclick = () => {
+            const msg = `*بطاقة معلومات الوفد السياحي*\nالاسم: ${g.name}\nالهاتف: ${g.phone}\nالنقل: ${g.transportType}\nمن: ${g.fromLocation} إلى: ${g.toLocation}`;
+            window.open(`https://wa.me/${g.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`);
+        };
+        document.getElementById('directionsBtn').onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(g.fromLocation)}&destination=${encodeURIComponent(g.toLocation)}`);
+    }
+
+    // Status
+    function openStatus(id) {
+        const g = guides.find(x=>x.id===id); if(!g) return;
+        document.getElementById('statusGuideInfo').innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;justify-content:center;">
+                ${g.guidePhoto ? `<img src="${g.guidePhoto}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;">` : '<div style="width:50px;height:50px;border-radius:50%;background:#d1d5db;"></div>'}
+                <div><b>${g.name}</b><br>📞 ${g.phone}</div>
+            </div>`;
+        document.getElementById('statusModal').classList.add('show');
+        document.getElementById('shareStatusBtn').onclick = async () => {
+            const text = document.getElementById('statusMessage').value;
+            const div = document.createElement('div');
+            div.style.cssText = 'background:white;padding:20px;border-radius:16px;text-align:center;font-family:Cairo;';
+            div.innerHTML = `<h4>F‑NOTEPRO WORK</h4><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0;">${g.guidePhoto?`<img src="${g.guidePhoto}" style="width:60px;height:60px;border-radius:50%;">`:''}<div><b>${g.name}</b><br>${g.phone}</div></div>${text?`<div style="background:#f0fdf4;padding:12px;border-radius:12px;">${text}</div>`:''}`;
+            document.body.appendChild(div);
+            const canvas = await html2canvas(div,{scale:2});
+            document.body.removeChild(div);
+            const blob = await new Promise(r=>canvas.toBlob(r,'image/png'));
+            const file = new File([blob],'حالة.png',{type:'image/png'});
+            if(navigator.share) await navigator.share({files:[file]});
+            else { const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='حالة.png'; a.click(); }
+            document.getElementById('statusModal').classList.remove('show');
+        };
+    }
+
+    // Notifications
+    function scheduleNotification(g) {
+        if(!g.tripDate) return;
+        const tripTime = new Date(g.tripDate).getTime();
+        const delay = tripTime - Date.now();
+        if(delay <= 0) return;
+        const timer = setTimeout(() => {
+            if(Notification.permission === 'granted') new Notification('تذكير برحلة', { body: `${g.name} - ${g.toLocation}` });
+        }, delay);
+        notificationTimers.push({id: g.id, timer});
+    }
+    function scheduleAllNotifications() {
+        notificationTimers.forEach(t => clearTimeout(t.timer));
+        notificationTimers = [];
+        guides.forEach(g => scheduleNotification(g));
+    }
+
+    // Weekly view
+    document.getElementById('weeklyBtn').onclick = () => {
+        const now = new Date();
+        const start = new Date(now.setDate(now.getDate()-now.getDay()+1));
+        const end = new Date(start.getTime()+7*86400000);
+        const weekGuides = guides.filter(g => g.tripDate && new Date(g.tripDate) >= start && new Date(g.tripDate) < end)
+            .sort((a,b) => new Date(a.tripDate)-new Date(b.tripDate));
+        const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+        let html = '';
+        for(let i=0;i<7;i++) {
+            const dayGuides = weekGuides.filter(g => new Date(g.tripDate).getDay()===i);
+            html += `<div style="font-weight:700;color:var(--olive);">${days[i]}</div>`;
+            if(dayGuides.length) dayGuides.forEach(g => html += `<div style="background:var(--card);padding:8px;border-radius:12px;">${g.name} - ${g.toLocation} (${new Date(g.tripDate).toLocaleTimeString('ar-TN',{hour:'2-digit',minute:'2-digit'})})</div>`);
+            else html += '<div style="color:var(--txt3);">لا توجد رحلات</div>';
+        }
+        const modal = document.createElement('div'); modal.className='modal show';
+        modal.innerHTML = `<div class="modal-box"><div class="close-btn" onclick="this.closest('.modal').remove()">&times;</div><h3>الجدول الأسبوعي</h3>${html}</div>`;
+        document.body.appendChild(modal);
+    };
+
+    // Other tools
+    document.getElementById('syncBtn').onclick = async () => {
+        const locals = guides.filter(g=>g.id.startsWith('local_'));
+        for(let g of locals) { const ref = db.collection('guides').doc(); await ref.set({...g, id:ref.id}); }
+        guides = guides.filter(g=>!g.id.startsWith('local_')); LDB.saveGuides(guides); renderGuides(); toast('تمت المزامنة');
+    };
+    document.getElementById('exportPdfBtn').onclick = async () => {
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
+        const cards = document.querySelectorAll('.guide-card');
+        for(let i=0;i<cards.length;i++) { const canvas = await html2canvas(cards[i],{scale:2}); if(i>0) doc.addPage(); doc.addImage(canvas.toDataURL('image/png'),'PNG',10,10,190,0); }
+        doc.save('guides.pdf');
+    };
+    document.getElementById('backupBtn').onclick = () => { const b=new Blob([JSON.stringify(guides)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='backup.json'; a.click(); };
+    document.getElementById('restoreBtn').onclick = () => { const i=document.createElement('input'); i.type='file'; i.accept='.json'; i.onchange=e=>{ const r=new FileReader(); r.onload=()=>{ guides=JSON.parse(r.result); LDB.saveGuides(guides); renderGuides(); }; r.readAsText(e.target.files[0]); }; i.click(); };
+    document.getElementById('setPinBtn').onclick = () => { const p=prompt('PIN (4 أرقام)'); if(p&&/^\d{4}$/.test(p)){ LDB.setPin(p); toast('تم'); } };
+    document.getElementById('shareCardBtn').onclick = async () => {
+        const canvas = await html2canvas(document.getElementById('touristCard'),{scale:2,backgroundColor:'#ffffff',useCORS:true});
+        const blob = await new Promise(r=>canvas.toBlob(r,'image/png'));
+        const file = new File([blob],'بطاقة_سائح.png',{type:'image/png'});
+        if(navigator.share) await navigator.share({files:[file]});
+        else { const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='بطاقة_سائح.png'; a.click(); }
+    };
+    document.getElementById('closeCardBtn2').onclick = () => { document.getElementById('cardModal').classList.remove('show'); document.getElementById('headerActions').style.display='none'; };
+    document.getElementById('closeGuideBtn2').onclick = () => { document.getElementById('guideModal').classList.remove('show'); document.getElementById('headerActions').style.display='none'; };
+    document.getElementById('closeStatusBtn').onclick = () => document.getElementById('statusModal').classList.remove('show');
+    document.getElementById('headerBackBtn').onclick = () => { document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show')); document.getElementById('headerActions').style.display='none'; };
+    document.getElementById('headerSaveBtn').onclick = () => document.getElementById('saveGuideBtn').click();
+
+    // Add/Edit
+    document.getElementById('addGuideBtn').onclick = () => {
+        editGuideId=null; busPhotoUrl=''; guidePhotoUrl='';
+        ['gName','gPhone','gNationality','gPeopleCount','gTransport','gPlate1','gPlate2','gForeignPlate','gFrom','gTo','gAgency','gPublicSummary','gTripDate'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('busPreview').style.display='none'; document.getElementById('guidePreview').style.display='none';
+        document.getElementById('modalTitle').textContent='➕ إضافة مرشد';
+        document.getElementById('guideModal').classList.add('show');
+        document.getElementById('headerActions').style.display='flex';
+    };
+    function editGuide(id) {
+        const g = guides.find(x=>x.id===id); if(!g) return;
+        editGuideId = id;
+        document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||'';
+        document.getElementById('gNationality').value=g.nationality||''; document.getElementById('gPeopleCount').value=g.peopleCount||'';
+        document.getElementById('gTransport').value=g.transportType||'';
+        document.getElementById('gPlate1').value=g.plate1||''; document.getElementById('gPlate2').value=g.plate2||'';
+        document.getElementById('gForeignPlate').value=g.foreignPlate||'';
+        isForeignPlate = g.isForeignPlate || false;
+        document.getElementById('tunisiaPlateSection').style.display = isForeignPlate?'none':'block';
+        document.getElementById('foreignPlateSection').style.display = isForeignPlate?'block':'none';
+        document.getElementById('gFrom').value=g.fromLocation||''; document.getElementById('gTo').value=g.toLocation||'';
+        document.getElementById('gTripDate').value=g.tripDate||'';
+        document.getElementById('gAgency').value=g.agency||'';
+        document.getElementById('gPublicSummary').value=g.publicSummary||'';
+        busPhotoUrl = g.busPhoto||''; guidePhotoUrl = g.guidePhoto||'';
+        document.getElementById('busPreview').src=busPhotoUrl; document.getElementById('busPreview').style.display=busPhotoUrl?'block':'none';
+        document.getElementById('guidePreview').src=guidePhotoUrl; document.getElementById('guidePreview').style.display=guidePhotoUrl?'block':'none';
+        document.getElementById('modalTitle').textContent='✏️ تعديل مرشد';
+        document.getElementById('guideModal').classList.add('show');
+        document.getElementById('headerActions').style.display='flex';
+    }
+
+    // Weather & time
+    async function updateWeather() {
+        try {
+            const resp = await fetch('https://api.open-meteo.com/v1/forecast?latitude=36.8&longitude=10.18&current_weather=true');
+            const data = await resp.json();
+            const temp = Math.round(data.current_weather.temperature)+'°';
+            const icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌧️',81:'🌧️',82:'🌧️',85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️'};
+            currentWeather = { icon: icons[data.current_weather.weathercode]||'🌡️', temp };
+            document.getElementById('weatherTemp').textContent=temp;
+            document.getElementById('weatherIcon').textContent=currentWeather.icon;
+        } catch(e) {}
+    }
+    function updateDateTime() {
+        const now = new Date();
+        document.getElementById('currentTime').textContent = now.toLocaleTimeString('ar-TN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+        document.getElementById('currentDate').textContent = now.toLocaleDateString('ar-TN',{weekday:'long',day:'numeric',month:'long'});
+    }
+    updateWeather(); updateDateTime();
+    setInterval(updateDateTime,1000);
+    setInterval(updateWeather,600000);
+
+    if('Notification' in window) Notification.requestPermission();
+    renderGuides();
 </script>
 </body>
 </html>
