@@ -13,8 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --olive: #556B2F; --gold: #D4AF37; --bg: #f5f7fa; --card: #fff; --txt: #1e293b; --txt2: #475569; --txt3: #94a3b8;
-            --border: #e2e8f0; --err: #ef4444; --ok: #10b981; --wa: #25D366;
+            --olive: #556B2F; --gold: #D4AF37; --bg: #f5f7fa; --card: #fff; --txt: #1e293b;
+            --txt2: #475569; --txt3: #94a3b8; --border: #e2e8f0; --err: #ef4444; --ok: #10b981; --wa: #25D366;
         }
         .dark { --bg: #0f172a; --card: #1e293b; --txt: #f1f5f9; --txt2: #cbd5e1; --txt3: #64748b; --border: #334155; }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo',sans-serif; }
@@ -29,27 +29,41 @@
         .logo-area img { height:38px; }
         .logo-text { font-weight:800; font-size:18px; color:var(--olive); }
         .h-btn { width:38px; height:38px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; background:var(--card); }
-        .header-actions { display:flex; gap:8px; align-items:center; }
+        .header-actions { display:flex; gap:8px; }
         .header-actions button { padding:8px 14px; border-radius:12px; font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px; }
         .save-btn { background:var(--olive); color:white; }
         .back-btn { background:var(--err); color:white; }
 
-        /* بطاقة السائح */
+        /* Weather Widget */
+        .weather-widget {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .weather-left { display: flex; align-items: center; gap: 8px; }
+        .weather-icon { font-size: 28px; color: var(--gold); }
+        .temp { font-weight: 700; color: var(--txt); }
+        .time-right { text-align: left; direction: ltr; }
+        .current-time { font-size: 28px; font-weight: 800; color: var(--olive); line-height: 1; }
+        .current-date { font-size: 12px; color: var(--txt3); margin-top: 2px; }
+
+        /* Tourist Card */
         #touristCard { background:#fff; border-radius:20px; padding:20px; border:3px solid var(--gold); position:relative; overflow:hidden; color:#1e293b; }
         .stripe-top, .stripe-bottom { position:absolute; left:0; width:100%; height:5px; }
         .stripe-top { top:0; background:linear-gradient(90deg, var(--olive), var(--gold)); }
         .stripe-bottom { bottom:0; background:linear-gradient(90deg, var(--gold), var(--olive)); }
-
         .card-image-section { position:relative; margin-bottom:16px; }
         .main-bus-image { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:14px; background:#e5e7eb; display:block; }
         .guide-mini-overlay { position:absolute; bottom:-15px; right:12px; width:60px; height:60px; border-radius:50%; border:3px solid white; box-shadow:0 3px 10px rgba(0,0,0,0.25); overflow:hidden; background:var(--card); }
         .guide-mini-overlay img { width:100%; height:100%; object-fit:cover; }
         .guide-mini-overlay .default-avatar { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#d1d5db; color:#6b7280; font-size:28px; }
-
         .info-box { background:#f9fafb; border-radius:12px; padding:12px; border:1px solid #e5e7eb; }
         .info-box .label { font-size:10px; color:#6b7280; margin-bottom:4px; }
         .info-box .value { font-weight:800; color:var(--olive); font-size:15px; }
-
         .plate-display { background:#1e293b; color:white; border-radius:8px; padding:6px 10px; display:flex; align-items:center; justify-content:center; gap:4px; font-weight:800; direction:ltr; cursor:pointer; }
         .plate-display .plate-num { background:white; color:#1e293b; padding:3px 8px; border-radius:4px; }
 
@@ -57,11 +71,8 @@
         .modal.show { visibility:visible; opacity:1; }
         .modal-box { background:var(--card); border-radius:24px; padding:24px; width:92%; max-width:500px; max-height:88vh; overflow-y:auto; position:relative; }
         .modal-box .close-btn { position:absolute; top:12px; right:12px; font-size:22px; color:var(--txt2); cursor:pointer; }
-
         .btn-primary { background:var(--olive); color:white; padding:14px; border-radius:14px; font-weight:700; font-size:16px; }
-        .btn-secondary { background:var(--txt3); color:white; padding:14px; border-radius:14px; font-weight:700; }
         .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#1e293b; color:white; padding:10px 24px; border-radius:30px; font-size:13px; z-index:999; }
-
         .avatar { width:52px; height:52px; border-radius:14px; object-fit:cover; border:2px solid var(--olive); background:var(--bg); }
         .c-btn { padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; color:white; }
         .c-call { background:var(--ok); } .c-wa { background:var(--wa); } .c-card { background:var(--olive); } .c-edit { background:#f59e0b; } .c-del { background:var(--err); }
@@ -95,8 +106,21 @@
         </div>
     </div>
 
-    <div class="overlay" id="overlay"></div>
-    <div class="sidebar" id="sidebar" style="position:fixed;top:0;right:-320px;width:280px;height:100%;background:var(--card);z-index:200;transition:0.3s;padding:20px;">
+    <!-- Weather & Time Widget -->
+    <div class="weather-widget" id="weatherWidget">
+        <div class="weather-left">
+            <span class="weather-icon" id="weatherIcon">☀️</span>
+            <span class="temp" id="weatherTemp">--°</span>
+        </div>
+        <div class="time-right">
+            <div class="current-time" id="currentTime">00:00</div>
+            <div class="current-date" id="currentDate">السبت، 13 ماي</div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="overlay" id="overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:150;display:none;"></div>
+    <div class="sidebar" id="sidebar" style="position:fixed;top:0;right:-320px;width:280px;height:100%;background:var(--card);z-index:200;transition:0.3s;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,0.2);">
         <span id="sidebarCloseBtn" style="position:absolute;top:12px;left:12px;font-size:20px;cursor:pointer;">&times;</span>
         <h2>F‑NOTEPRO WORK</h2>
         <div id="sidebarUserInfo" style="font-size:12px;color:var(--txt3);margin-bottom:12px;"></div>
@@ -109,11 +133,13 @@
         <div class="s-item" id="setPinBtn"><i class="fa-solid fa-lock"></i> تغيير PIN</div>
     </div>
 
-    <div class="toolbar" style="display:flex;gap:8px;padding:10px 14px;background:var(--bg);position:sticky;top:58px;z-index:40;">
-        <input type="text" id="searchInput" class="search" placeholder="🔍 بحث عن مرشد..." style="flex:1;border-radius:60px;">
+    <!-- Toolbar -->
+    <div style="display:flex;gap:8px;padding:10px 14px;background:var(--bg);position:sticky;top:58px;z-index:40;">
+        <input type="text" id="searchInput" placeholder="🔍 بحث عن مرشد..." style="flex:1;border-radius:60px;">
         <button class="t-btn accent" id="addGuideBtn" style="width:42px;height:42px;border-radius:50%;background:var(--olive);color:white;font-size:22px;">+</button>
     </div>
 
+    <!-- Guides List -->
     <div id="guidesContainer" style="padding:10px 14px;display:flex;flex-direction:column;gap:10px;padding-bottom:80px;"></div>
 </div>
 
@@ -124,39 +150,20 @@
         <h3 id="modalTitle" style="color:var(--olive);text-align:center;">➕ إضافة مرشد</h3>
         <input type="text" id="gName" placeholder="اسم المرشد *">
         <input type="tel" id="gPhone" placeholder="رقم الهاتف *" dir="ltr">
-        <input type="tel" id="gClientPhone" placeholder="رقم العميل">
         <div style="display:flex;gap:6px;"><input type="text" id="gNationality" placeholder="الجنسية" style="flex:1"><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1" min="1"></div>
         <select id="gTransport"><option value="">نوع النقل</option><option value="حافلة كبيرة">حافلة كبيرة</option><option value="حافلة صغيرة">حافلة صغيرة</option><option value="ميكروبيس">ميكروبيس</option><option value="سيارة">سيارة</option><option value="باخرة">باخرة</option></select>
 
-        <!-- لوحة تونسية -->
         <div id="tunisiaPlateSection"><label style="font-size:12px;">🇹🇳 اللوحة التونسية</label>
             <div style="display:flex;align-items:center;gap:6px;"><input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2;text-align:center;" maxlength="5"><span>تونس</span><input type="text" id="gPlate2" placeholder="XXX" style="flex:1;text-align:center;" maxlength="3"></div>
         </div>
-
-        <!-- لوحة أجنبية -->
-        <div id="foreignPlateSection" style="display:none;"><label style="font-size:12px;">🌍 لوحة أجنبية</label>
-            <input type="text" id="gForeignPlate" placeholder="أدخل رقم اللوحة الأجنبية كاملاً">
-        </div>
-
+        <div id="foreignPlateSection" style="display:none;"><label style="font-size:12px;">🌍 لوحة أجنبية</label><input type="text" id="gForeignPlate" placeholder="أدخل رقم اللوحة الأجنبية كاملاً"></div>
         <button id="togglePlateBtn" style="background:var(--gold);color:white;border-radius:14px;padding:6px 12px;font-size:12px;margin:4px 0;">🔄 تبديل إلى لوحة أجنبية</button>
-
-        <div class="frequent-locations" style="display:flex;gap:4px;flex-wrap:wrap;margin:6px 0;">
-            <button onclick="document.getElementById('gFrom').value='مطار تونس قرطاج'" style="background:var(--olive);color:white;border-radius:20px;padding:4px 10px;font-size:12px;">المطار</button>
-            <button onclick="document.getElementById('gTo').value='الحمامات'" style="background:var(--olive);color:white;border-radius:20px;padding:4px 10px;font-size:12px;">الحمامات</button>
-            <button onclick="document.getElementById('gFrom').value='المرسى'" style="background:var(--olive);color:white;border-radius:20px;padding:4px 10px;font-size:12px;">المرسى</button>
-            <button onclick="document.getElementById('gTo').value='سوسة'" style="background:var(--olive);color:white;border-radius:20px;padding:4px 10px;font-size:12px;">سوسة</button>
-        </div>
 
         <div style="display:flex;gap:6px;"><input type="text" id="gFrom" placeholder="من" style="flex:1"><input type="text" id="gTo" placeholder="إلى" style="flex:1"></div>
         <input type="datetime-local" id="gTripDate">
 
-        <div class="upload-area" id="busUploadBtn" style="border:2px dashed var(--olive);border-radius:16px;padding:14px;text-align:center;margin:8px 0;cursor:pointer;">
-            <i class="fa-solid fa-bus"></i> 🚌 صورة وسيلة النقل <img id="busPreview" style="display:none;width:50px;height:50px;border-radius:8px;margin-top:6px;">
-        </div>
-
-        <div class="upload-area" id="guideUploadBtn" style="border:2px dashed var(--gold);border-radius:16px;padding:14px;text-align:center;margin:8px 0;cursor:pointer;">
-            <i class="fa-solid fa-image"></i> 📸 صورة المرشد <img id="guidePreview" style="display:none;width:50px;height:50px;border-radius:50%;margin-top:6px;">
-        </div>
+        <div class="upload-area" id="busUploadBtn" style="border:2px dashed var(--olive);border-radius:16px;padding:14px;text-align:center;margin:8px 0;cursor:pointer;"><i class="fa-solid fa-bus"></i> 🚌 صورة وسيلة النقل <img id="busPreview" style="display:none;width:50px;height:50px;border-radius:8px;margin-top:6px;"></div>
+        <div class="upload-area" id="guideUploadBtn" style="border:2px dashed var(--gold);border-radius:16px;padding:14px;text-align:center;margin:8px 0;cursor:pointer;"><i class="fa-solid fa-image"></i> 📸 صورة المرشد <img id="guidePreview" style="display:none;width:50px;height:50px;border-radius:50%;margin-top:6px;"></div>
 
         <input type="text" id="gAgency" placeholder="الوكالة">
         <div style="display:flex;gap:6px;"><textarea id="gPublicSummary" placeholder="ملخص عام" style="flex:1;"></textarea><button id="autoSummaryBtn" style="background:var(--gold);color:white;border-radius:14px;padding:8px;">إنشاء ملخص</button></div>
@@ -164,7 +171,7 @@
     </div>
 </div>
 
-<!-- بطاقة السائح -->
+<!-- Card Modal -->
 <div class="modal" id="cardModal">
     <div class="modal-box" style="max-width:550px; background:#f3f4f6;">
         <div class="close-btn" id="closeCardBtn2">&times;</div>
@@ -174,8 +181,6 @@
                 <div><h4 style="color:var(--olive);">F‑NOTEPRO WORK</h4><span style="font-size:10px;color:var(--gold);">بطاقة سائح سياحية</span></div>
                 <span id="cardDate" style="font-size:12px;"></span>
             </div>
-
-            <!-- صورة الحافلة هي الصورة الرئيسية دائماً -->
             <div class="card-image-section">
                 <img id="cardMainImage" class="main-bus-image" src="" alt="صورة النقل">
                 <div class="guide-mini-overlay" id="cardAvatarOverlay">
@@ -183,7 +188,6 @@
                     <div class="default-avatar" id="defaultAvatar"><i class="fa-solid fa-user"></i></div>
                 </div>
             </div>
-
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                 <div class="info-box"><span class="label">عدد الأفراد</span><br><span class="value" id="cardPeopleCount"></span></div>
                 <div class="info-box"><span class="label">الجنسية</span><br><span class="value" id="cardNationality"></span></div>
@@ -196,7 +200,6 @@
                 <div class="info-box"><span class="label">إلى</span><br><span class="value" id="cardTo"></span></div>
             </div>
             <div class="info-box" style="margin-top:8px;background:#f0fdf4;"><span class="label">المرشد</span><br><span class="value" id="cardGuideName"></span> | <span class="value" id="cardGuidePhone" dir="ltr"></span></div>
-            <div class="info-box" id="cardClientRow" style="display:none;"><span class="label">العميل</span><br><span class="value" id="cardClientPhone"></span></div>
             <div class="stripe-bottom"></div>
         </div>
         <div style="display:flex;gap:6px;margin-top:12px;">
@@ -250,7 +253,6 @@
         if(json.success) return json.data.url;
         throw new Error('فشل الرفع');
     }
-
     function pickImg(previewId, setUrl) {
         const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
         inp.onchange = async e => {
@@ -281,7 +283,7 @@
     document.getElementById('sidebarCloseBtn').onclick = () => { document.getElementById('sidebar').style.right='-320px'; document.getElementById('overlay').style.display='none'; };
     document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').style.right='-320px'; document.getElementById('overlay').style.display='none'; };
 
-    // تبديل اللوحة
+    // Toggle plate
     document.getElementById('togglePlateBtn').onclick = () => {
         isForeignPlate = !isForeignPlate;
         document.getElementById('tunisiaPlateSection').style.display = isForeignPlate ? 'none' : 'block';
@@ -289,18 +291,17 @@
         document.getElementById('togglePlateBtn').textContent = isForeignPlate ? '🔄 تبديل إلى لوحة تونسية' : '🔄 تبديل إلى لوحة أجنبية';
     };
 
-    // رفع الصور
+    // Upload buttons
     document.getElementById('busUploadBtn').onclick = () => pickImg('busPreview', url=>busPhotoUrl=url);
     document.getElementById('guideUploadBtn').onclick = () => pickImg('guidePreview', url=>guidePhotoUrl=url);
 
-    // حفظ المرشد
+    // Save guide
     document.getElementById('saveGuideBtn').onclick = async () => {
         const name = document.getElementById('gName').value.trim();
         const phone = document.getElementById('gPhone').value.trim();
         if(!name||!phone) return toast('الاسم والهاتف مطلوبان');
         const data = {
             id: editGuideId || 'local_'+Date.now(), userId: currentUser?.uid||'offline', name, phone,
-            clientPhone: document.getElementById('gClientPhone').value.trim(),
             nationality: document.getElementById('gNationality').value.trim(),
             peopleCount: document.getElementById('gPeopleCount').value,
             transportType: document.getElementById('gTransport').value,
@@ -322,14 +323,11 @@
         document.getElementById('guideModal').classList.remove('show');
     };
 
-    // عرض البطاقة
+    // Show card
     function showCard(id) {
         const g = guides.find(x=>x.id===id); if(!g) return;
-        // الصورة الرئيسية = صورة الحافلة دائماً، فإن لم توجد نضع صورة رمادية
         document.getElementById('cardMainImage').src = g.busPhoto || '';
         document.getElementById('cardMainImage').onerror = function() { this.src = ''; this.style.background = '#d1d5db'; };
-
-        // صورة المرشد الدائرية
         if(g.guidePhoto) {
             document.getElementById('cardGuideAvatar').src = g.guidePhoto;
             document.getElementById('cardGuideAvatar').style.display = 'block';
@@ -338,7 +336,6 @@
             document.getElementById('cardGuideAvatar').style.display = 'none';
             document.getElementById('defaultAvatar').style.display = 'flex';
         }
-
         document.getElementById('cardPeopleCount').textContent = g.peopleCount||'—';
         document.getElementById('cardNationality').textContent = g.nationality||'—';
         document.getElementById('cardTransport').textContent = g.transportType||'—';
@@ -347,26 +344,18 @@
         document.getElementById('cardGuideName').textContent = g.name||'—';
         document.getElementById('cardGuidePhone').textContent = g.phone||'—';
         document.getElementById('cardDate').textContent = new Date().toLocaleDateString('ar-TN');
-
-        // عرض اللوحة
         const plateDisplay = document.getElementById('cardPlateDisplay');
         if(g.isForeignPlate && g.foreignPlate) {
             plateDisplay.innerHTML = `<span style="background:white;color:#1e293b;padding:3px 8px;border-radius:4px;">${g.foreignPlate}</span><span style="color:var(--gold);margin:0 4px;">🌍</span>`;
         } else {
             plateDisplay.innerHTML = `<span class="plate-num">${g.plate1||'—'}</span><span style="color:var(--gold);margin:0 3px;">تونس</span><span class="plate-num">${g.plate2||'—'}</span>`;
         }
-
-        document.getElementById('cardClientRow').style.display = g.clientPhone?'block':'none';
-        document.getElementById('cardClientPhone').textContent = g.clientPhone||'';
         document.getElementById('cardModal').classList.add('show');
         document.getElementById('headerActions').style.display='flex';
-
-        // واتساب
         document.getElementById('whatsappCardBtn').onclick = () => {
             const msg = `*بطاقة سائح*\nالاسم: ${g.name}\nالهاتف: ${g.phone}\nالنقل: ${g.transportType}\nمن: ${g.fromLocation} إلى: ${g.toLocation}`;
             window.open(`https://wa.me/${(g.phone||'').replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`);
         };
-        // اتجاهات
         document.getElementById('directionsBtn').onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(g.fromLocation)}&destination=${encodeURIComponent(g.toLocation)}`);
     }
 
@@ -382,7 +371,7 @@
     document.getElementById('headerBackBtn').onclick = () => { document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show')); document.getElementById('headerActions').style.display='none'; };
     document.getElementById('headerSaveBtn').onclick = () => document.getElementById('saveGuideBtn').click();
 
-    // عرض المرشدين
+    // Render guides
     function renderGuides() {
         document.getElementById('guidesContainer').innerHTML = guides.map(g => `
             <div style="background:var(--card);border-radius:18px;padding:12px;display:flex;gap:10px;align-items:center;border:1px solid var(--border);">
@@ -401,7 +390,6 @@
         const g = guides.find(x=>x.id===id); if(!g) return;
         editGuideId = id;
         document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||'';
-        document.getElementById('gClientPhone').value=g.clientPhone||'';
         document.getElementById('gNationality').value=g.nationality||'';
         document.getElementById('gPeopleCount').value=g.peopleCount||'';
         document.getElementById('gTransport').value=g.transportType||'';
@@ -425,7 +413,7 @@
 
     document.getElementById('addGuideBtn').onclick = () => {
         editGuideId=null; busPhotoUrl=''; guidePhotoUrl='';
-        ['gName','gPhone','gClientPhone','gNationality','gPeopleCount','gTransport','gPlate1','gPlate2','gForeignPlate','gFrom','gTo','gAgency','gPublicSummary','gTripDate'].forEach(id=>document.getElementById(id).value='');
+        ['gName','gPhone','gNationality','gPeopleCount','gTransport','gPlate1','gPlate2','gForeignPlate','gFrom','gTo','gAgency','gPublicSummary','gTripDate'].forEach(id=>document.getElementById(id).value='');
         document.getElementById('busPreview').style.display='none'; document.getElementById('guidePreview').style.display='none';
         isForeignPlate=false;
         document.getElementById('tunisiaPlateSection').style.display='block';
@@ -435,10 +423,8 @@
         document.getElementById('guideModal').classList.add('show');
         document.getElementById('headerActions').style.display='flex';
     };
-
     document.getElementById('closeGuideBtn2').onclick = () => { document.getElementById('guideModal').classList.remove('show'); document.getElementById('headerActions').style.display='none'; };
 
-    // ملخص تلقائي
     document.getElementById('autoSummaryBtn').onclick = () => {
         const nat = document.getElementById('gNationality').value||'عالمي';
         const cnt = document.getElementById('gPeopleCount').value||'0';
@@ -448,7 +434,7 @@
         document.getElementById('gPublicSummary').value = `زيارة وفد ${nat} مكون من ${cnt} فرداً قادماً من ${from} إلى ${to} عبر ${trans}.`;
     };
 
-    // أدوات
+    // Tools
     document.getElementById('syncBtn').onclick = async () => {
         const locals = guides.filter(g=>g.id.startsWith('local_'));
         for(let g of locals) { const ref = db.collection('guides').doc(); await ref.set({...g, id:ref.id}); }
@@ -465,12 +451,26 @@
     document.getElementById('restoreBtn').onclick = () => { const i=document.createElement('input'); i.type='file'; i.accept='.json'; i.onchange=e=>{ const r=new FileReader(); r.onload=()=>{ guides=JSON.parse(r.result); LDB.saveGuides(guides); renderGuides(); toast('تم الاستيراد'); }; r.readAsText(e.target.files[0]); }; i.click(); };
     document.getElementById('setPinBtn').onclick = () => { const p=prompt('أدخل رمز PIN (4 أرقام)'); if(p&&/^\d{4}$/.test(p)){ LDB.setPin(p); toast('تم'); } };
 
-    function showPlateInfo() {
-        const g = guides.find(x=>x.id===editGuideId); // or pass id
-        if(!g) return;
-        if(g.isForeignPlate) toast('لوحة أجنبية: '+g.foreignPlate);
-        else toast('لوحة تونسية: '+g.plate1+' تونس '+g.plate2);
+    // Weather & Time Widget
+    async function updateWeather() {
+        try {
+            const resp = await fetch('https://api.open-meteo.com/v1/forecast?latitude=36.8&longitude=10.18&current_weather=true');
+            const data = await resp.json();
+            document.getElementById('weatherTemp').textContent = Math.round(data.current_weather.temperature) + '°';
+            const code = data.current_weather.weathercode;
+            const icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌧️',81:'🌧️',82:'🌧️',85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️'};
+            document.getElementById('weatherIcon').textContent = icons[code] || '🌡️';
+        } catch(e) {}
     }
+    function updateDateTime() {
+        const now = new Date();
+        document.getElementById('currentTime').textContent = now.toLocaleTimeString('ar-TN', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+        document.getElementById('currentDate').textContent = now.toLocaleDateString('ar-TN', {weekday:'long', day:'numeric', month:'long'});
+    }
+    updateWeather();
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    setInterval(updateWeather, 600000);
 
     renderGuides();
 </script>
