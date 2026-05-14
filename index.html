@@ -19,7 +19,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* نفس الأنماط السابقة مع بعض الإضافات */
         :root {
             --olive: #556B2F;
             --gold: #D4AF37;
@@ -47,7 +46,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body { background: var(--bg); color: var(--txt); min-height: 100vh; transition: 0.2s; }
         @media(min-width:768px) { body { max-width: 520px; margin: auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); } }
-        button { cursor: pointer; border: none; background: none; font-family: 'Cairo', sans-serif; transition: 0.15s; }
+        button { cursor: pointer; border: none; background: none; transition: 0.15s; }
         button:active { transform: scale(0.96); }
         input, textarea, select { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 14px; background: var(--bg); color: var(--txt); font-size: 14px; outline: none; margin: 5px 0; }
         textarea { resize: vertical; min-height: 70px; }
@@ -89,7 +88,6 @@
         .c-edit { background: #3b82f6; }
         .c-del { background: var(--err); }
         .c-security { background: var(--security); }
-
         .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
         .modal.show { visibility: visible; opacity: 1; }
         .modal-box { background: var(--card); border-radius: 24px; padding: 24px; width: 92%; max-width: 500px; max-height: 88vh; overflow-y: auto; }
@@ -103,28 +101,21 @@
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-secondary { width: 100%; padding: 12px; background: var(--txt3); color: white; border-radius: 14px; font-weight: 700; margin-top: 6px; }
         .btn-security { background: var(--security); }
-
-        /* البطاقة الأساسية (معلومات الوفد) */
-        .delegation-card {
-            background: #fff;
-            border-radius: 20px;
-            padding: 0;
-            border: 3px solid var(--gold);
-            position: relative;
-            overflow: hidden;
-        }
+        .delegation-card { background: #fff; border-radius: 20px; padding: 0; border: 3px solid var(--gold); position: relative; overflow: hidden; }
         .card-img-area { position: relative; width: 100%; height: 200px; background: #e5e7eb; }
         .card-img-area .main-img { width: 100%; height: 100%; object-fit: cover; }
         .card-img-area .overlay-avatar { position: absolute; bottom: 12px; right: 12px; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
         .info-box { background: #f9fafb; border-radius: 12px; padding: 12px; border: 1px solid #e5e7eb; }
         .tunisian-plate { background: #1e293b; color: white; border-radius: 8px; padding: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; direction: ltr; font-size: 13px; }
-
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 22px; border-radius: 30px; font-size: 13px; z-index: 999; animation: fadeInUp 0.3s ease; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         .spinner-small { display: inline-block; width: 18px; height: 18px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .flex-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
         .flex-btns button { flex: 1; }
+        .link-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); font-size:12px; direction:ltr; }
+        .link-item button { background: var(--wa); color: white; border-radius: 20px; padding: 4px 10px; font-size:11px; margin-right:8px; }
+        .link-item .phone-num { font-weight:bold; }
     </style>
 </head>
 <body>
@@ -182,7 +173,7 @@
     <div id="guidesContainer" class="guides"><div style="text-align:center;padding:40px;color:var(--txt3);" data-i18n="loading">⏳ جاري التحميل...</div></div>
 </div>
 
-<!-- مودال الإضافة / التعديل (نفسه) -->
+<!-- مودال الإضافة / التعديل -->
 <div class="modal" id="guideModal">
     <div class="modal-box">
         <h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3>
@@ -253,7 +244,7 @@
                     <div class="info-box"><span data-i18n="people_count" class="label">عدد الأفراد</span><br><span class="value" id="delegationPeopleCount"></span></div>
                     <div class="info-box"><span data-i18n="nationality" class="label">الجنسية</span><br><span class="value" id="delegationNationality"></span></div>
                     <div class="info-box"><span data-i18n="transport" class="label">نوع النقل</span><br><span class="value" id="delegationTransport"></span></div>
-                    <div class="info-box"><span data-i18n="plate" class="label" style="margin-bottom:4px;">رقم اللوحة</span><div class="tunisian-plate"><span class="plate-num" id="delegationPlate1"></span> تونس <span class="plate-num" id="delegationPlate2"></span></div></div>
+                    <div class="info-box"><span data-i18n="plate" class="label">رقم اللوحة</span><br><div class="tunisian-plate"><span id="delegationPlate1"></span> تونس <span id="delegationPlate2"></span></div></div>
                     <div class="info-box"><span data-i18n="from" class="label">من</span><br><span class="value" id="delegationFrom"></span></div>
                     <div class="info-box"><span data-i18n="to" class="label">إلى</span><br><span class="value" id="delegationTo"></span></div>
                 </div>
@@ -274,22 +265,26 @@
     </div>
 </div>
 
-<!-- مودال إرسال كرت الإعلام والأمن -->
+<!-- مودال الكرت الأمني (النسخة المطورة) -->
 <div class="modal" id="securityModal">
     <div class="modal-box">
         <h3><i class="fas fa-shield-alt"></i> <span data-i18n="security_title">كرت الإعلام والتنسيق مع الجهات الأمنية</span></h3>
-        <div id="securityCardPreview" class="delegation-card" style="margin-bottom:16px;"></div>
-        <label data-i18n="security_comment">📝 تعليق إضافي (للجهات الأمنية):</label>
-        <textarea id="securityComment" rows="3" placeholder="أدخل تعليقك هنا..."></textarea>
-        <label data-i18n="security_phones">📞 أرقام الواتساب المستهدفة (مفصولة بفواصل أو مسافات):</label>
-        <input type="text" id="securityPhones" placeholder="+216XXXXXXXX, +216YYYYYYYY" dir="ltr">
-        <button class="btn-primary" style="background:#25D366; margin-top:12px;" id="sendSecurityBtn"><i class="fab fa-whatsapp"></i> <span data-i18n="send_security">إرسال الكرت للأرقام المحددة</span></button>
-        <button class="btn-secondary" id="closeSecurityBtn" data-i18n="cancel">إلغاء</button>
+        <div id="securityCardPreview" class="delegation-card" style="margin-bottom:16px; max-width:100%;"></div>
+        <label data-i18n="custom_label">🏷️ تحديد المجموعة / الفقرة المخصصة (تظهر في البطاقة):</label>
+        <input type="text" id="securityGroupLabel" placeholder="مثال: وفد السليمانية - المجموعة الأولى" style="margin-bottom:12px;">
+        <label data-i18n="security_phones_list">📞 الأرقام المستهدفة (رقم واحد في كل سطر):</label>
+        <textarea id="securityPhonesList" rows="4" placeholder="+216XXXXXXXX&#10;+216YYYYYYYY&#10;+216ZZZZZZZZ" dir="ltr" style="font-family:monospace;"></textarea>
+        <div style="font-size:12px; color:var(--txt3); margin-bottom:8px;">
+            <i class="fas fa-info-circle"></i> <span data-i18n="how_to_use">كيفية الاستخدام: بعد إنشاء البطاقة، ستظهر روابط واتساب لكل رقم. انسخ الرابط وأرسله إلى الرقم المقابل لتظهر له الصورة تلقائياً.</span>
+        </div>
+        <button class="btn-primary" id="generateSecurityCardBtn" style="background:var(--olive);">🔄 إنشاء البطاقة والروابط</button>
+        <div id="securityLinksContainer" style="margin-top:16px; max-height:200px; overflow-y:auto; background:var(--bg); border-radius:12px; padding:8px; display:none;"></div>
+        <button class="btn-secondary" id="closeSecurityBtn" data-i18n="close">إغلاق</button>
     </div>
 </div>
 
 <script>
-    // Firebase Config (جديد)
+    // ========== Firebase Config (جديد) ==========
     const firebaseConfig = {
         apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
         authDomain: "f-notepromax-work.firebaseapp.com",
@@ -326,9 +321,9 @@
     let guidePhotoBlob = null, busPhotoBlob = null;
     let userProfile = { displayName: '', photoURL: '' };
     let currentLang = 'ar';
-    let currentGuideForCards = null;  // الكائن المرشد الحالي لعرض البطاقات
+    let currentGuideForCards = null;
 
-    // الترجمات (محدثة)
+    // الترجمات
     const translations = {
         ar: {
             login_sub: "إدارة الوفود السياحية", login_btn: "دخول", offline_btn: "🔄 بدون إنترنت",
@@ -339,7 +334,7 @@
             people_count: "عدد الأفراد", nationality: "الجنسية", transport: "نوع النقل", plate: "رقم اللوحة",
             from: "من", to: "إلى", guide_name: "المرشد السياحي", phone: "الجوال", notes: "ملاحظات",
             share_whatsapp: "مشاركة البطاقة", close: "إغلاق", security_card: "كرت الإعلام والأمن",
-            security_title: "كرت الإعلام والتنسيق مع الجهات الأمنية", security_comment: "📝 تعليق إضافي (للجهات الأمنية):", security_phones: "📞 أرقام الواتساب المستهدفة (مفصولة بفواصل أو مسافات):", send_security: "إرسال الكرت للأرقام المحددة",
+            security_title: "كرت الإعلام والتنسيق مع الجهات الأمنية", custom_label: "🏷️ تحديد المجموعة / الفقرة المخصصة:", security_phones_list: "📞 الأرقام المستهدفة (رقم واحد في كل سطر):", how_to_use: "كيفية الاستخدام: بعد إنشاء البطاقة، ستظهر روابط واتساب لكل رقم. انسخ الرابط وأرسله إلى الرقم المقابل لتظهر له الصورة تلقائياً.",
             delete_confirm: "هل أنت متأكد من حذف هذا المرشد؟", deleted: "🗑️ تم الحذف", saved: "✅ تم الحفظ بنجاح",
             sync_ok: "✅ تمت المزامنة بنجاح", sync_fail: "❌ فشلت المزامنة", offline_mode: "📴 وضع بدون إنترنت",
             no_results: "😕 لا توجد نتائج"
@@ -353,7 +348,7 @@
             people_count: "Nombre de personnes", nationality: "Nationalité", transport: "Type de transport", plate: "Plaque",
             from: "De", to: "À", guide_name: "Nom du guide", phone: "Téléphone", notes: "Notes",
             share_whatsapp: "Partager la fiche", close: "Fermer", security_card: "Fiche sécurité",
-            security_title: "Fiche de liaison avec les autorités sécuritaires", security_comment: "📝 Commentaire supplémentaire :", security_phones: "📞 Numéros WhatsApp cibles (séparés par des virgules ou espaces):", send_security: "Envoyer la fiche aux numéros",
+            security_title: "Fiche de liaison avec les autorités sécuritaires", custom_label: "🏷️ Désignation du groupe :", security_phones_list: "📞 Numéros cibles (un par ligne):", how_to_use: "Utilisation : après création de la fiche, des liens WhatsApp apparaîtront pour chaque numéro. Cliquez pour envoyer l'image.",
             delete_confirm: "Supprimer ce guide ?", deleted: "🗑️ Supprimé", saved: "✅ Enregistré",
             sync_ok: "✅ Synchronisation réussie", sync_fail: "❌ Échec de synchronisation", offline_mode: "📴 Mode hors ligne",
             no_results: "😕 Aucun résultat"
@@ -374,7 +369,7 @@
         document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
     }
 
-    // دوال رفع الصور (نفسها)
+    // دوال رفع الصور إلى Cloudinary
     async function uploadToCloudinary(blob) {
         const formData = new FormData();
         formData.append('file', blob, 'image.jpg');
@@ -449,7 +444,7 @@
         setTimeout(() => div.remove(), 2600);
     }
 
-    // عرض قائمة المرشدين (مع إضافة زر الكرت الأمني)
+    // عرض قائمة المرشدين
     function renderGuides() {
         const q = document.getElementById('searchInput').value.toLowerCase();
         const filtered = guides.filter(g => (g.name || '').toLowerCase().includes(q) || (g.phone || '').includes(q));
@@ -487,7 +482,7 @@
         }
     };
 
-    window.editGuide = function(id) { /* نفس السابق */ 
+    window.editGuide = function(id) {
         const g = guides.find(x => x.id === id); if (!g) return;
         editId = id; guidePhotoUrl = g.guidePhoto || ''; busPhotoUrl = g.busPhoto || '';
         document.getElementById('gName').value = g.name || ''; document.getElementById('gPhone').value = g.phone || '';
@@ -512,7 +507,7 @@
         document.getElementById('guideModal').classList.add('show');
     };
 
-    document.getElementById('saveGuideBtn').onclick = async function() { /* كما هو سابق */ 
+    document.getElementById('saveGuideBtn').onclick = async function() {
         const name = document.getElementById('gName').value.trim(), phone = document.getElementById('gPhone').value.trim();
         if (!name || !phone) return toast('⚠️ الاسم والهاتف مطلوبان');
         const saveBtn = this; saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-small"></span> حفظ...';
@@ -534,7 +529,7 @@
         finally { saveBtn.disabled = false; saveBtn.innerHTML = '💾 حفظ المرشد'; }
     };
 
-    // عرض بطاقة معلومات الوفد السياحي
+    // ========== بطاقة معلومات الوفد السياحي ==========
     window.showDelegationCard = function(id) {
         const g = guides.find(x => x.id === id);
         if (!g) return;
@@ -556,7 +551,6 @@
         document.getElementById('delegationModal').classList.add('show');
     };
 
-    // مشاركة البطاقة الأساسية عبر واتساب (صورة)
     document.getElementById('shareDelegationBtn').onclick = async () => {
         const card = document.getElementById('delegationCard');
         try {
@@ -568,99 +562,86 @@
         } catch (err) { toast('⚠️ ' + err.message); }
     };
 
-    // فتح مودال الكرت الأمني مع معاينة البطاقة + تعليق + أرقام
+    // ========== الكرت الأمني المطور ==========
+    function updateSecurityPreview(g, customText) {
+        const securityPreview = document.getElementById('securityCardPreview');
+        securityPreview.innerHTML = `
+            <div style="padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:28px;">
+                    <div><h4 style="color:var(--olive); font-size:14px;">NOTE PRO WORK</h4><span style="font-size:9px; color:var(--gold);">${currentLang === 'ar' ? 'كرت التنسيق الأمني' : 'Fiche sécurité'}</span></div>
+                </div>
+                <span style="font-size:10px;">${new Date().toLocaleDateString()}</span>
+            </div>
+            <div class="card-img-area" style="height:130px;">
+                <img class="main-img" src="${g.busPhoto || g.guidePhoto || ''}" crossorigin="anonymous" style="height:100%;">
+                <img class="overlay-avatar" src="${g.guidePhoto || ''}" crossorigin="anonymous" style="width:45px; height:45px; bottom:8px; right:8px;">
+            </div>
+            <div style="padding:12px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px;">
+                    <div><strong>${translations[currentLang].people_count}:</strong> ${g.peopleCount || '—'}</div>
+                    <div><strong>${translations[currentLang].nationality}:</strong> ${g.nationality || '—'}</div>
+                    <div><strong>${translations[currentLang].transport}:</strong> ${g.transportType || '—'}</div>
+                    <div><strong>${translations[currentLang].plate}:</strong> ${g.plate1 || '—'} - ${g.plate2 || '—'}</div>
+                    <div><strong>${translations[currentLang].guide_name}:</strong> ${g.name || '—'}</div>
+                    <div><strong>${translations[currentLang].phone}:</strong> ${g.phone || '—'}</div>
+                </div>
+                ${customText ? `<div style="margin-top:10px; background:#fff3cd; padding:6px; border-radius:8px; font-size:12px; color:#856404;"><strong>📌 ${currentLang === 'ar' ? 'المجموعة' : 'Groupe'} :</strong> ${customText}</div>` : ''}
+            </div>
+        `;
+    }
+
     window.showSecurityCard = function(id) {
         const g = guides.find(x => x.id === id);
         if (!g) return;
         currentGuideForCards = g;
-        // إنشاء معاينة لبطاقة الأمن (نفس محتوى delegationCard لكن مع إضافة حقل التعليق)
-        const securityPreview = document.getElementById('securityCardPreview');
-        securityPreview.innerHTML = `
-            <div style="padding:14px;display:flex;justify-content:space-between;align-items:center;">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:32px;">
-                    <div><h4 style="color:var(--olive);font-size:15px;font-weight:900;">NOTE PRO WORK</h4><span style="font-size:10px;color:var(--gold);">${currentLang === 'ar' ? 'كرت التنسيق الأمني' : 'Fiche de liaison sécuritaire'}</span></div>
-                </div>
-                <span style="font-size:11px;color:#6b7280;">${new Date().toLocaleDateString('ar-TN')}</span>
-            </div>
-            <div class="card-img-area">
-                <img class="main-img" src="${g.busPhoto || g.guidePhoto || ''}" crossorigin="anonymous">
-                <img class="overlay-avatar" src="${g.guidePhoto || ''}" crossorigin="anonymous">
-            </div>
-            <div style="padding:14px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-                    <div class="info-box"><span class="label">${translations[currentLang].people_count}</span><br><span class="value">${g.peopleCount || '—'}</span></div>
-                    <div class="info-box"><span class="label">${translations[currentLang].nationality}</span><br><span class="value">${g.nationality || '—'}</span></div>
-                    <div class="info-box"><span class="label">${translations[currentLang].transport}</span><br><span class="value">${g.transportType || '—'}</span></div>
-                    <div class="info-box"><span class="label">${translations[currentLang].plate}</span><br><div class="tunisian-plate"><span class="plate-num">${g.plate1 || '—'}</span> تونس <span class="plate-num">${g.plate2 || '—'}</span></div></div>
-                    <div class="info-box"><span class="label">${translations[currentLang].from}</span><br><span class="value">${g.fromLocation || '—'}</span></div>
-                    <div class="info-box"><span class="label">${translations[currentLang].to}</span><br><span class="value">${g.toLocation || '—'}</span></div>
-                </div>
-                <div class="info-box" style="margin-bottom:8px;background:#f0fdf4;border-color:var(--olive);">
-                    <div><span class="label">${translations[currentLang].guide_name}</span><br><span class="value">${g.name || '—'}</span></div>
-                    <div style="margin-top:4px;"><span class="label">${translations[currentLang].phone}</span><br><span class="value" dir="ltr">${g.phone || '—'}</span></div>
-                </div>
-                <div class="info-box" style="background:#fff3cd; border-color:#ffc107;" id="securityCommentPreview">
-                    <span class="label">📝 <span data-i18n="security_comment_label">تعليق الأمن</span></span><br>
-                    <span id="commentPreviewText" style="font-size:13px; color:#856404;">سيتم إضافة تعليقك هنا...</span>
-                </div>
-            </div>
-        `;
-        document.getElementById('securityComment').value = '';
-        document.getElementById('securityPhones').value = '';
+        document.getElementById('securityGroupLabel').value = '';
+        document.getElementById('securityPhonesList').value = '';
+        document.getElementById('securityLinksContainer').style.display = 'none';
+        document.getElementById('securityLinksContainer').innerHTML = '';
+        updateSecurityPreview(g, '');
         document.getElementById('securityModal').classList.add('show');
     };
 
-    // إرسال الكرت الأمني إلى الأرقام المدخلة عبر واتساب (مع التعليق)
-    document.getElementById('sendSecurityBtn').onclick = async () => {
-        const comment = document.getElementById('securityComment').value.trim();
-        const phonesRaw = document.getElementById('securityPhones').value.trim();
-        if (!phonesRaw) { toast('⚠️ الرجاء إدخال رقم واحد على الأقل'); return; }
-        // استخراج الأرقام (أي أرقام مكونة من 8 إلى 15 رقم، مع + اختياري)
-        const phoneNumbers = phonesRaw.match(/[\+]?\d{8,15}/g);
-        if (!phoneNumbers || phoneNumbers.length === 0) { toast('⚠️ لم يتم التعرف على أرقام صحيحة'); return; }
-
-        // تحديث معاينة التعليق في البطاقة قبل التقاط الصورة
-        const commentPreviewSpan = document.getElementById('commentPreviewText');
-        commentPreviewSpan.textContent = comment || (currentLang === 'ar' ? 'لا يوجد تعليق' : 'Aucun commentaire');
+    document.getElementById('generateSecurityCardBtn').onclick = async () => {
+        const groupLabel = document.getElementById('securityGroupLabel').value.trim();
+        const phonesRaw = document.getElementById('securityPhonesList').value;
+        if (!phonesRaw.trim()) { toast('⚠️ الرجاء إدخال رقم واحد على الأقل'); return; }
+        const phoneNumbers = phonesRaw.split(/\r?\n/).map(p => p.trim()).filter(p => p.match(/[\+]?\d{8,15}/));
+        if (phoneNumbers.length === 0) { toast('⚠️ لم يتم التعرف على أرقام صحيحة'); return; }
         
-        // التقاط صورة للبطاقة الأمنية (التي تحتوي على التعليق)
+        updateSecurityPreview(currentGuideForCards, groupLabel);
         const securityCardElement = document.getElementById('securityCardPreview');
+        toast('⏳ جاري إنشاء الصورة ورفعها...');
         try {
-            const canvas = await html2canvas(securityCardElement, { scale: 2, backgroundColor: '#ffffff', useCORS: true, allowTaint: true });
+            const canvas = await html2canvas(securityCardElement, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
             const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-            const imageFile = new File([blob], 'security_card.png', { type: 'image/png' });
-            
-            // إرسال الصورة لكل رقم عبر واتساب
+            const imageUrl = await uploadToCloudinary(blob);
+            const container = document.getElementById('securityLinksContainer');
+            container.innerHTML = '';
+            const messageText = encodeURIComponent(`📢 بطاقة التنسيق الأمني للوفد السياحي:\n${imageUrl}\n${groupLabel ? `المجموعة: ${groupLabel}` : ''}`);
             for (let phone of phoneNumbers) {
-                // تنظيف الرقم (إزالة كل ما ليس رقماً أو +)
                 let cleanPhone = phone.replace(/[^0-9+]/g, '');
                 if (!cleanPhone.startsWith('+')) cleanPhone = '+216' + cleanPhone.replace(/^0+/, '');
-                const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent('📢 بطاقة التنسيق الأمني للوفد السياحي')}`;
-                // فتح نافذة جديدة لكل رقم (قد يمنع المتصفح النوافذ المتعددة، لذلك نرسل تباعاً مع تأخير)
-                window.open(waUrl, '_blank');
-                await new Promise(r => setTimeout(r, 800));
-                // ملاحظة: لا يمكن إرفاق الصورة مباشرة عبر رابط wa.me، لذلك سنقوم بتحميل الصورة للمستخدم ليشاركها يدوياً أو نستخدم واجهة مشاركة الملفات.
-                // حل بديل: استخدام واجهة المشاركة عبر navigator.share إذا كانت متاحة.
+                const waLink = `https://wa.me/${cleanPhone}?text=${messageText}`;
+                const div = document.createElement('div');
+                div.className = 'link-item';
+                div.innerHTML = `<span class="phone-num">${cleanPhone}</span>
+                                <a href="${waLink}" target="_blank" style="background:var(--wa); color:white; padding:4px 12px; border-radius:20px; text-decoration:none; font-size:12px;">📲 إرسال</a>`;
+                container.appendChild(div);
             }
-            // أفضل حل: استخدام navigator.share لإرسال الصورة إلى تطبيق واتساب (لكل رقم على حدة غير ممكن).
-            // بدلاً من ذلك، نقوم بتحميل الصورة ونعرض رسالة للمستخدم ليقوم بمشاركتها يدوياً مع الأرقام المدخلة.
-            // لكن لتسهيل الأمر، سنقوم بفتح واتساب مع رسالة نصية فقط، وننبه المستخدم لإرفاق الصورة يدوياً.
-            toast(`✅ تم فتح واتساب للأرقام المدخلة، يرجى إرفاق الصورة التي تم تحميلها يدوياً.`);
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'security_card.png';
-            a.click();
-            document.getElementById('securityModal').classList.remove('show');
+            container.style.display = 'block';
+            toast(`✅ تم إنشاء ${phoneNumbers.length} رابط. اضغط على إرسال لكل رقم على حدة.`);
         } catch (err) {
-            toast('❌ فشل إنشاء الصورة: ' + err.message);
+            toast('❌ فشل إنشاء البطاقة: ' + err.message);
         }
     };
 
+    // أحداث الإغلاق والمصادقة...
     document.getElementById('closeSecurityBtn').onclick = () => document.getElementById('securityModal').classList.remove('show');
     document.getElementById('closeDelegationBtn').onclick = () => document.getElementById('delegationModal').classList.remove('show');
-
-    // باقي دوال المصادقة والتزامن والتصدير...
+    document.getElementById('securityBtn').onclick = () => { if (currentGuideForCards) showSecurityCard(currentGuideForCards.id); else toast('⚠️ اختر مرشداً أولاً'); };
+    
     document.getElementById('loginBtn').onclick = async () => { const email = document.getElementById('loginEmail').value.trim(), pass = document.getElementById('loginPassword').value; if (!email || !pass) return toast('أدخل البريد وكلمة المرور'); try { await auth.signInWithEmailAndPassword(email, pass); } catch(e) { document.getElementById('loginError').textContent = 'خطأ: ' + e.message; document.getElementById('loginError').style.display = 'block'; } };
     document.getElementById('offlineBtn').onclick = () => { currentUser = { uid: 'offline', email: 'offline@local' }; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; document.getElementById('sidebarUserInfo').textContent = translations[currentLang].offline_mode; guides = LDB.getGuides(); renderGuides(); };
     auth.onAuthStateChanged(async u => { if (u) { currentUser = u; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; document.getElementById('sidebarUserInfo').textContent = '👤 ' + u.email; const d = await db.collection('users').doc(u.uid).get(); if (d.exists) userProfile = d.data(); else { userProfile = { displayName: u.email, photoURL: '' }; await db.collection('users').doc(u.uid).set(userProfile); } db.collection('guides').where('userId', '==', u.uid).get().then(s => { let cloud = []; s.forEach(d => cloud.push({ id: d.id, ...d.data() })); guides = [...cloud, ...LDB.getGuides().filter(l => !cloud.find(c => c.id === l.id))]; LDB.saveGuides(guides); renderGuides(); }).catch(() => { guides = LDB.getGuides(); renderGuides(); }); } else { currentUser = null; document.getElementById('appContainer').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; } });
