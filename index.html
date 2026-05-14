@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>F-Note Pro Max | بطاقة المرشد السياحي</title>
+    <title>F-Note Pro Max | إدارة الوفود السياحية</title>
 
-    <!-- Firebase SDKs (الإصدارات المتوافقة) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -19,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ========== المتغيرات والتصميم الأساسي ========== */
+        /* نفس الأنماط السابقة مع بعض الإضافات */
         :root {
             --olive: #556B2F;
             --gold: #D4AF37;
@@ -34,6 +34,7 @@
             --err: #ef4444;
             --ok: #10b981;
             --wa: #25D366;
+            --security: #1e40af;
         }
         .dark {
             --bg: #0f172a;
@@ -43,326 +44,68 @@
             --txt3: #64748b;
             --border: #334155;
         }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Cairo', sans-serif;
-        }
-        body {
-            background: var(--bg);
-            color: var(--txt);
-            min-height: 100vh;
-            transition: 0.2s;
-        }
-        @media(min-width:768px) {
-            body {
-                max-width: 520px;
-                margin: auto;
-                border-left: 1px solid var(--border);
-                border-right: 1px solid var(--border);
-            }
-        }
-        button {
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-family: 'Cairo', sans-serif;
-            transition: 0.15s;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: var(--txt); min-height: 100vh; transition: 0.2s; }
+        @media(min-width:768px) { body { max-width: 520px; margin: auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); } }
+        button { cursor: pointer; border: none; background: none; font-family: 'Cairo', sans-serif; transition: 0.15s; }
         button:active { transform: scale(0.96); }
-        input, textarea, select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid var(--border);
-            border-radius: 14px;
-            background: var(--bg);
-            color: var(--txt);
-            font-size: 14px;
-            outline: none;
-            font-family: 'Cairo', sans-serif;
-            margin: 5px 0;
-        }
+        input, textarea, select { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 14px; background: var(--bg); color: var(--txt); font-size: 14px; outline: none; margin: 5px 0; }
         textarea { resize: vertical; min-height: 70px; }
-
-        @keyframes logoPulse {
-            0%,100% { transform: scale(1); box-shadow: 0 10px 30px rgba(85, 107, 47, 0.3); }
-            50% { transform: scale(1.08); box-shadow: 0 20px 50px rgba(85, 107, 47, 0.5); }
-        }
+        @keyframes logoPulse { 0%,100% { transform: scale(1); box-shadow: 0 10px 30px rgba(85, 107, 47, 0.3); } 50% { transform: scale(1.08); box-shadow: 0 20px 50px rgba(85, 107, 47, 0.5); } }
         .logo-pulse { animation: logoPulse 2.5s ease-in-out infinite; }
-
-        .header {
-            background: var(--card);
-            padding: 8px 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            border-bottom: 1px solid var(--border);
-        }
-        .header .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .header { background: var(--card); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--border); }
+        .header .logo-area { display: flex; align-items: center; gap: 8px; }
         .header .logo-area img { height: 38px; }
         .header .logo-text { font-weight: 900; font-size: 18px; color: var(--olive); }
-        .h-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--txt2);
-            font-size: 17px;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            right: -320px;
-            width: 280px;
-            height: 100%;
-            background: var(--card);
-            z-index: 200;
-            transition: 0.3s;
-            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
-            overflow-y: auto;
-            padding: 20px;
-        }
+        .h-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--txt2); font-size: 17px; }
+        .sidebar { position: fixed; top: 0; right: -320px; width: 280px; height: 100%; background: var(--card); z-index: 200; transition: 0.3s; box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2); overflow-y: auto; padding: 20px; }
         .sidebar.open { right: 0; }
-        .sidebar h2 {
-            color: var(--olive);
-            font-size: 20px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .sidebar h2 { color: var(--olive); font-size: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
         .sidebar h2 img { width: 30px; }
-        .s-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            border-radius: 14px;
-            cursor: pointer;
-            color: var(--txt);
-            font-size: 14px;
-            margin: 4px 0;
-        }
+        .s-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; cursor: pointer; color: var(--txt); font-size: 14px; margin: 4px 0; }
         .s-item:active { background: var(--bg); }
         .s-item i { width: 22px; text-align: center; color: var(--olive); }
-        .lang-row {
-            display: flex;
-            gap: 6px;
-            margin: 10px 0;
-        }
-        .lang-btn {
-            flex: 1;
-            padding: 8px;
-            text-align: center;
-            border-radius: 14px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--txt2);
-            font-size: 12px;
-        }
-        .lang-btn.active {
-            background: var(--olive);
-            color: white;
-            border-color: var(--olive);
-        }
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 150;
-            display: none;
-        }
+        .lang-row { display: flex; gap: 6px; margin: 10px 0; }
+        .lang-btn { flex: 1; padding: 8px; text-align: center; border-radius: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--txt2); font-size: 12px; }
+        .lang-btn.active { background: var(--olive); color: white; border-color: var(--olive); }
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 150; display: none; }
         .overlay.show { display: block; }
-
-        .toolbar {
-            display: flex;
-            gap: 8px;
-            padding: 10px 14px;
-            background: var(--bg);
-            position: sticky;
-            top: 56px;
-            z-index: 40;
-        }
-        .search {
-            flex: 1;
-            padding: 10px 14px;
-            border: 2px solid var(--border);
-            border-radius: 60px;
-            background: var(--card);
-            color: var(--txt);
-            font-size: 13px;
-        }
-        .t-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--txt2);
-            font-size: 16px;
-            background: var(--card);
-        }
-        .t-btn.accent {
-            background: var(--olive);
-            color: white;
-            border-color: var(--olive);
-            font-size: 20px;
-        }
-
-        .guides {
-            padding: 10px 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding-bottom: 80px;
-        }
-        .guide-card {
-            background: var(--card);
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border);
-        }
-        .card-top {
-            display: flex;
-            gap: 10px;
-            padding: 12px;
-        }
-        .avatar {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
-            object-fit: cover;
-            border: 2px solid var(--olive);
-            flex-shrink: 0;
-            background: var(--bg);
-        }
+        .toolbar { display: flex; gap: 8px; padding: 10px 14px; background: var(--bg); position: sticky; top: 56px; z-index: 40; }
+        .search { flex: 1; padding: 10px 14px; border: 2px solid var(--border); border-radius: 60px; background: var(--card); color: var(--txt); font-size: 13px; }
+        .t-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--txt2); font-size: 16px; background: var(--card); }
+        .t-btn.accent { background: var(--olive); color: white; border-color: var(--olive); font-size: 20px; }
+        .guides { padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; }
+        .guide-card { background: var(--card); border-radius: 18px; overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); border: 1px solid var(--border); }
+        .card-top { display: flex; gap: 10px; padding: 12px; }
+        .avatar { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; border: 2px solid var(--olive); flex-shrink: 0; background: var(--bg); }
         .card-mid { flex: 1; min-width: 0; }
         .name { font-weight: 800; font-size: 16px; }
         .phone { font-size: 13px; color: var(--olive); font-weight: 700; direction: ltr; }
-        .card-bottom {
-            display: flex;
-            gap: 4px;
-            padding: 8px 12px;
-            border-top: 1px solid var(--border);
-            background: var(--bg);
-            flex-wrap: wrap;
-        }
-        .c-btn {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
+        .card-bottom { display: flex; gap: 4px; padding: 8px 12px; border-top: 1px solid var(--border); background: var(--bg); flex-wrap: wrap; }
+        .c-btn { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; color: white; display: inline-flex; align-items: center; gap: 4px; }
         .c-call { background: var(--ok); }
         .c-wa { background: var(--wa); }
         .c-card { background: var(--olive); }
         .c-edit { background: #3b82f6; }
         .c-del { background: var(--err); }
+        .c-security { background: var(--security); }
 
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 300;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: 0.2s;
-        }
-        .modal.show {
-            visibility: visible;
-            opacity: 1;
-        }
-        .modal-box {
-            background: var(--card);
-            border-radius: 24px;
-            padding: 24px;
-            width: 92%;
-            max-width: 500px;
-            max-height: 88vh;
-            overflow-y: auto;
-        }
+        .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal.show { visibility: visible; opacity: 1; }
+        .modal-box { background: var(--card); border-radius: 24px; padding: 24px; width: 92%; max-width: 500px; max-height: 88vh; overflow-y: auto; }
         .modal-box h3 { text-align: center; color: var(--olive); margin-bottom: 16px; }
-        .upload-area {
-            border: 2px dashed var(--olive);
-            border-radius: 16px;
-            padding: 14px;
-            text-align: center;
-            margin: 8px 0;
-            cursor: pointer;
-            transition: 0.2s;
-            position: relative;
-        }
-        .upload-area:hover {
-            border-color: var(--gold);
-            background: rgba(85, 107, 47, 0.03);
-        }
-        .upload-area img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-top: 6px;
-        }
-        .upload-area .upload-spinner {
-            display: none;
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 16px;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: var(--olive);
-        }
+        .upload-area { border: 2px dashed var(--olive); border-radius: 16px; padding: 14px; text-align: center; margin: 8px 0; cursor: pointer; position: relative; }
+        .upload-area:hover { border-color: var(--gold); background: rgba(85, 107, 47, 0.03); }
+        .upload-area img { width: 60px; height: 60px; object-fit: cover; border-radius: 12px; margin-top: 6px; }
+        .upload-area .upload-spinner { display: none; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.7); border-radius: 16px; align-items: center; justify-content: center; font-size: 24px; color: var(--olive); }
         .upload-area.uploading .upload-spinner { display: flex; }
-        .btn-primary {
-            width: 100%;
-            padding: 12px;
-            background: var(--ok);
-            color: white;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 15px;
-            margin-top: 10px;
-        }
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .btn-secondary {
-            width: 100%;
-            padding: 12px;
-            background: var(--txt3);
-            color: white;
-            border-radius: 14px;
-            font-weight: 700;
-            margin-top: 6px;
-        }
+        .btn-primary { width: 100%; padding: 12px; background: var(--ok); color: white; border-radius: 14px; font-weight: 700; font-size: 15px; margin-top: 10px; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary { width: 100%; padding: 12px; background: var(--txt3); color: white; border-radius: 14px; font-weight: 700; margin-top: 6px; }
+        .btn-security { background: var(--security); }
 
-        #touristCard {
+        /* البطاقة الأساسية (معلومات الوفد) */
+        .delegation-card {
             background: #fff;
             border-radius: 20px;
             padding: 0;
@@ -370,125 +113,18 @@
             position: relative;
             overflow: hidden;
         }
-        .card-img-area {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            background: #e5e7eb;
-        }
-        .card-img-area .main-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .card-img-area .overlay-avatar {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 3px solid var(--gold);
-            object-fit: cover;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-        .info-box {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid #e5e7eb;
-        }
-        .tunisian-plate {
-            background: #1e293b;
-            color: white;
-            border-radius: 8px;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-weight: 800;
-            direction: ltr;
-            font-size: 13px;
-        }
+        .card-img-area { position: relative; width: 100%; height: 200px; background: #e5e7eb; }
+        .card-img-area .main-img { width: 100%; height: 100%; object-fit: cover; }
+        .card-img-area .overlay-avatar { position: absolute; bottom: 12px; right: 12px; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
+        .info-box { background: #f9fafb; border-radius: 12px; padding: 12px; border: 1px solid #e5e7eb; }
+        .tunisian-plate { background: #1e293b; color: white; border-radius: 8px; padding: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; direction: ltr; font-size: 13px; }
 
-        .chat-float-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: var(--gold);
-            color: white;
-            font-size: 24px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            z-index: 90;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .msg-bubble {
-            max-width: 80%;
-            padding: 8px 14px;
-            border-radius: 18px;
-            font-size: 13px;
-            margin: 4px 0;
-        }
-        .msg-mine {
-            align-self: flex-end;
-            background: var(--olive);
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-        .msg-other {
-            align-self: flex-start;
-            background: var(--bg);
-            border-bottom-left-radius: 4px;
-        }
-        .msg-sender {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--gold);
-            margin-bottom: 2px;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e293b;
-            color: white;
-            padding: 10px 22px;
-            border-radius: 30px;
-            font-size: 13px;
-            z-index: 999;
-            animation: fadeInUp 0.3s ease;
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-        .spinner-small {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2px solid transparent;
-            border-top-color: currentColor;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            vertical-align: middle;
-            margin-right: 6px;
-        }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 22px; border-radius: 30px; font-size: 13px; z-index: 999; animation: fadeInUp 0.3s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        .spinner-small { display: inline-block; width: 18px; height: 18px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .flex-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .flex-btns button { flex: 1; }
     </style>
 </head>
 <body>
@@ -498,7 +134,7 @@
     <div style="background:var(--card);border-radius:24px;padding:36px 28px;max-width:400px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.1);">
         <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" class="logo-pulse" style="width:120px;margin-bottom:20px;border-radius:24px;">
         <h1 style="color:var(--olive);font-size:28px;font-weight:900;margin-bottom:4px;">F‑Note Pro Max</h1>
-        <p style="color:var(--gold);font-size:14px;font-weight:600;margin-bottom:20px;" data-i18n="login_sub">بطاقة المرشد السياحي</p>
+        <p style="color:var(--gold);font-size:14px;font-weight:600;margin-bottom:20px;" data-i18n="login_sub">إدارة الوفود السياحية</p>
         <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr">
         <input type="password" id="loginPassword" placeholder="كلمة المرور">
         <button id="loginBtn" style="width:100%;padding:14px;background:var(--olive);color:white;border-radius:14px;font-weight:700;font-size:16px;margin-top:12px;" data-i18n="login_btn">دخول</button>
@@ -544,10 +180,9 @@
     </div>
 
     <div id="guidesContainer" class="guides"><div style="text-align:center;padding:40px;color:var(--txt3);" data-i18n="loading">⏳ جاري التحميل...</div></div>
-    <button class="chat-float-btn" id="openChatBtn"><i class="fa-solid fa-comments"></i></button>
 </div>
 
-<!-- مودال الإضافة / التعديل -->
+<!-- مودال الإضافة / التعديل (نفسه) -->
 <div class="modal" id="guideModal">
     <div class="modal-box">
         <h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3>
@@ -594,63 +229,67 @@
     </div>
 </div>
 
-<!-- مودال بطاقة السائح -->
-<div class="modal" id="cardModal">
+<!-- مودال معلومات الوفد السياحي (البطاقة الأساسية) -->
+<div class="modal" id="delegationModal">
     <div class="modal-box" style="background:#f3f4f6;max-width:550px;">
-        <h3 data-i18n="tourist_card_title">📱 بطاقة السائح السياحية</h3>
-        <div id="touristCard">
+        <h3 data-i18n="delegation_title">📋 معلومات الوفد السياحي</h3>
+        <div id="delegationCard" class="delegation-card">
             <div style="padding:14px;display:flex;justify-content:space-between;align-items:center;">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:32px;">
                     <div>
                         <h4 style="color:var(--olive);font-size:15px;font-weight:900;">NOTE PRO WORK</h4>
-                        <span style="font-size:10px;color:var(--gold);">بطاقة سائح سياحية</span>
+                        <span style="font-size:10px;color:var(--gold);" data-i18n="delegation_sub">معلومات الوفد السياحي</span>
                     </div>
                 </div>
-                <span style="font-size:11px;color:#6b7280;" id="cardDate"></span>
+                <span style="font-size:11px;color:#6b7280;" id="delegationDate"></span>
             </div>
             <div class="card-img-area">
-                <img id="cardMainImg" class="main-img" src="" crossorigin="anonymous">
-                <img id="cardAvatar" class="overlay-avatar" src="" crossorigin="anonymous">
+                <img id="delegationMainImg" class="main-img" src="" crossorigin="anonymous">
+                <img id="delegationAvatar" class="overlay-avatar" src="" crossorigin="anonymous">
             </div>
             <div style="padding:14px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-                    <div class="info-box"><span data-i18n="people_count" class="label">عدد الأفراد</span><br><span class="value" id="cardPeopleCount"></span></div>
-                    <div class="info-box"><span data-i18n="nationality" class="label">الجنسية</span><br><span class="value" id="cardNationality"></span></div>
-                    <div class="info-box"><span data-i18n="transport" class="label">نوع النقل</span><br><span class="value" id="cardTransport"></span></div>
-                    <div class="info-box"><span data-i18n="plate" class="label" style="margin-bottom:4px;">رقم اللوحة</span><div class="tunisian-plate"><span class="plate-num" id="cardPlate1"></span> تونس <span class="plate-num" id="cardPlate2"></span></div></div>
-                    <div class="info-box"><span data-i18n="from" class="label">من</span><br><span class="value" id="cardFrom"></span></div>
-                    <div class="info-box"><span data-i18n="to" class="label">إلى</span><br><span class="value" id="cardTo"></span></div>
+                    <div class="info-box"><span data-i18n="people_count" class="label">عدد الأفراد</span><br><span class="value" id="delegationPeopleCount"></span></div>
+                    <div class="info-box"><span data-i18n="nationality" class="label">الجنسية</span><br><span class="value" id="delegationNationality"></span></div>
+                    <div class="info-box"><span data-i18n="transport" class="label">نوع النقل</span><br><span class="value" id="delegationTransport"></span></div>
+                    <div class="info-box"><span data-i18n="plate" class="label" style="margin-bottom:4px;">رقم اللوحة</span><div class="tunisian-plate"><span class="plate-num" id="delegationPlate1"></span> تونس <span class="plate-num" id="delegationPlate2"></span></div></div>
+                    <div class="info-box"><span data-i18n="from" class="label">من</span><br><span class="value" id="delegationFrom"></span></div>
+                    <div class="info-box"><span data-i18n="to" class="label">إلى</span><br><span class="value" id="delegationTo"></span></div>
                 </div>
                 <div class="info-box" style="margin-bottom:8px;background:#f0fdf4;border-color:var(--olive);">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div><span data-i18n="guide_name" class="label">المرشد السياحي</span><br><span class="value" id="cardGuideName"></span></div>
-                        <div style="text-align:left;"><span data-i18n="phone" class="label">الجوال</span><br><span class="value" id="cardGuidePhone" dir="ltr"></span></div>
+                        <div><span data-i18n="guide_name" class="label">المرشد السياحي</span><br><span class="value" id="delegationGuideName"></span></div>
+                        <div style="text-align:left;"><span data-i18n="phone" class="label">الجوال</span><br><span class="value" id="delegationGuidePhone" dir="ltr"></span></div>
                     </div>
                 </div>
-                <div class="info-box" id="cardNotesRow" style="display:none;"><span data-i18n="notes" class="label">ملاحظات</span><br><span style="font-size:13px;color:var(--txt2);" id="cardNotes"></span></div>
+                <div class="info-box" id="delegationNotesRow" style="display:none;"><span data-i18n="notes" class="label">ملاحظات</span><br><span style="font-size:13px;color:var(--txt2);" id="delegationNotes"></span></div>
             </div>
         </div>
-        <button class="btn-primary" style="background:#25D366;margin-top:12px;" id="shareCardBtn" data-i18n="share_card"><i class="fab fa-whatsapp"></i> مشاركة البطاقة</button>
-        <button class="btn-secondary" id="closeCardBtn" data-i18n="close">إغلاق</button>
+        <div class="flex-btns">
+            <button class="btn-primary" style="background:#25D366;" id="shareDelegationBtn"><i class="fab fa-whatsapp"></i> <span data-i18n="share_whatsapp">مشاركة البطاقة</span></button>
+            <button class="btn-primary btn-security" id="securityBtn" style="background:var(--security);"><i class="fas fa-shield-alt"></i> <span data-i18n="security_card">كرت الإعلام والأمن</span></button>
+        </div>
+        <button class="btn-secondary" id="closeDelegationBtn" data-i18n="close">إغلاق</button>
     </div>
 </div>
 
-<!-- مودال المحادثة -->
-<div class="modal" id="chatModal">
-    <div class="modal-box" style="display:flex;flex-direction:column;height:70vh;">
-        <h3 data-i18n="group_chat">💬 محادثة المجموعة</h3>
-        <div id="chatMessages" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:12px;"></div>
-        <div style="display:flex;gap:8px;">
-            <input type="text" id="chatInput" placeholder="اكتب رسالة..." style="flex:1;" onkeydown="if(event.key==='Enter')sendMsg()">
-            <button class="t-btn accent" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-        <button class="btn-secondary" id="closeChatBtn" data-i18n="close">إغلاق</button>
+<!-- مودال إرسال كرت الإعلام والأمن -->
+<div class="modal" id="securityModal">
+    <div class="modal-box">
+        <h3><i class="fas fa-shield-alt"></i> <span data-i18n="security_title">كرت الإعلام والتنسيق مع الجهات الأمنية</span></h3>
+        <div id="securityCardPreview" class="delegation-card" style="margin-bottom:16px;"></div>
+        <label data-i18n="security_comment">📝 تعليق إضافي (للجهات الأمنية):</label>
+        <textarea id="securityComment" rows="3" placeholder="أدخل تعليقك هنا..."></textarea>
+        <label data-i18n="security_phones">📞 أرقام الواتساب المستهدفة (مفصولة بفواصل أو مسافات):</label>
+        <input type="text" id="securityPhones" placeholder="+216XXXXXXXX, +216YYYYYYYY" dir="ltr">
+        <button class="btn-primary" style="background:#25D366; margin-top:12px;" id="sendSecurityBtn"><i class="fab fa-whatsapp"></i> <span data-i18n="send_security">إرسال الكرت للأرقام المحددة</span></button>
+        <button class="btn-secondary" id="closeSecurityBtn" data-i18n="cancel">إلغاء</button>
     </div>
 </div>
 
 <script>
-    // ========== إعدادات Firebase الجديدة ==========
+    // Firebase Config (جديد)
     const firebaseConfig = {
         apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
         authDomain: "f-notepromax-work.firebaseapp.com",
@@ -662,7 +301,7 @@
         measurementId: "G-W5BPRWGRYC"
     };
 
-    // ========== Cloudinary فقط (بدون ImgBB) ==========
+    // Cloudinary فقط
     const CLOUDINARY_CONFIG = {
         cloudName: 'dmhtx93nj',
         uploadPreset: 'fcloud_preset',
@@ -670,13 +309,11 @@
         uploadUrl: 'https://api.cloudinary.com/v1_1/dmhtx93nj/image/upload'
     };
 
-    // تهيئة Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
     db.enablePersistence({ synchronizeTabs: true }).catch(() => console.warn('⚠️ Firestore persistence غير متاح'));
 
-    // التخزين المحلي
     const LDB = {
         get(k) { try { return JSON.parse(localStorage.getItem('fnote_' + k) || 'null'); } catch(e) { return null; } },
         set(k, v) { try { localStorage.setItem('fnote_' + k, JSON.stringify(v)); } catch(e) {} },
@@ -684,37 +321,39 @@
         saveGuides(arr) { this.set('guides', arr); }
     };
 
-    // حالة التطبيق
     let currentUser = null, guides = LDB.getGuides(), editId = null;
     let guidePhotoUrl = '', busPhotoUrl = '';
     let guidePhotoBlob = null, busPhotoBlob = null;
     let userProfile = { displayName: '', photoURL: '' };
     let currentLang = 'ar';
+    let currentGuideForCards = null;  // الكائن المرشد الحالي لعرض البطاقات
 
-    // ========== قاموس الترجمة ==========
+    // الترجمات (محدثة)
     const translations = {
         ar: {
-            login_sub: "بطاقة المرشد السياحي", login_btn: "دخول", offline_btn: "🔄 بدون إنترنت",
+            login_sub: "إدارة الوفود السياحية", login_btn: "دخول", offline_btn: "🔄 بدون إنترنت",
             profile: "👤 الملف الشخصي", logout: "🚪 تسجيل الخروج", lang_title: "🌐 اللغة", tools_title: "⚙️ أدوات",
             sync: "☁️ مزامنة السحابة", export_json: "📄 تصدير JSON", export_pdf: "📕 تصدير PDF",
             search_placeholder: "🔍 بحث عن مرشد...", loading: "⏳ جاري التحميل...", add_guide_title: "➕ إضافة مرشد جديد",
-            save_guide: "💾 حفظ المرشد", cancel: "إلغاء", tourist_card_title: "📱 بطاقة السائح السياحية",
+            save_guide: "💾 حفظ المرشد", cancel: "إلغاء", delegation_title: "📋 معلومات الوفد السياحي", delegation_sub: "معلومات الوفد السياحي",
             people_count: "عدد الأفراد", nationality: "الجنسية", transport: "نوع النقل", plate: "رقم اللوحة",
             from: "من", to: "إلى", guide_name: "المرشد السياحي", phone: "الجوال", notes: "ملاحظات",
-            share_card: "مشاركة البطاقة", close: "إغلاق", group_chat: "💬 محادثة المجموعة",
+            share_whatsapp: "مشاركة البطاقة", close: "إغلاق", security_card: "كرت الإعلام والأمن",
+            security_title: "كرت الإعلام والتنسيق مع الجهات الأمنية", security_comment: "📝 تعليق إضافي (للجهات الأمنية):", security_phones: "📞 أرقام الواتساب المستهدفة (مفصولة بفواصل أو مسافات):", send_security: "إرسال الكرت للأرقام المحددة",
             delete_confirm: "هل أنت متأكد من حذف هذا المرشد؟", deleted: "🗑️ تم الحذف", saved: "✅ تم الحفظ بنجاح",
             sync_ok: "✅ تمت المزامنة بنجاح", sync_fail: "❌ فشلت المزامنة", offline_mode: "📴 وضع بدون إنترنت",
             no_results: "😕 لا توجد نتائج"
         },
         fr: {
-            login_sub: "Carte de guide touristique", login_btn: "Connexion", offline_btn: "🔄 Hors ligne",
+            login_sub: "Gestion des délégations touristiques", login_btn: "Connexion", offline_btn: "🔄 Hors ligne",
             profile: "👤 Profil", logout: "🚪 Déconnexion", lang_title: "🌐 Langue", tools_title: "⚙️ Outils",
             sync: "☁️ Synchronisation", export_json: "📄 Exporter JSON", export_pdf: "📕 Exporter PDF",
             search_placeholder: "🔍 Rechercher un guide...", loading: "⏳ Chargement...", add_guide_title: "➕ Ajouter un guide",
-            save_guide: "💾 Enregistrer", cancel: "Annuler", tourist_card_title: "📱 Carte touristique",
+            save_guide: "💾 Enregistrer", cancel: "Annuler", delegation_title: "📋 Informations de la délégation", delegation_sub: "Fiche délégation touristique",
             people_count: "Nombre de personnes", nationality: "Nationalité", transport: "Type de transport", plate: "Plaque",
             from: "De", to: "À", guide_name: "Nom du guide", phone: "Téléphone", notes: "Notes",
-            share_card: "Partager la carte", close: "Fermer", group_chat: "💬 Chat de groupe",
+            share_whatsapp: "Partager la fiche", close: "Fermer", security_card: "Fiche sécurité",
+            security_title: "Fiche de liaison avec les autorités sécuritaires", security_comment: "📝 Commentaire supplémentaire :", security_phones: "📞 Numéros WhatsApp cibles (séparés par des virgules ou espaces):", send_security: "Envoyer la fiche aux numéros",
             delete_confirm: "Supprimer ce guide ?", deleted: "🗑️ Supprimé", saved: "✅ Enregistré",
             sync_ok: "✅ Synchronisation réussie", sync_fail: "❌ Échec de synchronisation", offline_mode: "📴 Mode hors ligne",
             no_results: "😕 Aucun résultat"
@@ -735,7 +374,7 @@
         document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
     }
 
-    // ========== رفع الصورة إلى Cloudinary فقط ==========
+    // دوال رفع الصور (نفسها)
     async function uploadToCloudinary(blob) {
         const formData = new FormData();
         formData.append('file', blob, 'image.jpg');
@@ -747,7 +386,6 @@
         return data.secure_url;
     }
 
-    // ضغط الصورة
     async function compressImage(file, maxW = 800, quality = 0.7) {
         return new Promise(resolve => {
             const reader = new FileReader();
@@ -811,7 +449,7 @@
         setTimeout(() => div.remove(), 2600);
     }
 
-    // ========== عرض المرشدين ==========
+    // عرض قائمة المرشدين (مع إضافة زر الكرت الأمني)
     function renderGuides() {
         const q = document.getElementById('searchInput').value.toLowerCase();
         const filtered = guides.filter(g => (g.name || '').toLowerCase().includes(q) || (g.phone || '').includes(q));
@@ -833,7 +471,8 @@
                 <div class="card-bottom">
                     <button class="c-btn c-call" onclick="location.href='tel:${g.phone}'">📞</button>
                     <button class="c-btn c-wa" onclick="window.open('https://wa.me/${(g.phone || '').replace(/[^0-9]/g, '')}')">💬</button>
-                    <button class="c-btn c-card" onclick="showTouristCard('${g.id}')">🪪 بطاقة</button>
+                    <button class="c-btn c-card" onclick="showDelegationCard('${g.id}')">🪪 بطاقة الوفد</button>
+                    <button class="c-btn c-security" onclick="showSecurityCard('${g.id}')">🛡️ كرت أمني</button>
                     <button class="c-btn c-edit" onclick="editGuide('${g.id}')">✏️</button>
                     <button class="c-btn c-del" onclick="deleteGuide('${g.id}')">🗑️</button>
                 </div>
@@ -848,7 +487,7 @@
         }
     };
 
-    window.editGuide = function(id) {
+    window.editGuide = function(id) { /* نفس السابق */ 
         const g = guides.find(x => x.id === id); if (!g) return;
         editId = id; guidePhotoUrl = g.guidePhoto || ''; busPhotoUrl = g.busPhoto || '';
         document.getElementById('gName').value = g.name || ''; document.getElementById('gPhone').value = g.phone || '';
@@ -873,7 +512,7 @@
         document.getElementById('guideModal').classList.add('show');
     };
 
-    document.getElementById('saveGuideBtn').onclick = async function() {
+    document.getElementById('saveGuideBtn').onclick = async function() { /* كما هو سابق */ 
         const name = document.getElementById('gName').value.trim(), phone = document.getElementById('gPhone').value.trim();
         if (!name || !phone) return toast('⚠️ الاسم والهاتف مطلوبان');
         const saveBtn = this; saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-small"></span> حفظ...';
@@ -885,25 +524,7 @@
             if (navigator.onLine && busPhotoBlob && (!busPhotoUrl || busPhotoUrl.startsWith('data:'))) {
                 finalBus = await uploadToCloudinary(busPhotoBlob); busPhotoUrl = finalBus;
             }
-            const data = {
-                id: editId || 'local_' + Date.now(),
-                userId: currentUser ? currentUser.uid : 'offline',
-                creatorName: userProfile.displayName || (currentUser ? currentUser.email : 'مستخدم'),
-                name, phone,
-                nationality: document.getElementById('gNationality').value.trim(),
-                peopleCount: document.getElementById('gPeopleCount').value,
-                transportType: document.getElementById('gTransport').value,
-                plate1: document.getElementById('gPlate1').value.trim(),
-                plate2: document.getElementById('gPlate2').value.trim(),
-                fromLocation: document.getElementById('gFrom').value.trim(),
-                toLocation: document.getElementById('gTo').value.trim(),
-                guidePhoto: finalGuide || null,
-                busPhoto: finalBus || null,
-                agency: document.getElementById('gAgency').value.trim(),
-                notes: document.getElementById('gNotes').value.trim(),
-                visibility: document.getElementById('gVisibility').value,
-                updatedAt: new Date().toISOString()
-            };
+            const data = { id: editId || 'local_' + Date.now(), userId: currentUser ? currentUser.uid : 'offline', creatorName: userProfile.displayName || (currentUser ? currentUser.email : 'مستخدم'), name, phone, nationality: document.getElementById('gNationality').value.trim(), peopleCount: document.getElementById('gPeopleCount').value, transportType: document.getElementById('gTransport').value, plate1: document.getElementById('gPlate1').value.trim(), plate2: document.getElementById('gPlate2').value.trim(), fromLocation: document.getElementById('gFrom').value.trim(), toLocation: document.getElementById('gTo').value.trim(), guidePhoto: finalGuide || null, busPhoto: finalBus || null, agency: document.getElementById('gAgency').value.trim(), notes: document.getElementById('gNotes').value.trim(), visibility: document.getElementById('gVisibility').value, updatedAt: new Date().toISOString() };
             if (editId) guides = guides.map(g => g.id === editId ? data : g);
             else guides.unshift(data);
             LDB.saveGuides(guides);
@@ -913,37 +534,133 @@
         finally { saveBtn.disabled = false; saveBtn.innerHTML = '💾 حفظ المرشد'; }
     };
 
-    window.showTouristCard = function(id) {
-        const g = guides.find(x => x.id === id); if (!g) return;
-        document.getElementById('cardMainImg').src = g.busPhoto || g.guidePhoto || '';
-        document.getElementById('cardAvatar').src = g.guidePhoto || '';
-        document.getElementById('cardPeopleCount').textContent = g.peopleCount || '—';
-        document.getElementById('cardNationality').textContent = g.nationality || '—';
-        document.getElementById('cardTransport').textContent = g.transportType || '—';
-        document.getElementById('cardPlate1').textContent = g.plate1 || '—';
-        document.getElementById('cardPlate2').textContent = g.plate2 || '—';
-        document.getElementById('cardFrom').textContent = g.fromLocation || '—';
-        document.getElementById('cardTo').textContent = g.toLocation || '—';
-        document.getElementById('cardGuideName').textContent = g.name || '—';
-        document.getElementById('cardGuidePhone').textContent = g.phone || '—';
-        if (g.notes) { document.getElementById('cardNotes').textContent = g.notes; document.getElementById('cardNotesRow').style.display = 'block'; }
-        else document.getElementById('cardNotesRow').style.display = 'none';
-        document.getElementById('cardDate').textContent = new Date().toLocaleDateString('ar-TN');
-        document.getElementById('cardModal').classList.add('show');
+    // عرض بطاقة معلومات الوفد السياحي
+    window.showDelegationCard = function(id) {
+        const g = guides.find(x => x.id === id);
+        if (!g) return;
+        currentGuideForCards = g;
+        document.getElementById('delegationMainImg').src = g.busPhoto || g.guidePhoto || '';
+        document.getElementById('delegationAvatar').src = g.guidePhoto || '';
+        document.getElementById('delegationPeopleCount').textContent = g.peopleCount || '—';
+        document.getElementById('delegationNationality').textContent = g.nationality || '—';
+        document.getElementById('delegationTransport').textContent = g.transportType || '—';
+        document.getElementById('delegationPlate1').textContent = g.plate1 || '—';
+        document.getElementById('delegationPlate2').textContent = g.plate2 || '—';
+        document.getElementById('delegationFrom').textContent = g.fromLocation || '—';
+        document.getElementById('delegationTo').textContent = g.toLocation || '—';
+        document.getElementById('delegationGuideName').textContent = g.name || '—';
+        document.getElementById('delegationGuidePhone').textContent = g.phone || '—';
+        if (g.notes) { document.getElementById('delegationNotes').textContent = g.notes; document.getElementById('delegationNotesRow').style.display = 'block'; }
+        else document.getElementById('delegationNotesRow').style.display = 'none';
+        document.getElementById('delegationDate').textContent = new Date().toLocaleDateString('ar-TN');
+        document.getElementById('delegationModal').classList.add('show');
     };
-    document.getElementById('shareCardBtn').onclick = async () => {
-        const card = document.getElementById('touristCard');
+
+    // مشاركة البطاقة الأساسية عبر واتساب (صورة)
+    document.getElementById('shareDelegationBtn').onclick = async () => {
+        const card = document.getElementById('delegationCard');
         try {
             const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true, allowTaint: true });
             const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-            const file = new File([blob], 'carte_touriste.png', { type: 'image/png' });
-            if (navigator.share && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Carte Touriste' });
-            else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'carte_touriste.png'; a.click(); toast('📥 تم التحميل'); }
+            const file = new File([blob], 'delegation_info.png', { type: 'image/png' });
+            if (navigator.share && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'معلومات الوفد' });
+            else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'delegation_info.png'; a.click(); toast('📥 تم التحميل'); }
         } catch (err) { toast('⚠️ ' + err.message); }
     };
-    document.getElementById('closeCardBtn').onclick = () => document.getElementById('cardModal').classList.remove('show');
 
-    // المصادقة
+    // فتح مودال الكرت الأمني مع معاينة البطاقة + تعليق + أرقام
+    window.showSecurityCard = function(id) {
+        const g = guides.find(x => x.id === id);
+        if (!g) return;
+        currentGuideForCards = g;
+        // إنشاء معاينة لبطاقة الأمن (نفس محتوى delegationCard لكن مع إضافة حقل التعليق)
+        const securityPreview = document.getElementById('securityCardPreview');
+        securityPreview.innerHTML = `
+            <div style="padding:14px;display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:32px;">
+                    <div><h4 style="color:var(--olive);font-size:15px;font-weight:900;">NOTE PRO WORK</h4><span style="font-size:10px;color:var(--gold);">${currentLang === 'ar' ? 'كرت التنسيق الأمني' : 'Fiche de liaison sécuritaire'}</span></div>
+                </div>
+                <span style="font-size:11px;color:#6b7280;">${new Date().toLocaleDateString('ar-TN')}</span>
+            </div>
+            <div class="card-img-area">
+                <img class="main-img" src="${g.busPhoto || g.guidePhoto || ''}" crossorigin="anonymous">
+                <img class="overlay-avatar" src="${g.guidePhoto || ''}" crossorigin="anonymous">
+            </div>
+            <div style="padding:14px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                    <div class="info-box"><span class="label">${translations[currentLang].people_count}</span><br><span class="value">${g.peopleCount || '—'}</span></div>
+                    <div class="info-box"><span class="label">${translations[currentLang].nationality}</span><br><span class="value">${g.nationality || '—'}</span></div>
+                    <div class="info-box"><span class="label">${translations[currentLang].transport}</span><br><span class="value">${g.transportType || '—'}</span></div>
+                    <div class="info-box"><span class="label">${translations[currentLang].plate}</span><br><div class="tunisian-plate"><span class="plate-num">${g.plate1 || '—'}</span> تونس <span class="plate-num">${g.plate2 || '—'}</span></div></div>
+                    <div class="info-box"><span class="label">${translations[currentLang].from}</span><br><span class="value">${g.fromLocation || '—'}</span></div>
+                    <div class="info-box"><span class="label">${translations[currentLang].to}</span><br><span class="value">${g.toLocation || '—'}</span></div>
+                </div>
+                <div class="info-box" style="margin-bottom:8px;background:#f0fdf4;border-color:var(--olive);">
+                    <div><span class="label">${translations[currentLang].guide_name}</span><br><span class="value">${g.name || '—'}</span></div>
+                    <div style="margin-top:4px;"><span class="label">${translations[currentLang].phone}</span><br><span class="value" dir="ltr">${g.phone || '—'}</span></div>
+                </div>
+                <div class="info-box" style="background:#fff3cd; border-color:#ffc107;" id="securityCommentPreview">
+                    <span class="label">📝 <span data-i18n="security_comment_label">تعليق الأمن</span></span><br>
+                    <span id="commentPreviewText" style="font-size:13px; color:#856404;">سيتم إضافة تعليقك هنا...</span>
+                </div>
+            </div>
+        `;
+        document.getElementById('securityComment').value = '';
+        document.getElementById('securityPhones').value = '';
+        document.getElementById('securityModal').classList.add('show');
+    };
+
+    // إرسال الكرت الأمني إلى الأرقام المدخلة عبر واتساب (مع التعليق)
+    document.getElementById('sendSecurityBtn').onclick = async () => {
+        const comment = document.getElementById('securityComment').value.trim();
+        const phonesRaw = document.getElementById('securityPhones').value.trim();
+        if (!phonesRaw) { toast('⚠️ الرجاء إدخال رقم واحد على الأقل'); return; }
+        // استخراج الأرقام (أي أرقام مكونة من 8 إلى 15 رقم، مع + اختياري)
+        const phoneNumbers = phonesRaw.match(/[\+]?\d{8,15}/g);
+        if (!phoneNumbers || phoneNumbers.length === 0) { toast('⚠️ لم يتم التعرف على أرقام صحيحة'); return; }
+
+        // تحديث معاينة التعليق في البطاقة قبل التقاط الصورة
+        const commentPreviewSpan = document.getElementById('commentPreviewText');
+        commentPreviewSpan.textContent = comment || (currentLang === 'ar' ? 'لا يوجد تعليق' : 'Aucun commentaire');
+        
+        // التقاط صورة للبطاقة الأمنية (التي تحتوي على التعليق)
+        const securityCardElement = document.getElementById('securityCardPreview');
+        try {
+            const canvas = await html2canvas(securityCardElement, { scale: 2, backgroundColor: '#ffffff', useCORS: true, allowTaint: true });
+            const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+            const imageFile = new File([blob], 'security_card.png', { type: 'image/png' });
+            
+            // إرسال الصورة لكل رقم عبر واتساب
+            for (let phone of phoneNumbers) {
+                // تنظيف الرقم (إزالة كل ما ليس رقماً أو +)
+                let cleanPhone = phone.replace(/[^0-9+]/g, '');
+                if (!cleanPhone.startsWith('+')) cleanPhone = '+216' + cleanPhone.replace(/^0+/, '');
+                const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent('📢 بطاقة التنسيق الأمني للوفد السياحي')}`;
+                // فتح نافذة جديدة لكل رقم (قد يمنع المتصفح النوافذ المتعددة، لذلك نرسل تباعاً مع تأخير)
+                window.open(waUrl, '_blank');
+                await new Promise(r => setTimeout(r, 800));
+                // ملاحظة: لا يمكن إرفاق الصورة مباشرة عبر رابط wa.me، لذلك سنقوم بتحميل الصورة للمستخدم ليشاركها يدوياً أو نستخدم واجهة مشاركة الملفات.
+                // حل بديل: استخدام واجهة المشاركة عبر navigator.share إذا كانت متاحة.
+            }
+            // أفضل حل: استخدام navigator.share لإرسال الصورة إلى تطبيق واتساب (لكل رقم على حدة غير ممكن).
+            // بدلاً من ذلك، نقوم بتحميل الصورة ونعرض رسالة للمستخدم ليقوم بمشاركتها يدوياً مع الأرقام المدخلة.
+            // لكن لتسهيل الأمر، سنقوم بفتح واتساب مع رسالة نصية فقط، وننبه المستخدم لإرفاق الصورة يدوياً.
+            toast(`✅ تم فتح واتساب للأرقام المدخلة، يرجى إرفاق الصورة التي تم تحميلها يدوياً.`);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'security_card.png';
+            a.click();
+            document.getElementById('securityModal').classList.remove('show');
+        } catch (err) {
+            toast('❌ فشل إنشاء الصورة: ' + err.message);
+        }
+    };
+
+    document.getElementById('closeSecurityBtn').onclick = () => document.getElementById('securityModal').classList.remove('show');
+    document.getElementById('closeDelegationBtn').onclick = () => document.getElementById('delegationModal').classList.remove('show');
+
+    // باقي دوال المصادقة والتزامن والتصدير...
     document.getElementById('loginBtn').onclick = async () => { const email = document.getElementById('loginEmail').value.trim(), pass = document.getElementById('loginPassword').value; if (!email || !pass) return toast('أدخل البريد وكلمة المرور'); try { await auth.signInWithEmailAndPassword(email, pass); } catch(e) { document.getElementById('loginError').textContent = 'خطأ: ' + e.message; document.getElementById('loginError').style.display = 'block'; } };
     document.getElementById('offlineBtn').onclick = () => { currentUser = { uid: 'offline', email: 'offline@local' }; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; document.getElementById('sidebarUserInfo').textContent = translations[currentLang].offline_mode; guides = LDB.getGuides(); renderGuides(); };
     auth.onAuthStateChanged(async u => { if (u) { currentUser = u; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; document.getElementById('sidebarUserInfo').textContent = '👤 ' + u.email; const d = await db.collection('users').doc(u.uid).get(); if (d.exists) userProfile = d.data(); else { userProfile = { displayName: u.email, photoURL: '' }; await db.collection('users').doc(u.uid).set(userProfile); } db.collection('guides').where('userId', '==', u.uid).get().then(s => { let cloud = []; s.forEach(d => cloud.push({ id: d.id, ...d.data() })); guides = [...cloud, ...LDB.getGuides().filter(l => !cloud.find(c => c.id === l.id))]; LDB.saveGuides(guides); renderGuides(); }).catch(() => { guides = LDB.getGuides(); renderGuides(); }); } else { currentUser = null; document.getElementById('appContainer').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; } });
@@ -961,9 +678,6 @@
     document.getElementById('guideUploadBtn').onclick = () => pickAndUploadImg('guidePreview', 'guideUploadBtn', url => guidePhotoUrl = url, blob => guidePhotoBlob = blob);
     document.getElementById('busUploadBtn').onclick = () => pickAndUploadImg('busPreview', 'busUploadBtn', url => busPhotoUrl = url, blob => busPhotoBlob = blob);
     document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
-    document.getElementById('openChatBtn').onclick = () => { if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ تسجيل الدخول مطلوب'); document.getElementById('chatModal').classList.add('show'); db.collection('groupMessages').orderBy('createdAt', 'asc').onSnapshot(snap => { const c = document.getElementById('chatMessages'); c.innerHTML = ''; snap.forEach(d => { const m = d.data(); const isMine = m.senderId === currentUser?.uid; c.innerHTML += `<div class="msg-bubble ${isMine ? 'msg-mine' : 'msg-other'}"><span class="msg-sender">${m.senderName || 'مستخدم'}</span><br>${m.text}</div>`; }); c.scrollTop = c.scrollHeight; }, err => toast('⚠️ فشل تحميل المحادثة')); };
-    document.getElementById('closeChatBtn').onclick = () => document.getElementById('chatModal').classList.remove('show');
-    window.sendMsg = async function() { const input = document.getElementById('chatInput'); const text = input.value.trim(); if (!text || !currentUser || currentUser.uid === 'offline') return; try { await db.collection('groupMessages').add({ senderId: currentUser.uid, senderName: userProfile.displayName || currentUser.email, text, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); input.value = ''; } catch(e) { toast('❌ فشل الإرسال'); } };
     setLanguage('ar');
     renderGuides();
 </script>
