@@ -19,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ========== الأنماط الأساسية ========== */
+        /* جميع الأنماط السابقة كما هي (لم تتغير) */
         :root {
             --olive: #556B2F;
             --gold: #D4AF37;
@@ -240,6 +240,17 @@
         }
         .add-number-form input { flex: 1; margin: 0; }
         .add-number-form button { background: var(--ok); color: white; padding: 8px 12px; border-radius: 14px; }
+        /* تحسين رسالة الخطأ */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border-right: 3px solid var(--err);
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--err);
+            text-align: right;
+        }
     </style>
 </head>
 <body>
@@ -255,6 +266,10 @@
         <button id="loginBtn" style="width:100%;padding:14px;background:var(--olive);color:white;border-radius:14px;font-weight:700;font-size:16px;margin-top:12px;">دخول</button>
         <button id="offlineBtn" style="width:100%;padding:14px;background:var(--txt3);color:white;border-radius:14px;font-weight:700;font-size:14px;margin-top:8px;">🔄 بدون إنترنت</button>
         <div id="loginError" style="color:var(--err);font-size:13px;margin-top:8px;display:none;"></div>
+        <div style="margin-top:16px; font-size:12px; color:var(--txt3);">
+            <i class="fas fa-info-circle"></i> الحسابات لا تُنشأ إلا عن طريق المدير<br>
+            <strong>fahmiajmi5@gmail.com</strong>
+        </div>
     </div>
 </div>
 
@@ -629,7 +644,6 @@
     }
     function getWeatherHtml() { return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
 
-    // دالة عرض اللوحة الديناميكية
     function getPlateHtml(plate1, plate2, delegationType, transportType, plateFunction) {
         let typeClass = 'plate-touristic';
         let prefix = '';
@@ -1184,18 +1198,47 @@
     document.getElementById('closeTermsBtn').onclick = () => document.getElementById('termsModal').classList.remove('show');
     document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }));
 
+    // زر تسجيل الدخول مع رسائل خطأ مفصلة
     document.getElementById('loginBtn').onclick = async () => {
         const email = document.getElementById('loginEmail').value.trim();
         const pass = document.getElementById('loginPassword').value;
-        if (!email || !pass) return toast('أدخل البريد وكلمة المرور');
+        const errorDiv = document.getElementById('loginError');
+        
+        if (!email || !pass) {
+            errorDiv.textContent = '⚠️ الرجاء إدخال البريد الإلكتروني وكلمة المرور';
+            errorDiv.style.display = 'block';
+            toast('⚠️ الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+            return;
+        }
+        
+        errorDiv.style.display = 'none';
+        
         try {
             await auth.signInWithEmailAndPassword(email, pass);
         } catch(e) {
-            document.getElementById('loginError').textContent = 'خطأ: ' + e.message;
-            document.getElementById('loginError').style.display = 'block';
-            toast('❌ فشل تسجيل الدخول');
+            let errorMessage = '';
+            switch (e.code) {
+                case 'auth/invalid-email':
+                    errorMessage = '⚠️ البريد الإلكتروني غير صالح';
+                    break;
+                case 'auth/user-disabled':
+                    errorMessage = '⚠️ هذا الحساب معطل';
+                    break;
+                case 'auth/user-not-found':
+                    errorMessage = '⚠️ لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = '⚠️ كلمة المرور غير صحيحة';
+                    break;
+                default:
+                    errorMessage = '⚠️ فشل تسجيل الدخول: ' + e.message;
+            }
+            errorDiv.textContent = errorMessage;
+            errorDiv.style.display = 'block';
+            toast('❌ ' + errorMessage);
         }
     };
+    
     document.getElementById('offlineBtn').onclick = () => {
         currentUser = { uid: 'offline', email: 'offline@local' };
         document.getElementById('loginScreen').style.display = 'none';
