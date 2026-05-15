@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>F-Note Pro Max | إدارة الوفود</title>
+    <title>F-Note Pro Max | إدارة الوفود السياحية والدبلوماسية</title>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -19,6 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
+        /* ========== الأنماط الأساسية ========== */
         :root {
             --olive: #556B2F;
             --gold: #D4AF37;
@@ -36,6 +37,7 @@
             --security: #1e40af;
             --police: #0f5c6b;
             --delegation: #7c3aed;
+            --mission: #b45309;
         }
         .dark {
             --bg: #0f172a;
@@ -116,7 +118,6 @@
         .card-img-area .overlay-avatar { position: absolute; bottom: 12px; right: 12px; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); cursor: pointer; }
         .info-box { background: var(--bg); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
         .info-box .value { font-weight: 800; font-size: 16px; color: var(--olive); }
-        /* أنماط اللوحات الجديدة */
         .plate-container {
             border-radius: 8px;
             padding: 8px;
@@ -129,7 +130,6 @@
             direction: ltr;
             font-size: 13px;
             color: white;
-            transition: all 0.2s;
         }
         .plate-touristic { background: #1e293b; }
         .plate-diplomatic { background: #1e3a8a; }
@@ -214,7 +214,6 @@
             color: var(--olive);
             direction: ltr;
         }
-        /* إدارة الأرقام */
         .numbers-manager {
             background: var(--bg);
             border-radius: 16px;
@@ -323,7 +322,6 @@
     </div>
 </div>
 
-<!-- باقي المودالات (الملف الشخصي، تغيير كلمة المرور، إضافة مرشد، بطاقة الوفد، كرت المتابعة، عرض الصور) -->
 <!-- مودال الملف الشخصي -->
 <div class="modal" id="profileModal">
     <div class="modal-box">
@@ -470,17 +468,14 @@
     </div>
 </div>
 
-<!-- مودال كرت التنسيق والمتابعة (مع الأرقام المحفوظة) -->
+<!-- مودال كرت التنسيق والمتابعة -->
 <div class="modal" id="securityModal">
     <div class="modal-box">
         <h3><i class="fas fa-exchange-alt"></i> كرت التنسيق والمتابعة</h3>
         <div id="securityCardPreview" class="delegation-card" style="margin-bottom:16px;"></div>
         <label>🏷️ تحديد المجموعة / الفقرة المخصصة:</label>
         <input type="text" id="securityGroupLabel" placeholder="مثال: وفد السليمانية - المجموعة الأولى">
-        
-        <!-- الأرقام المحفوظة ستظهر هنا -->
         <div id="savedNumbersContainer" style="margin-top:12px;"></div>
-        
         <div style="font-size:12px; color:var(--txt3); margin-top:8px;">
             <i class="fas fa-info-circle"></i> الأرقام الظاهرة هي الأرقام المحفوظة في الإعدادات المشتركة.
         </div>
@@ -496,7 +491,7 @@
 </div>
 
 <script>
-    // ========== إعدادات Firebase ==========
+    // ========== إعدادات Firebase و Cloudinary والطقس ==========
     const firebaseConfig = {
         apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
         authDomain: "f-notepromax-work.firebaseapp.com",
@@ -505,7 +500,6 @@
         messagingSenderId: "125749698617",
         appId: "1:125749698617:web:ff9709a863fd5a5053ede8"
     };
-    
     const CLOUDINARY_CONFIG = {
         cloudName: 'dmhtx93nj',
         uploadPreset: 'fcloud_preset',
@@ -521,6 +515,7 @@
     const auth = firebase.auth();
     db.enablePersistence({ synchronizeTabs: true }).catch(() => console.warn('⚠️ persistence غير متاح'));
 
+    // التخزين المحلي
     const LDB = {
         get(k) { try { return JSON.parse(localStorage.getItem('fnote_' + k) || 'null'); } catch(e) { return null; } },
         set(k, v) { try { localStorage.setItem('fnote_' + k, JSON.stringify(v)); } catch(e) {} },
@@ -535,7 +530,7 @@
     let currentLang = 'ar';
     let currentGuideForCards = null;
     let currentWeather = { temp: '', condition: '', city: CITY };
-    let whatsappNumbers = []; // الأرقام المحفوظة
+    let whatsappNumbers = [];
 
     // ========== دوال مساعدة ==========
     function toast(msg) {
@@ -624,10 +619,6 @@
     }
 
     async function fetchWeather() {
-        if (!WEATHER_API_KEY) {
-            currentWeather = { temp: '?', condition: 'لا يوجد مفتاح', city: CITY };
-            return;
-        }
         try {
             const url = `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=${currentLang === 'ar' ? 'ar' : 'fr'}`;
             const res = await fetch(url);
@@ -638,13 +629,12 @@
     }
     function getWeatherHtml() { return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
 
-    // دالة عرض اللوحة الجديدة (بدون كلمة "تونس" للوفود غير السياحية)
+    // دالة عرض اللوحة الديناميكية
     function getPlateHtml(plate1, plate2, delegationType, transportType, plateFunction) {
         let typeClass = 'plate-touristic';
         let prefix = '';
         let showTunis = true;
         
-        // تحديد النوع الحقيقي (الأولوية لنوع النقل)
         let effectiveType = delegationType;
         if (transportType === 'سيارة دبلوماسية') effectiveType = 'دبلوماسي';
         else if (transportType === 'سيارة قنصلية') effectiveType = 'قنصلي';
@@ -684,7 +674,7 @@
     document.getElementById('closeImageViewer').onclick = () => document.getElementById('imageViewerModal').classList.remove('show');
     document.getElementById('imageViewerModal').onclick = (e) => { if (e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); };
 
-    // ========== إدارة الأرقام المحفوظة في Firestore ==========
+    // ========== إدارة الأرقام المحفوظة ==========
     async function loadWhatsappNumbers() {
         try {
             const docRef = db.collection('settings').doc('whatsappNumbers');
@@ -696,7 +686,7 @@
                 await docRef.set({ numbers: [] });
             }
         } catch(e) {
-            console.warn('خطأ في تحميل الأرقام', e);
+            console.warn(e);
             whatsappNumbers = [];
         }
         renderNumbersManager();
@@ -844,9 +834,8 @@
         const isTouristic = g.delegationType === 'سياحي';
         document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none';
         document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block';
-        // تحديث فاصل اللوحة
         const separator = document.getElementById('plateSeparator');
-        if (separator) separator.style.display = g.delegationType === 'سياحي' ? 'inline' : 'none';
+        if (separator) separator.style.display = isTouristic ? 'inline' : 'none';
     };
 
     document.getElementById('addGuideBtn').onclick = () => {
@@ -1064,7 +1053,7 @@
         } catch(err) { toast('⚠️ ' + err.message); }
     };
 
-    // ========== كرت المتابعة مع الأرقام المحفوظة والإرسال المتسلسل ==========
+    // ========== كرت المتابعة مع الإرسال المتسلسل ==========
     function updateSecurityPreview(g, customText) {
         const preview = document.getElementById('securityCardPreview');
         const now = new Date();
@@ -1095,11 +1084,10 @@
         document.getElementById('securityLinksContainer').style.display = 'none';
         document.getElementById('securityLinksContainer').innerHTML = '';
         updateSecurityPreview(g, '');
-        renderSavedNumbersInSecurity(); // عرض الأرقام المحفوظة
+        renderSavedNumbersInSecurity();
         document.getElementById('securityModal').classList.add('show');
     };
 
-    // إنشاء البطاقة والحصول على رابط الصورة
     async function getSecurityCardImageUrl(groupLabel) {
         updateSecurityPreview(currentGuideForCards, groupLabel);
         const cardEl = document.getElementById('securityCardPreview');
@@ -1108,7 +1096,6 @@
         return await uploadToCloudinary(blob);
     }
 
-    // فتح الرابط بشكل متسلسل مع تأخير
     async function openWhatsAppSequentially(numbers, imageUrl, groupLabel) {
         const msg = encodeURIComponent(`📢 كرت التنسيق والمتابعة:\n${imageUrl}\n${groupLabel ? `المجموعة: ${groupLabel}` : ''}\nالطقس: ${getWeatherHtml()}`);
         for (let i = 0; i < numbers.length; i++) {
@@ -1117,7 +1104,7 @@
             const link = `https://wa.me/${clean}?text=${msg}`;
             window.open(link, '_blank');
             toast(`📲 جاري فتح الرقم ${i+1}/${numbers.length}: ${clean}`);
-            await new Promise(r => setTimeout(r, 2000)); // تأخير 2 ثانية بين كل رقم
+            await new Promise(r => setTimeout(r, 2000));
         }
         toast(`✅ تم فتح ${numbers.length} رقم بنجاح`);
     }
@@ -1137,7 +1124,6 @@
         }
     };
 
-    // إدارة الأرقام
     document.getElementById('numbersManagerBtn').onclick = () => {
         renderNumbersManager();
         document.getElementById('numbersManagerModal').classList.add('show');
