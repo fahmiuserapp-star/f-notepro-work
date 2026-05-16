@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>F-Note Pro Max | إدارة الوفود</title>
 
-    <!-- Firebase SDKs (كاملة) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
 
     <!-- html2canvas + html2pdf -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -21,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* نفس الأنماط السابقة (لم تتغير) */
+        /* الأنماط الأساسية (كما هي) */
         :root {
             --olive: #556B2F;
             --gold: #D4AF37;
@@ -119,7 +118,7 @@
         .info-box .value { font-weight: 800; font-size: 16px; color: var(--olive); }
         .plate-container {
             border-radius: 8px;
-            padding: 8px;
+            padding: 8px 12px;
             display: inline-flex;
             flex-direction: column;
             align-items: center;
@@ -127,17 +126,16 @@
             gap: 6px;
             font-weight: 800;
             direction: ltr;
-            font-size: 13px;
-            color: white;
-            transition: all 0.2s;
+            font-size: 14px;
+            color: white !important;
         }
         .plate-touristic { background: #1e293b; }
         .plate-diplomatic { background: #1e3a8a; }
         .plate-consular { background: #854d0e; }
         .plate-media { background: #4c0519; }
         .plate-security { background: #065f46; }
-        .plate-numbers { display: flex; gap: 8px; align-items: center; }
-        .plate-function { font-size: 9px; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 20px; }
+        .plate-numbers { display: flex; gap: 8px; align-items: center; font-family: monospace; }
+        .plate-function { font-size: 10px; background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 20px; }
         .datetime-bar {
             display: flex;
             justify-content: space-between;
@@ -448,7 +446,7 @@
 </div>
 
 <script>
-    // ========== إعدادات Firebase (مع إضافة Storage) ==========
+    // ========== إعدادات Firebase ==========
     const firebaseConfig = {
         apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
         authDomain: "f-notepromax-work.firebaseapp.com",
@@ -471,8 +469,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
-    const storage = firebase.storage();   // ✅ إضافة دعم التخزين
-    const analytics = firebase.analytics(); // ✅ تحليلات اختيارية
+    const storage = firebase.storage();
 
     db.enablePersistence({ synchronizeTabs: true }).catch(() => console.warn('⚠️ persistence غير متاح'));
 
@@ -490,9 +487,9 @@
     let currentLang = 'ar';
     let currentGuideForCards = null;
     let currentWeather = { temp: '', condition: '', city: CITY };
-    let unsubscribeFirestore = null;  // ✅ لإلغاء الاستماع عند تسجيل الخروج
+    let unsubscribeFirestore = null;
 
-    // ========== الترجمات الكاملة ==========
+    // ========== الترجمات ==========
     const translations = {
         ar: {
             login_sub: "إدارة الوفود السياحية والدبلوماسية",
@@ -658,7 +655,7 @@
         document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
     }
 
-    // ========== دوال مساعدة (مطورة) ==========
+    // ========== دوال مساعدة ==========
     async function compressImage(file, maxW = 800, quality = 0.7) {
         return new Promise(resolve => {
             const reader = new FileReader();
@@ -697,22 +694,16 @@
         const data = await res.json();
         return data.data.url;
     }
-    
-    // ✅ رفع احتياطي إلى Firebase Storage
-    async function uploadToFirebaseStorage(blob, path = `guides/${Date.now()}.jpg`) {
-        const ref = storage.ref(path);
-        await ref.put(blob);
-        return await ref.getDownloadURL();
-    }
 
-    // ✅ دالة ذكية تجرب السحابات الثلاث بالتسلسل
     async function uploadImageSmart(blob, useImgBB = false) {
         try {
             if (useImgBB) return await uploadToImgBB(blob);
             else return await uploadToCloudinary(blob);
         } catch (err) {
             console.warn("Cloudinary/ImgBB failed, falling back to Firebase Storage", err);
-            return await uploadToFirebaseStorage(blob);
+            const ref = storage.ref(`guides/${Date.now()}.jpg`);
+            await ref.put(blob);
+            return await ref.getDownloadURL();
         }
     }
 
@@ -776,27 +767,28 @@
         setTimeout(() => div.remove(), 2600);
     }
 
+    // دالة عرض اللوحة مع الأنماط الصحيحة
     function getPlateHtml(plate1, plate2, delegationType, transportType, plateFunction) {
-        let typeClass = 'plate-touristic';
+        let bgColor = '#1e293b';
         let prefix = '';
         if (transportType === 'سيارة دبلوماسية') {
-            typeClass = 'plate-diplomatic';
+            bgColor = '#1e3a8a';
             prefix = 'CD ';
         } else if (transportType === 'سيارة قنصلية') {
-            typeClass = 'plate-consular';
+            bgColor = '#854d0e';
             prefix = 'CC ';
         } else {
             switch (delegationType) {
-                case 'دبلوماسي': typeClass = 'plate-diplomatic'; prefix = 'CD '; break;
-                case 'قنصلي': typeClass = 'plate-consular'; prefix = 'CC '; break;
-                case 'إعلامي': typeClass = 'plate-media'; prefix = 'MED '; break;
-                case 'أمني': typeClass = 'plate-security'; prefix = 'SEC '; break;
-                default: prefix = '';
+                case 'دبلوماسي': bgColor = '#1e3a8a'; prefix = 'CD '; break;
+                case 'قنصلي': bgColor = '#854d0e'; prefix = 'CC '; break;
+                case 'إعلامي': bgColor = '#4c0519'; prefix = 'MED '; break;
+                case 'أمني': bgColor = '#065f46'; prefix = 'SEC '; break;
+                default: bgColor = '#1e293b'; prefix = '';
             }
         }
         let funcText = plateFunction ? ` (${plateFunction})` : '';
         let displayType = (transportType === 'سيارة دبلوماسية') ? 'دبلوماسي' : (transportType === 'سيارة قنصلية') ? 'قنصلي' : delegationType;
-        return `<div class="plate-container ${typeClass}">
+        return `<div class="plate-container" style="background-color: ${bgColor};">
                     <div class="plate-numbers">${prefix}<span>${plate1 || '—'}</span> <span>تونس</span> <span>${plate2 || '—'}</span></div>
                     <div class="plate-function">${displayType || 'سياحي'}${funcText}</div>
                 </div>`;
@@ -810,7 +802,7 @@
     document.getElementById('closeImageViewer').onclick = () => document.getElementById('imageViewerModal').classList.remove('show');
     document.getElementById('imageViewerModal').onclick = (e) => { if (e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); };
 
-    // ========== عرض قائمة المرشدين (نفس الأصل) ==========
+    // عرض قائمة المرشدين
     function renderGuides() {
         let filtered = guides;
         if (currentUser && currentUser.uid !== 'offline') filtered = guides.filter(g => g.visibility === 'public' || g.userId === currentUser.uid);
@@ -879,8 +871,16 @@
         document.getElementById('busPreview').src = busPhotoUrl;
         document.getElementById('busPreview').style.display = busPhotoUrl ? 'block' : 'none';
         document.getElementById('modalTitle').innerHTML = translations[currentLang].add_guide_title.replace('➕', '✏️');
-        document.getElementById('guideModal').classList.add('show');
+        // تحديث وضوح الحقول حسب نوع الوفد
         const isTouristic = g.delegationType === 'سياحي';
+        document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none';
+        document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block';
+        document.getElementById('guideModal').classList.add('show');
+    };
+
+    // تغيير نوع الوفد عند الإضافة/التعديل
+    document.getElementById('gDelegationType').onchange = function() {
+        const isTouristic = this.value === 'سياحي';
         document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none';
         document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block';
     };
@@ -909,12 +909,6 @@
         document.getElementById('guideModal').classList.add('show');
         document.getElementById('phoneFieldContainer').style.display = 'block';
         document.getElementById('stayDurationContainer').style.display = 'none';
-    };
-
-    document.getElementById('gDelegationType').onchange = function() {
-        const isTouristic = this.value === 'سياحي';
-        document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none';
-        document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block';
     };
 
     document.getElementById('saveGuideBtn').onclick = async function() {
@@ -972,7 +966,7 @@
         finally { saveBtn.disabled = false; saveBtn.innerHTML = '💾 ' + (currentLang === 'ar' ? 'حفظ المرشد' : 'Enregistrer'); }
     };
 
-    // ========== الملف الشخصي (نفس الأصل) ==========
+    // الملف الشخصي
     async function loadProfile() {
         document.getElementById('profileDisplayName').value = userProfile.displayName || (currentUser ? currentUser.email : '');
         document.getElementById('profileEmail').value = currentUser ? currentUser.email : '';
@@ -1018,8 +1012,7 @@
         loadProfile();
     }, blob => profilePhotoBlob = blob, true);
 
-    // ========== بطاقة الوفد (نفس الأصل مع إصلاح CORS لـ html2canvas) ==========
-    // دالة مساعدة لجلب الصور وتحويلها لتجنب مشاكل CORS في html2canvas
+    // بطاقة الوفد مع إصلاح اللوحة
     async function prepareElementForCanvas(element) {
         const images = element.querySelectorAll('img');
         for (let img of images) {
@@ -1110,7 +1103,7 @@
         } catch(err) { toast('⚠️ ' + err.message); }
     };
 
-    // ========== كرت المتابعة (نفس الأصل) ==========
+    // كرت المتابعة
     function updateSecurityPreview(g, customText) {
         const preview = document.getElementById('securityCardPreview');
         const now = new Date();
@@ -1171,11 +1164,10 @@
         } catch(err) { toast('❌ ' + (currentLang === 'ar' ? 'فشل: ' + err.message : 'Échec : ' + err.message)); }
     };
 
-    // ========== المزامنة المتطورة (ثنائية الاتجاه) ومستمع Firestore ==========
+    // المزامنة والمستمع المباشر
     async function syncGuides() {
         if (!currentUser || currentUser.uid === 'offline') return;
         try {
-            // 1. دفع أي بيانات محلية غير موجودة في السحابة (خاصة بعد وضع الطيران)
             const cloudIds = new Set();
             const cloudSnap = await db.collection('guides').get();
             cloudSnap.forEach(doc => cloudIds.add(doc.id));
@@ -1184,7 +1176,6 @@
                     await db.collection('guides').doc(g.id).set(g, { merge: true });
                 }
             }
-            // 2. جلب أحدث البيانات من السحابة ودمجها
             const mySnap = await db.collection('guides').where('userId', '==', currentUser.uid).get();
             const publicSnap = await db.collection('guides').where('visibility', '==', 'public').get();
             let cloud = [];
@@ -1197,7 +1188,6 @@
         } catch(e) { toast(translations[currentLang].sync_fail); }
     }
 
-    // ✅ مستمع في الوقت الفعلي من Firestore
     function startFirestoreListener() {
         if (unsubscribeFirestore) unsubscribeFirestore();
         if (!currentUser || currentUser.uid === 'offline') return;
@@ -1222,7 +1212,7 @@
         }, err => console.warn("Listener error:", err));
     }
 
-    // ========== أحداث الواجهة والأزرار ==========
+    // أحداث الواجهة
     document.getElementById('refreshBtn').onclick = async () => {
         if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ ' + (currentLang === 'ar' ? 'المزامنة تتطلب اتصالاً' : 'Synchronisation nécessite une connexion'));
         toast('⏳ ' + (currentLang === 'ar' ? 'جاري التحديث...' : 'Mise à jour...'));
@@ -1244,7 +1234,6 @@
     };
     document.getElementById('searchInput').oninput = renderGuides;
     
-    // حفظ الوضع المظلم
     if (localStorage.getItem('fnote_dark') === 'true') document.body.classList.add('dark');
     document.getElementById('darkToggle').onclick = () => {
         document.body.classList.toggle('dark');
@@ -1303,7 +1292,7 @@
         toast('📕 ' + (currentLang === 'ar' ? 'تم التصدير' : 'Exporté'));
     };
 
-    // ========== مراقب المصادقة ==========
+    // مراقب المصادقة
     auth.onAuthStateChanged(async u => {
         if (u) {
             currentUser = u;
@@ -1314,7 +1303,7 @@
             else { userProfile = { displayName: u.email, photoURL: '' }; await db.collection('users').doc(u.uid).set(userProfile); }
             await loadProfile();
             await syncGuides();
-            startFirestoreListener(); // ✅ تفعيل الاستماع الحي
+            startFirestoreListener();
         } else {
             if (unsubscribeFirestore) unsubscribeFirestore();
             currentUser = null;
