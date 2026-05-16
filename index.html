@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>F-Note Pro Max | إدارة الوفود السياحية والدبلوماسية</title>
+    <title>F-Note Pro Max | إدارة الوفود</title>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (الإصدارات المتوافقة) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -19,12 +19,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ========== المتغيرات الأساسية (نفس السابق) ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
         :root {
             --olive: #556B2F;
             --gold: #D4AF37;
-            --olive-dark: #3d4d21;
-            --gold-light: #e8c456;
             --bg: #f5f7fa;
             --card: #ffffff;
             --txt: #1e293b;
@@ -35,10 +38,6 @@
             --ok: #10b981;
             --wa: #25D366;
             --security: #1e40af;
-            --police: #0f5c6b;
-            --delegation: #7c3aed;
-            --mission: #b45309;
-            --administrative: #065a60;
         }
         .dark {
             --bg: #0f172a;
@@ -48,98 +47,289 @@
             --txt3: #64748b;
             --border: #334155;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background: var(--bg); color: var(--txt); min-height: 100vh; transition: 0.2s; }
+        body { background: var(--bg); color: var(--txt); transition: 0.2s; min-height: 100vh; }
         @media(min-width:768px) { body { max-width: 520px; margin: auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); } }
-        button { cursor: pointer; border: none; background: none; transition: 0.15s; }
+        button { cursor: pointer; background: none; border: none; transition: 0.15s; }
         button:active { transform: scale(0.96); }
-        input, textarea, select { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 14px; background: var(--bg); color: var(--txt); font-size: 14px; outline: none; margin: 5px 0; }
-        textarea { resize: vertical; min-height: 70px; }
-        @keyframes logoPulse { 0%,100% { transform: scale(1); box-shadow: 0 10px 30px rgba(85, 107, 47, 0.3); } 50% { transform: scale(1.08); box-shadow: 0 20px 50px rgba(85, 107, 47, 0.5); } }
-        .logo-pulse { animation: logoPulse 2.5s ease-in-out infinite; }
-        .header { background: var(--card); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--border); }
-        .header .logo-area { display: flex; align-items: center; gap: 8px; }
-        .header .logo-area img { height: 38px; }
-        .header .logo-text { font-weight: 900; font-size: 18px; color: var(--olive); }
-        .h-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--txt2); font-size: 17px; }
-        .sidebar { position: fixed; top: 0; right: -320px; width: 300px; height: 100%; background: var(--card); z-index: 200; transition: 0.3s; box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2); overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--txt);
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        textarea { min-height: 70px; resize: vertical; }
+        .header {
+            background: var(--card);
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .logo-area { display: flex; align-items: center; gap: 8px; }
+        .logo-area img { height: 38px; }
+        .logo-text { font-weight: 900; font-size: 18px; color: var(--olive); }
+        .h-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            color: var(--txt2);
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100%;
+            background: var(--card);
+            z-index: 200;
+            transition: 0.3s;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.2);
+        }
         .sidebar.open { right: 0; }
         .profile-card-sidebar {
-            background: linear-gradient(135deg, var(--olive-dark), var(--olive));
+            background: linear-gradient(135deg, #3d4d21, #556B2F);
             border-radius: 24px;
             padding: 16px;
-            color: white;
             text-align: center;
+            color: white;
         }
-        .profile-avatar-sidebar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--gold); margin: 0 auto 10px; display: block; cursor: pointer; }
-        .profile-name-sidebar { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-        .profile-email-sidebar { font-size: 12px; opacity: 0.8; margin-bottom: 12px; word-break: break-all; }
-        .edit-profile-btn { background: rgba(255,255,255,0.2); border: none; padding: 6px 12px; border-radius: 30px; color: white; font-size: 12px; width: 100%; cursor: pointer; }
-        .sidebar-section { background: var(--bg); border-radius: 20px; padding: 12px; }
-        .sidebar-section-title { font-size: 14px; font-weight: 700; color: var(--olive); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .s-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 14px; cursor: pointer; color: var(--txt); font-size: 14px; margin: 4px 0; transition: 0.1s; }
+        .profile-avatar-sidebar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--gold);
+            margin: 0 auto 10px;
+        }
+        .profile-name-sidebar { font-size: 18px; font-weight: 800; }
+        .profile-email-sidebar { font-size: 12px; opacity: 0.8; margin: 4px 0 12px; }
+        .edit-profile-btn {
+            background: rgba(255,255,255,0.2);
+            border-radius: 30px;
+            padding: 6px 12px;
+            font-size: 12px;
+            width: 100%;
+            color: white;
+        }
+        .sidebar-section {
+            background: var(--bg);
+            border-radius: 20px;
+            padding: 12px;
+        }
+        .sidebar-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--olive);
+            margin-bottom: 10px;
+            display: flex;
+            gap: 8px;
+        }
+        .s-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 14px;
+            cursor: pointer;
+            margin: 4px 0;
+        }
         .s-item:active { background: var(--border); }
-        .s-item i { width: 24px; text-align: center; color: var(--olive); }
+        .s-item i { width: 24px; color: var(--olive); }
         .lang-row { display: flex; gap: 6px; margin: 10px 0; }
-        .lang-btn { flex: 1; padding: 8px; text-align: center; border-radius: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--txt2); font-size: 12px; cursor: pointer; }
+        .lang-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            font-size: 12px;
+        }
         .lang-btn.active { background: var(--olive); color: white; border-color: var(--olive); }
         .footer-links { font-size: 10px; color: var(--txt3); text-align: center; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
-        .footer-links span { cursor: pointer; text-decoration: underline; }
-        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 150; display: none; }
+        .footer-links span { text-decoration: underline; cursor: pointer; }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 150;
+            display: none;
+        }
         .overlay.show { display: block; }
-        .toolbar { display: flex; gap: 8px; padding: 10px 14px; background: var(--bg); position: sticky; top: 56px; z-index: 40; }
-        .search { flex: 1; padding: 10px 14px; border: 2px solid var(--border); border-radius: 60px; background: var(--card); color: var(--txt); font-size: 13px; }
-        .t-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--txt2); font-size: 16px; background: var(--card); }
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--bg);
+            position: sticky;
+            top: 56px;
+            z-index: 40;
+        }
+        .search {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 60px;
+            border: 2px solid var(--border);
+            background: var(--card);
+        }
+        .t-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card);
+        }
         .t-btn.accent { background: var(--olive); color: white; border-color: var(--olive); font-size: 20px; }
-        .guides { padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; }
-        .guide-card { background: var(--card); border-radius: 18px; overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); border: 1px solid var(--border); }
+        .guides {
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 80px;
+        }
+        .guide-card {
+            background: var(--card);
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
         .card-top { display: flex; gap: 10px; padding: 12px; }
-        .avatar { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; border: 2px solid var(--olive); flex-shrink: 0; background: var(--bg); cursor: pointer; }
-        .card-mid { flex: 1; min-width: 0; }
+        .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            object-fit: cover;
+            border: 2px solid var(--olive);
+            cursor: pointer;
+        }
+        .card-mid { flex: 1; }
         .name { font-weight: 800; font-size: 16px; }
-        .phone { font-size: 13px; color: var(--olive); font-weight: 700; direction: ltr; }
-        .card-bottom { display: flex; gap: 6px; padding: 6px 8px; border-top: 1px solid var(--border); background: var(--bg); flex-wrap: wrap; justify-content: center; }
-        .c-btn { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 4px; }
-        .c-btn i { font-size: 12px; }
+        .phone { font-size: 12px; color: var(--olive); direction: ltr; }
+        .card-bottom {
+            display: flex;
+            gap: 6px;
+            padding: 8px 10px;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+            flex-wrap: wrap;
+        }
+        .c-btn {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
         .c-call { background: var(--ok); }
         .c-wa { background: var(--wa); }
         .c-card { background: var(--olive); }
         .c-edit { background: #3b82f6; }
         .c-del { background: var(--err); }
         .c-security { background: var(--security); }
-        .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
         .modal.show { visibility: visible; opacity: 1; }
-        .modal-box { background: var(--card); border-radius: 24px; padding: 24px; width: 92%; max-width: 550px; max-height: 88vh; overflow-y: auto; }
-        .modal-box h3 { text-align: center; color: var(--olive); margin-bottom: 16px; }
-        .upload-area { border: 2px dashed var(--olive); border-radius: 16px; padding: 14px; text-align: center; margin: 8px 0; cursor: pointer; position: relative; }
-        .upload-area:hover { border-color: var(--gold); background: rgba(85, 107, 47, 0.03); }
-        .upload-area img { width: 60px; height: 60px; object-fit: cover; border-radius: 12px; margin-top: 6px; }
-        .upload-area .upload-spinner { display: none; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.7); border-radius: 16px; align-items: center; justify-content: center; font-size: 24px; color: var(--olive); }
-        .upload-area.uploading .upload-spinner { display: flex; }
-        .btn-primary { width: 100%; padding: 12px; background: var(--ok); color: white; border-radius: 14px; font-weight: 700; font-size: 15px; margin-top: 10px; }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-secondary { width: 100%; padding: 12px; background: var(--txt3); color: white; border-radius: 14px; font-weight: 700; margin-top: 6px; }
-        .delegation-card { background: var(--card); border-radius: 20px; padding: 0; border: 3px solid var(--gold); position: relative; overflow: hidden; color: var(--txt); }
-        .card-img-area { position: relative; width: 100%; height: 200px; background: #e5e7eb; cursor: pointer; }
-        .card-img-area .main-img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
-        .card-img-area .overlay-avatar { position: absolute; bottom: 12px; right: 12px; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); cursor: pointer; }
-        .info-box { background: var(--bg); border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
-        .info-box .value { font-weight: 800; font-size: 16px; color: var(--olive); }
+        .modal-box {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px;
+            width: 92%;
+            max-width: 550px;
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: var(--ok);
+            color: white;
+            border-radius: 14px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        .btn-secondary {
+            width: 100%;
+            padding: 12px;
+            background: var(--txt3);
+            color: white;
+            border-radius: 14px;
+            margin-top: 6px;
+        }
+        .delegation-card {
+            background: var(--card);
+            border-radius: 20px;
+            border: 3px solid var(--gold);
+            overflow: hidden;
+        }
+        .card-img-area {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: #e5e7eb;
+            cursor: pointer;
+        }
+        .card-img-area .main-img { width: 100%; height: 100%; object-fit: cover; }
+        .card-img-area .overlay-avatar {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            object-fit: cover;
+        }
+        .info-box {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid var(--border);
+        }
         .plate-container {
+            background: #1e293b;
             border-radius: 8px;
             padding: 8px;
             display: inline-flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-weight: 800;
-            direction: ltr;
-            font-size: 13px;
+            gap: 4px;
             color: white;
-            transition: all 0.2s;
+            direction: ltr;
         }
-        .plate-touristic { background: #1e293b; }
         .plate-diplomatic { background: #1e3a8a; }
         .plate-consular { background: #854d0e; }
         .plate-media { background: #4c0519; }
@@ -148,37 +338,88 @@
         .plate-delegation { background: #7c3aed; }
         .plate-mission { background: #b45309; }
         .plate-administrative { background: #065a60; }
-        .plate-numbers { display: flex; gap: 8px; align-items: center; }
-        .plate-function { font-size: 9px; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 20px; }
+        .plate-numbers { display: flex; gap: 6px; }
         .datetime-bar {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 10px 14px;
-            background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
-            border-bottom: 1px solid var(--border);
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #e8c456, #D4AF37);
             font-size: 11px;
-            color: #1e293b;
             font-weight: 600;
         }
-        .dark .datetime-bar { background: linear-gradient(135deg, #4a5b2e 0%, #6b8c23 100%); color: white; }
-        .datetime-bar i { margin-left: 4px; }
-        .weather-info { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.1); padding: 4px 10px; border-radius: 30px; }
-        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 22px; border-radius: 30px; font-size: 13px; z-index: 999; animation: fadeInUp 0.3s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-        .spinner-small { display: inline-block; width: 18px; height: 18px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+        .weather-info { background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 30px; }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            z-index: 999;
+            animation: fadeInUp 0.3s;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .spinner-small {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .flex-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .flex-btns button { flex: 1; }
-        .link-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); font-size:12px; direction:ltr; }
-        .link-item a { background: var(--wa); color: white; padding: 4px 12px; border-radius: 20px; text-decoration: none; font-size: 12px; }
-        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 12px; display: block; border: 3px solid var(--gold); }
-        .image-viewer-modal { background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); }
-        .image-viewer-modal .modal-box { background: transparent; box-shadow: none; padding: 0; max-width: 95%; text-align: center; }
-        .image-viewer-modal img { max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
-        .close-viewer { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; }
+        .flex-btns { display: flex; gap: 8px; margin-top: 12px; }
+        .contact-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            border: 1px solid var(--border);
+        }
+        .contact-buttons { display: flex; gap: 8px; }
+        .contact-buttons button {
+            width: 40px;
+            height: 40px;
+            border-radius: 30px;
+            font-size: 20px;
+            color: white;
+        }
+        .call-btn { background: var(--ok); }
+        .wa-btn { background: var(--wa); }
+        .numbers-manager { background: var(--bg); border-radius: 16px; padding: 12px; margin-top: 12px; }
+        .number-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--border); }
+        .delete-number-btn { color: var(--err); cursor: pointer; }
+        .add-number-form { display: flex; gap: 8px; margin-top: 12px; }
+        .add-number-form button { background: var(--ok); color: white; padding: 8px 12px; border-radius: 14px; }
+        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto; border: 3px solid var(--gold); }
+        .image-viewer-modal { background: rgba(0,0,0,0.9); }
+        .image-viewer-modal .modal-box { background: transparent; padding: 0; text-align: center; }
+        .image-viewer-modal img { max-width: 100%; max-height: 85vh; border-radius: 16px; }
+        .close-viewer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
         .timestamp-row {
             display: flex;
             justify-content: space-between;
@@ -190,65 +431,17 @@
             border-top: 1px solid var(--border);
             padding-top: 6px;
         }
-        .contact-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg);
-            border-radius: 12px;
-            padding: 8px 12px;
+        .guide-phone-number { font-size: 14px; font-weight: 700; color: var(--olive); direction: ltr; }
+        .error-message {
+            background: rgba(239,68,68,0.1);
+            border-right: 3px solid var(--err);
+            padding: 10px;
             margin-top: 8px;
-            border: 1px solid var(--border);
-        }
-        .contact-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        .contact-buttons button {
-            background: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 30px;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-        .contact-buttons .call-btn { background: var(--ok); }
-        .contact-buttons .wa-btn { background: var(--wa); }
-        .guide-phone-number {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--olive);
-            direction: ltr;
-        }
-        .numbers-manager {
-            background: var(--bg);
-            border-radius: 16px;
-            padding: 12px;
-            margin-top: 12px;
-        }
-        .number-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            border-bottom: 1px solid var(--border);
-        }
-        .number-item:last-child { border-bottom: none; }
-        .delete-number-btn {
+            border-radius: 8px;
+            font-size: 13px;
             color: var(--err);
-            font-size: 16px;
-            cursor: pointer;
+            text-align: right;
         }
-        .add-number-form {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        .add-number-form input { flex: 1; margin: 0; }
-        .add-number-form button { background: var(--ok); color: white; padding: 8px 12px; border-radius: 14px; }
     </style>
 </head>
 <body>
@@ -256,15 +449,15 @@
 <!-- شاشة الدخول -->
 <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;">
     <div style="background:var(--card);border-radius:24px;padding:36px 28px;max-width:400px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.1);">
-        <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" class="logo-pulse" style="width:120px;margin-bottom:20px;border-radius:24px;">
-        <h1 style="color:var(--olive);font-size:28px;font-weight:900;margin-bottom:4px;">F‑Note Pro Max</h1>
-        <p style="color:var(--gold);font-size:14px;font-weight:600;margin-bottom:20px;">إدارة الوفود السياحية والدبلوماسية</p>
+        <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:100px;margin-bottom:20px;border-radius:24px;animation:logoPulse 2.5s infinite;">
+        <h1 style="color:var(--olive);font-size:28px;">F‑Note Pro Max</h1>
+        <p style="color:var(--gold);margin-bottom:20px;">إدارة الوفود السياحية والدبلوماسية</p>
         <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr">
         <input type="password" id="loginPassword" placeholder="كلمة المرور">
-        <button id="loginBtn" style="width:100%;padding:14px;background:var(--olive);color:white;border-radius:14px;font-weight:700;font-size:16px;margin-top:12px;">دخول</button>
-        <button id="offlineBtn" style="width:100%;padding:14px;background:var(--txt3);color:white;border-radius:14px;font-weight:700;font-size:14px;margin-top:8px;">🔄 بدون إنترنت</button>
-        <div id="loginError" style="color:var(--err);font-size:13px;margin-top:8px;display:none;"></div>
-        <div style="margin-top:16px; font-size:12px; color:var(--txt3);">
+        <button id="loginBtn" style="width:100%;padding:14px;background:var(--olive);color:white;border-radius:14px;font-weight:700;margin-top:12px;">دخول</button>
+        <button id="offlineBtn" style="width:100%;padding:14px;background:var(--txt3);color:white;border-radius:14px;margin-top:8px;">🔄 بدون إنترنت</button>
+        <div id="loginError" class="error-message" style="display:none;"></div>
+        <div style="margin-top:16px;font-size:12px;color:var(--txt3);">
             <i class="fas fa-info-circle"></i> الحسابات لا تُنشأ إلا عن طريق المدير<br>
             <strong>fahmiajmi5@gmail.com</strong>
         </div>
@@ -274,21 +467,17 @@
 <!-- التطبيق الرئيسي -->
 <div id="appContainer" style="display:none;">
     <div class="header">
-        <div class="logo-area">
-            <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" alt="Logo">
-            <span class="logo-text">F‑Note Pro</span>
-        </div>
+        <div class="logo-area"><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png"><span class="logo-text">F‑Note Pro</span></div>
         <div style="display:flex;gap:8px;">
             <button class="h-btn" id="refreshBtn"><i class="fa-solid fa-arrows-rotate"></i></button>
             <button class="h-btn" id="darkToggle"><i class="fa-solid fa-moon"></i></button>
             <button class="h-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
         </div>
     </div>
-
     <div class="overlay" id="overlay"></div>
     <div class="sidebar" id="sidebar">
         <div class="profile-card-sidebar">
-            <img id="sidebarAvatar" class="profile-avatar-sidebar" src="" alt="صورة شخصية">
+            <img id="sidebarAvatar" class="profile-avatar-sidebar">
             <div class="profile-name-sidebar" id="sidebarDisplayName">...</div>
             <div class="profile-email-sidebar" id="sidebarEmail">...</div>
             <button class="edit-profile-btn" id="editProfileSidebarBtn"><i class="fas fa-edit"></i> تعديل الملف الشخصي</button>
@@ -308,215 +497,24 @@
                 <button class="lang-btn" data-lang="fr">FR</button>
             </div>
         </div>
-        <div class="footer-links">
-            <span id="termsBtn">📜 شروط الخدمة والحقوق</span>
-        </div>
+        <div class="footer-links"><span id="termsBtn">📜 شروط الخدمة والحقوق</span></div>
     </div>
-
     <div class="toolbar">
         <input type="text" id="searchInput" class="search" placeholder="🔍 بحث عن مرشد...">
         <button class="t-btn" id="voiceSearchBtn"><i class="fa-solid fa-microphone"></i></button>
         <button class="t-btn accent" id="addGuideBtn">+</button>
     </div>
-
-    <div id="guidesContainer" class="guides"><div style="text-align:center;padding:40px;color:var(--txt3);">⏳ جاري التحميل...</div></div>
+    <div id="guidesContainer" class="guides"><div style="text-align:center;padding:40px;">⏳ جاري التحميل...</div></div>
 </div>
 
 <!-- مودال إدارة الأرقام -->
-<div class="modal" id="numbersManagerModal">
-    <div class="modal-box">
-        <h3><i class="fa-solid fa-phone-plus"></i> إدارة أرقام الواتساب (المشتركة)</h3>
-        <div id="numbersList" class="numbers-manager"></div>
-        <div class="add-number-form">
-            <input type="tel" id="newNumberInput" placeholder="+216XXXXXXXX" dir="ltr">
-            <button id="addNumberBtn"><i class="fas fa-plus"></i> إضافة</button>
-        </div>
-        <button class="btn-secondary" id="closeNumbersBtn">إغلاق</button>
-    </div>
-</div>
-
-<!-- مودال الملف الشخصي -->
-<div class="modal" id="profileModal">
-    <div class="modal-box">
-        <h3>👤 تعديل الملف الشخصي</h3>
-        <div class="upload-area" id="profileUploadBtn" style="text-align:center;">
-            <img id="profileAvatar" class="profile-avatar" src="">
-            <i class="fa-solid fa-camera"></i> تغيير الصورة
-            <div class="upload-spinner"><span class="spinner-small"></span></div>
-        </div>
-        <input type="text" id="profileDisplayName" placeholder="اسم العرض">
-        <input type="email" id="profileEmail" disabled>
-        <button id="changePasswordBtn" class="btn-secondary" style="margin-top:0;">🔑 تغيير كلمة المرور</button>
-        <button id="saveProfileBtn" class="btn-primary">💾 حفظ التغييرات</button>
-        <button id="closeProfileBtn" class="btn-secondary">إلغاء</button>
-    </div>
-</div>
-
-<!-- مودال تغيير كلمة المرور -->
-<div class="modal" id="passwordModal">
-    <div class="modal-box">
-        <h3>🔑 تغيير كلمة المرور</h3>
-        <input type="password" id="oldPassword" placeholder="كلمة المرور الحالية">
-        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
-        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
-        <button id="confirmPasswordBtn" class="btn-primary">تغيير</button>
-        <button id="closePasswordBtn" class="btn-secondary">إلغاء</button>
-    </div>
-</div>
-
-<!-- مودال إضافة / تعديل مرشد -->
-<div class="modal" id="guideModal">
-    <div class="modal-box">
-        <h3 id="modalTitle">➕ إضافة مرشد جديد</h3>
-        <input type="text" id="gName" placeholder="اسم المرشد *">
-        <div id="phoneFieldContainer"><input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr"></div>
-        <div style="display:flex;gap:6px;">
-            <input type="text" id="gNationality" placeholder="الجنسية" style="flex:1;">
-            <input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1;" min="1">
-        </div>
-        <select id="gDelegationType">
-            <option value="سياحي">وفد سياحي</option>
-            <option value="دبلوماسي">وفد دبلوماسي</option>
-            <option value="قنصلي">وفد قنصلي</option>
-            <option value="إعلامي">وفد إعلامي</option>
-            <option value="أمني">وفد أمني</option>
-            <option value="شرطة">وفد شرطة</option>
-            <option value="مندوبية">مندوبية</option>
-            <option value="بعثة">بعثة</option>
-            <option value="إداري تونسي">إداري تونسي</option>
-        </select>
-        <select id="gTransport">
-            <option value="">نوع النقل</option>
-            <option value="حافلة صغيرة">حافلة صغيرة</option>
-            <option value="حافلة كبيرة">حافلة كبيرة</option>
-            <option value="سيارة">سيارة</option>
-            <option value="سيارة دبلوماسية">سيارة دبلوماسية</option>
-            <option value="سيارة قنصلية">سيارة قنصلية</option>
-            <option value="فان">فان</option>
-            <option value="أخرى">أخرى</option>
-        </select>
-        <div style="display:flex;gap:6px;align-items:center;">
-            <input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2;text-align:center;font-weight:800;font-size:15px;" maxlength="5">
-            <span style="font-weight:900;color:var(--olive);" id="plateSeparator">🇹🇳</span>
-            <input type="text" id="gPlate2" placeholder="XXX" style="flex:1;text-align:center;font-weight:800;font-size:15px;" maxlength="3">
-        </div>
-        <input type="text" id="gPlateFunction" placeholder="الوظيفة / الغرض من اللوحة (اختياري)">
-        <div id="administrativePlateContainer" style="display:none;">
-            <div style="display:flex;gap:6px;margin:5px 0;">
-                <select id="gAdmNumber" style="flex:1;">
-                    <option value="">رقم الإدارة</option>
-                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-                    <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
-                    <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
-                    <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
-                    <option value="21">21</option>
-                </select>
-                <input type="text" id="gAdmMata" placeholder="مطى" style="flex:1;" maxlength="10">
-                <input type="text" id="gAdmSerial" placeholder="الرقم التسلسلي" style="flex:1;" maxlength="10">
-            </div>
-        </div>
-        <div style="display:flex;gap:6px;">
-            <input type="text" id="gFrom" placeholder="من" style="flex:1;">
-            <input type="text" id="gTo" placeholder="إلى" style="flex:1;">
-        </div>
-        <div id="stayDurationContainer" style="display:none;">
-            <input type="number" id="gStayDuration" placeholder="مدة الإقامة (بالأيام)" min="1">
-        </div>
-        <div class="upload-area" id="guideUploadBtn">
-            <i class="fa-solid fa-user"></i> 📸 صورة المرشد
-            <img id="guidePreview" src="" style="display:none;">
-            <div class="upload-spinner"><span class="spinner-small"></span> جاري الرفع...</div>
-        </div>
-        <div class="upload-area" id="busUploadBtn">
-            <i class="fa-solid fa-bus"></i> 🚌 صورة وسيلة النقل
-            <img id="busPreview" src="" style="display:none;">
-            <div class="upload-spinner"><span class="spinner-small"></span> جاري الرفع...</div>
-        </div>
-        <input type="text" id="gAgency" placeholder="الوكالة">
-        <textarea id="gNotes" placeholder="ملاحظات"></textarea>
-        <select id="gVisibility">
-            <option value="private">🔒 خاص</option>
-            <option value="public">🌍 عام (يظهر للجميع)</option>
-        </select>
-        <button class="btn-primary" id="saveGuideBtn">💾 حفظ المرشد</button>
-        <button class="btn-secondary" id="closeGuideBtn">إلغاء</button>
-    </div>
-</div>
-
-<!-- مودال بطاقة الوفد -->
-<div class="modal" id="delegationModal">
-    <div class="modal-box" style="background:#f3f4f6;max-width:550px;">
-        <h3>📋 معلومات الوفد</h3>
-        <div id="delegationCard" class="delegation-card">
-            <div class="datetime-bar">
-                <span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span>
-                <span><i class="far fa-clock"></i> <span id="delegationTime"></span></span>
-                <div id="delegationWeather" class="weather-info"></div>
-            </div>
-            <div style="padding:14px;display:flex;justify-content:space-between;align-items:center;">
-                <div><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:32px;"></div>
-                <div><h4 style="color:var(--olive);font-size:15px;">NOTE PRO WORK</h4><span id="delegationSubTitle" style="font-size:10px;color:var(--gold);">معلومات الوفد</span></div>
-            </div>
-            <div class="card-img-area">
-                <img id="delegationMainImg" class="main-img" src="" crossorigin="anonymous">
-                <img id="delegationAvatar" class="overlay-avatar" src="" crossorigin="anonymous">
-            </div>
-            <div style="padding:14px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div class="info-box"><span>عدد الأفراد</span><br><span id="delegationPeopleCount" class="value"></span></div>
-                    <div class="info-box"><span>الجنسية</span><br><span id="delegationNationality" class="value"></span></div>
-                    <div class="info-box"><span>نوع النقل</span><br><span id="delegationTransport" class="value"></span></div>
-                    <div class="info-box"><span>رقم اللوحة</span><br><div id="delegationPlateDisplay"></div></div>
-                    <div class="info-box"><span>من</span><br><span id="delegationFrom" class="value"></span></div>
-                    <div class="info-box"><span>إلى</span><br><span id="delegationTo" class="value"></span></div>
-                </div>
-                <div id="stayDurationDisplay" class="info-box" style="display:none; margin-top:8px;"><span>مدة الإقامة</span><br><span id="delegationStayDuration" class="value"></span></div>
-                <div id="guideInfoBox" class="info-box" style="margin-top:8px;background:#f0fdf4;">
-                    <div><span>المرشد</span><br><span id="delegationGuideName" class="value"></span></div>
-                </div>
-                <div id="guideContactRow" class="contact-row" style="display:none;">
-                    <span class="guide-phone-number" id="delegationGuidePhoneDisplay"></span>
-                    <div class="contact-buttons">
-                        <button class="call-btn" id="callGuideBtn"><i class="fas fa-phone-alt"></i></button>
-                        <button class="wa-btn" id="waGuideBtn"><i class="fab fa-whatsapp"></i></button>
-                    </div>
-                </div>
-                <div id="delegationNotesRow" class="info-box" style="display:none; margin-top:8px;"><span>ملاحظات</span><br><span id="delegationNotes" style="font-size:13px;"></span></div>
-                <div class="timestamp-row">
-                    <span><i class="far fa-plus-square"></i> الإضافة: <span id="creationTimestamp"></span></span>
-                    <span><i class="fab fa-whatsapp"></i> الإرسال: <span id="sendTimestamp"></span></span>
-                    <span><i class="fas fa-user-check"></i> المنشئ: <span id="creatorName"></span></span>
-                </div>
-            </div>
-        </div>
-        <div class="flex-btns">
-            <button class="btn-primary" style="background:var(--ok);" id="shareDelegationBtn"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button>
-        </div>
-        <button class="btn-secondary" id="closeDelegationBtn">إغلاق</button>
-    </div>
-</div>
-
-<!-- مودال كرت التنسيق والمتابعة -->
-<div class="modal" id="securityModal">
-    <div class="modal-box">
-        <h3><i class="fas fa-exchange-alt"></i> كرت التنسيق والمتابعة</h3>
-        <div id="securityCardPreview" class="delegation-card" style="margin-bottom:16px;"></div>
-        <label>🏷️ تحديد المجموعة / الفقرة المخصصة:</label>
-        <input type="text" id="securityGroupLabel" placeholder="مثال: وفد السليمانية - المجموعة الأولى">
-        <div id="savedNumbersContainer" style="margin-top:12px;"></div>
-        <div style="font-size:12px; color:var(--txt3); margin-top:8px;">
-            <i class="fas fa-info-circle"></i> الأرقام الظاهرة هي الأرقام المحفوظة في الإعدادات المشتركة.
-        </div>
-        <button class="btn-primary" id="sendAllSequentialBtn" style="background:var(--wa); margin-top:12px;"><i class="fab fa-whatsapp"></i> إرسال الكرت إلى جميع الأرقام تباعاً</button>
-        <div id="securityLinksContainer" style="margin-top:16px; max-height:200px; overflow-y:auto; background:var(--bg); border-radius:12px; padding:8px; display:none;"></div>
-        <button class="btn-secondary" id="closeSecurityBtn">إغلاق</button>
-    </div>
-</div>
-
-<!-- مودال عرض الصورة المكبرة -->
-<div class="modal image-viewer-modal" id="imageViewerModal">
-    <div class="modal-box" style="position:relative;"><div class="close-viewer" id="closeImageViewer">&times;</div><img id="fullImageView" src=""></div>
-</div>
+<div class="modal" id="numbersManagerModal"><div class="modal-box"><h3>إدارة أرقام الواتساب</h3><div id="numbersList" class="numbers-manager"></div><div class="add-number-form"><input type="tel" id="newNumberInput" placeholder="+216XXXXXXXX"><button id="addNumberBtn">إضافة</button></div><button class="btn-secondary" id="closeNumbersBtn">إغلاق</button></div></div>
+<div class="modal" id="profileModal"><div class="modal-box"><h3>تعديل الملف الشخصي</h3><div class="upload-area" id="profileUploadBtn" style="text-align:center;"><img id="profileAvatar" class="profile-avatar"><i class="fa-solid fa-camera"></i> تغيير الصورة<div class="upload-spinner"></div></div><input type="text" id="profileDisplayName" placeholder="اسم العرض"><input type="email" id="profileEmail" disabled><button id="changePasswordBtn" class="btn-secondary">🔑 تغيير كلمة المرور</button><button id="saveProfileBtn" class="btn-primary">💾 حفظ التغييرات</button><button id="closeProfileBtn" class="btn-secondary">إلغاء</button></div></div>
+<div class="modal" id="passwordModal"><div class="modal-box"><h3>🔑 تغيير كلمة المرور</h3><input type="password" id="oldPassword" placeholder="كلمة المرور الحالية"><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button id="confirmPasswordBtn" class="btn-primary">تغيير</button><button id="closePasswordBtn" class="btn-secondary">إلغاء</button></div></div>
+<div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle">➕ إضافة مرشد جديد</h3><input type="text" id="gName" placeholder="اسم المرشد *"><div id="phoneFieldContainer"><input type="tel" id="gPhone" placeholder="رقم الجوال *"></div><div style="display:flex;gap:6px;"><input type="text" id="gNationality" placeholder="الجنسية" style="flex:1;"><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1;" min="1"></div><select id="gDelegationType"><option value="سياحي">وفد سياحي</option><option value="دبلوماسي">وفد دبلوماسي</option><option value="قنصلي">وفد قنصلي</option><option value="إعلامي">وفد إعلامي</option><option value="أمني">وفد أمني</option><option value="شرطة">وفد شرطة</option><option value="مندوبية">مندوبية</option><option value="بعثة">بعثة</option><option value="إداري تونسي">إداري تونسي</option></select><select id="gTransport"><option value="">نوع النقل</option><option value="حافلة صغيرة">حافلة صغيرة</option><option value="حافلة كبيرة">حافلة كبيرة</option><option value="سيارة">سيارة</option><option value="سيارة دبلوماسية">سيارة دبلوماسية</option><option value="سيارة قنصلية">سيارة قنصلية</option><option value="فان">فان</option><option value="أخرى">أخرى</option></select><div style="display:flex;gap:6px;"><input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2;"><span id="plateSeparator">🇹🇳</span><input type="text" id="gPlate2" placeholder="XXX" style="flex:1;"></div><input type="text" id="gPlateFunction" placeholder="الوظيفة"><div id="administrativePlateContainer" style="display:none;"><div style="display:flex;gap:6px;"><select id="gAdmNumber"><option value="">رقم</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option></select><input type="text" id="gAdmMata" placeholder="مطى"><input type="text" id="gAdmSerial" placeholder="الرقم التسلسلي"></div></div><div style="display:flex;gap:6px;"><input type="text" id="gFrom" placeholder="من"><input type="text" id="gTo" placeholder="إلى"></div><div id="stayDurationContainer" style="display:none;"><input type="number" id="gStayDuration" placeholder="مدة الإقامة (أيام)"></div><div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> صورة المرشد<img id="guidePreview" style="display:none;"><div class="upload-spinner"></div></div><div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> صورة وسيلة النقل<img id="busPreview" style="display:none;"><div class="upload-spinner"></div></div><input type="text" id="gAgency" placeholder="الوكالة"><textarea id="gNotes" placeholder="ملاحظات"></textarea><select id="gVisibility"><option value="private">خاص</option><option value="public">عام</option></select><button class="btn-primary" id="saveGuideBtn">حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn">إلغاء</button></div></div>
+<div class="modal" id="delegationModal"><div class="modal-box"><h3>معلومات الوفد</h3><div id="delegationCard" class="delegation-card"><div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span><span><i class="far fa-clock"></i> <span id="delegationTime"></span></span><div id="delegationWeather" class="weather-info"></div></div><div style="padding:14px;display:flex;justify-content:space-between;"><div><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:32px;"></div><div><h4 style="color:var(--olive);">NOTE PRO WORK</h4><span id="delegationSubTitle" style="font-size:10px;color:var(--gold);">معلومات الوفد</span></div></div><div class="card-img-area"><img id="delegationMainImg" class="main-img"><img id="delegationAvatar" class="overlay-avatar"></div><div style="padding:14px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div class="info-box"><span>عدد الأفراد</span><br><span id="delegationPeopleCount" class="value"></span></div><div class="info-box"><span>الجنسية</span><br><span id="delegationNationality" class="value"></span></div><div class="info-box"><span>نوع النقل</span><br><span id="delegationTransport" class="value"></span></div><div class="info-box"><span>رقم اللوحة</span><br><div id="delegationPlateDisplay"></div></div><div class="info-box"><span>من</span><br><span id="delegationFrom" class="value"></span></div><div class="info-box"><span>إلى</span><br><span id="delegationTo" class="value"></span></div></div><div id="stayDurationDisplay" class="info-box" style="display:none;"><span>مدة الإقامة</span><br><span id="delegationStayDuration"></span></div><div id="guideInfoBox" class="info-box" style="background:#f0fdf4;"><span>المرشد</span><br><span id="delegationGuideName"></span></div><div id="guideContactRow" class="contact-row" style="display:none;"><span id="delegationGuidePhoneDisplay" class="guide-phone-number"></span><div class="contact-buttons"><button class="call-btn" id="callGuideBtn"><i class="fas fa-phone-alt"></i></button><button class="wa-btn" id="waGuideBtn"><i class="fab fa-whatsapp"></i></button></div></div><div id="delegationNotesRow" class="info-box" style="display:none;"><span>ملاحظات</span><br><span id="delegationNotes"></span></div><div class="timestamp-row"><span><i class="far fa-plus-square"></i> الإضافة: <span id="creationTimestamp"></span></span><span><i class="fab fa-whatsapp"></i> الإرسال: <span id="sendTimestamp"></span></span><span><i class="fas fa-user-check"></i> المنشئ: <span id="creatorName"></span></span></div></div></div><button class="btn-primary" id="shareDelegationBtn">مشاركة البطاقة</button><button class="btn-secondary" id="closeDelegationBtn">إغلاق</button></div></div>
+<div class="modal" id="securityModal"><div class="modal-box"><h3>كرت التنسيق والمتابعة</h3><div id="securityCardPreview" class="delegation-card"></div><label>تحديد المجموعة:</label><input type="text" id="securityGroupLabel"><div id="savedNumbersContainer"></div><button class="btn-primary" id="sendAllSequentialBtn">إرسال الكرت إلى جميع الأرقام تباعاً</button><div id="securityLinksContainer"></div><button class="btn-secondary" id="closeSecurityBtn">إغلاق</button></div></div>
+<div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box"><div class="close-viewer" id="closeImageViewer">&times;</div><img id="fullImageView"></div></div>
 
 <script>
     // ========== إعدادات Firebase ==========
@@ -537,18 +535,17 @@
     const IMGBB_API_KEY = '4e65916ca5e764d97e1f5348c6515666';
     const WEATHER_API_KEY = '8d3316e943ba32112e54a2c8e75fe242';
     const CITY = 'Sfax';
-    const ADMIN_EMAIL = 'fahmiajmi5@gmail.com';
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
-    db.enablePersistence({ synchronizeTabs: true }).catch(() => console.warn('⚠️ persistence غير متاح'));
+    db.enablePersistence({ synchronizeTabs: true }).catch(() => console.warn('persistence غير متاح'));
 
     // التخزين المحلي
     const LDB = {
-        get(k) { try { return JSON.parse(localStorage.getItem('fnote_' + k) || 'null'); } catch(e) { return null; } },
-        set(k, v) { try { localStorage.setItem('fnote_' + k, JSON.stringify(v)); } catch(e) {} },
-        getGuides() { return this.get('guides') || []; },
+        get(k) { try { return JSON.parse(localStorage.getItem('fnote_'+k)||'null'); } catch(e){ return null; } },
+        set(k,v) { localStorage.setItem('fnote_'+k, JSON.stringify(v)); },
+        getGuides() { return this.get('guides')||[]; },
         saveGuides(arr) { this.set('guides', arr); }
     };
 
@@ -561,408 +558,172 @@
     let currentWeather = { temp: '', condition: '', city: CITY };
     let whatsappNumbers = [];
 
-    // ========== دوال مساعدة ==========
-    function toast(msg) {
-        const div = document.createElement('div');
-        div.className = 'toast';
-        div.textContent = msg;
-        document.body.appendChild(div);
-        setTimeout(() => { div.style.opacity = '0'; div.style.transition = '0.3s'; }, 2200);
-        setTimeout(() => div.remove(), 2600);
-    }
-
-    async function compressImage(file, maxW = 800, quality = 0.7) {
-        return new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = ev => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let w = img.width, h = img.height;
-                    if (w > maxW) { h *= maxW / w; w = maxW; }
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
-                };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    async function uploadToCloudinary(blob) {
-        const fd = new FormData();
-        fd.append('file', blob, 'image.jpg');
-        fd.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-        fd.append('api_key', CLOUDINARY_CONFIG.apiKey);
-        const res = await fetch(CLOUDINARY_CONFIG.uploadUrl, { method: 'POST', body: fd });
-        if (!res.ok) throw new Error('Cloudinary upload failed');
-        const data = await res.json();
-        return data.secure_url;
-    }
-
-    async function uploadToImgBB(blob) {
-        const fd = new FormData();
-        fd.append('image', blob, 'image.jpg');
-        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
-        if (!res.ok) throw new Error('ImgBB upload failed');
-        const data = await res.json();
-        return data.data.url;
-    }
-
-    async function pickAndUploadImg(previewId, uploadAreaId, setUrlFn, setBlobFn, useImgBB = false) {
-        const inp = document.createElement('input');
-        inp.type = 'file';
-        inp.accept = 'image/*';
-        inp.onchange = async e => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const previewEl = document.getElementById(previewId);
-            const uploadArea = document.getElementById(uploadAreaId);
-            const localUrl = URL.createObjectURL(file);
-            previewEl.src = localUrl;
-            previewEl.style.display = 'block';
-            try {
-                const compressed = await compressImage(file, 800, 0.7);
-                setBlobFn(compressed);
-                if (navigator.onLine) {
-                    uploadArea.classList.add('uploading');
-                    let finalUrl = useImgBB ? await uploadToImgBB(compressed) : await uploadToCloudinary(compressed);
-                    setUrlFn(finalUrl);
-                    previewEl.src = finalUrl;
-                    toast('✅ تم الرفع');
-                } else {
-                    const base64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(compressed); });
-                    setUrlFn(base64);
-                    toast('⚠️ غير متصل - حفظ محلي');
-                }
-            } catch(err) {
-                const base64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(compressed || file); });
-                setUrlFn(base64);
-                toast('⚠️ تعذر الرفع - حفظ محلي');
-            } finally {
-                uploadArea.classList.remove('uploading');
-            }
-        };
-        inp.click();
-    }
-
-    async function fetchWeather() {
-        if (!WEATHER_API_KEY) {
-            currentWeather = { temp: '?', condition: 'لا يوجد مفتاح', city: CITY };
-            return;
-        }
-        try {
-            const url = `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=${currentLang === 'ar' ? 'ar' : 'fr'}`;
-            const res = await fetch(url);
-            if (!res.ok) throw new Error();
-            const data = await res.json();
-            currentWeather = { temp: Math.round(data.main.temp), condition: data.weather[0].description, city: data.name };
-        } catch(e) { currentWeather = { temp: '?', condition: 'غير متوفر', city: CITY }; }
-    }
+    // دوال مساعدة
+    function toast(msg) { let d=document.createElement('div'); d.className='toast'; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>d.remove(),2600); }
+    async function compressImage(file, maxW=800, quality=0.7) { return new Promise(r=>{ let fr=new FileReader(); fr.onload=e=>{ let img=new Image(); img.onload=()=>{ let c=document.createElement('canvas'); let w=img.width, h=img.height; if(w>maxW){ h*=maxW/w; w=maxW; } c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); c.toBlob(b=>r(b),'image/jpeg',quality); }; img.src=e.target.result; }; fr.readAsDataURL(file); }); }
+    async function uploadToCloudinary(blob) { let fd=new FormData(); fd.append('file',blob,'image.jpg'); fd.append('upload_preset',CLOUDINARY_CONFIG.uploadPreset); fd.append('api_key',CLOUDINARY_CONFIG.apiKey); let res=await fetch(CLOUDINARY_CONFIG.uploadUrl,{method:'POST',body:fd}); if(!res.ok) throw new Error(); let data=await res.json(); return data.secure_url; }
+    async function uploadToImgBB(blob) { let fd=new FormData(); fd.append('image',blob,'image.jpg'); let res=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,{method:'POST',body:fd}); if(!res.ok) throw new Error(); let data=await res.json(); return data.data.url; }
+    async function pickAndUploadImg(previewId, uploadAreaId, setUrlFn, setBlobFn, useImgBB=false) { let inp=document.createElement('input'); inp.type='file'; inp.onchange=async e=>{ let file=e.target.files[0]; if(!file) return; let preview=document.getElementById(previewId), area=document.getElementById(uploadAreaId); preview.src=URL.createObjectURL(file); preview.style.display='block'; try{ let comp=await compressImage(file,800,0.7); setBlobFn(comp); if(navigator.onLine){ area.classList.add('uploading'); let url=useImgBB?await uploadToImgBB(comp):await uploadToCloudinary(comp); setUrlFn(url); preview.src=url; toast('✅ تم الرفع'); }else{ let base64=await new Promise(r=>{let fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(comp);}); setUrlFn(base64); toast('⚠️ غير متصل'); } }catch(err){ let base64=await new Promise(r=>{let fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(comp||file);}); setUrlFn(base64); toast('⚠️ تعذر الرفع'); } finally{ area.classList.remove('uploading'); } }; inp.click(); }
+    async function fetchWeather() { try{ let res=await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=ar`); if(!res.ok) throw new Error(); let data=await res.json(); currentWeather={temp:Math.round(data.main.temp),condition:data.weather[0].description,city:data.name}; }catch(e){ currentWeather={temp:'?',condition:'غير متوفر',city:CITY}; } }
     function getWeatherHtml() { return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
 
-    // عرض اللوحة حسب نوع الوفد مع دعم الإداري التونسي
-    function getPlateHtml(guide) {
-        const plate1 = guide.plate1 || '—';
-        const plate2 = guide.plate2 || '—';
-        const delegationType = guide.delegationType || 'سياحي';
-        const transportType = guide.transportType || '';
-        const plateFunction = guide.plateFunction || '';
-        const admNumber = guide.admNumber || '';
-        const admMata = guide.admMata || '';
-        const admSerial = guide.admSerial || '';
-
-        let typeClass = 'plate-touristic';
-        let prefix = '';
-        let showTunis = true;
-        let customHtml = '';
-
-        let effectiveType = delegationType;
-        if (transportType === 'سيارة دبلوماسية') effectiveType = 'دبلوماسي';
-        else if (transportType === 'سيارة قنصلية') effectiveType = 'قنصلي';
-
-        if (delegationType === 'إداري تونسي') {
-            typeClass = 'plate-administrative';
-            customHtml = `<div class="plate-numbers"><span>${admNumber || '—'}</span> <span style="font-weight:900;">مطى</span> <span>${admMata || '—'}</span> <span>${admSerial || '—'}</span></div>`;
-            return `<div class="plate-container ${typeClass}">${customHtml}<div class="plate-function">إداري تونسي${plateFunction ? ` (${plateFunction})` : ''}</div></div>`;
-        }
-
-        switch (effectiveType) {
-            case 'دبلوماسي': typeClass = 'plate-diplomatic'; prefix = 'CD '; showTunis = false; break;
-            case 'قنصلي': typeClass = 'plate-consular'; prefix = 'CC '; showTunis = false; break;
-            case 'إعلامي': typeClass = 'plate-media'; prefix = 'MED '; showTunis = false; break;
-            case 'أمني': typeClass = 'plate-security'; prefix = 'SEC '; showTunis = false; break;
-            case 'شرطة': typeClass = 'plate-police'; prefix = 'POL '; showTunis = false; break;
-            case 'مندوبية': typeClass = 'plate-delegation'; prefix = 'REP '; showTunis = false; break;
-            case 'بعثة': typeClass = 'plate-mission'; prefix = 'MIS '; showTunis = false; break;
-            default: showTunis = true;
-        }
-
-        let funcText = plateFunction ? ` (${plateFunction})` : '';
-        let displayType = effectiveType || 'سياحي';
-
-        if (showTunis) {
-            return `<div class="plate-container ${typeClass}">
-                        <div class="plate-numbers"><span>${plate1}</span> <span style="font-weight:900;">تونس</span> <span>${plate2}</span></div>
-                        <div class="plate-function">${displayType}${funcText}</div>
-                    </div>`;
-        } else {
-            return `<div class="plate-container ${typeClass}">
-                        <div class="plate-numbers">${prefix}<span>${plate1}</span> <span>${plate2}</span></div>
-                        <div class="plate-function">${displayType}${funcText}</div>
+    // عرض اللوحة حسب نوع الوفد
+    function getPlateHtml(g) {
+        let type = g.delegationType || 'سياحي';
+        if (type === 'إداري تونسي') {
+            return `<div class="plate-container plate-administrative">
+                        <div class="plate-numbers"><span>${g.admNumber||''}</span> <span>مطى</span> <span>${g.admMata||''}</span> <span>${g.admSerial||''}</span></div>
+                        <div class="plate-function">إداري تونسي${g.plateFunction?` (${g.plateFunction})`:''}</div>
                     </div>`;
         }
-    }
-
-    function showFullImage(url) {
-        if (!url) return;
-        document.getElementById('fullImageView').src = url;
-        document.getElementById('imageViewerModal').classList.add('show');
-    }
-    document.getElementById('closeImageViewer').onclick = () => document.getElementById('imageViewerModal').classList.remove('show');
-    document.getElementById('imageViewerModal').onclick = (e) => { if (e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); };
-
-    // ========== إدارة الأرقام المحفوظة ==========
-    async function loadWhatsappNumbers() {
-        try {
-            const docRef = db.collection('settings').doc('whatsappNumbers');
-            const doc = await docRef.get();
-            if (doc.exists) {
-                whatsappNumbers = doc.data().numbers || [];
-            } else {
-                whatsappNumbers = [];
-                await docRef.set({ numbers: [] });
-            }
-        } catch(e) {
-            console.warn(e);
-            whatsappNumbers = [];
+        let prefix='', cls='';
+        switch(type){
+            case 'دبلوماسي': prefix='CD '; cls='plate-diplomatic'; break;
+            case 'قنصلي': prefix='CC '; cls='plate-consular'; break;
+            case 'إعلامي': prefix='MED '; cls='plate-media'; break;
+            case 'أمني': prefix='SEC '; cls='plate-security'; break;
+            case 'شرطة': prefix='POL '; cls='plate-police'; break;
+            case 'مندوبية': prefix='REP '; cls='plate-delegation'; break;
+            case 'بعثة': prefix='MIS '; cls='plate-mission'; break;
+            default: cls=''; prefix='';
         }
-        renderNumbersManager();
-    }
-
-    async function saveWhatsappNumbers() {
-        if (!currentUser || currentUser.uid === 'offline') {
-            toast('⚠️ لا يمكن حفظ الأرقام في وضع عدم الاتصال');
-            return;
-        }
-        try {
-            await db.collection('settings').doc('whatsappNumbers').set({ numbers: whatsappNumbers });
-            toast('✅ تم حفظ الأرقام');
-            renderNumbersManager();
-        } catch(e) { toast('❌ فشل حفظ الأرقام: ' + e.message); }
-    }
-
-    function renderNumbersManager() {
-        const container = document.getElementById('numbersList');
-        if (!container) return;
-        if (whatsappNumbers.length === 0) {
-            container.innerHTML = '<div style="text-align:center;padding:12px;">لا توجد أرقام محفوظة</div>';
+        if(type==='سياحي'){
+            return `<div class="plate-container"><div class="plate-numbers"><span>${g.plate1||'—'}</span> <span>تونس</span> <span>${g.plate2||'—'}</span></div><div class="plate-function">سياحي${g.plateFunction?` (${g.plateFunction})`:''}</div></div>`;
         } else {
-            container.innerHTML = whatsappNumbers.map((num, idx) => `
-                <div class="number-item">
-                    <span>${num}</span>
-                    <span class="delete-number-btn" onclick="deleteNumber(${idx})"><i class="fas fa-trash-alt"></i></span>
-                </div>
-            `).join('');
+            return `<div class="plate-container ${cls}"><div class="plate-numbers">${prefix}<span>${g.plate1||'—'}</span> <span>${g.plate2||'—'}</span></div><div class="plate-function">${type}${g.plateFunction?` (${g.plateFunction})`:''}</div></div>`;
         }
     }
 
-    window.deleteNumber = async function(idx) {
-        whatsappNumbers.splice(idx, 1);
-        await saveWhatsappNumbers();
-        renderNumbersManager();
-        if (document.getElementById('securityModal').classList.contains('show')) {
-            renderSavedNumbersInSecurity();
-        }
-    };
+    function showFullImage(url) { if(url){ document.getElementById('fullImageView').src=url; document.getElementById('imageViewerModal').classList.add('show'); } }
+    document.getElementById('closeImageViewer').onclick=()=>document.getElementById('imageViewerModal').classList.remove('show');
+    document.getElementById('imageViewerModal').onclick=e=>{if(e.target===document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show');};
 
-    document.getElementById('addNumberBtn')?.addEventListener('click', async () => {
-        const newNum = document.getElementById('newNumberInput').value.trim();
-        if (!newNum) return toast('⚠️ أدخل رقمًا صحيحًا');
-        let cleanNum = newNum.replace(/[^0-9+]/g, '');
-        if (!cleanNum.startsWith('+')) cleanNum = '+216' + cleanNum.replace(/^0+/, '');
-        if (!cleanNum.match(/[\+]?\d{8,15}/)) return toast('⚠️ رقم غير صالح');
-        if (whatsappNumbers.includes(cleanNum)) return toast('⚠️ الرقم موجود مسبقًا');
-        whatsappNumbers.push(cleanNum);
-        await saveWhatsappNumbers();
-        document.getElementById('newNumberInput').value = '';
-        renderNumbersManager();
-        if (document.getElementById('securityModal').classList.contains('show')) {
-            renderSavedNumbersInSecurity();
-        }
-    });
-
-    function renderSavedNumbersInSecurity() {
-        const container = document.getElementById('savedNumbersContainer');
-        if (!container) return;
-        if (whatsappNumbers.length === 0) {
-            container.innerHTML = '<div style="background:var(--bg); padding:12px; border-radius:12px; text-align:center;">لا توجد أرقام محفوظة. أضف أرقامًا من القائمة الجانبية.</div>';
-            return;
-        }
-        container.innerHTML = `
-            <div style="background:var(--bg); border-radius:12px; padding:8px;">
-                <div style="font-size:12px; font-weight:bold; margin-bottom:8px;">📞 الأرقام المحفوظة (${whatsappNumbers.length}):</div>
-                <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                    ${whatsappNumbers.map(num => `<span style="background:var(--card); padding:4px 10px; border-radius:20px; font-size:11px; direction:ltr;">${num}</span>`).join('')}
-                </div>
-            </div>
-        `;
-    }
+    // ========== إدارة الأرقام ==========
+    async function loadWhatsappNumbers() { try{ let doc=await db.collection('settings').doc('whatsappNumbers').get(); whatsappNumbers=doc.exists?doc.data().numbers||[]:[]; }catch(e){ whatsappNumbers=[]; } renderNumbersManager(); }
+    async function saveWhatsappNumbers() { if(!currentUser||currentUser.uid==='offline') return toast('⚠️ لا يمكن الحفظ'); try{ await db.collection('settings').doc('whatsappNumbers').set({numbers:whatsappNumbers}); toast('✅ تم حفظ الأرقام'); renderNumbersManager(); }catch(e){ toast('❌ فشل الحفظ'); } }
+    function renderNumbersManager(){ let c=document.getElementById('numbersList'); if(!c) return; if(!whatsappNumbers.length) c.innerHTML='<div style="text-align:center;padding:12px;">لا توجد أرقام</div>'; else c.innerHTML=whatsappNumbers.map((n,i)=>`<div class="number-item"><span>${n}</span><span class="delete-number-btn" onclick="deleteNumber(${i})"><i class="fas fa-trash-alt"></i></span></div>`).join(''); }
+    window.deleteNumber=async function(i){ whatsappNumbers.splice(i,1); await saveWhatsappNumbers(); renderNumbersManager(); if(document.getElementById('securityModal').classList.contains('show')) renderSavedNumbersInSecurity(); };
+    document.getElementById('addNumberBtn')?.addEventListener('click',async()=>{ let n=document.getElementById('newNumberInput').value.trim(); if(!n) return toast('أدخل رقمًا'); let clean=n.replace(/[^0-9+]/g,''); if(!clean.startsWith('+')) clean='+216'+clean.replace(/^0+/,''); if(!clean.match(/[\+]?\d{8,15}/)) return toast('رقم غير صالح'); if(whatsappNumbers.includes(clean)) return toast('الرقم موجود'); whatsappNumbers.push(clean); await saveWhatsappNumbers(); document.getElementById('newNumberInput').value=''; renderNumbersManager(); if(document.getElementById('securityModal').classList.contains('show')) renderSavedNumbersInSecurity(); });
+    function renderSavedNumbersInSecurity(){ let c=document.getElementById('savedNumbersContainer'); if(!c) return; if(!whatsappNumbers.length){ c.innerHTML='<div style="background:var(--bg);padding:12px;">لا توجد أرقام محفوظة</div>'; return; } c.innerHTML=`<div style="background:var(--bg);border-radius:12px;padding:8px;"><div style="font-size:12px;font-weight:bold;">📞 الأرقام المحفوظة (${whatsappNumbers.length}):</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${whatsappNumbers.map(num=>`<span style="background:var(--card);padding:4px 10px;border-radius:20px;">${num}</span>`).join('')}</div></div>`; }
 
     // ========== عرض قائمة المرشدين ==========
     function renderGuides() {
         let filtered = guides;
-        if (currentUser && currentUser.uid !== 'offline') filtered = guides.filter(g => g.visibility === 'public' || g.userId === currentUser.uid);
+        if(currentUser && currentUser.uid !== 'offline') filtered = guides.filter(g => g.visibility === 'public' || g.userId === currentUser.uid);
         else filtered = guides.filter(g => g.visibility === 'public');
         const q = document.getElementById('searchInput').value.toLowerCase();
         filtered = filtered.filter(g => (g.name || '').toLowerCase().includes(q) || (g.phone || '').includes(q));
         const container = document.getElementById('guidesContainer');
-        if (!filtered.length) { container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--txt3);">😕 لا توجد نتائج</div>`; return; }
+        if(!filtered.length){ container.innerHTML='<div style="text-align:center;padding:40px;">😕 لا توجد نتائج</div>'; return; }
         container.innerHTML = filtered.map(g => `
             <div class="guide-card">
                 <div class="card-top">
-                    <img class="avatar" src="${g.guidePhoto || ''}" onclick="showFullImage('${g.guidePhoto || ''}')" onerror="this.style.display='none'">
+                    <img class="avatar" src="${g.guidePhoto||''}" onclick="showFullImage('${g.guidePhoto||''}')" onerror="this.style.display='none'">
                     <div class="card-mid">
-                        <div class="name">${g.name || ''} ${g.nationality ? '(' + g.nationality + ')' : ''}</div>
-                        <div style="font-size:11px;color:var(--txt3);">🚐 ${g.transportType || '—'} | 👥 ${g.peopleCount || '—'} | ${g.delegationType || 'سياحي'}</div>
-                        ${g.delegationType === 'سياحي' ? `<div class="phone">📞 ${g.phone || ''}</div>` : (g.stayDuration ? `<div>⏱️ إقامة: ${g.stayDuration} يوم</div>` : '')}
+                        <div class="name">${g.name||''} ${g.nationality?'('+g.nationality+')':''}</div>
+                        <div style="font-size:11px;">🚐 ${g.transportType||'—'} | 👥 ${g.peopleCount||'—'} | ${g.delegationType||'سياحي'}</div>
+                        ${g.delegationType==='سياحي'?`<div class="phone">📞 ${g.phone||''}</div>`:(g.stayDuration?`<div>⏱️ إقامة: ${g.stayDuration} يوم</div>`:'')}
                     </div>
                 </div>
                 <div class="card-bottom">
-                    ${g.delegationType === 'سياحي' ? `<button class="c-btn c-call" onclick="location.href='tel:${g.phone}'"><i class="fas fa-phone-alt"></i></button>
-                    <button class="c-btn c-wa" onclick="window.open('https://wa.me/${(g.phone || '').replace(/[^0-9]/g, '')}')"><i class="fab fa-whatsapp"></i></button>` : ''}
+                    ${g.delegationType==='سياحي'?`<button class="c-btn c-call" onclick="location.href='tel:${g.phone}'"><i class="fas fa-phone-alt"></i></button>
+                    <button class="c-btn c-wa" onclick="window.open('https://wa.me/${(g.phone||'').replace(/[^0-9]/g,'')}')"><i class="fab fa-whatsapp"></i></button>`:''}
                     <button class="c-btn c-card" onclick="showDelegationCard('${g.id}')"><i class="fas fa-id-card"></i></button>
                     <button class="c-btn c-security" onclick="showSecurityCard('${g.id}')"><i class="fas fa-exchange-alt"></i></button>
-                    ${g.userId === currentUser?.uid ? `<button class="c-btn c-edit" onclick="editGuide('${g.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="c-btn c-del" onclick="deleteGuide('${g.id}')"><i class="fas fa-trash-alt"></i></button>` : ''}
+                    ${g.userId===currentUser?.uid?`<button class="c-btn c-edit" onclick="editGuide('${g.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="c-btn c-del" onclick="deleteGuide('${g.id}')"><i class="fas fa-trash-alt"></i></button>`:''}
                 </div>
             </div>
         `).join('');
     }
 
     window.deleteGuide = async function(id) {
-        if (confirm('هل أنت متأكد من الحذف؟')) {
-            guides = guides.filter(g => g.id !== id);
+        if(confirm('هل أنت متأكد من الحذف؟')){
+            guides = guides.filter(g=>g.id!==id);
             LDB.saveGuides(guides);
-            if (currentUser && currentUser.uid !== 'offline' && navigator.onLine) {
-                await db.collection('guides').doc(id).delete().catch(e=>console.warn(e));
-            }
+            if(currentUser && currentUser.uid !== 'offline' && navigator.onLine) await db.collection('guides').doc(id).delete();
             renderGuides();
             toast('🗑️ تم الحذف');
         }
     };
 
     window.editGuide = function(id) {
-        const g = guides.find(x => x.id === id);
-        if (!g) return;
-        editId = id;
-        guidePhotoUrl = g.guidePhoto || '';
-        busPhotoUrl = g.busPhoto || '';
-        document.getElementById('gName').value = g.name || '';
-        document.getElementById('gPhone').value = g.phone || '';
-        document.getElementById('gNationality').value = g.nationality || '';
-        document.getElementById('gPeopleCount').value = g.peopleCount || '';
-        document.getElementById('gDelegationType').value = g.delegationType || 'سياحي';
-        document.getElementById('gTransport').value = g.transportType || '';
-        document.getElementById('gPlate1').value = g.plate1 || '';
-        document.getElementById('gPlate2').value = g.plate2 || '';
-        document.getElementById('gPlateFunction').value = g.plateFunction || '';
-        document.getElementById('gFrom').value = g.fromLocation || '';
-        document.getElementById('gTo').value = g.toLocation || '';
-        document.getElementById('gStayDuration').value = g.stayDuration || '';
-        document.getElementById('gAgency').value = g.agency || '';
-        document.getElementById('gNotes').value = g.notes || '';
-        document.getElementById('gVisibility').value = g.visibility || 'private';
-        // الإداري التونسي
-        if (g.delegationType === 'إداري تونسي') {
-            document.getElementById('gAdmNumber').value = g.admNumber || '';
-            document.getElementById('gAdmMata').value = g.admMata || '';
-            document.getElementById('gAdmSerial').value = g.admSerial || '';
+        let g = guides.find(x=>x.id===id);
+        if(!g) return;
+        editId=id;
+        guidePhotoUrl=g.guidePhoto||''; busPhotoUrl=g.busPhoto||'';
+        document.getElementById('gName').value=g.name||'';
+        document.getElementById('gPhone').value=g.phone||'';
+        document.getElementById('gNationality').value=g.nationality||'';
+        document.getElementById('gPeopleCount').value=g.peopleCount||'';
+        document.getElementById('gDelegationType').value=g.delegationType||'سياحي';
+        document.getElementById('gTransport').value=g.transportType||'';
+        document.getElementById('gPlate1').value=g.plate1||'';
+        document.getElementById('gPlate2').value=g.plate2||'';
+        document.getElementById('gPlateFunction').value=g.plateFunction||'';
+        document.getElementById('gFrom').value=g.fromLocation||'';
+        document.getElementById('gTo').value=g.toLocation||'';
+        document.getElementById('gStayDuration').value=g.stayDuration||'';
+        document.getElementById('gAgency').value=g.agency||'';
+        document.getElementById('gNotes').value=g.notes||'';
+        document.getElementById('gVisibility').value=g.visibility||'private';
+        if(g.delegationType==='إداري تونسي'){
+            document.getElementById('gAdmNumber').value=g.admNumber||'';
+            document.getElementById('gAdmMata').value=g.admMata||'';
+            document.getElementById('gAdmSerial').value=g.admSerial||'';
         }
-        document.getElementById('guidePreview').src = guidePhotoUrl;
-        document.getElementById('guidePreview').style.display = guidePhotoUrl ? 'block' : 'none';
-        document.getElementById('busPreview').src = busPhotoUrl;
-        document.getElementById('busPreview').style.display = busPhotoUrl ? 'block' : 'none';
-        document.getElementById('modalTitle').innerHTML = '✏️ تعديل مرشد';
+        document.getElementById('guidePreview').src=guidePhotoUrl; document.getElementById('guidePreview').style.display=guidePhotoUrl?'block':'none';
+        document.getElementById('busPreview').src=busPhotoUrl; document.getElementById('busPreview').style.display=busPhotoUrl?'block':'none';
+        document.getElementById('modalTitle').innerHTML='✏️ تعديل مرشد';
         document.getElementById('guideModal').classList.add('show');
-        const isTouristic = g.delegationType === 'سياحي';
-        const isAdministrative = g.delegationType === 'إداري تونسي';
-        document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none';
-        document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block';
-        document.getElementById('administrativePlateContainer').style.display = isAdministrative ? 'block' : 'none';
-        const separator = document.getElementById('plateSeparator');
-        if (separator) separator.style.display = (isTouristic || (!isAdministrative && !isTouristic)) ? 'inline' : 'none';
+        let isTouristic=g.delegationType==='سياحي', isAdmin=g.delegationType==='إداري تونسي';
+        document.getElementById('phoneFieldContainer').style.display=isTouristic?'block':'none';
+        document.getElementById('stayDurationContainer').style.display=(!isTouristic && !isAdmin)?'block':'none';
+        document.getElementById('administrativePlateContainer').style.display=isAdmin?'block':'none';
+        document.getElementById('plateSeparator').style.display=(isTouristic || (!isAdmin && !isTouristic))?'inline':'none';
     };
 
-    document.getElementById('addGuideBtn').onclick = () => {
-        editId = null;
-        guidePhotoUrl = ''; busPhotoUrl = '';
-        document.getElementById('gName').value = '';
-        document.getElementById('gPhone').value = '';
-        document.getElementById('gNationality').value = '';
-        document.getElementById('gPeopleCount').value = '';
-        document.getElementById('gDelegationType').value = 'سياحي';
-        document.getElementById('gTransport').value = '';
-        document.getElementById('gPlate1').value = '';
-        document.getElementById('gPlate2').value = '';
-        document.getElementById('gPlateFunction').value = '';
-        document.getElementById('gFrom').value = '';
-        document.getElementById('gTo').value = '';
-        document.getElementById('gStayDuration').value = '';
-        document.getElementById('gAgency').value = '';
-        document.getElementById('gNotes').value = '';
-        document.getElementById('gVisibility').value = 'private';
-        document.getElementById('gAdmNumber').value = '';
-        document.getElementById('gAdmMata').value = '';
-        document.getElementById('gAdmSerial').value = '';
-        document.getElementById('guidePreview').style.display = 'none';
-        document.getElementById('busPreview').style.display = 'none';
-        document.getElementById('modalTitle').innerHTML = '➕ إضافة مرشد جديد';
+    document.getElementById('addGuideBtn').onclick=()=>{
+        editId=null; guidePhotoUrl=''; busPhotoUrl='';
+        ['gName','gPhone','gNationality','gPeopleCount','gTransport','gPlate1','gPlate2','gPlateFunction','gFrom','gTo','gStayDuration','gAgency','gNotes','gAdmNumber','gAdmMata','gAdmSerial'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('gDelegationType').value='سياحي';
+        document.getElementById('gVisibility').value='private';
+        document.getElementById('guidePreview').style.display='none';
+        document.getElementById('busPreview').style.display='none';
+        document.getElementById('modalTitle').innerHTML='➕ إضافة مرشد جديد';
         document.getElementById('guideModal').classList.add('show');
-        document.getElementById('phoneFieldContainer').style.display = 'block';
-        document.getElementById('stayDurationContainer').style.display = 'none';
-        document.getElementById('administrativePlateContainer').style.display = 'none';
-        const separator = document.getElementById('plateSeparator');
-        if (separator) separator.style.display = 'inline';
+        document.getElementById('phoneFieldContainer').style.display='block';
+        document.getElementById('stayDurationContainer').style.display='none';
+        document.getElementById('administrativePlateContainer').style.display='none';
+        document.getElementById('plateSeparator').style.display='inline';
     };
 
-    document.getElementById('gDelegationType').onchange = function() {
-        const isTouristic = this.value === 'سياحي';
-        const isAdministrative = this.value === 'إداري تونسي';
-        document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none';
-        document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block';
-        document.getElementById('administrativePlateContainer').style.display = isAdministrative ? 'block' : 'none';
-        const separator = document.getElementById('plateSeparator');
-        if (separator) separator.style.display = (isTouristic || (!isAdministrative && !isTouristic)) ? 'inline' : 'none';
+    document.getElementById('gDelegationType').onchange=function(){
+        let isTouristic=this.value==='سياحي', isAdmin=this.value==='إداري تونسي';
+        document.getElementById('phoneFieldContainer').style.display=isTouristic?'block':'none';
+        document.getElementById('stayDurationContainer').style.display=(!isTouristic && !isAdmin)?'block':'none';
+        document.getElementById('administrativePlateContainer').style.display=isAdmin?'block':'none';
+        document.getElementById('plateSeparator').style.display=(isTouristic || (!isAdmin && !isTouristic))?'inline':'none';
     };
 
-    document.getElementById('saveGuideBtn').onclick = async function() {
-        const name = document.getElementById('gName').value.trim();
-        const phone = document.getElementById('gPhone').value.trim();
-        const delegationType = document.getElementById('gDelegationType').value;
-        if (!name) return toast('⚠️ الاسم مطلوب');
-        if (delegationType === 'سياحي' && !phone) return toast('⚠️ رقم الجوال مطلوب للوفود السياحية');
-        const saveBtn = this;
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<span class="spinner-small"></span> حفظ...';
-        try {
-            let finalGuide = guidePhotoUrl, finalBus = busPhotoUrl;
-            if (navigator.onLine && guidePhotoBlob && (!guidePhotoUrl || guidePhotoUrl.startsWith('data:'))) {
-                finalGuide = await uploadToCloudinary(guidePhotoBlob);
-                guidePhotoUrl = finalGuide;
-            }
-            if (navigator.onLine && busPhotoBlob && (!busPhotoUrl || busPhotoUrl.startsWith('data:'))) {
-                finalBus = await uploadToCloudinary(busPhotoBlob);
-                busPhotoUrl = finalBus;
-            }
-            const now = new Date();
-            const data = {
-                id: editId || 'local_' + Date.now(),
-                userId: currentUser ? currentUser.uid : 'offline',
-                creatorName: userProfile.displayName || (currentUser ? currentUser.email : 'مستخدم'),
+    document.getElementById('saveGuideBtn').onclick=async function(){
+        let name=document.getElementById('gName').value.trim();
+        let phone=document.getElementById('gPhone').value.trim();
+        let delegationType=document.getElementById('gDelegationType').value;
+        if(!name) return toast('⚠️ الاسم مطلوب');
+        if(delegationType==='سياحي' && !phone) return toast('⚠️ رقم الجوال مطلوب للوفود السياحية');
+        let btn=this; btn.disabled=true; btn.innerHTML='<span class="spinner-small"></span> حفظ...';
+        try{
+            let finalGuide=guidePhotoUrl, finalBus=busPhotoUrl;
+            if(navigator.onLine && guidePhotoBlob && (!guidePhotoUrl || guidePhotoUrl.startsWith('data:'))){ finalGuide=await uploadToCloudinary(guidePhotoBlob); guidePhotoUrl=finalGuide; }
+            if(navigator.onLine && busPhotoBlob && (!busPhotoUrl || busPhotoUrl.startsWith('data:'))){ finalBus=await uploadToCloudinary(busPhotoBlob); busPhotoUrl=finalBus; }
+            let now=new Date();
+            let data={
+                id: editId||'local_'+Date.now(),
+                userId: currentUser?currentUser.uid:'offline',
+                creatorName: userProfile.displayName||(currentUser?currentUser.email:'مستخدم'),
                 name,
-                phone: delegationType === 'سياحي' ? phone : '',
+                phone: delegationType==='سياحي'?phone:'',
                 nationality: document.getElementById('gNationality').value.trim(),
                 peopleCount: document.getElementById('gPeopleCount').value,
                 delegationType: delegationType,
@@ -972,369 +733,288 @@
                 plateFunction: document.getElementById('gPlateFunction').value.trim(),
                 fromLocation: document.getElementById('gFrom').value.trim(),
                 toLocation: document.getElementById('gTo').value.trim(),
-                stayDuration: delegationType !== 'سياحي' && delegationType !== 'إداري تونسي' ? document.getElementById('gStayDuration').value : null,
-                admNumber: delegationType === 'إداري تونسي' ? document.getElementById('gAdmNumber').value : null,
-                admMata: delegationType === 'إداري تونسي' ? document.getElementById('gAdmMata').value.trim() : null,
-                admSerial: delegationType === 'إداري تونسي' ? document.getElementById('gAdmSerial').value.trim() : null,
-                guidePhoto: finalGuide || null,
-                busPhoto: finalBus || null,
+                stayDuration: (delegationType!=='سياحي' && delegationType!=='إداري تونسي')?document.getElementById('gStayDuration').value:null,
+                admNumber: delegationType==='إداري تونسي'?document.getElementById('gAdmNumber').value:null,
+                admMata: delegationType==='إداري تونسي'?document.getElementById('gAdmMata').value.trim():null,
+                admSerial: delegationType==='إداري تونسي'?document.getElementById('gAdmSerial').value.trim():null,
+                guidePhoto: finalGuide||null,
+                busPhoto: finalBus||null,
                 agency: document.getElementById('gAgency').value.trim(),
                 notes: document.getElementById('gNotes').value.trim(),
                 visibility: document.getElementById('gVisibility').value,
                 updatedAt: now.toISOString(),
-                createdAt: editId ? (guides.find(g=>g.id===editId)?.createdAt || now.toISOString()) : now.toISOString()
+                createdAt: editId?(guides.find(g=>g.id===editId)?.createdAt||now.toISOString()):now.toISOString()
             };
-            if (editId) guides = guides.map(g => g.id === editId ? data : g);
+            if(editId) guides=guides.map(g=>g.id===editId?data:g);
             else guides.unshift(data);
             LDB.saveGuides(guides);
-            if (currentUser && currentUser.uid !== 'offline' && navigator.onLine) await db.collection('guides').doc(data.id).set(data, { merge: true });
+            if(currentUser && currentUser.uid!=='offline' && navigator.onLine) await db.collection('guides').doc(data.id).set(data,{merge:true});
             renderGuides();
             document.getElementById('guideModal').classList.remove('show');
-            toast('✅ تم الحفظ بنجاح');
-        } catch(err) { toast('❌ خطأ: ' + err.message); }
-        finally { saveBtn.disabled = false; saveBtn.innerHTML = '💾 حفظ المرشد'; }
+            toast('✅ تم الحفظ');
+        }catch(err){ toast('❌ خطأ: '+err.message); }
+        finally{ btn.disabled=false; btn.innerHTML='💾 حفظ المرشد'; }
     };
 
     // ========== الملف الشخصي ==========
-    async function loadProfile() {
-        document.getElementById('profileDisplayName').value = userProfile.displayName || (currentUser ? currentUser.email : '');
-        document.getElementById('profileEmail').value = currentUser ? currentUser.email : '';
-        document.getElementById('profileAvatar').src = userProfile.photoURL || 'https://ui-avatars.com/api/?background=556B2F&color=fff&name=' + encodeURIComponent(userProfile.displayName || 'User');
-        document.getElementById('sidebarDisplayName').innerHTML = userProfile.displayName || currentUser?.email || '...';
-        document.getElementById('sidebarEmail').innerHTML = currentUser?.email || '';
-        document.getElementById('sidebarAvatar').src = userProfile.photoURL || 'https://ui-avatars.com/api/?background=556B2F&color=fff&name=' + encodeURIComponent(userProfile.displayName || 'User');
+    async function loadProfile(){
+        document.getElementById('profileDisplayName').value=userProfile.displayName||(currentUser?currentUser.email:'');
+        document.getElementById('profileEmail').value=currentUser?currentUser.email:'';
+        let avatar=userProfile.photoURL||'https://ui-avatars.com/api/?background=556B2F&color=fff&name='+encodeURIComponent(userProfile.displayName||'User');
+        document.getElementById('profileAvatar').src=avatar;
+        document.getElementById('sidebarDisplayName').innerHTML=userProfile.displayName||currentUser?.email||'...';
+        document.getElementById('sidebarEmail').innerHTML=currentUser?.email||'';
+        document.getElementById('sidebarAvatar').src=avatar;
     }
-
-    document.getElementById('editProfileSidebarBtn').onclick = () => document.getElementById('profileModal').classList.add('show');
-    document.getElementById('closeProfileBtn').onclick = () => document.getElementById('profileModal').classList.remove('show');
-    document.getElementById('saveProfileBtn').onclick = async () => {
-        const newName = document.getElementById('profileDisplayName').value.trim();
-        if (newName && currentUser) {
-            await currentUser.updateProfile({ displayName: newName });
-            userProfile.displayName = newName;
-            await db.collection('users').doc(currentUser.uid).set({ displayName: newName, photoURL: userProfile.photoURL }, { merge: true });
-            toast('✅ تم تحديث الاسم');
-            loadProfile();
-        }
-        document.getElementById('profileModal').classList.remove('show');
-    };
-    document.getElementById('changePasswordBtn').onclick = () => document.getElementById('passwordModal').classList.add('show');
-    document.getElementById('closePasswordBtn').onclick = () => document.getElementById('passwordModal').classList.remove('show');
-    document.getElementById('confirmPasswordBtn').onclick = async () => {
-        const oldPwd = document.getElementById('oldPassword').value;
-        const newPwd = document.getElementById('newPassword').value;
-        const confirm = document.getElementById('confirmPassword').value;
-        if (newPwd !== confirm) return toast('❌ كلمة المرور الجديدة غير متطابقة');
-        try {
-            const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, oldPwd);
-            await currentUser.reauthenticateWithCredential(credential);
-            await currentUser.updatePassword(newPwd);
-            toast('✅ تم تغيير كلمة المرور');
-            document.getElementById('passwordModal').classList.remove('show');
-        } catch(err) { toast('❌ فشل التغيير: ' + err.message); }
-    };
-    document.getElementById('profileUploadBtn').onclick = () => pickAndUploadImg('profileAvatar', 'profileUploadBtn', async (url) => {
-        userProfile.photoURL = url;
-        if (currentUser) await currentUser.updateProfile({ photoURL: url });
-        await db.collection('users').doc(currentUser.uid).set({ photoURL: url }, { merge: true });
-        toast('✅ تم تحديث الصورة');
-        loadProfile();
-    }, blob => profilePhotoBlob = blob, true);
+    document.getElementById('editProfileSidebarBtn').onclick=()=>document.getElementById('profileModal').classList.add('show');
+    document.getElementById('closeProfileBtn').onclick=()=>document.getElementById('profileModal').classList.remove('show');
+    document.getElementById('saveProfileBtn').onclick=async()=>{ let newName=document.getElementById('profileDisplayName').value.trim(); if(newName && currentUser){ await currentUser.updateProfile({displayName:newName}); userProfile.displayName=newName; await db.collection('users').doc(currentUser.uid).set({displayName:newName,photoURL:userProfile.photoURL},{merge:true}); toast('✅ تم تحديث الاسم'); loadProfile(); } document.getElementById('profileModal').classList.remove('show'); };
+    document.getElementById('changePasswordBtn').onclick=()=>document.getElementById('passwordModal').classList.add('show');
+    document.getElementById('closePasswordBtn').onclick=()=>document.getElementById('passwordModal').classList.remove('show');
+    document.getElementById('confirmPasswordBtn').onclick=async()=>{ let old=document.getElementById('oldPassword').value, newPwd=document.getElementById('newPassword').value, confirm=document.getElementById('confirmPassword').value; if(newPwd!==confirm) return toast('كلمة المرور غير متطابقة'); try{ let cred=firebase.auth.EmailAuthProvider.credential(currentUser.email,old); await currentUser.reauthenticateWithCredential(cred); await currentUser.updatePassword(newPwd); toast('✅ تم تغيير كلمة المرور'); document.getElementById('passwordModal').classList.remove('show'); }catch(err){ toast('❌ فشل التغيير: '+err.message); } };
+    document.getElementById('profileUploadBtn').onclick=()=>pickAndUploadImg('profileAvatar','profileUploadBtn',async(url)=>{ userProfile.photoURL=url; if(currentUser) await currentUser.updateProfile({photoURL:url}); await db.collection('users').doc(currentUser.uid).set({photoURL:url},{merge:true}); toast('✅ تم تحديث الصورة'); loadProfile(); },blob=>profilePhotoBlob=blob,true);
 
     // ========== بطاقة الوفد ==========
-    window.showDelegationCard = async function(id) {
-        const g = guides.find(x => x.id === id);
-        if (!g) return;
-        currentGuideForCards = g;
+    window.showDelegationCard=async function(id){
+        let g=guides.find(x=>x.id===id);
+        if(!g) return;
+        currentGuideForCards=g;
         await fetchWeather();
-        document.getElementById('delegationMainImg').src = g.busPhoto || g.guidePhoto || '';
-        document.getElementById('delegationAvatar').src = g.guidePhoto || '';
-        document.getElementById('delegationPeopleCount').innerHTML = g.peopleCount || '—';
-        document.getElementById('delegationNationality').innerHTML = g.nationality || '—';
-        document.getElementById('delegationTransport').innerHTML = g.transportType || '—';
-        document.getElementById('delegationPlateDisplay').innerHTML = getPlateHtml(g);
-        document.getElementById('delegationFrom').innerHTML = g.fromLocation || '—';
-        document.getElementById('delegationTo').innerHTML = g.toLocation || '—';
-
-        if (g.delegationType === 'سياحي') {
-            document.getElementById('guideInfoBox').style.display = 'block';
-            document.getElementById('delegationGuideName').innerHTML = g.name || '—';
-        } else {
-            document.getElementById('guideInfoBox').style.display = 'none';
+        document.getElementById('delegationMainImg').src=g.busPhoto||g.guidePhoto||'';
+        document.getElementById('delegationAvatar').src=g.guidePhoto||'';
+        document.getElementById('delegationPeopleCount').innerHTML=g.peopleCount||'—';
+        document.getElementById('delegationNationality').innerHTML=g.nationality||'—';
+        document.getElementById('delegationTransport').innerHTML=g.transportType||'—';
+        document.getElementById('delegationPlateDisplay').innerHTML=getPlateHtml(g);
+        document.getElementById('delegationFrom').innerHTML=g.fromLocation||'—';
+        document.getElementById('delegationTo').innerHTML=g.toLocation||'—';
+        if(g.delegationType==='سياحi'){
+            document.getElementById('guideInfoBox').style.display='block';
+            document.getElementById('delegationGuideName').innerHTML=g.name||'—';
+        }else{
+            document.getElementById('guideInfoBox').style.display='none';
         }
-
-        const contactRow = document.getElementById('guideContactRow');
-        if (g.delegationType === 'سياحي' && g.phone) {
-            contactRow.style.display = 'flex';
-            document.getElementById('delegationGuidePhoneDisplay').innerHTML = g.phone;
-            const cleanPhone = g.phone.replace(/[^0-9]/g, '');
-            const phoneLink = cleanPhone.startsWith('+') ? cleanPhone : '+216' + cleanPhone;
-            document.getElementById('callGuideBtn').onclick = () => location.href = `tel:${phoneLink}`;
-            document.getElementById('waGuideBtn').onclick = () => window.open(`https://wa.me/${phoneLink}`, '_blank');
-        } else {
-            contactRow.style.display = 'none';
+        let contactRow=document.getElementById('guideContactRow');
+        if(g.delegationType==='سياحي' && g.phone){
+            contactRow.style.display='flex';
+            document.getElementById('delegationGuidePhoneDisplay').innerHTML=g.phone;
+            let cleanPhone=g.phone.replace(/[^0-9]/g,'');
+            let phoneLink=cleanPhone.startsWith('+')?cleanPhone:'+216'+cleanPhone;
+            document.getElementById('callGuideBtn').onclick=()=>location.href=`tel:${phoneLink}`;
+            document.getElementById('waGuideBtn').onclick=()=>window.open(`https://wa.me/${phoneLink}`,'_blank');
+        }else{
+            contactRow.style.display='none';
         }
-
-        if (g.stayDuration && g.delegationType !== 'سياحي' && g.delegationType !== 'إداري تونسي') {
-            document.getElementById('delegationStayDuration').innerHTML = g.stayDuration + ' يوم';
-            document.getElementById('stayDurationDisplay').style.display = 'block';
-        } else document.getElementById('stayDurationDisplay').style.display = 'none';
-
-        if (g.notes) {
-            document.getElementById('delegationNotes').innerHTML = g.notes;
-            document.getElementById('delegationNotesRow').style.display = 'block';
-        } else document.getElementById('delegationNotesRow').style.display = 'none';
-
-        const now = new Date();
-        document.getElementById('delegationDate').innerHTML = now.toLocaleDateString('ar-TN');
-        document.getElementById('delegationTime').innerHTML = now.toLocaleTimeString('ar-TN');
-        document.getElementById('delegationWeather').innerHTML = getWeatherHtml();
-        let subTitle = {
-            سياحي: 'وفد سياحي', دبلوماسي: 'وفد دبلوماسي', قنصلي: 'وفد قنصلي',
-            إعلامي: 'وفد إعلامي', أمني: 'وفد أمني', شرطة: 'وفد شرطة',
-            مندوبية: 'مندوبية', بعثة: 'بعثة', 'إداري تونسي': 'إداري تونسي'
-        }[g.delegationType] || 'وفد سياحي';
-        document.getElementById('delegationSubTitle').innerHTML = subTitle;
-        const createdAt = g.createdAt ? new Date(g.createdAt) : null;
-        document.getElementById('creationTimestamp').innerHTML = createdAt ? createdAt.toLocaleString('ar-TN') : 'غير معروف';
-        document.getElementById('sendTimestamp').innerHTML = 'لم يرسل بعد';
-        document.getElementById('creatorName').innerHTML = g.creatorName || 'غير معروف';
-
-        document.getElementById('delegationMainImg').onclick = () => showFullImage(g.busPhoto || g.guidePhoto);
-        document.getElementById('delegationAvatar').onclick = () => showFullImage(g.guidePhoto);
-
+        if(g.stayDuration && g.delegationType!=='سياحي' && g.delegationType!=='إداري تونسي'){
+            document.getElementById('delegationStayDuration').innerHTML=g.stayDuration+' يوم';
+            document.getElementById('stayDurationDisplay').style.display='block';
+        }else document.getElementById('stayDurationDisplay').style.display='none';
+        if(g.notes){
+            document.getElementById('delegationNotes').innerHTML=g.notes;
+            document.getElementById('delegationNotesRow').style.display='block';
+        }else document.getElementById('delegationNotesRow').style.display='none';
+        let now=new Date();
+        document.getElementById('delegationDate').innerHTML=now.toLocaleDateString('ar-TN');
+        document.getElementById('delegationTime').innerHTML=now.toLocaleTimeString('ar-TN');
+        document.getElementById('delegationWeather').innerHTML=getWeatherHtml();
+        let subTitle={سياحي:'وفد سياحي',دبلوماسي:'وفد دبلوماسي',قنصلي:'وفد قنصلي',إعلامي:'وفد إعلامي',أمني:'وفد أمني',شرطة:'وفد شرطة',مندوبية:'مندوبية',بعثة:'بعثة','إداري تونسي':'إداري تونسي'}[g.delegationType]||'وفد سياحي';
+        document.getElementById('delegationSubTitle').innerHTML=subTitle;
+        document.getElementById('creationTimestamp').innerHTML=g.createdAt?new Date(g.createdAt).toLocaleString('ar-TN'):'غير معروف';
+        document.getElementById('sendTimestamp').innerHTML='لم يرسل بعد';
+        document.getElementById('creatorName').innerHTML=g.creatorName||'غير معروف';
+        document.getElementById('delegationMainImg').onclick=()=>showFullImage(g.busPhoto||g.guidePhoto);
+        document.getElementById('delegationAvatar').onclick=()=>showFullImage(g.guidePhoto);
         document.getElementById('delegationModal').classList.add('show');
     };
 
-    document.getElementById('shareDelegationBtn').onclick = async () => {
-        const card = document.getElementById('delegationCard');
-        try {
-            const now = new Date();
-            document.getElementById('sendTimestamp').innerHTML = now.toLocaleString('ar-TN');
-            const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true, allowTaint: true });
-            const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-            const file = new File([blob], 'delegation.png', { type: 'image/png' });
-            if (navigator.share && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'معلومات الوفد' });
-            else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'delegation.png'; a.click(); toast('📥 تم التحميل'); }
-        } catch(err) { toast('⚠️ ' + err.message); }
+    document.getElementById('shareDelegationBtn').onclick=async()=>{
+        let card=document.getElementById('delegationCard');
+        try{
+            let now=new Date();
+            document.getElementById('sendTimestamp').innerHTML=now.toLocaleString('ar-TN');
+            let canvas=await html2canvas(card,{scale:2,backgroundColor:'#ffffff',useCORS:true});
+            let blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+            let file=new File([blob],'delegation.png',{type:'image/png'});
+            if(navigator.share && navigator.canShare({files:[file]})) await navigator.share({files:[file],title:'معلومات الوفد'});
+            else{ let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='delegation.png'; a.click(); toast('📥 تم التحميل'); }
+        }catch(err){ toast('⚠️ '+err.message); }
     };
 
     // ========== كرت المتابعة ==========
-    function updateSecurityPreview(g, customText) {
-        const preview = document.getElementById('securityCardPreview');
-        const now = new Date();
-        let subTitle = {
-            سياحي: 'وفد سياحي', دبلوماسي: 'وفد دبلوماسي', قنصلي: 'وفد قنصلي',
-            إعلامي: 'وفد إعلامي', أمني: 'وفد أمني', شرطة: 'وفد شرطة',
-            مندوبية: 'مندوبية', بعثة: 'بعثة', 'إداري تونسي': 'إداري تونسي'
-        }[g.delegationType] || 'وفد سياحي';
-        preview.innerHTML = `
+    function updateSecurityPreview(g,customText){
+        let preview=document.getElementById('securityCardPreview');
+        let now=new Date();
+        let subTitle={سياحي:'وفد سياحي',دبلوماسي:'وفد دبلوماسي',قنصلي:'وفد قنصلي',إعلامي:'وفد إعلامي',أمني:'وفد أمني',شرطة:'وفد شرطة',مندوبية:'مندوبية',بعثة:'بعثة','إداري تونسي':'إداري تونسي'}[g.delegationType]||'وفد سياحي';
+        preview.innerHTML=`
             <div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString()}</span><span><i class="far fa-clock"></i> ${now.toLocaleTimeString()}</span><div class="weather-info">${getWeatherHtml()}</div></div>
             <div style="padding:12px;text-align:center;"><h4 style="color:var(--olive);">NOTE PRO WORK</h4><span>${subTitle}</span></div>
-            <div class="card-img-area" style="height:130px;"><img class="main-img" src="${g.busPhoto || g.guidePhoto || ''}"><img class="overlay-avatar" src="${g.guidePhoto || ''}" style="width:45px;height:45px;"></div>
+            <div class="card-img-area" style="height:130px;"><img class="main-img" src="${g.busPhoto||g.guidePhoto||''}"><img class="overlay-avatar" src="${g.guidePhoto||''}" style="width:45px;height:45px;"></div>
             <div style="padding:12px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-                <div><strong>عدد الأفراد:</strong> ${g.peopleCount || '—'}</div><div><strong>الجنسية:</strong> ${g.nationality || '—'}</div>
-                <div><strong>نوع النقل:</strong> ${g.transportType || '—'}</div><div><strong>اللوحة:</strong> ${getPlateHtml(g)}</div>
-                <div><strong>من:</strong> ${g.fromLocation || '—'}</div><div><strong>إلى:</strong> ${g.toLocation || '—'}</div>
-            </div>${customText ? `<div style="margin-top:10px;background:#fff3cd;padding:6px;border-radius:8px;"><strong>المجموعة:</strong> ${customText}</div>` : ''}</div>
-            <div class="timestamp-row"><span><i class="far fa-plus-square"></i> الإضافة: ${g.createdAt ? new Date(g.createdAt).toLocaleString() : 'غير معروف'}</span><span><i class="fab fa-whatsapp"></i> الإرسال: ${new Date().toLocaleString()}</span><span><i class="fas fa-user-check"></i> المنشئ: ${g.creatorName || 'غير معروف'}</span></div>
+                <div><strong>عدد الأفراد:</strong> ${g.peopleCount||'—'}</div><div><strong>الجنسية:</strong> ${g.nationality||'—'}</div>
+                <div><strong>نوع النقل:</strong> ${g.transportType||'—'}</div><div><strong>اللوحة:</strong> ${getPlateHtml(g)}</div>
+                <div><strong>من:</strong> ${g.fromLocation||'—'}</div><div><strong>إلى:</strong> ${g.toLocation||'—'}</div>
+            </div>${customText?`<div style="margin-top:10px;background:#fff3cd;padding:6px;border-radius:8px;"><strong>المجموعة:</strong> ${customText}</div>`:''}</div>
+            <div class="timestamp-row"><span><i class="far fa-plus-square"></i> الإضافة: ${g.createdAt?new Date(g.createdAt).toLocaleString():'غير معروف'}</span><span><i class="fab fa-whatsapp"></i> الإرسال: ${new Date().toLocaleString()}</span><span><i class="fas fa-user-check"></i> المنشئ: ${g.creatorName||'غير معروف'}</span></div>
         `;
     }
 
-    window.showSecurityCard = async function(id) {
-        const g = guides.find(x => x.id === id);
-        if (!g) return;
-        currentGuideForCards = g;
+    window.showSecurityCard=async function(id){
+        let g=guides.find(x=>x.id===id);
+        if(!g) return;
+        currentGuideForCards=g;
         await fetchWeather();
-        document.getElementById('securityGroupLabel').value = '';
-        document.getElementById('securityLinksContainer').style.display = 'none';
-        document.getElementById('securityLinksContainer').innerHTML = '';
-        updateSecurityPreview(g, '');
+        document.getElementById('securityGroupLabel').value='';
+        document.getElementById('securityLinksContainer').style.display='none';
+        updateSecurityPreview(g,'');
         renderSavedNumbersInSecurity();
         document.getElementById('securityModal').classList.add('show');
     };
 
-    async function getSecurityCardImageUrl(groupLabel) {
-        updateSecurityPreview(currentGuideForCards, groupLabel);
-        const cardEl = document.getElementById('securityCardPreview');
-        const canvas = await html2canvas(cardEl, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    async function getSecurityCardImageUrl(groupLabel){
+        updateSecurityPreview(currentGuideForCards,groupLabel);
+        let cardEl=document.getElementById('securityCardPreview');
+        let canvas=await html2canvas(cardEl,{scale:2,backgroundColor:'#ffffff',useCORS:true});
+        let blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
         return await uploadToCloudinary(blob);
     }
 
-    async function openWhatsAppSequentially(numbers, imageUrl, groupLabel) {
-        const msg = encodeURIComponent(`📢 كرت التنسيق والمتابعة:\n${imageUrl}\n${groupLabel ? `المجموعة: ${groupLabel}` : ''}\nالطقس: ${getWeatherHtml()}`);
-        for (let i = 0; i < numbers.length; i++) {
-            let clean = numbers[i].replace(/[^0-9+]/g, '');
-            if (!clean.startsWith('+')) clean = '+216' + clean.replace(/^0+/, '');
-            const link = `https://wa.me/${clean}?text=${msg}`;
-            window.open(link, '_blank');
+    async function openWhatsAppSequentially(numbers,imageUrl,groupLabel){
+        let msg=encodeURIComponent(`📢 كرت التنسيق والمتابعة:\n${imageUrl}\n${groupLabel?`المجموعة: ${groupLabel}`:''}\nالطقس: ${getWeatherHtml()}`);
+        for(let i=0;i<numbers.length;i++){
+            let clean=numbers[i].replace(/[^0-9+]/g,'');
+            if(!clean.startsWith('+')) clean='+216'+clean.replace(/^0+/,'');
+            window.open(`https://wa.me/${clean}?text=${msg}`,'_blank');
             toast(`📲 جاري فتح الرقم ${i+1}/${numbers.length}: ${clean}`);
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r=>setTimeout(r,2000));
         }
-        toast(`✅ تم فتح ${numbers.length} رقم بنجاح`);
+        toast(`✅ تم فتح ${numbers.length} رقم`);
     }
 
-    document.getElementById('sendAllSequentialBtn').onclick = async () => {
-        if (!whatsappNumbers.length) {
-            toast('⚠️ لا توجد أرقام محفوظة. أضف أرقامًا من القائمة الجانبية أولاً.');
-            return;
-        }
-        const groupLabel = document.getElementById('securityGroupLabel').value.trim();
+    document.getElementById('sendAllSequentialBtn').onclick=async()=>{
+        if(!whatsappNumbers.length) return toast('⚠️ لا توجد أرقام محفوظة');
+        let groupLabel=document.getElementById('securityGroupLabel').value.trim();
         toast('⏳ جاري إنشاء البطاقة...');
-        try {
-            const imageUrl = await getSecurityCardImageUrl(groupLabel);
-            await openWhatsAppSequentially(whatsappNumbers, imageUrl, groupLabel);
-        } catch(err) {
-            toast('❌ فشل: ' + err.message);
-        }
+        try{
+            let imageUrl=await getSecurityCardImageUrl(groupLabel);
+            await openWhatsAppSequentially(whatsappNumbers,imageUrl,groupLabel);
+        }catch(err){ toast('❌ فشل: '+err.message); }
     };
 
-    document.getElementById('numbersManagerBtn').onclick = () => {
-        renderNumbersManager();
-        document.getElementById('numbersManagerModal').classList.add('show');
-    };
-    document.getElementById('closeNumbersBtn').onclick = () => document.getElementById('numbersManagerModal').classList.remove('show');
+    document.getElementById('numbersManagerBtn').onclick=()=>{ renderNumbersManager(); document.getElementById('numbersManagerModal').classList.add('show'); };
+    document.getElementById('closeNumbersBtn').onclick=()=>document.getElementById('numbersManagerModal').classList.remove('show');
 
-    // ========== المزامنة والمصادقة ==========
-    async function syncGuides() {
-        if (!currentUser || currentUser.uid === 'offline') return;
-        try {
-            const mySnap = await db.collection('guides').where('userId', '==', currentUser.uid).get();
-            const publicSnap = await db.collection('guides').where('visibility', '==', 'public').get();
-            let cloud = [];
-            mySnap.forEach(d => cloud.push({ id: d.id, ...d.data() }));
-            publicSnap.forEach(d => { if (!cloud.find(c => c.id === d.id)) cloud.push({ id: d.id, ...d.data() }); });
-            guides = cloud;
+    // ========== المزامنة ==========
+    async function syncGuides(){
+        if(!currentUser || currentUser.uid==='offline') return;
+        try{
+            let mySnap=await db.collection('guides').where('userId','==',currentUser.uid).get();
+            let publicSnap=await db.collection('guides').where('visibility','==','public').get();
+            let cloud=[];
+            mySnap.forEach(d=>cloud.push({id:d.id,...d.data()}));
+            publicSnap.forEach(d=>{if(!cloud.find(c=>c.id===d.id)) cloud.push({id:d.id,...d.data()});});
+            guides=cloud;
             LDB.saveGuides(guides);
             renderGuides();
-        } catch(e) { console.warn(e); }
+        }catch(e){ console.warn(e); }
     }
 
-    document.getElementById('refreshBtn').onclick = async () => {
-        if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ المزامنة تتطلب اتصالاً');
+    document.getElementById('refreshBtn').onclick=async()=>{
+        if(!currentUser||currentUser.uid==='offline') return toast('⚠️ المزامنة تتطلب اتصالاً');
         toast('⏳ جاري التحديث...');
         await syncGuides();
         await loadWhatsappNumbers();
         toast('✅ تم التحديث');
     };
-    document.getElementById('syncBtn').onclick = async () => {
-        if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ تتطلب اتصالاً');
+    document.getElementById('syncBtn').onclick=async()=>{
+        if(!currentUser||currentUser.uid==='offline') return toast('⚠️ تتطلب اتصالاً');
         await syncGuides();
         await loadWhatsappNumbers();
         toast('✅ تمت المزامنة');
     };
-    document.getElementById('voiceSearchBtn').onclick = () => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return toast('⚠️ غير مدعوم');
-        const rec = new SpeechRecognition();
-        rec.lang = 'ar-TN';
+    document.getElementById('voiceSearchBtn').onclick=()=>{
+        let SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+        if(!SpeechRecognition) return toast('⚠️ غير مدعوم');
+        let rec=new SpeechRecognition();
+        rec.lang='ar-TN';
         rec.start();
-        rec.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); };
-        rec.onerror = () => toast('⚠️ لم يتم التعرف');
+        rec.onresult=e=>{ document.getElementById('searchInput').value=e.results[0][0].transcript; renderGuides(); };
+        rec.onerror=()=>toast('⚠️ لم يتم التعرف');
     };
-    document.getElementById('searchInput').oninput = renderGuides;
-    document.getElementById('darkToggle').onclick = () => { document.body.classList.toggle('dark'); };
-    document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
-    document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
-    document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', function() {
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('searchInput').oninput=renderGuides;
+    document.getElementById('darkToggle').onclick=()=>{ document.body.classList.toggle('dark'); };
+    document.getElementById('menuBtn').onclick=()=>{ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
+    document.getElementById('overlay').onclick=()=>{ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+    document.querySelectorAll('.lang-btn').forEach(btn=>btn.addEventListener('click',function(){
+        document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
         this.classList.add('active');
-        currentLang = this.dataset.lang;
+        currentLang=this.dataset.lang;
         renderGuides();
     }));
-    document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
-    document.getElementById('closeDelegationBtn').onclick = () => document.getElementById('delegationModal').classList.remove('show');
-    document.getElementById('closeSecurityBtn').onclick = () => document.getElementById('securityModal').classList.remove('show');
-    document.getElementById('termsBtn').onclick = () => document.getElementById('termsModal').classList.add('show');
-    document.getElementById('closeTermsBtn').onclick = () => document.getElementById('termsModal').classList.remove('show');
-    document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }));
+    document.getElementById('closeGuideBtn').onclick=()=>document.getElementById('guideModal').classList.remove('show');
+    document.getElementById('closeDelegationBtn').onclick=()=>document.getElementById('delegationModal').classList.remove('show');
+    document.getElementById('closeSecurityBtn').onclick=()=>document.getElementById('securityModal').classList.remove('show');
+    document.getElementById('termsBtn').onclick=()=>document.getElementById('termsModal').classList.add('show');
+    document.getElementById('closeTermsBtn').onclick=()=>document.getElementById('termsModal').classList.remove('show');
+    document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m) m.classList.remove('show');}));
 
-    // زر تسجيل الدخول مع رسائل خطأ مفصلة
-    document.getElementById('loginBtn').onclick = async () => {
-        const email = document.getElementById('loginEmail').value.trim();
-        const pass = document.getElementById('loginPassword').value;
-        const errorDiv = document.getElementById('loginError');
-        
-        if (!email || !pass) {
-            errorDiv.textContent = '⚠️ الرجاء إدخال البريد الإلكتروني وكلمة المرور';
-            errorDiv.style.display = 'block';
-            toast('⚠️ الرجاء إدخال البريد الإلكتروني وكلمة المرور');
-            return;
-        }
-        errorDiv.style.display = 'none';
-        try {
-            await auth.signInWithEmailAndPassword(email, pass);
-        } catch(e) {
-            let errorMessage = '';
-            switch (e.code) {
-                case 'auth/invalid-email':
-                    errorMessage = '⚠️ البريد الإلكتروني غير صالح';
-                    break;
-                case 'auth/user-disabled':
-                    errorMessage = '⚠️ هذا الحساب معطل';
-                    break;
-                case 'auth/user-not-found':
-                    errorMessage = '⚠️ لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
-                    break;
-                case 'auth/wrong-password':
-                    errorMessage = '⚠️ كلمة المرور غير صحيحة';
-                    break;
-                default:
-                    errorMessage = '⚠️ فشل تسجيل الدخول: ' + e.message;
+    // تسجيل الدخول
+    document.getElementById('loginBtn').onclick=async()=>{
+        let email=document.getElementById('loginEmail').value.trim();
+        let pass=document.getElementById('loginPassword').value;
+        let errDiv=document.getElementById('loginError');
+        if(!email||!pass){ errDiv.textContent='⚠️ الرجاء إدخال البريد الإلكتروني وكلمة المرور'; errDiv.style.display='block'; toast('⚠️ أدخل البريد وكلمة المرور'); return; }
+        errDiv.style.display='none';
+        try{ await auth.signInWithEmailAndPassword(email,pass); }
+        catch(e){
+            let msg='';
+            switch(e.code){
+                case'auth/invalid-email': msg='⚠️ البريد الإلكتروني غير صالح'; break;
+                case'auth/user-disabled': msg='⚠️ هذا الحساب معطل'; break;
+                case'auth/user-not-found': msg='⚠️ لا يوجد حساب مرتبط بهذا البريد'; break;
+                case'auth/wrong-password': msg='⚠️ كلمة المرور غير صحيحة'; break;
+                default: msg='⚠️ فشل تسجيل الدخول: '+e.message;
             }
-            errorDiv.textContent = errorMessage;
-            errorDiv.style.display = 'block';
-            toast('❌ ' + errorMessage);
+            errDiv.textContent=msg; errDiv.style.display='block'; toast('❌ '+msg);
         }
     };
-    
-    document.getElementById('offlineBtn').onclick = () => {
-        currentUser = { uid: 'offline', email: 'offline@local' };
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'block';
-        guides = LDB.getGuides();
+    document.getElementById('offlineBtn').onclick=()=>{
+        currentUser={uid:'offline',email:'offline@local'};
+        document.getElementById('loginScreen').style.display='none';
+        document.getElementById('appContainer').style.display='block';
+        guides=LDB.getGuides();
         renderGuides();
-        whatsappNumbers = [];
+        whatsappNumbers=[];
     };
-    document.getElementById('signOutBtn').onclick = () => auth.signOut();
-    document.getElementById('exportJsonBtn').onclick = () => {
-        const blob = new Blob([JSON.stringify(guides, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'guides_backup.json';
-        a.click();
-        toast('📄 تم التصدير');
+    document.getElementById('signOutBtn').onclick=()=>auth.signOut();
+    document.getElementById('exportJsonBtn').onclick=()=>{
+        let blob=new Blob([JSON.stringify(guides,null,2)],{type:'application/json'});
+        let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='guides_backup.json'; a.click(); toast('📄 تم التصدير');
     };
-    document.getElementById('exportPdfBtn').onclick = () => {
-        const el = document.createElement('div');
-        el.style.padding = '20px';
-        el.innerHTML = '<h1>F-Note Pro Max</h1><hr>' + guides.map(g => `<p><strong>${g.name}</strong> – ${g.phone} | ${g.nationality||''} | ${g.transportType||''}</p>`).join('');
-        html2pdf().from(el).save('guides.pdf');
-        toast('📕 تم التصدير');
+    document.getElementById('exportPdfBtn').onclick=()=>{
+        let el=document.createElement('div'); el.style.padding='20px'; el.innerHTML='<h1>F-Note Pro Max</h1><hr>'+guides.map(g=>`<p><strong>${g.name}</strong> – ${g.phone} | ${g.nationality||''} | ${g.transportType||''}</p>`).join('');
+        html2pdf().from(el).save('guides.pdf'); toast('📕 تم التصدير');
     };
 
-    auth.onAuthStateChanged(async u => {
-        if (u) {
-            currentUser = u;
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            const doc = await db.collection('users').doc(u.uid).get();
-            if (doc.exists) userProfile = doc.data();
-            else { userProfile = { displayName: u.email, photoURL: '' }; await db.collection('users').doc(u.uid).set(userProfile); }
+    auth.onAuthStateChanged(async u=>{
+        if(u){
+            currentUser=u;
+            document.getElementById('loginScreen').style.display='none';
+            document.getElementById('appContainer').style.display='block';
+            let doc=await db.collection('users').doc(u.uid).get();
+            if(doc.exists) userProfile=doc.data();
+            else{ userProfile={displayName:u.email,photoURL:''}; await db.collection('users').doc(u.uid).set(userProfile); }
             await loadProfile();
             await syncGuides();
             await loadWhatsappNumbers();
-        } else {
-            currentUser = null;
-            document.getElementById('appContainer').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('loginError').style.display = 'none';
+        }else{
+            currentUser=null;
+            document.getElementById('appContainer').style.display='none';
+            document.getElementById('loginScreen').style.display='flex';
+            document.getElementById('loginEmail').value='';
+            document.getElementById('loginPassword').value='';
+            document.getElementById('loginError').style.display='none';
         }
     });
-
     renderGuides();
 </script>
 </body>
