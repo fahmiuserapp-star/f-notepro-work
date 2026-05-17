@@ -281,6 +281,10 @@
     let currentGuideForCards = null;
     let currentWeather = { temp: '', condition: '', city: CITY };
     let unsubscribeFirestore = null;
+    
+    // متغيرات لتتبع عمليات الرفع الخلفية للصور
+    let guideUploadTracker = { current: null };
+    let busUploadTracker = { current: null };
 
     // الترجمات
     const translations = {
@@ -290,58 +294,89 @@
 
     function setLanguage(lang){ currentLang = lang; document.querySelectorAll('[data-i18n]').forEach(el=>{ const key = el.getAttribute('data-i18n'); if(translations[lang][key]) el.textContent = translations[lang][key]; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ const key = el.getAttribute('data-i18n-placeholder'); if(translations[lang][key]) el.placeholder = translations[lang][key]; }); document.documentElement.lang = (lang==='ar')?'ar':'fr'; document.documentElement.dir = (lang==='ar')?'rtl':'ltr'; }
 
-    async function compressImage(file, maxW=800, quality=0.7){ return new Promise(resolve=>{ const reader = new FileReader(); reader.onload = ev=>{ const img = new Image(); img.onload = ()=>{ const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if(w>maxW){ h *= maxW/w; w = maxW; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img,0,0,w,h); canvas.toBlob(resolve,'image/jpeg',quality); }; img.src = ev.target.result; }; reader.readAsDataURL(file); }); }
+    // ========== دوال سريعة جداً لمعالجة الصور والرفع ==========
+    async function compressImageFast(file, maxWidth = 700, quality = 0.5) {
+        // استخدام createImageBitmap بدلاً من Image (أسرع بكثير)
+        const bitmap = await createImageBitmap(file);
+        let { width, height } = bitmap;
+        if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bitmap, 0, 0, width, height);
+        return new Promise((resolve) => {
+            canvas.toBlob(resolve, 'image/jpeg', quality);
+        });
+    }
 
-    // دالة رفع إلى مسار مخصص
-    async function uploadToFirebaseStorage(blob, subFolder = 'general') {
+    async function uploadImageWithPath(blob, subFolder) {
+        if (!navigator.onLine) throw new Error("غير متصل");
         const timestamp = Date.now();
-        const fileName = `${subFolder}/${timestamp}_${Math.random().toString(36).substring(2,8)}.jpg`;
+        const fileName = `${subFolder}/${timestamp}_${Math.random().toString(36).substring(2, 8)}.jpg`;
         const ref = storage.ref(fileName);
         await ref.put(blob);
         return await ref.getDownloadURL();
     }
 
-    // رفع صورة مع إمكانية تحديد المجلد الفرعي (مثل "guide_photos" أو "bus_photos")
-    async function uploadImageWithPath(blob, subFolder){ if(!navigator.onLine) throw new Error("غير متصل"); return await uploadToFirebaseStorage(blob, subFolder); }
-
-    // دالة مساعدة لرفع الصورة مع إعادة المحاولة (لحالة base64 المحلي)
-    async function uploadPendingBlob(blob, subFolder) {
-        if(!blob) return null;
-        try {
-            return await uploadImageWithPath(blob, subFolder);
-        } catch(e) {
-            console.warn("فشل رفع الصورة:", e);
-            return null;
-        }
-    }
-
-    // دالة اختيار الصور ورفعها (مع مسار مخصص)
-    async function pickAndUploadImg(previewId, uploadAreaId, setUrlFn, setBlobFn, subFolder = 'general'){
-        const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-        inp.onchange = async e=>{
-            const file = e.target.files[0]; if(!file) return;
-            const previewEl = document.getElementById(previewId); const uploadArea = document.getElementById(uploadAreaId);
-            const localUrl = URL.createObjectURL(file); previewEl.src = localUrl; previewEl.style.display = 'block';
-            try{
-                const compressed = await compressImage(file,800,0.7);
-                setBlobFn(compressed);
-                if(navigator.onLine && subFolder !== 'local'){ 
-                    uploadArea.classList.add('uploading');
-                    let finalUrl = await uploadImageWithPath(compressed, subFolder);
-                    setUrlFn(finalUrl);
-                    previewEl.src = finalUrl;
-                    toast('✅ تم الرفع إلى '+subFolder);
-                } else {
-                    // حفظ كـ base64 مؤقتاً
-                    const base64 = await new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(compressed); });
-                    setUrlFn(base64);
-                    toast('⚠️ غير متصل - حفظ محلي مؤقت');
+    // دالة اختيار الصورة مع عرض فوري ورفع خلفي
+    function pickAndUploadImg(previewId, uploadAreaId, setUrlFn, setBlobFn, subFolder = 'general', pendingTracker = null) {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'image/*';
+        inp.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const previewEl = document.getElementById(previewId);
+            const uploadArea = document.getElementById(uploadAreaId);
+            
+            // عرض الصورة فوراً من الملف الأصلي (دون انتظار ضغط أو رفع)
+            const localUrl = URL.createObjectURL(file);
+            previewEl.src = localUrl;
+            previewEl.style.display = 'block';
+            setUrlFn(localUrl); // مؤقتاً نضع الرابط المحلي
+            
+            // بدء الضغط والرفع في الخلفية (لا ننتظر)
+            uploadArea.classList.add('uploading');
+            
+            // إنشاء Promise للرفع الخلفي
+            const uploadPromise = (async () => {
+                try {
+                    const compressed = await compressImageFast(file, 700, 0.5);
+                    setBlobFn(compressed);
+                    let finalUrl = localUrl;
+                    if (navigator.onLine && subFolder !== 'local') {
+                        finalUrl = await uploadImageWithPath(compressed, subFolder);
+                        setUrlFn(finalUrl);
+                        previewEl.src = finalUrl;
+                        toast('✅ تم رفع الصورة إلى ' + subFolder);
+                    } else {
+                        // وضع غير متصل - نحتفظ بالـ blob وbase64 لاحقاً
+                        const base64 = await new Promise(r => {
+                            const fr = new FileReader();
+                            fr.onload = () => r(fr.result);
+                            fr.readAsDataURL(compressed);
+                        });
+                        setUrlFn(base64);
+                        previewEl.src = base64;
+                        toast('⚠️ غير متصل - حفظ محلي');
+                    }
+                } catch (err) {
+                    console.warn("فشل الرفع الخلفي", err);
+                    toast('⚠️ فشل رفع الصورة، سيتم المحاولة لاحقاً');
+                } finally {
+                    uploadArea.classList.remove('uploading');
+                    URL.revokeObjectURL(localUrl); // تنظيف الذاكرة
                 }
-            } catch(err){
-                const base64 = await new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(compressed||file); });
-                setUrlFn(base64);
-                toast('⚠️ تعذر الرفع - حفظ محلي');
-            } finally { uploadArea.classList.remove('uploading'); }
+            })();
+            
+            // تخزين Promise الرفع في المتتبع لاستخدامه عند الحفظ
+            if (pendingTracker) {
+                pendingTracker.current = uploadPromise;
+            }
         };
         inp.click();
     }
@@ -444,30 +479,90 @@
     document.getElementById('addGuideBtn').onclick = () => { editId = null; guidePhotoUrl = ''; busPhotoUrl = ''; document.getElementById('gName').value = ''; document.getElementById('gPhone').value = ''; document.getElementById('gNationality').value = ''; document.getElementById('gPeopleCount').value = ''; document.getElementById('gDelegationType').value = 'سياحي'; document.getElementById('gTransport').value = ''; document.getElementById('gPlate1').value = ''; document.getElementById('gPlate2').value = ''; document.getElementById('gPlateFunction').value = ''; document.getElementById('gFrom').value = ''; document.getElementById('gTo').value = ''; document.getElementById('gStayDuration').value = ''; document.getElementById('gAgency').value = ''; document.getElementById('gNotes').value = ''; document.getElementById('gVisibility').value = 'private'; document.getElementById('guidePreview').style.display = 'none'; document.getElementById('busPreview').style.display = 'none'; document.getElementById('modalTitle').innerHTML = '➕ إضافة مرشد جديد'; document.getElementById('guideModal').classList.add('show'); document.getElementById('phoneFieldContainer').style.display = 'block'; document.getElementById('stayDurationContainer').style.display = 'none'; };
     document.getElementById('gDelegationType').onchange = function(){ const isTouristic = this.value === 'سياحي'; document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none'; document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block'; };
 
-    document.getElementById('saveGuideBtn').onclick = async function(){
-        const name = document.getElementById('gName').value.trim(); const phone = document.getElementById('gPhone').value.trim(); const delegationType = document.getElementById('gDelegationType').value;
-        if(!name) return toast('⚠️ '+(currentLang==='ar'?'الاسم مطلوب':'Nom requis'));
-        if(delegationType === 'سياحي' && !phone) return toast('⚠️ '+(currentLang==='ar'?'رقم الجوال مطلوب للوفود السياحية':'Téléphone requis'));
-        const saveBtn = this; saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-small"></span> '+(currentLang==='ar'?'حفظ...':'Enregistrement...');
-        try{
-            let finalGuideUrl = guidePhotoUrl, finalBusUrl = busPhotoUrl;
-            // رفع الصور المخزنة محلياً (base64 أو blob) إلى المسارات الصحيحة إذا كان الاتصال متاحاً
-            if(navigator.onLine){
-                if(guidePhotoBlob && (!guidePhotoUrl || guidePhotoUrl.startsWith('data:'))){ finalGuideUrl = await uploadPendingBlob(guidePhotoBlob, 'guide_photos'); guidePhotoUrl = finalGuideUrl; }
-                if(busPhotoBlob && (!busPhotoUrl || busPhotoUrl.startsWith('data:'))){ finalBusUrl = await uploadPendingBlob(busPhotoBlob, 'bus_photos'); busPhotoUrl = finalBusUrl; }
-            } else {
-                // في وضع عدم الاتصال، نحتفظ بالـ base64
-                if(guidePhotoBlob && !guidePhotoUrl.startsWith('data:')) finalGuideUrl = guidePhotoUrl;
-                if(busPhotoBlob && !busPhotoUrl.startsWith('data:')) finalBusUrl = busPhotoUrl;
+    // رفع الصور باستخدام الدوال السريعة
+    document.getElementById('guideUploadBtn').onclick = () => pickAndUploadImg('guidePreview', 'guideUploadBtn', (url) => { guidePhotoUrl = url; }, (blob) => { guidePhotoBlob = blob; }, 'guide_photos', guideUploadTracker);
+    document.getElementById('busUploadBtn').onclick = () => pickAndUploadImg('busPreview', 'busUploadBtn', (url) => { busPhotoUrl = url; }, (blob) => { busPhotoBlob = blob; }, 'bus_photos', busUploadTracker);
+
+    // حفظ المرشد مع انتظار الرفع الخلفي
+    document.getElementById('saveGuideBtn').onclick = async function() {
+        const name = document.getElementById('gName').value.trim();
+        const phone = document.getElementById('gPhone').value.trim();
+        const delegationType = document.getElementById('gDelegationType').value;
+        if (!name) return toast('⚠️ ' + (currentLang === 'ar' ? 'الاسم مطلوب' : 'Nom requis'));
+        if (delegationType === 'سياحي' && !phone) return toast('⚠️ ' + (currentLang === 'ar' ? 'رقم الجوال مطلوب للوفود السياحية' : 'Téléphone requis'));
+
+        const saveBtn = this;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-small"></span> ' + (currentLang === 'ar' ? 'حفظ...' : 'Enregistrement...');
+
+        try {
+            // انتظار اكتمال الرفع الخلفي (بحد أقصى 5 ثوانٍ)
+            if (guideUploadTracker.current) {
+                await Promise.race([guideUploadTracker.current, new Promise(r => setTimeout(r, 5000))]);
+                guideUploadTracker.current = null;
             }
+            if (busUploadTracker.current) {
+                await Promise.race([busUploadTracker.current, new Promise(r => setTimeout(r, 5000))]);
+                busUploadTracker.current = null;
+            }
+
+            // إذا كانت الصور لا تزال بصيغة blob أو base64 ولم يتم رفعها بعد، نحاول رفعها الآن
+            let finalGuideUrl = guidePhotoUrl;
+            let finalBusUrl = busPhotoUrl;
+            if (navigator.onLine) {
+                if (guidePhotoBlob && (!guidePhotoUrl || guidePhotoUrl.startsWith('data:') || guidePhotoUrl.startsWith('blob:'))) {
+                    finalGuideUrl = await uploadImageWithPath(guidePhotoBlob, 'guide_photos');
+                    guidePhotoUrl = finalGuideUrl;
+                }
+                if (busPhotoBlob && (!busPhotoUrl || busPhotoUrl.startsWith('data:') || busPhotoUrl.startsWith('blob:'))) {
+                    finalBusUrl = await uploadImageWithPath(busPhotoBlob, 'bus_photos');
+                    busPhotoUrl = finalBusUrl;
+                }
+            }
+
             const now = new Date();
-            const data = { id: editId || 'local_'+Date.now(), userId: currentUser ? currentUser.uid : 'offline', creatorName: userProfile.displayName || (currentUser ? currentUser.email : 'مستخدم'), name, phone: delegationType === 'سياحي' ? phone : '', nationality: document.getElementById('gNationality').value.trim(), peopleCount: document.getElementById('gPeopleCount').value, delegationType: delegationType, transportType: document.getElementById('gTransport').value, plate1: document.getElementById('gPlate1').value.trim(), plate2: document.getElementById('gPlate2').value.trim(), plateFunction: document.getElementById('gPlateFunction').value.trim(), fromLocation: document.getElementById('gFrom').value.trim(), toLocation: document.getElementById('gTo').value.trim(), stayDuration: delegationType !== 'سياحي' ? document.getElementById('gStayDuration').value : null, guidePhoto: finalGuideUrl || null, busPhoto: finalBusUrl || null, agency: document.getElementById('gAgency').value.trim(), notes: document.getElementById('gNotes').value.trim(), visibility: document.getElementById('gVisibility').value, updatedAt: now.toISOString(), createdAt: editId ? (guides.find(g=>g.id===editId)?.createdAt || now.toISOString()) : now.toISOString() };
-            if(editId) guides = guides.map(g=>g.id===editId?data:g); else guides.unshift(data);
+            const data = {
+                id: editId || 'local_' + Date.now(),
+                userId: currentUser ? currentUser.uid : 'offline',
+                creatorName: userProfile.displayName || (currentUser ? currentUser.email : 'مستخدم'),
+                name,
+                phone: delegationType === 'سياحي' ? phone : '',
+                nationality: document.getElementById('gNationality').value.trim(),
+                peopleCount: document.getElementById('gPeopleCount').value,
+                delegationType: delegationType,
+                transportType: document.getElementById('gTransport').value,
+                plate1: document.getElementById('gPlate1').value.trim(),
+                plate2: document.getElementById('gPlate2').value.trim(),
+                plateFunction: document.getElementById('gPlateFunction').value.trim(),
+                fromLocation: document.getElementById('gFrom').value.trim(),
+                toLocation: document.getElementById('gTo').value.trim(),
+                stayDuration: delegationType !== 'سياحي' ? document.getElementById('gStayDuration').value : null,
+                guidePhoto: finalGuideUrl || null,
+                busPhoto: finalBusUrl || null,
+                agency: document.getElementById('gAgency').value.trim(),
+                notes: document.getElementById('gNotes').value.trim(),
+                visibility: document.getElementById('gVisibility').value,
+                updatedAt: now.toISOString(),
+                createdAt: editId ? (guides.find(g => g.id === editId)?.createdAt || now.toISOString()) : now.toISOString()
+            };
+
+            if (editId) guides = guides.map(g => g.id === editId ? data : g);
+            else guides.unshift(data);
             LDB.saveGuides(guides);
-            if(currentUser && currentUser.uid !== 'offline' && navigator.onLine) await db.collection('guides').doc(data.id).set(data, {merge:true});
-            renderGuides(); document.getElementById('guideModal').classList.remove('show'); toast(translations[currentLang].saved);
-        } catch(err){ toast(translations[currentLang].save_error+': '+err.message); }
-        finally { saveBtn.disabled = false; saveBtn.innerHTML = '💾 '+(currentLang==='ar'?'حفظ المرشد':'Enregistrer'); }
+
+            if (currentUser && currentUser.uid !== 'offline' && navigator.onLine) {
+                await db.collection('guides').doc(data.id).set(data, { merge: true });
+            }
+
+            renderGuides();
+            document.getElementById('guideModal').classList.remove('show');
+            toast(translations[currentLang].saved);
+        } catch (err) {
+            toast(translations[currentLang].save_error + ': ' + err.message);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '💾 ' + (currentLang === 'ar' ? 'حفظ المرشد' : 'Enregistrer');
+        }
     };
 
     async function loadProfile(){
@@ -485,12 +580,7 @@
     document.getElementById('changePasswordBtn').onclick = ()=>document.getElementById('passwordModal').classList.add('show');
     document.getElementById('closePasswordBtn').onclick = ()=>document.getElementById('passwordModal').classList.remove('show');
     document.getElementById('confirmPasswordBtn').onclick = async ()=>{ const oldPwd = document.getElementById('oldPassword').value; const newPwd = document.getElementById('newPassword').value; const confirm = document.getElementById('confirmPassword').value; if(newPwd !== confirm) return toast('❌ '+(currentLang==='ar'?'كلمة المرور الجديدة غير متطابقة':'Les mots de passe ne correspondent pas')); try{ const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, oldPwd); await currentUser.reauthenticateWithCredential(credential); await currentUser.updatePassword(newPwd); toast('✅ '+(currentLang==='ar'?'تم تغيير كلمة المرور':'Mot de passe changé')); document.getElementById('passwordModal').classList.remove('show'); } catch(err){ toast('❌ '+(currentLang==='ar'?'فشل التغيير: '+err.message:'Échec : '+err.message)); } };
-    document.getElementById('profileUploadBtn').onclick = ()=>pickAndUploadImg('profileAvatar','profileUploadBtn', async (url)=>{ userProfile.photoURL = url; if(currentUser) await currentUser.updateProfile({photoURL:url}); await db.collection('users').doc(currentUser.uid).set({photoURL:url},{merge:true}); toast('✅ '+(currentLang==='ar'?'تم تحديث الصورة':'Photo mise à jour')); loadProfile(); }, blob=>profilePhotoBlob=blob, 'profile_photos');
-
-    // رفع صورة المرشد (المجلد guide_photos)
-    document.getElementById('guideUploadBtn').onclick = ()=>pickAndUploadImg('guidePreview','guideUploadBtn', (url)=>{ guidePhotoUrl = url; }, (blob)=>{ guidePhotoBlob = blob; }, 'guide_photos');
-    // رفع صورة وسيلة النقل (المجلد bus_photos)
-    document.getElementById('busUploadBtn').onclick = ()=>pickAndUploadImg('busPreview','busUploadBtn', (url)=>{ busPhotoUrl = url; }, (blob)=>{ busPhotoBlob = blob; }, 'bus_photos');
+    document.getElementById('profileUploadBtn').onclick = ()=>pickAndUploadImg('profileAvatar','profileUploadBtn', async (url)=>{ userProfile.photoURL = url; if(currentUser) await currentUser.updateProfile({photoURL:url}); await db.collection('users').doc(currentUser.uid).set({photoURL:url},{merge:true}); toast('✅ '+(currentLang==='ar'?'تم تحديث الصورة':'Photo mise à jour')); loadProfile(); }, blob=>profilePhotoBlob=blob, 'profile_photos', null);
 
     async function prepareElementForCanvas(element){ const images = element.querySelectorAll('img'); for(let img of images){ if(img.src && (img.src.startsWith('http://')||img.src.startsWith('https://')) && !img.crossOrigin){ try{ const resp = await fetch(img.src, {mode:'cors'}); const blob = await resp.blob(); const url = URL.createObjectURL(blob); img.crossOrigin = 'anonymous'; img.src = url; } catch(e){ console.warn(e); } } } return element; }
 
