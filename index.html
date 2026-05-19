@@ -116,7 +116,7 @@
         .card-img-area .main-img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
         .info-box { background: var(--bg); border-radius: 10px; padding: 8px; border: 1px solid var(--border); }
         .info-box .value { font-weight: 800; font-size: 14px; color: var(--olive); }
-        /* تنسيق اللوحة الجديد بدون نص سفلي */
+        /* تنسيق اللوحة الجديد */
         .plate-container {
             background-color: #2d3748;
             border-radius: 12px;
@@ -124,7 +124,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             font-weight: 800;
             direction: ltr;
             font-size: 16px;
@@ -187,6 +187,22 @@
         .badge-consular-bg { background: #854d0e; }
         .badge-media-bg { background: #4c0519; }
         .badge-security-bg { background: #065f46; }
+        /* تنسيق حقل اللوحة حسب النوع */
+        .plate-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .plate-input-group .plate-sep {
+            font-weight: bold;
+            color: var(--olive);
+        }
+        .special-plate-input {
+            direction: ltr;
+            text-align: center;
+            font-family: monospace;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -277,11 +293,8 @@
             <option value="فان" data-i18n="van">فان</option>
             <option value="أخرى" data-i18n="other">أخرى</option>
         </select>
-        <div style="display:flex;gap:5px;align-items:center;">
-            <input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2;text-align:center;font-weight:800;font-size:14px;" maxlength="5">
-            <span style="font-weight:900;color:var(--olive);">🇹🇳</span>
-            <input type="text" id="gPlate2" placeholder="XXX" style="flex:1;text-align:center;font-weight:800;font-size:14px;" maxlength="3">
-        </div>
+        <!-- حقل اللوحة ديناميكي: سيظهر كحقلين للوحة التونسية أو حقل واحد للوحات الخاصة -->
+        <div id="plateInputContainer"></div>
         <input type="text" id="gPlateFunction" placeholder="الوظيفة / الغرض من اللوحة (اختياري)" data-i18n-placeholder="plate_function">
         <div class="plate-preview" id="platePreview"></div>
         <div id="stayDurationContainer" style="display:none;">
@@ -324,6 +337,16 @@
                     <div class="info-box"><span data-i18n="transport">نوع النقل</span><br><span id="delegationTransport" class="value"></span></div>
                     <div class="info-box" style="grid-column: span 2;"><span data-i18n="plate">رقم اللوحة</span><br><div id="delegationPlateDisplay" class="plate-with-badge"></div></div>
                     <div class="info-box"><span data-i18n="agency">الوكالة</span><br><span id="delegationAgency" class="value"></span></div>
+                </div>
+                <div id="guideInfoBox" class="info-box" style="margin-top:6px; display:none; background:#f0fdf4;">
+                    <div><span data-i18n="guide_name">المرشد</span><br><span id="delegationGuideName" class="value"></span></div>
+                </div>
+                <div id="guideContactRow" class="contact-row" style="display:none; margin-top:6px;">
+                    <span class="guide-phone-number" id="delegationGuidePhoneDisplay"></span>
+                    <div class="contact-buttons">
+                        <button class="call-btn" id="callGuideBtn"><i class="fas fa-phone-alt"></i></button>
+                        <button class="wa-btn" id="waGuideBtn"><i class="fab fa-whatsapp"></i></button>
+                    </div>
                 </div>
                 <div id="stayDurationDisplay" class="info-box" style="display:none; margin-top:6px;"><span data-i18n="stay_duration">مدة الإقامة</span><br><span id="delegationStayDuration" class="value"></span></div>
                 <div id="delegationNotesRow" class="info-box" style="display:none; margin-top:6px;"><span data-i18n="notes">ملاحظات</span><br><span id="delegationNotes" style="font-size:12px;"></span></div>
@@ -396,6 +419,9 @@
     let currentGuideForCards = null;
     let currentWeather = { temp: '', condition: '', city: CITY };
     let unsubscribeFirestore = null;
+
+    // متغيرات لتخزين قيم اللوحة
+    let currentPlate1 = '', currentPlate2 = '', currentSpecialPlate = '';
 
     const translations = {
         ar: { login_sub:"إدارة الوفود السياحية والدبلوماسية", login_btn:"دخول", offline_btn:"🔄 بدون إنترنت", edit_profile:"تعديل الملف الشخصي", tools_section:"أدوات متقدمة", sync:"مزامنة السحابة", export_json:"تصدير JSON", export_pdf:"تصدير PDF", logout:"تسجيل الخروج", language:"اللغة", terms:"📜 شروط الخدمة والحقوق", terms_title:"📜 شروط الخدمة والحقوق", terms_text:"باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.", close:"إغلاق", profile_title:"👤 تعديل الملف الشخصي", change_photo:"تغيير الصورة", display_name:"اسم العرض", change_password:"🔑 تغيير كلمة المرور", save_profile:"💾 حفظ التغييرات", cancel:"إلغاء", change_password_title:"🔑 تغيير كلمة المرور", change:"تغيير", add_guide_title:"➕ إضافة مرشد جديد", guide_name:"اسم المرشد", nationality:"الجنسية", people_count:"عدد الأفراد", touristic_delegation:"وفد سياحي", diplomatic_delegation:"وفد دبلوماسي", consular_delegation:"وفد قنصلي", media_delegation:"وفد إعلامي", security_delegation:"وفد أمني", transport_type:"نوع النقل", small_bus:"حافلة صغيرة", large_bus:"حافلة كبيرة", car:"سيارة", diplomatic_car:"سيارة دبلوماسية", consular_car:"سيارة قنصلية", van:"فان", other:"أخرى", plate_function:"الوظيفة / الغرض من اللوحة (اختياري)", stay_duration:"مدة الإقامة (بالأيام)", guide_photo:"📸 صورة المرشد", bus_photo:"🚌 صورة وسيلة النقل", agency:"الوكالة", notes:"ملاحظات", private:"🔒 خاص", public:"🌍 عام (يظهر للجميع)", save_guide:"💾 حفظ المرشد", delegation_info:"📋 معلومات الوفد", transport:"نوع النقل", plate:"رقم اللوحة", created_at:"تاريخ الإضافة:", sent_at:"تاريخ الإرسال:", created_by:"المنشئ:", share_card:"مشاركة البطاقة", security_card_title:"كرت التنسيق والمتابعة", custom_group_label:"🏷️ تحديد المجموعة / الفقرة المخصصة:", target_numbers_label:"📞 أرقام الواتساب المستهدفة (رقم واحد في كل سطر):", generate_card_links:"🔄 إنشاء البطاقة والروابط", search_placeholder:"🔍 بحث عن مرشد...", loading:"⏳ جاري التحميل...", delete_confirm:"هل أنت متأكد من الحذف؟", deleted:"🗑️ تم الحذف", saved:"✅ تم الحفظ بنجاح", sync_ok:"✅ تمت المزامنة", sync_fail:"❌ فشلت المزامنة", no_results:"😕 لا توجد نتائج", offline_mode:"📴 وضع بدون إنترنت", save_error:"❌ خطأ في الحفظ", weather_unavailable:"غير متوفر" },
@@ -472,15 +498,13 @@
         };
     }
 
-    // ========== دوال اللوحة الجديدة ==========
-    // تحديد إذا كانت لوحة خاصة (دبلوماسية/قنصلية/إعلامية/أمنية) أو عادية
+    // ========== دوال اللوحة ==========
     function isSpecialPlate(delegationType, transportType) {
         const specialDelegations = ['دبلوماسي', 'قنصلي', 'إعلامي', 'أمني'];
         const specialTransports = ['سيارة دبلوماسية', 'سيارة قنصلية'];
         return specialDelegations.includes(delegationType) || specialTransports.includes(transportType);
     }
 
-    // الحصول على بادئة اللوحة الخاصة
     function getPlatePrefix(delegationType, transportType) {
         if (transportType === 'سيارة دبلوماسية') return 'CD';
         if (transportType === 'سيارة قنصلية') return 'CC';
@@ -491,13 +515,10 @@
         return '';
     }
 
-    // دالة توليد اللوحة بدون نص سفلي
-    function getPlateHtml(plate1, plate2, delegationType, transportType, plateFunction) {
+    function getPlateHtml(plate1, plate2, delegationType, transportType, plateFunction, specialPlateValue = '') {
         const isSpecial = isSpecialPlate(delegationType, transportType);
         let bgColor = '#2d3748';
-        let textColor = '#ffffff';
         
-        // تحديد لون الخلفية حسب النوع
         if (transportType === 'سيارة دبلوماسية') bgColor = '#1e3a8a';
         else if (transportType === 'سيارة قنصلية') bgColor = '#854d0e';
         else if (delegationType === 'دبلوماسي') bgColor = '#1e3a8a';
@@ -508,19 +529,20 @@
         let plateText = '';
         if (isSpecial) {
             const prefix = getPlatePrefix(delegationType, transportType);
-            const fullNumber = `${plate1 || ''}${plate2 ? ' ' + plate2 : ''}`.trim();
-            plateText = `${prefix} ${fullNumber}`;
+            const plateValue = specialPlateValue || (plate1 + (plate2 ? ' ' + plate2 : '')).trim();
+            plateText = `${prefix} ${plateValue || '_____'}`;
         } else {
-            // لوحة عادية: الجزء الأول + "تونس" + الجزء الثاني
-            plateText = `${plate1 || '—'} تونس ${plate2 || '—'}`;
+            // لوحة تونسية عادية: 3 أرقام + "تونس" + 4 أرقام (أو 4/5 أرقام + "تونس" + 3 أرقام حسب الاتجاه)
+            const left = plate1 || '123';
+            const right = plate2 || '4567';
+            plateText = `${left} تونس ${right}`;
         }
         
-        return `<div class="plate-container" style="background-color: ${bgColor}; color: ${textColor};">
+        return `<div class="plate-container" style="background-color: ${bgColor};">
                     <span class="plate-numbers">${plateText}</span>
                 </div>`;
     }
 
-    // دالة توليد شارة نوع الوفد المنفصلة
     function getDelegationBadgeHtml(delegationType) {
         let badgeClass = 'badge-touristic';
         let icon = '🌍';
@@ -537,31 +559,86 @@
                 </div>`;
     }
 
-    // دالة توليد اللوحة مع الشارة بجانبها
-    function getPlateWithBadgeHtml(plate1, plate2, delegationType, transportType, plateFunction) {
-        const plateHtml = getPlateHtml(plate1, plate2, delegationType, transportType, plateFunction);
+    function getPlateWithBadgeHtml(plate1, plate2, delegationType, transportType, plateFunction, specialPlateValue = '') {
+        const plateHtml = getPlateHtml(plate1, plate2, delegationType, transportType, plateFunction, specialPlateValue);
         const badgeHtml = getDelegationBadgeHtml(delegationType);
         return `<div class="plate-with-badge">${plateHtml} ${badgeHtml}</div>`;
     }
 
-    // تحديث معاينة اللوحة في نموذج الإضافة
+    // دالة لإعادة بناء حقل إدخال اللوحة ديناميكياً حسب نوع الوفد
+    function updatePlateInputFields() {
+        const container = document.getElementById('plateInputContainer');
+        if (!container) return;
+        const delegationType = document.getElementById('gDelegationType').value;
+        const transportType = document.getElementById('gTransport').value;
+        const isSpecial = isSpecialPlate(delegationType, transportType);
+        
+        if (isSpecial) {
+            // لوحة خاصة: حقل واحد للنص الكامل (يمكن أن يحتوي على حروف وأرقام)
+            container.innerHTML = `
+                <input type="text" id="gSpecialPlate" class="special-plate-input" placeholder="رقم اللوحة (مثال: 12345 ABC)" value="${currentSpecialPlate}" style="direction: ltr;">
+                <input type="hidden" id="gPlate1" value="">
+                <input type="hidden" id="gPlate2" value="">
+            `;
+            const specialInput = document.getElementById('gSpecialPlate');
+            specialInput.addEventListener('input', () => {
+                currentSpecialPlate = specialInput.value;
+                updatePlatePreview();
+            });
+        } else {
+            // لوحة تونسية عادية: حقلان (يمين ويسار) مع كلمة تونس بينهما
+            container.innerHTML = `
+                <div class="plate-input-group">
+                    <input type="text" id="gPlate1" placeholder="الجزء الأول (مثال: 123)" style="flex:2; text-align:center; font-weight:800;" maxlength="5" value="${currentPlate1}">
+                    <span class="plate-sep">🇹🇳 تونس 🇹🇳</span>
+                    <input type="text" id="gPlate2" placeholder="الجزء الثاني (مثال: 4567)" style="flex:3; text-align:center; font-weight:800;" maxlength="4" value="${currentPlate2}">
+                </div>
+                <input type="hidden" id="gSpecialPlate" value="">
+            `;
+            const plate1Input = document.getElementById('gPlate1');
+            const plate2Input = document.getElementById('gPlate2');
+            plate1Input.addEventListener('input', () => {
+                currentPlate1 = plate1Input.value;
+                updatePlatePreview();
+            });
+            plate2Input.addEventListener('input', () => {
+                currentPlate2 = plate2Input.value;
+                updatePlatePreview();
+            });
+        }
+        updatePlatePreview();
+    }
+
     function updatePlatePreview() {
         const delegationType = document.getElementById('gDelegationType')?.value || 'سياحي';
         const transportType = document.getElementById('gTransport')?.value || '';
-        const plate1 = document.getElementById('gPlate1')?.value.trim() || '';
-        const plate2 = document.getElementById('gPlate2')?.value.trim() || '';
         const plateFunction = document.getElementById('gPlateFunction')?.value.trim() || '';
         const previewContainer = document.getElementById('platePreview');
-        if (previewContainer) {
-            previewContainer.innerHTML = getPlateWithBadgeHtml(plate1, plate2, delegationType, transportType, plateFunction);
+        if (!previewContainer) return;
+        
+        const isSpecial = isSpecialPlate(delegationType, transportType);
+        if (isSpecial) {
+            const specialPlate = document.getElementById('gSpecialPlate')?.value || currentSpecialPlate;
+            previewContainer.innerHTML = getPlateWithBadgeHtml('', '', delegationType, transportType, plateFunction, specialPlate);
+        } else {
+            const plate1 = document.getElementById('gPlate1')?.value.trim() || currentPlate1;
+            const plate2 = document.getElementById('gPlate2')?.value.trim() || currentPlate2;
+            previewContainer.innerHTML = getPlateWithBadgeHtml(plate1, plate2, delegationType, transportType, plateFunction, '');
         }
     }
 
-    // ربط أحداث تحديث المعاينة
-    document.getElementById('gDelegationType')?.addEventListener('change', updatePlatePreview);
-    document.getElementById('gTransport')?.addEventListener('change', updatePlatePreview);
-    document.getElementById('gPlate1')?.addEventListener('input', updatePlatePreview);
-    document.getElementById('gPlate2')?.addEventListener('input', updatePlatePreview);
+    // ربط الأحداث لتحديث حقول اللوحة والمعاينة
+    document.getElementById('gDelegationType')?.addEventListener('change', () => {
+        updatePlateInputFields();
+        updatePlatePreview();
+        const isTouristic = document.getElementById('gDelegationType').value === 'سياحي';
+        document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none';
+        document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block';
+    });
+    document.getElementById('gTransport')?.addEventListener('change', () => {
+        updatePlateInputFields();
+        updatePlatePreview();
+    });
     document.getElementById('gPlateFunction')?.addEventListener('input', updatePlatePreview);
 
     // ========== دوال البطاقات ==========
@@ -635,8 +712,6 @@
         document.getElementById('gPeopleCount').value = g.peopleCount || '';
         document.getElementById('gDelegationType').value = g.delegationType || 'سياحي';
         document.getElementById('gTransport').value = g.transportType || '';
-        document.getElementById('gPlate1').value = g.plate1 || '';
-        document.getElementById('gPlate2').value = g.plate2 || '';
         document.getElementById('gPlateFunction').value = g.plateFunction || '';
         document.getElementById('gStayDuration').value = g.stayDuration || '';
         document.getElementById('gAgency').value = g.agency || '';
@@ -647,6 +722,20 @@
         document.getElementById('busPreview').src = busPhotoBase64;
         document.getElementById('busPreview').style.display = busPhotoBase64 ? 'block' : 'none';
         document.getElementById('modalTitle').innerHTML = '✏️ تعديل مرشد';
+        
+        // استعادة قيم اللوحة
+        const isSpecial = isSpecialPlate(g.delegationType, g.transportType);
+        if (isSpecial) {
+            currentSpecialPlate = g.specialPlate || (g.plate1 + (g.plate2 ? ' ' + g.plate2 : '')).trim();
+            currentPlate1 = '';
+            currentPlate2 = '';
+        } else {
+            currentPlate1 = g.plate1 || '';
+            currentPlate2 = g.plate2 || '';
+            currentSpecialPlate = '';
+        }
+        updatePlateInputFields();
+        
         const isTouristic = g.delegationType === 'سياحي';
         document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none';
         document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block';
@@ -659,7 +748,6 @@
         document.getElementById('gName').value = ''; document.getElementById('gPhone').value = ''; 
         document.getElementById('gNationality').value = ''; document.getElementById('gPeopleCount').value = ''; 
         document.getElementById('gDelegationType').value = 'سياحي'; document.getElementById('gTransport').value = ''; 
-        document.getElementById('gPlate1').value = ''; document.getElementById('gPlate2').value = ''; 
         document.getElementById('gPlateFunction').value = ''; document.getElementById('gStayDuration').value = ''; 
         document.getElementById('gAgency').value = ''; document.getElementById('gNotes').value = ''; 
         document.getElementById('gVisibility').value = 'private'; 
@@ -667,16 +755,10 @@
         document.getElementById('modalTitle').innerHTML = '➕ إضافة مرشد جديد'; 
         document.getElementById('phoneFieldContainer').style.display = 'block'; 
         document.getElementById('stayDurationContainer').style.display = 'none'; 
-        updatePlatePreview();
+        currentPlate1 = ''; currentPlate2 = ''; currentSpecialPlate = '';
+        updatePlateInputFields();
         document.getElementById('guideModal').classList.add('show'); 
     };
-    document.getElementById('gDelegationType').onchange = function(){ 
-        const isTouristic = this.value === 'سياحي'; 
-        document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none'; 
-        document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block'; 
-        updatePlatePreview();
-    };
-    document.getElementById('gTransport').onchange = updatePlatePreview;
 
     setupInstantUpload('guideUploadBtn', 'guidePreview', 'guideProgress', (base64) => { guidePhotoBase64 = base64; });
     setupInstantUpload('busUploadBtn', 'busPreview', 'busProgress', (base64) => { busPhotoBase64 = base64; });
@@ -692,6 +774,7 @@
         const name = document.getElementById('gName').value.trim();
         const phone = document.getElementById('gPhone').value.trim();
         const delegationType = document.getElementById('gDelegationType').value;
+        const transportType = document.getElementById('gTransport').value;
         if (!name) return toast('⚠️ ' + (currentLang === 'ar' ? 'الاسم مطلوب' : 'Nom requis'));
         if (delegationType === 'سياحي' && !phone) return toast('⚠️ ' + (currentLang === 'ar' ? 'رقم الجوال مطلوب للوفود السياحية' : 'Téléphone requis'));
 
@@ -700,6 +783,18 @@
         saveBtn.innerHTML = '<span class="spinner-small"></span> ' + (currentLang === 'ar' ? 'حفظ...' : 'Enregistrement...');
         
         try {
+            const isSpecial = isSpecialPlate(delegationType, transportType);
+            let plate1 = '', plate2 = '', specialPlate = '';
+            if (isSpecial) {
+                specialPlate = document.getElementById('gSpecialPlate')?.value.trim() || currentSpecialPlate;
+                plate1 = specialPlate;
+                plate2 = '';
+            } else {
+                plate1 = document.getElementById('gPlate1')?.value.trim() || currentPlate1;
+                plate2 = document.getElementById('gPlate2')?.value.trim() || currentPlate2;
+                specialPlate = '';
+            }
+            
             const now = new Date();
             const data = {
                 id: editId || 'local_' + Date.now(),
@@ -710,9 +805,10 @@
                 nationality: document.getElementById('gNationality').value.trim(),
                 peopleCount: document.getElementById('gPeopleCount').value,
                 delegationType: delegationType,
-                transportType: document.getElementById('gTransport').value,
-                plate1: document.getElementById('gPlate1').value.trim(),
-                plate2: document.getElementById('gPlate2').value.trim(),
+                transportType: transportType,
+                plate1: plate1,
+                plate2: plate2,
+                specialPlate: specialPlate,
                 plateFunction: document.getElementById('gPlateFunction').value.trim(),
                 stayDuration: delegationType !== 'سياحي' ? document.getElementById('gStayDuration').value : null,
                 guidePhoto: guidePhotoBase64 || null,
@@ -767,14 +863,43 @@
         document.getElementById('delegationPeopleCount').innerHTML = g.peopleCount || '—';
         document.getElementById('delegationNationality').innerHTML = g.nationality || '—';
         document.getElementById('delegationTransport').innerHTML = g.transportType || '—';
-        // عرض اللوحة مع الشارة
-        document.getElementById('delegationPlateDisplay').innerHTML = getPlateWithBadgeHtml(g.plate1, g.plate2, g.delegationType, g.transportType, g.plateFunction);
+        
+        const isSpecial = isSpecialPlate(g.delegationType, g.transportType);
+        let plateHtml = '';
+        if (isSpecial) {
+            const specialValue = g.specialPlate || (g.plate1 + (g.plate2 ? ' ' + g.plate2 : '')).trim();
+            plateHtml = getPlateWithBadgeHtml('', '', g.delegationType, g.transportType, g.plateFunction, specialValue);
+        } else {
+            plateHtml = getPlateWithBadgeHtml(g.plate1, g.plate2, g.delegationType, g.transportType, g.plateFunction, '');
+        }
+        document.getElementById('delegationPlateDisplay').innerHTML = plateHtml;
         document.getElementById('delegationAgency').innerHTML = g.agency || '—';
         
         // شارة نوع الوفد
         const badge = document.getElementById('delegationBadge');
         badge.innerHTML = g.delegationType || 'سياحي';
         badge.className = `delegation-type-badge ${getDelegationBadgeBgClass(g.delegationType)}`;
+        
+        // معلومات المرشد (تظهر فقط للوفد السياحي)
+        const guideInfoBox = document.getElementById('guideInfoBox');
+        const guideContactRow = document.getElementById('guideContactRow');
+        if (g.delegationType === 'سياحي' && g.name) {
+            guideInfoBox.style.display = 'block';
+            document.getElementById('delegationGuideName').innerHTML = g.name || '—';
+            if (g.phone) {
+                guideContactRow.style.display = 'flex';
+                document.getElementById('delegationGuidePhoneDisplay').innerHTML = g.phone;
+                const cleanPhone = g.phone.replace(/[^0-9]/g,'');
+                const phoneLink = cleanPhone.startsWith('+')?cleanPhone:'+216'+cleanPhone;
+                document.getElementById('callGuideBtn').onclick = ()=>location.href=`tel:${phoneLink}`;
+                document.getElementById('waGuideBtn').onclick = ()=>window.open(`https://wa.me/${phoneLink}`,'_blank');
+            } else {
+                guideContactRow.style.display = 'none';
+            }
+        } else {
+            guideInfoBox.style.display = 'none';
+            guideContactRow.style.display = 'none';
+        }
         
         if (g.stayDuration && g.delegationType !== 'سياحي') {
             document.getElementById('stayDurationDisplay').style.display = 'block';
@@ -807,6 +932,15 @@
         const preview = document.getElementById('securityCardPreview'); const now = new Date();
         let subTitle = {سياحي:'وفد سياحي', دبلوماسي:'وفد دبلوماسي', قنصلي:'وفد قنصلي', إعلامي:'وفد إعلامي', أمني:'وفد أمني'}[g.delegationType]||'وفد سياحي';
         const badgeBgClass = getDelegationBadgeBgClass(g.delegationType);
+        const isSpecial = isSpecialPlate(g.delegationType, g.transportType);
+        let plateHtml = '';
+        if (isSpecial) {
+            const specialValue = g.specialPlate || (g.plate1 + (g.plate2 ? ' ' + g.plate2 : '')).trim();
+            plateHtml = getPlateHtml('', '', g.delegationType, g.transportType, g.plateFunction, specialValue);
+        } else {
+            plateHtml = getPlateHtml(g.plate1, g.plate2, g.delegationType, g.transportType, g.plateFunction, '');
+        }
+        
         preview.innerHTML = `<div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString()}</span><span><i class="far fa-clock"></i> ${now.toLocaleTimeString()}</span><div class="weather-info">${getWeatherHtml()}</div></div>
         <div style="padding:10px;text-align:center;"><h4 style="color:var(--olive);">NOTE PRO WORK</h4><span>${subTitle}</span></div>
         <div class="card-img-area" style="height:130px;"><img class="main-img" src="${g.busPhoto || ''}"></div>
@@ -817,9 +951,10 @@
                 <div><strong>${translations[currentLang].nationality}:</strong> ${g.nationality || '—'}</div>
                 <div><strong>${translations[currentLang].transport}:</strong> ${g.transportType || '—'}</div>
                 <div><strong>${translations[currentLang].plate}:</strong></div>
-                <div style="grid-column: span 2;">${getPlateWithBadgeHtml(g.plate1, g.plate2, g.delegationType, g.transportType, g.plateFunction)}</div>
+                <div style="grid-column: span 2;">${plateHtml}</div>
                 <div><strong>${translations[currentLang].agency}:</strong> ${g.agency || '—'}</div>
             </div>
+            ${g.delegationType === 'سياحي' && g.name ? `<div style="margin-top:8px;background:#f0fdf4;padding:5px;border-radius:8px;"><strong>${translations[currentLang].guide_name}:</strong> ${g.name} ${g.phone ? '📞 ' + g.phone : ''}</div>` : ''}
             ${customText ? `<div style="margin-top:8px;background:#fff3cd;padding:5px;border-radius:8px;"><strong>${translations[currentLang].custom_group_label}:</strong> ${customText}</div>` : ''}
             ${g.notes ? `<div style="margin-top:8px;background:#e0f2fe;padding:5px;border-radius:8px;"><strong>${translations[currentLang].notes}:</strong> ${g.notes}</div>` : ''}
         </div>
@@ -828,7 +963,7 @@
     
     window.showSecurityCard = async function(id){ const g = guides.find(x=>x.id===id); if(!g) return; currentGuideForCards = g; await fetchWeather(); document.getElementById('securityGroupLabel').value = ''; document.getElementById('securityPhonesList').value = ''; document.getElementById('securityLinksContainer').style.display = 'none'; updateSecurityPreview(g,''); document.getElementById('securityModal').classList.add('show'); };
     
-    document.getElementById('generateSecurityCardBtn').onclick = async ()=>{ const groupLabel = document.getElementById('securityGroupLabel').value.trim(); const phonesRaw = document.getElementById('securityPhonesList').value; if(!phonesRaw.trim()) return toast('⚠️ '+(currentLang==='ar'?'أدخل رقم واحد على الأقل':'Entrez au moins un numéro')); const phoneNumbers = phonesRaw.split(/\r?\n/).map(p=>p.trim()).filter(p=>p.match(/[\+]?\d{8,15}/)); if(!phoneNumbers.length) return toast('⚠️ '+(currentLang==='ar'?'لم يتم التعرف على أرقام صحيحة':'Numéros non valides')); updateSecurityPreview(currentGuideForCards, groupLabel); const cardEl = document.getElementById('securityCardPreview'); toast('⏳ '+(currentLang==='ar'?'جاري الإنشاء...':'Génération...')); try{ const prepared = await prepareElementForCanvas(cardEl); const canvas = await html2canvas(prepared, {scale:2, backgroundColor:'#ffffff', useCORS:true}); const blob = await new Promise(r=>canvas.toBlob(r,'image/png')); const imageUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(blob); }); const container = document.getElementById('securityLinksContainer'); container.innerHTML = ''; const msg = encodeURIComponent(`📢 بطاقة التنسيق والمتابعة:\n${imageUrl}\n${groupLabel?`المجموعة: ${groupLabel}`:''}\n${getWeatherHtml()}\nالوكالة: ${currentGuideForCards.agency || 'غير محددة'}\n${currentGuideForCards.notes ? `ملاحظات: ${currentGuideForCards.notes}` : ''}`); phoneNumbers.forEach(phone=>{ let clean = phone.replace(/[^0-9+]/g,''); if(!clean.startsWith('+')) clean = '+216'+clean.replace(/^0+/,''); const link = `https://wa.me/${clean}?text=${msg}`; const div = document.createElement('div'); div.className = 'link-item'; div.innerHTML = `<span>${clean}</span><a href="${link}" target="_blank">📲 إرسال</a>`; container.appendChild(div); }); container.style.display = 'block'; toast(`✅ ${translations[currentLang].sync_ok} ${phoneNumbers.length} رابط`); } catch(err){ toast('❌ '+(currentLang==='ar'?'فشل: '+err.message:'Échec : '+err.message)); } };
+    document.getElementById('generateSecurityCardBtn').onclick = async ()=>{ const groupLabel = document.getElementById('securityGroupLabel').value.trim(); const phonesRaw = document.getElementById('securityPhonesList').value; if(!phonesRaw.trim()) return toast('⚠️ '+(currentLang==='ar'?'أدخل رقم واحد على الأقل':'Entrez au moins un numéro')); const phoneNumbers = phonesRaw.split(/\r?\n/).map(p=>p.trim()).filter(p=>p.match(/[\+]?\d{8,15}/)); if(!phoneNumbers.length) return toast('⚠️ '+(currentLang==='ar'?'لم يتم التعرف على أرقام صحيحة':'Numéros non valides')); updateSecurityPreview(currentGuideForCards, groupLabel); const cardEl = document.getElementById('securityCardPreview'); toast('⏳ '+(currentLang==='ar'?'جاري الإنشاء...':'Génération...')); try{ const prepared = await prepareElementForCanvas(cardEl); const canvas = await html2canvas(prepared, {scale:2, backgroundColor:'#ffffff', useCORS:true}); const blob = await new Promise(r=>canvas.toBlob(r,'image/png')); const imageUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(blob); }); const container = document.getElementById('securityLinksContainer'); container.innerHTML = ''; const msg = encodeURIComponent(`📢 بطاقة التنسيق والمتابعة:\n${imageUrl}\n${groupLabel?`المجموعة: ${groupLabel}`:''}\n${getWeatherHtml()}\nالوكالة: ${currentGuideForCards.agency || 'غير محددة'}\n${currentGuideForCards.delegationType === 'سياحي' && currentGuideForCards.name ? `المرشد: ${currentGuideForCards.name} ${currentGuideForCards.phone ? '📞 ' + currentGuideForCards.phone : ''}` : ''}\n${currentGuideForCards.notes ? `ملاحظات: ${currentGuideForCards.notes}` : ''}`); phoneNumbers.forEach(phone=>{ let clean = phone.replace(/[^0-9+]/g,''); if(!clean.startsWith('+')) clean = '+216'+clean.replace(/^0+/,''); const link = `https://wa.me/${clean}?text=${msg}`; const div = document.createElement('div'); div.className = 'link-item'; div.innerHTML = `<span>${clean}</span><a href="${link}" target="_blank">📲 إرسال</a>`; container.appendChild(div); }); container.style.display = 'block'; toast(`✅ ${translations[currentLang].sync_ok} ${phoneNumbers.length} رابط`); } catch(err){ toast('❌ '+(currentLang==='ar'?'فشل: '+err.message:'Échec : '+err.message)); } };
 
     // دوال المزامنة
     async function syncGuicesToCloud(){ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userDocs = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicDocs = await db.collection('guides').where('visibility','==','public').get(); const cloudMap = new Map(); userDocs.forEach(doc=>cloudMap.set(doc.id, {id:doc.id, ...doc.data()})); publicDocs.forEach(doc=>{ if(!cloudMap.has(doc.id)) cloudMap.set(doc.id, {id:doc.id, ...doc.data()}); }); let changed = false; for(let cloud of cloudMap.values()){ const local = guides.find(g=>g.id===cloud.id); if(!local){ guides.push(cloud); changed = true; } else if(new Date(cloud.updatedAt||0) > new Date(local.updatedAt||0)){ const index = guides.findIndex(g=>g.id===cloud.id); guides[index] = cloud; changed = true; } } for(let local of guides){ const cloud = cloudMap.get(local.id); if(!cloud && (local.userId === currentUser.uid || local.visibility === 'public')){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } else if(cloud && new Date(local.updatedAt||0) > new Date(cloud.updatedAt||0) && local.userId === currentUser.uid){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } return true; } catch(e){ console.error(e); return false; } }
@@ -867,6 +1002,11 @@
         } else { if(unsubscribeFirestore) unsubscribeFirestore(); currentUser = null; document.getElementById('appContainer').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('loginEmail').value = ''; document.getElementById('loginPassword').value = ''; document.getElementById('loginError').style.display = 'none'; }
     });
     setLanguage('ar'); renderGuides();
+    
+    // تهيئة حقول اللوحة عند تحميل الصفحة
+    setTimeout(() => {
+        updatePlateInputFields();
+    }, 100);
 </script>
 </body>
 </html>
