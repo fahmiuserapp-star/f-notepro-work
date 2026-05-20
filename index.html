@@ -579,8 +579,8 @@
         renderGuides();
     }
 
-    // ========== دوال رفع الصور السريعة جداً ==========
-    async function fastCompress(file) {
+    // ========== دوال رفع الصور الجديدة كلياً ==========
+    function compressImageFast(file) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -588,15 +588,15 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     let w = img.width, h = img.height;
-                    const maxSize = 500;
-                    if (w > maxSize) {
-                        h = (h * maxSize) / w;
-                        w = maxSize;
+                    const max = 500;
+                    if (w > max) {
+                        h = (h * max) / w;
+                        w = max;
                     }
                     canvas.width = w;
                     canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    canvas.toBlob(resolve, 'image/jpeg', 0.4);
+                    canvas.toBlob(resolve, 'image/jpeg', 0.5);
                 };
                 img.src = e.target.result;
             };
@@ -604,26 +604,32 @@
         });
     }
 
-    async function uploadToFirebase(file, folder) {
+    async function uploadPhoto(file, folder) {
+        if (!file) return null;
+        
         if (!navigator.onLine) {
-            // حفظ كـ base64 مؤقت
+            // غير متصل - حفظ كـ base64
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => resolve(e.target.result);
                 reader.readAsDataURL(file);
             });
         }
-        const compressed = await fastCompress(file);
+        
+        // متصل - ضغط ثم رفع
+        const compressed = await compressImageFast(file);
         const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(2, 6)}.jpg`;
         const ref = storage.ref(fileName);
         await ref.put(compressed);
         return await ref.getDownloadURL();
     }
 
-    function setupImageUpload(btnId, previewId, progressId, onSuccess) {
+    function bindImageUpload(btnId, previewId, progressId, callback) {
         const btn = document.getElementById(btnId);
         const preview = document.getElementById(previewId);
-        const progressBar = document.getElementById(progressId);
+        const progress = document.getElementById(progressId);
+        
+        if (!btn) return;
         
         btn.onclick = () => {
             const input = document.createElement('input');
@@ -633,34 +639,35 @@
                 const file = e.target.files[0];
                 if (!file) return;
                 
-                // معاينة فورية
+                // عرض الصورة فوراً
                 const localUrl = URL.createObjectURL(file);
                 preview.src = localUrl;
                 preview.style.display = 'block';
                 
                 btn.classList.add('uploading');
-                if (progressBar) progressBar.style.display = 'block';
-                const fill = progressBar?.querySelector('.progress-fill');
+                if (progress) progress.style.display = 'block';
+                const fill = progress?.querySelector('.progress-fill');
                 if (fill) fill.style.width = '30%';
                 
                 try {
-                    const url = await uploadToFirebase(file, 'guide_photos');
+                    const url = await uploadPhoto(file, 'guides');
                     if (fill) fill.style.width = '100%';
                     preview.src = url;
-                    if (onSuccess) onSuccess(url);
+                    callback(url);
                     toast('✅ تم رفع الصورة');
                 } catch (err) {
+                    console.error(err);
                     toast('❌ فشل الرفع، تم الحفظ محلياً');
                     const reader = new FileReader();
                     reader.onload = (ev) => {
                         const base64 = ev.target.result;
                         preview.src = base64;
-                        if (onSuccess) onSuccess(base64);
+                        callback(base64);
                     };
                     reader.readAsDataURL(file);
                 } finally {
                     btn.classList.remove('uploading');
-                    if (progressBar) setTimeout(() => progressBar.style.display = 'none', 500);
+                    if (progress) setTimeout(() => progress.style.display = 'none', 500);
                     URL.revokeObjectURL(localUrl);
                 }
             };
@@ -803,10 +810,10 @@
     cancelCustomPlate?.addEventListener('click', closeCustomPlateModal);
     customPlateModal?.addEventListener('click', (e) => { if(e.target === customPlateModal) closeCustomPlateModal(); });
 
-    // إعداد رفع الصور السريع
-    setupImageUpload('guideUploadBtn', 'guidePreview', 'guideProgress', (url) => { guidePhotoUrl = url; });
-    setupImageUpload('busUploadBtn', 'busPreview', 'busProgress', (url) => { busPhotoUrl = url; });
-    setupImageUpload('profileUploadBtn', 'profileAvatar', null, async (url) => {
+    // ربط أزرار رفع الصور
+    bindImageUpload('guideUploadBtn', 'guidePreview', 'guideProgress', (url) => { guidePhotoUrl = url; });
+    bindImageUpload('busUploadBtn', 'busPreview', 'busProgress', (url) => { busPhotoUrl = url; });
+    bindImageUpload('profileUploadBtn', 'profileAvatar', null, async (url) => {
         userProfile.photoURL = url;
         if(currentUser) await currentUser.updateProfile({photoURL:url});
         await db.collection('users').doc(currentUser.uid).set({photoURL:url},{merge:true});
