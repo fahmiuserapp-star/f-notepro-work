@@ -20,6 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
+        /* جميع الأنماط كما هي - مختصرة للمساحة */
         :root {
             --olive: #556B2F;
             --gold: #D4AF37;
@@ -478,7 +479,7 @@
     let currentWeather = { temp: '', condition: '', city: CITY };
     let unsubscribeFirestore = null;
 
-    // الترجمات
+    // الترجمات (مختصرة)
     const translations = {
         ar: {
             login_sub:"إدارة الوفود السياحية والدبلوماسية", login_btn:"دخول", offline_btn:"🔄 بدون إنترنت",
@@ -579,10 +580,10 @@
         renderGuides();
     }
 
-    // ========== دوال رفع الصور الجديدة كلياً (بسيطة وسريعة) ==========
+    // ========== دوال رفع الصور الجديدة كلياً (مبسطة، سريعة، بضغط قوي) ==========
     
-    // ضغط سريع جداً
-    function resizeImage(file, maxSize = 400) {
+    // ضغط الصورة بشكل قوي (300px، جودة 0.2)
+    function compressImageStrong(file) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -590,6 +591,7 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     let w = img.width, h = img.height;
+                    const maxSize = 300;
                     if (w > maxSize) {
                         h = (h * maxSize) / w;
                         w = maxSize;
@@ -597,7 +599,7 @@
                     canvas.width = w;
                     canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    canvas.toBlob(resolve, 'image/jpeg', 0.4);
+                    canvas.toBlob(resolve, 'image/jpeg', 0.2);
                 };
                 img.src = e.target.result;
             };
@@ -605,15 +607,15 @@
         });
     }
 
-    // رفع الصورة
-    async function uploadImage(file, path) {
+    // رفع الصورة مباشرة
+    async function uploadPhotoSimple(file, folder) {
         if (!file) return null;
         
-        // عرض الصورة فوراً من الجهاز
-        const localUrl = URL.createObjectURL(file);
+        // معاينة فورية من الجهاز
+        const localPreview = URL.createObjectURL(file);
         
         if (!navigator.onLine) {
-            // غير متصل - حفظ base64
+            // غير متصل -> حفظ base64
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => resolve(e.target.result);
@@ -621,20 +623,24 @@
             });
         }
         
-        // ضغط ثم رفع
-        const compressed = await resizeImage(file, 400);
-        const fileName = `${path}/${Date.now()}_${Math.random().toString(36).substring(2, 5)}.jpg`;
-        const ref = storage.ref(fileName);
-        await ref.put(compressed);
-        URL.revokeObjectURL(localUrl);
-        return await ref.getDownloadURL();
+        // ضغط قوي ثم رفع
+        const compressed = await compressImageStrong(file);
+        const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(2, 5)}.jpg`;
+        const storageRef = storage.ref(fileName);
+        
+        await storageRef.put(compressed);
+        URL.revokeObjectURL(localPreview);
+        
+        return await storageRef.getDownloadURL();
     }
 
-    // ربط زر الصورة
-    function initUpload(btnId, imgId, progressId, callback) {
+    // ربط زر رفع الصورة
+    function attachUploadHandler(btnId, imgId, progressId, callback) {
         const btn = document.getElementById(btnId);
         const img = document.getElementById(imgId);
-        const progress = document.getElementById(progressId);
+        const progressBar = document.getElementById(progressId);
+        
+        if (!btn) return;
         
         btn.onclick = () => {
             const input = document.createElement('input');
@@ -644,34 +650,35 @@
                 const file = e.target.files[0];
                 if (!file) return;
                 
-                // معاينة
-                const localUrl = URL.createObjectURL(file);
-                img.src = localUrl;
+                // معاينة فورية
+                const previewUrl = URL.createObjectURL(file);
+                img.src = previewUrl;
                 img.style.display = 'block';
                 
                 btn.classList.add('uploading');
-                if (progress) progress.style.display = 'block';
-                const fill = progress?.querySelector('.progress-fill');
-                if (fill) fill.style.width = '40%';
+                if (progressBar) progressBar.style.display = 'block';
+                const fill = progressBar?.querySelector('.progress-fill');
+                if (fill) fill.style.width = '30%';
                 
                 try {
-                    const url = await uploadImage(file, 'guides');
+                    const url = await uploadPhotoSimple(file, 'guides');
                     if (fill) fill.style.width = '100%';
                     img.src = url;
                     callback(url);
-                    toast('✅ تم');
                 } catch (err) {
-                    toast('❌ فشل');
+                    console.error(err);
+                    // فشل -> حفظ base64
                     const reader = new FileReader();
                     reader.onload = (ev) => {
-                        img.src = ev.target.result;
-                        callback(ev.target.result);
+                        const base64 = ev.target.result;
+                        img.src = base64;
+                        callback(base64);
                     };
                     reader.readAsDataURL(file);
                 } finally {
                     btn.classList.remove('uploading');
-                    if (progress) setTimeout(() => progress.style.display = 'none', 400);
-                    URL.revokeObjectURL(localUrl);
+                    if (progressBar) setTimeout(() => progressBar.style.display = 'none', 300);
+                    URL.revokeObjectURL(previewUrl);
                 }
             };
             input.click();
@@ -700,7 +707,7 @@
 
     async function fetchWeather(){ if(!WEATHER_API_KEY){ currentWeather={temp:'?', condition:translations[currentLang].weather_unavailable, city:CITY}; return; } try{ const url = `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=${currentLang==='ar'?'ar':'en'}`; const res = await fetch(url); if(!res.ok) throw new Error(); const data = await res.json(); currentWeather = { temp: Math.round(data.main.temp), condition: data.weather[0].description, city: data.name }; } catch(e){ currentWeather = { temp:'?', condition:translations[currentLang].weather_unavailable, city:CITY }; } }
     function getWeatherHtml(){ return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
-    function toast(msg){ const div = document.createElement('div'); div.className = 'toast'; div.textContent = msg; document.body.appendChild(div); setTimeout(()=>{ div.style.opacity='0'; },2200); setTimeout(()=>div.remove(),2600); }
+    function toast(msg){ const div = document.createElement('div'); div.className = 'toast'; div.textContent = msg; document.body.appendChild(div); setTimeout(()=>{ div.style.opacity='0'; },2000); setTimeout(()=>div.remove(),2500); }
 
     function showFullImage(url){ if(url && url.startsWith('http')) { document.getElementById('fullImageView').src = url; document.getElementById('imageViewerModal').classList.add('show'); } }
     document.getElementById('closeImageViewer')?.addEventListener('click',()=>document.getElementById('imageViewerModal').classList.remove('show'));
@@ -813,10 +820,10 @@
     cancelCustomPlate?.addEventListener('click', closeCustomPlateModal);
     customPlateModal?.addEventListener('click', (e) => { if(e.target === customPlateModal) closeCustomPlateModal(); });
 
-    // رفع الصور بالطريقة الجديدة
-    initUpload('guideUploadBtn', 'guidePreview', 'guideProgress', (url) => { guidePhotoUrl = url; });
-    initUpload('busUploadBtn', 'busPreview', 'busProgress', (url) => { busPhotoUrl = url; });
-    initUpload('profileUploadBtn', 'profileAvatar', null, async (url) => {
+    // ربط أزرار رفع الصور
+    attachUploadHandler('guideUploadBtn', 'guidePreview', 'guideProgress', (url) => { guidePhotoUrl = url; });
+    attachUploadHandler('busUploadBtn', 'busPreview', 'busProgress', (url) => { busPhotoUrl = url; });
+    attachUploadHandler('profileUploadBtn', 'profileAvatar', null, async (url) => {
         userProfile.photoURL = url;
         if(currentUser) await currentUser.updateProfile({photoURL:url});
         await db.collection('users').doc(currentUser.uid).set({photoURL:url},{merge:true});
