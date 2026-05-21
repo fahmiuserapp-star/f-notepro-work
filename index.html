@@ -150,7 +150,10 @@
         .agency-box, .notes-box { background: var(--bg); border-radius: 16px; padding: 10px; border: 1px solid var(--border); margin-bottom: 12px; width: 100%; }
         .agency-box .label, .notes-box .label { font-size: 10px; color: var(--txt3); display: block; margin-bottom: 4px; }
         .agency-box .value, .notes-box .value { font-size: 13px; font-weight: 500; color: var(--txt); }
-        .notes-box.custom-paragraph { background: #fff3cd; border-color: #ffeeba; }
+        /* تحسين الفقرة المخصصة */
+        .custom-paragraph-wrapper { margin-top: 8px; width: 100%; }
+        .custom-paragraph-title { font-size: 12px; font-weight: 700; color: var(--olive); margin-bottom: 6px; display: block; }
+        .custom-paragraph-content { background: #fff3cd; border-radius: 14px; padding: 12px; border: 1px solid #ffeeba; font-weight: 600; font-size: 14px; color: #1e293b; line-height: 1.4; }
         .timestamp-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 10px; color: var(--txt3); width: 100%; }
         .real-plate { background: #1a1a2e; border-radius: 40px; padding: 6px 16px; display: inline-flex; align-items: center; gap: 6px; font-family: monospace; font-weight: bold; font-size: 14px; color: white; direction: ltr; }
         
@@ -174,12 +177,19 @@
         .user-more-btn { background: var(--olive); }
         .user-delete-btn { background: var(--err); margin-right: 6px; }
         
-        /* QR code */
-        .qr-container { display: flex; justify-content: center; margin: 10px 0; }
+        /* تحسين QR Code */
+        .qr-container { display: flex; justify-content: center; margin: 12px 0; padding: 10px; background: white; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: fit-content; margin-left: auto; margin-right: auto; }
+        .qr-container canvas, .qr-container img { border-radius: 12px; }
         
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--olive); color: white; padding: 8px 20px; border-radius: 40px; font-size: 13px; z-index: 1000; }
         .login-container { background: white; border-radius: 32px; padding: 30px 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; }
         .login-lang-dropdown { position: absolute; top: 15px; left: 15px; }
+        
+        /* مودال اللوحة المخصصة */
+        .custom-plate-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 500; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .custom-plate-modal.show { visibility: visible; opacity: 1; }
+        .custom-plate-box { background: var(--card); border-radius: 32px; padding: 24px; width: 90%; max-width: 350px; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -255,7 +265,19 @@
     <div id="guidesContainer" class="guides"><div style="text-align:center;padding:30px;">⏳ جاري التحميل...</div></div>
 </div>
 
-<!-- المودالات -->
+<!-- مودال اللوحة المخصصة -->
+<div id="customPlateModal" class="custom-plate-modal">
+    <div class="custom-plate-box">
+        <h4 style="color:var(--olive);margin-bottom:16px;"><i class="fas fa-plus-circle"></i> <span data-i18n="add_custom_plate">إضافة لوحة مخصصة</span></h4>
+        <input type="text" id="customPlateInput" placeholder="مثال: CD 12345 | POL 789 | 123 ABC" dir="ltr">
+        <div class="modal-buttons">
+            <button id="confirmCustomPlate" class="btn-primary" data-i18n="add">إضافة</button>
+            <button id="cancelCustomPlate" class="btn-secondary" data-i18n="cancel">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- باقي المودالات (المختصرة للطول ولكنها كاملة) -->
 <div class="modal" id="dashboardModal"><div class="modal-box"><h3><i class="fas fa-chart-line"></i> <span data-i18n="dashboard_title">لوحة الإحصائيات الأمنية</span></h3><div id="dashboardStats" class="dashboard-stats"></div><div id="topNationalities"></div><button class="btn-secondary" id="closeDashboardBtn" data-i18n="close">إغلاق</button></div></div>
 <div class="modal" id="confirmDeleteModal"><div class="modal-box"><h3>⚠️ <span data-i18n="confirm_delete_title">تأكيد الحذف</span></h3><p id="deleteConfirmMsg" data-i18n="delete_confirm_msg">هل أنت متأكد من حذف هذا المرشد؟</p><div style="display:flex; gap:10px; margin-top:15px;"><button id="confirmDeleteBtn" class="btn-primary" style="background:var(--err);" data-i18n="yes_delete">نعم، احذف</button><button id="cancelDeleteBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div></div>
 <div class="modal" id="termsModal"><div class="modal-box"><h3 data-i18n="terms_title">📜 شروط الخدمة</h3><p data-i18n="terms_text">باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.</p><button class="btn-secondary" id="closeTermsBtn" data-i18n="close">إغلاق</button></div></div>
@@ -321,53 +343,20 @@
     let isDeveloper = false;
     let pendingDeleteId = null;
 
-    // ========== الترجمات الكاملة ==========
+    // ========== الترجمات الكاملة (مختصرة للطول) ==========
     const translations = {
-        ar: {
-            login_sub:"إدارة الوفود السياحية والدبلوماسية", login_btn:"دخول", offline_btn:"🔄 بدون إنترنت", login_info:"🔐 يتم إنشاء الحسابات عن طريق السيد فهمي (مدير النظام)",
-            edit_profile:"تعديل الملف الشخصي", tools_section:"أدوات متقدمة", sync:"مزامنة السحابة", export_json:"تصدير JSON", export_pdf:"تصدير PDF", logout:"تسجيل الخروج", language:"اللغة", terms:"📜 شروط الخدمة", terms_title:"شروط الخدمة", terms_text:"باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.", close:"إغلاق",
-            profile_title:"تعديل الملف الشخصي", change_photo:"تغيير الصورة", display_name:"اسم العرض", change_password:"تغيير كلمة المرور", save_profile:"حفظ التغييرات", cancel:"إلغاء", change_password_title:"تغيير كلمة المرور", change:"تغيير",
-            add_guide_title:"إضافة مرشد جديد", guide_name:"اسم المرشد", phone:"رقم الجوال", nationality:"الجنسية", people_count:"عدد الأفراد", transport_type:"نوع النقل", small_bus:"حافلة صغيرة", large_bus:"حافلة كبيرة", car:"سيارة", van:"فان", other:"أخرى",
-            guide_photo:"صورة المرشد", bus_photo:"صورة السيارة", agency:"الوكالة", notes:"ملاحظات", private:"خاص", public:"عام", save_guide:"حفظ المرشد",
-            delegation_info:"معلومات الوفد", transport:"نوع النقل", plate:"رقم السيارة", from:"من", to:"إلى", created_at:"تاريخ الإضافة:", sent_at:"تاريخ الإرسال:", created_by:"المنشئ:", share_card:"مشاركة البطاقة",
-            security_card_title:"كرت التنسيق والمتابعة", custom_group_label:"الفقرة المخصصة", saved_numbers_label:"الأرقام المحفوظة", add_numbers_label:"أرقام جديدة", save_numbers:"حفظ الأرقام", generate_card:"إنشاء البطاقة",
-            search_placeholder:"بحث عن مرشد...", delete_confirm:"هل أنت متأكد من الحذف؟", deleted:"تم الحذف", saved:"تم الحفظ بنجاح", sync_ok:"تمت المزامنة", sync_fail:"فشلت المزامنة", no_results:"لا توجد نتائج", save_error:"خطأ في الحفظ",
-            weather_unavailable:"غير متوفر", add_custom_plate:"إضافة لوحة مخصصة", add:"إضافة", more:"المزيد", call:"اتصل", card:"البطاقة", follow_up:"متابعة", edit:"تعديل", delete:"حذف", send:"إرسال", link:"رابط", sent_history:"سجل الإرسال", resend:"إعادة إرسال",
-            developer_section:"قسم المطور", manage_users:"إدارة الحسابات", view_all_guides:"رؤية جميع الإضافات", manage_users_title:"إدارة المستخدمين", create_user:"إنشاء حساب جديد", all_guides_title:"جميع الإضافات", no_users:"لا يوجد مستخدمين", loading:"جاري التحميل...",
-            status_pending:"منتظر", status_inside:"دخل النزل", status_left:"غادر النزل", dashboard_title:"لوحة الإحصائيات الأمنية", confirm_delete_title:"تأكيد الحذف", delete_confirm_msg:"هل أنت متأكد من حذف هذا المرشد؟", yes_delete:"نعم، احذف", ocr_plate:"مسح اللوحة بالكاميرا", send_notification:"إرسال إشعار تجريبي"
-        },
-        fr: {
-            login_sub:"Gestion des délégations", login_btn:"Connexion", offline_btn:"Hors ligne", login_info:"Comptes créés par M. Fahmi",
-            edit_profile:"Modifier le profil", tools_section:"Outils avancés", sync:"Synchronisation", export_json:"Exporter JSON", export_pdf:"Exporter PDF", logout:"Déconnexion", language:"Langue", terms:"Conditions", terms_title:"Conditions d'utilisation", terms_text:"En utilisant cette application, vous acceptez toutes les conditions.", close:"Fermer",
-            profile_title:"Modifier le profil", change_photo:"Changer la photo", display_name:"Nom d'affichage", change_password:"Changer le mot de passe", save_profile:"Enregistrer", cancel:"Annuler", change_password_title:"Changer le mot de passe", change:"Changer",
-            add_guide_title:"Ajouter un guide", guide_name:"Nom du guide", phone:"Téléphone", nationality:"Nationalité", people_count:"Nombre", transport_type:"Type de transport", small_bus:"Petit bus", large_bus:"Grand bus", car:"Voiture", van:"Van", other:"Autre",
-            guide_photo:"Photo du guide", bus_photo:"Photo du véhicule", agency:"Agence", notes:"Notes", private:"Privé", public:"Public", save_guide:"Enregistrer",
-            delegation_info:"Infos délégation", transport:"Transport", plate:"Plaque", from:"De", to:"À", created_at:"Ajouté le:", sent_at:"Envoyé le:", created_by:"Créé par:", share_card:"Partager",
-            security_card_title:"Fiche de coordination", custom_group_label:"Paragraphe personnalisé", saved_numbers_label:"Numéros", add_numbers_label:"Nouveaux numéros", save_numbers:"Sauvegarder", generate_card:"Générer",
-            search_placeholder:"Rechercher...", delete_confirm:"Supprimer ?", deleted:"Supprimé", saved:"Enregistré", sync_ok:"Synchronisé", sync_fail:"Échec", no_results:"Aucun résultat", save_error:"Erreur",
-            weather_unavailable:"N/D", add_custom_plate:"Ajouter plaque", add:"Ajouter", more:"Plus", call:"Appeler", card:"Carte", follow_up:"Suivi", edit:"Modifier", delete:"Supprimer", send:"Envoyer", link:"Lien", sent_history:"Historique", resend:"Renvoyer",
-            developer_section:"Développeur", manage_users:"Gérer comptes", view_all_guides:"Voir tous", manage_users_title:"Gérer utilisateurs", create_user:"Créer compte", all_guides_title:"Tous les ajouts", no_users:"Aucun utilisateur", loading:"Chargement...",
-            status_pending:"En attente", status_inside:"Entré", status_left:"Sorti", dashboard_title:"Tableau de bord", confirm_delete_title:"Confirmation", delete_confirm_msg:"Supprimer ce guide ?", yes_delete:"Oui, supprimer", ocr_plate:"Scanner la plaque", send_notification:"Envoyer notification"
-        },
-        en: {
-            login_sub:"Delegation Management", login_btn:"Login", offline_btn:"Offline", login_info:"Accounts created by Mr. Fahmi",
-            edit_profile:"Edit Profile", tools_section:"Advanced Tools", sync:"Cloud Sync", export_json:"Export JSON", export_pdf:"Export PDF", logout:"Logout", language:"Language", terms:"Terms", terms_title:"Terms of Service", terms_text:"By using this application, you agree to all terms.", close:"Close",
-            profile_title:"Edit Profile", change_photo:"Change Photo", display_name:"Display Name", change_password:"Change Password", save_profile:"Save", cancel:"Cancel", change_password_title:"Change Password", change:"Change",
-            add_guide_title:"Add Guide", guide_name:"Guide Name", phone:"Phone", nationality:"Nationality", people_count:"People", transport_type:"Transport Type", small_bus:"Small Bus", large_bus:"Large Bus", car:"Car", van:"Van", other:"Other",
-            guide_photo:"Guide Photo", bus_photo:"Vehicle Photo", agency:"Agency", notes:"Notes", private:"Private", public:"Public", save_guide:"Save Guide",
-            delegation_info:"Delegation Info", transport:"Transport", plate:"Plate", from:"From", to:"To", created_at:"Added:", sent_at:"Sent:", created_by:"Created by:", share_card:"Share Card",
-            security_card_title:"Coordination Card", custom_group_label:"Custom Text", saved_numbers_label:"Saved Numbers", add_numbers_label:"New Numbers", save_numbers:"Save Numbers", generate_card:"Generate Card",
-            search_placeholder:"Search...", delete_confirm:"Delete?", deleted:"Deleted", saved:"Saved", sync_ok:"Synced", sync_fail:"Failed", no_results:"No results", save_error:"Error",
-            weather_unavailable:"N/A", add_custom_plate:"Add Custom Plate", add:"Add", more:"More", call:"Call", card:"Card", follow_up:"Follow up", edit:"Edit", delete:"Delete", send:"Send", link:"Link", sent_history:"History", resend:"Resend",
-            developer_section:"Developer", manage_users:"Manage Accounts", view_all_guides:"View All", manage_users_title:"Manage Users", create_user:"Create Account", all_guides_title:"All Additions", no_users:"No users", loading:"Loading...",
-            status_pending:"Pending", status_inside:"Inside", status_left:"Left", dashboard_title:"Dashboard", confirm_delete_title:"Confirm Delete", delete_confirm_msg:"Are you sure you want to delete this guide?", yes_delete:"Yes, delete", ocr_plate:"Scan Plate", send_notification:"Send Notification"
-        }
+        ar: { login_sub:"إدارة الوفود السياحية والدبلوماسية", login_btn:"دخول", offline_btn:"🔄 بدون إنترنت", login_info:"🔐 يتم إنشاء الحسابات عن طريق السيد فهمي (مدير النظام)", edit_profile:"تعديل الملف الشخصي", tools_section:"أدوات متقدمة", sync:"مزامنة السحابة", export_json:"تصدير JSON", export_pdf:"تصدير PDF", logout:"تسجيل الخروج", language:"اللغة", terms:"شروط الخدمة", terms_title:"شروط الخدمة", terms_text:"باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.", close:"إغلاق", profile_title:"تعديل الملف الشخصي", change_photo:"تغيير الصورة", display_name:"اسم العرض", change_password:"تغيير كلمة المرور", save_profile:"حفظ التغييرات", cancel:"إلغاء", change_password_title:"تغيير كلمة المرور", change:"تغيير", add_guide_title:"إضافة مرشد جديد", guide_name:"اسم المرشد", phone:"رقم الجوال", nationality:"الجنسية", people_count:"عدد الأفراد", transport_type:"نوع النقل", small_bus:"حافلة صغيرة", large_bus:"حافلة كبيرة", car:"سيارة", van:"فان", other:"أخرى", guide_photo:"صورة المرشد", bus_photo:"صورة السيارة", agency:"الوكالة", notes:"ملاحظات", private:"خاص", public:"عام", save_guide:"حفظ المرشد", delegation_info:"معلومات الوفد", transport:"نوع النقل", plate:"رقم السيارة", from:"من", to:"إلى", created_at:"تاريخ الإضافة:", sent_at:"تاريخ الإرسال:", created_by:"المنشئ:", share_card:"مشاركة البطاقة", security_card_title:"كرت التنسيق والمتابعة", custom_group_label:"الفقرة المخصصة", saved_numbers_label:"الأرقام المحفوظة", add_numbers_label:"أرقام جديدة", save_numbers:"حفظ الأرقام", generate_card:"إنشاء البطاقة", search_placeholder:"بحث عن مرشد...", delete_confirm:"هل أنت متأكد من الحذف؟", deleted:"تم الحذف", saved:"تم الحفظ بنجاح", sync_ok:"تمت المزامنة", sync_fail:"فشلت المزامنة", no_results:"لا توجد نتائج", save_error:"خطأ في الحفظ", weather_unavailable:"غير متوفر", add_custom_plate:"إضافة لوحة مخصصة", add:"إضافة", more:"المزيد", call:"اتصل", card:"البطاقة", follow_up:"متابعة", edit:"تعديل", delete:"حذف", send:"إرسال", link:"رابط", sent_history:"سجل الإرسال", resend:"إعادة إرسال", developer_section:"قسم المطور", manage_users:"إدارة الحسابات", view_all_guides:"رؤية جميع الإضافات", manage_users_title:"إدارة المستخدمين", create_user:"إنشاء حساب جديد", all_guides_title:"جميع الإضافات", no_users:"لا يوجد مستخدمين", loading:"جاري التحميل...", status_pending:"منتظر", status_inside:"دخل النزل", status_left:"غادر النزل", dashboard_title:"لوحة الإحصائيات الأمنية", confirm_delete_title:"تأكيد الحذف", delete_confirm_msg:"هل أنت متأكد من حذف هذا المرشد؟", yes_delete:"نعم، احذف", ocr_plate:"مسح اللوحة بالكاميرا", send_notification:"إرسال إشعار تجريبي" },
+        fr: { /* مشابه للعربية لكن بالفرنسية - سيتم تضمينه كاملاً في الكود النهائي */ },
+        en: { /* مشابه للعربية لكن بالإنجليزية - سيتم تضمينه كاملاً */ }
     };
+    // إكمال الترجمات للغتين الأخرى (لضيق المساحة سأضعها في الكود النهائي كاملة)
+    translations.fr = { ...translations.ar, login_sub:"Gestion des délégations", login_btn:"Connexion", offline_btn:"Hors ligne", login_info:"Comptes créés par M. Fahmi", edit_profile:"Modifier le profil", tools_section:"Outils avancés", sync:"Synchronisation", export_json:"Exporter JSON", export_pdf:"Exporter PDF", logout:"Déconnexion", language:"Langue", terms:"Conditions", terms_title:"Conditions d'utilisation", terms_text:"En utilisant cette application, vous acceptez toutes les conditions.", close:"Fermer", profile_title:"Modifier le profil", change_photo:"Changer la photo", display_name:"Nom d'affichage", change_password:"Changer le mot de passe", save_profile:"Enregistrer", cancel:"Annuler", change_password_title:"Changer le mot de passe", change:"Changer", add_guide_title:"Ajouter un guide", guide_name:"Nom du guide", phone:"Téléphone", nationality:"Nationalité", people_count:"Nombre", transport_type:"Type de transport", small_bus:"Petit bus", large_bus:"Grand bus", car:"Voiture", van:"Van", other:"Autre", guide_photo:"Photo du guide", bus_photo:"Photo du véhicule", agency:"Agence", notes:"Notes", private:"Privé", public:"Public", save_guide:"Enregistrer", delegation_info:"Infos délégation", transport:"Transport", plate:"Plaque", from:"De", to:"À", created_at:"Ajouté le:", sent_at:"Envoyé le:", created_by:"Créé par:", share_card:"Partager", security_card_title:"Fiche de coordination", custom_group_label:"Paragraphe personnalisé", saved_numbers_label:"Numéros", add_numbers_label:"Nouveaux numéros", save_numbers:"Sauvegarder", generate_card:"Générer", search_placeholder:"Rechercher...", delete_confirm:"Supprimer ?", deleted:"Supprimé", saved:"Enregistré", sync_ok:"Synchronisé", sync_fail:"Échec", no_results:"Aucun résultat", save_error:"Erreur", weather_unavailable:"N/D", add_custom_plate:"Ajouter plaque", add:"Ajouter", more:"Plus", call:"Appeler", card:"Carte", follow_up:"Suivi", edit:"Modifier", delete:"Supprimer", send:"Envoyer", link:"Lien", sent_history:"Historique", resend:"Renvoyer", developer_section:"Développeur", manage_users:"Gérer comptes", view_all_guides:"Voir tous", manage_users_title:"Gérer utilisateurs", create_user:"Créer compte", all_guides_title:"Tous les ajouts", no_users:"Aucun utilisateur", loading:"Chargement...", status_pending:"En attente", status_inside:"Entré", status_left:"Sorti", dashboard_title:"Tableau de bord", confirm_delete_title:"Confirmation", delete_confirm_msg:"Supprimer ce guide ?", yes_delete:"Oui, supprimer", ocr_plate:"Scanner la plaque", send_notification:"Envoyer notification" };
+    translations.en = { ...translations.ar, login_sub:"Delegation Management", login_btn:"Login", offline_btn:"Offline", login_info:"Accounts created by Mr. Fahmi", edit_profile:"Edit Profile", tools_section:"Advanced Tools", sync:"Cloud Sync", export_json:"Export JSON", export_pdf:"Export PDF", logout:"Logout", language:"Language", terms:"Terms", terms_title:"Terms of Service", terms_text:"By using this application, you agree to all terms.", close:"Close", profile_title:"Edit Profile", change_photo:"Change Photo", display_name:"Display Name", change_password:"Change Password", save_profile:"Save", cancel:"Cancel", change_password_title:"Change Password", change:"Change", add_guide_title:"Add Guide", guide_name:"Guide Name", phone:"Phone", nationality:"Nationality", people_count:"People", transport_type:"Transport Type", small_bus:"Small Bus", large_bus:"Large Bus", car:"Car", van:"Van", other:"Other", guide_photo:"Guide Photo", bus_photo:"Vehicle Photo", agency:"Agency", notes:"Notes", private:"Private", public:"Public", save_guide:"Save Guide", delegation_info:"Delegation Info", transport:"Transport", plate:"Plate", from:"From", to:"To", created_at:"Added:", sent_at:"Sent:", created_by:"Created by:", share_card:"Share Card", security_card_title:"Coordination Card", custom_group_label:"Custom Text", saved_numbers_label:"Saved Numbers", add_numbers_label:"New Numbers", save_numbers:"Save Numbers", generate_card:"Generate Card", search_placeholder:"Search...", delete_confirm:"Delete?", deleted:"Deleted", saved:"Saved", sync_ok:"Synced", sync_fail:"Failed", no_results:"No results", save_error:"Error", weather_unavailable:"N/A", add_custom_plate:"Add Custom Plate", add:"Add", more:"More", call:"Call", card:"Card", follow_up:"Follow up", edit:"Edit", delete:"Delete", send:"Send", link:"Link", sent_history:"History", resend:"Resend", developer_section:"Developer", manage_users:"Manage Accounts", view_all_guides:"View All", manage_users_title:"Manage Users", create_user:"Create Account", all_guides_title:"All Additions", no_users:"No users", loading:"Loading...", status_pending:"Pending", status_inside:"Inside", status_left:"Left", dashboard_title:"Dashboard", confirm_delete_title:"Confirm Delete", delete_confirm_msg:"Are you sure you want to delete this guide?", yes_delete:"Yes, delete", ocr_plate:"Scan Plate", send_notification:"Send Notification" };
 
     function t(key){ return translations[currentLang][key] || key; }
     function toast(msg){ const d=document.createElement('div'); d.className='toast'; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>d.remove(),2500); }
 
-    // ========== رفع الصور (لم يتغير) ==========
+    // ========== رفع الصور ==========
     async function compressToBase64(file, maxSize=2500, quality=0.95) {
         return new Promise((resolve) => {
             const reader = new FileReader();
@@ -493,7 +482,7 @@
     }
     function getWeatherHtml() { return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
 
-    // ========== عرض قائمة المرشدين مع الترجمة ==========
+    // ========== عرض قائمة المرشدين ==========
     function renderGuides() {
         let filtered = guides;
         if (currentUser && currentUser.uid !== 'offline') {
@@ -677,24 +666,30 @@
         document.getElementById('creationTimestamp').innerHTML=g.createdAt?new Date(g.createdAt).toLocaleString('ar-TN', { hour12: false }):'غير معروف';
         document.getElementById('sendTimestamp').innerHTML='لم يرسل بعد';
         document.getElementById('creatorName').innerHTML=g.creatorName||'غير معروف';
-        // إنشاء QR Code لرابط البطاقة بعد رفعها
         document.getElementById('delegationModal').classList.add('show');
-        // سيتم إنشاء QR عند الضغط على مشاركة البطاقة
     };
+    // زر مشاركة البطاقة: يرفع الصورة ويرسلها عبر واتساب (بدون حفظ)
     document.getElementById('shareDelegationBtn').onclick=async()=>{ 
         const card=document.getElementById('delegationCard'); 
         const canvas=await html2canvas(card,{scale:2, useCORS:true}); 
         const blob=await new Promise(r=>canvas.toBlob(r,'image/png')); 
         const url = await uploadCardToCloudinary(blob);
-        // إنشاء QR
+        // إنشاء QR Code أنيق
         const qrContainer = document.getElementById('delegationQrContainer');
         qrContainer.innerHTML = '';
         new QRCode(qrContainer, { text: url, width: 120, height: 120 });
-        toast('📥 تم رفع البطاقة وظهر QR');
-        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='delegation.png'; a.click(); 
+        // إرسال الرابط مباشرة إلى واتساب
+        const message = `📸 بطاقة الوفد: ${url}`;
+        if(currentGuideForCards && currentGuideForCards.phone) {
+            openWhatsAppDirect(currentGuideForCards.phone.replace(/[^0-9]/g,''), message);
+        } else {
+            // إذا لم يكن هناك مرشد محدد نفتح واتساب للصق الرابط
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        }
+        toast('📱 تم فتح واتساب لمشاركة البطاقة');
     };
     
-    // كرت المتابعة
+    // كرت المتابعة مع تحسين الفقرة المخصصة
     function updateSecurityPreview(g, customText){
         const preview=document.getElementById('securityCardPreview'); const now=new Date();
         let infoHtml='';
@@ -704,13 +699,22 @@
         if(g.plate && g.plate!=='🇹🇳') infoHtml+=`<div class="info-item"><span class="label">${t('plate')}</span><span class="value">${formatPlateDisplay(g.plate)}</span></div>`;
         if(g.fromLocation) infoHtml+=`<div class="info-item"><span class="label">${t('from')}</span><span class="value">${g.fromLocation}</span></div>`;
         if(g.toLocation) infoHtml+=`<div class="info-item"><span class="label">${t('to')}</span><span class="value">${g.toLocation}</span></div>`;
+        
+        let customHtml = '';
+        if(customText) {
+            customHtml = `<div class="custom-paragraph-wrapper">
+                            <div class="custom-paragraph-title">${t('custom_group_label')}</div>
+                            <div class="custom-paragraph-content">${customText}</div>
+                         </div>`;
+        }
+        
         preview.innerHTML = `<div class="datetime-bar"><span>${now.toLocaleDateString()}</span><span>${now.toLocaleTimeString('ar-TN',{hour12:false})}</span><div class="weather-info">${getWeatherHtml()}</div></div>
         <div class="card-img-area"><img class="main-img" src="${g.busPhoto||''}" crossorigin="anonymous"><img class="overlay-avatar" src="${g.guidePhoto||''}" crossorigin="anonymous"></div>
         <div class="guide-info-row"><span class="guide-name-card">${g.name||'—'}</span><span class="guide-phone-card">${g.phone||'—'}</span></div>
         <div class="card-content">${infoHtml?`<div class="info-grid">${infoHtml}</div>`:''}
         ${g.agency?`<div class="agency-box"><span class="label">${t('agency')}</span><span class="value">${g.agency}</span></div>`:''}
         ${g.notes?`<div class="notes-box"><span class="label">${t('notes')}</span><span class="value">${g.notes}</span></div>`:''}
-        ${customText?`<div class="notes-box custom-paragraph"><span class="label">${t('custom_group_label')}</span><span class="value">${customText}</span></div>`:''}
+        ${customHtml}
         <div class="timestamp-row"><span>${t('created_at')} ${g.createdAt?new Date(g.createdAt).toLocaleString('ar-TN',{hour12:false}):'غير معروف'}</span><span>${t('created_by')} ${g.creatorName||'غير معروف'}</span></div></div>`;
     }
     window.showSecurityCard=async function(id){ const g=guides.find(x=>x.id===id); if(!g) return; currentGuideForCards=g; await fetchWeather(); updateSecurityPreview(g,''); updateSavedNumbersDisplay(); document.getElementById('securityModal').classList.add('show'); };
@@ -766,7 +770,30 @@
         unsubscribeFirestore = db.collection('guides').onSnapshot(()=>fullSync(), err=>setTimeout(startFirestoreListener,5000));
     }
 
-    // ========== أحداث الواجهة ==========
+    // ========== أحداث الواجهة وإصلاح زر اللوحة المخصصة ==========
+    const customPlateModal = document.getElementById('customPlateModal');
+    const addCustomPlateBtn = document.getElementById('addCustomPlateBtn');
+    const confirmCustomPlate = document.getElementById('confirmCustomPlate');
+    const cancelCustomPlate = document.getElementById('cancelCustomPlate');
+    const customPlateInput = document.getElementById('customPlateInput');
+    function openCustomPlateModal() { customPlateInput.value = ''; customPlateModal.classList.add('show'); }
+    function closeCustomPlateModal() { customPlateModal.classList.remove('show'); }
+    addCustomPlateBtn?.addEventListener('click', openCustomPlateModal);
+    confirmCustomPlate?.addEventListener('click', () => {
+        const plateValue = customPlateInput.value.trim();
+        if (plateValue) {
+            document.getElementById('gPlate').value = plateValue;
+            document.getElementById('gPlateRight').value = '';
+            document.getElementById('gPlateLeft').value = '';
+            toast('✅ تم إضافة اللوحة المخصصة');
+        } else {
+            toast('⚠️ الرجاء إدخال رقم اللوحة');
+        }
+        closeCustomPlateModal();
+    });
+    cancelCustomPlate?.addEventListener('click', closeCustomPlateModal);
+    customPlateModal?.addEventListener('click', (e) => { if(e.target === customPlateModal) closeCustomPlateModal(); });
+
     document.getElementById('addGuideBtn').onclick = () => { editId=null; guidePhotoBase64=''; busPhotoBase64=''; document.getElementById('gName').value=''; document.getElementById('gPhone').value=''; document.getElementById('gNationality').value=''; document.getElementById('gPeopleCount').value=''; document.getElementById('gTransport').value=''; document.getElementById('gFrom').value=''; document.getElementById('gTo').value=''; document.getElementById('gPlateRight').value=''; document.getElementById('gPlateLeft').value=''; document.getElementById('gPlate').value=''; document.getElementById('gAgency').value=''; document.getElementById('gNotes').value=''; document.getElementById('gStatus').value='pending'; document.getElementById('gVisibility').value='public'; document.getElementById('guidePreview').style.display='none'; document.getElementById('busPreview').style.display='none'; document.getElementById('modalTitle').innerHTML = t('add_guide_title'); document.getElementById('guideModal').classList.add('show'); };
     window.editGuide = function(id){ const g=guides.find(x=>x.id===id); if(!g) return; editId=id; guidePhotoBase64=g.guidePhoto||''; busPhotoBase64=g.busPhoto||''; document.getElementById('gName').value=g.name||''; document.getElementById('gPhone').value=g.phone||''; document.getElementById('gNationality').value=g.nationality||''; document.getElementById('gPeopleCount').value=g.peopleCount||''; document.getElementById('gTransport').value=g.transportType||''; document.getElementById('gFrom').value=g.fromLocation||''; document.getElementById('gTo').value=g.toLocation||''; document.getElementById('gAgency').value=g.agency||''; document.getElementById('gNotes').value=g.notes||''; document.getElementById('gStatus').value=g.status||'pending'; document.getElementById('gVisibility').value=g.visibility||'public'; let plate=g.plate||''; plate=plate.replace(/تونس/g,'🇹🇳'); let parts=plate.split(' 🇹🇳 '); if(parts.length===2){ document.getElementById('gPlateRight').value=parts[0]; document.getElementById('gPlateLeft').value=parts[1]; }else{ document.getElementById('gPlateRight').value=''; document.getElementById('gPlateLeft').value=''; } document.getElementById('gPlate').value=plate; document.getElementById('guidePreview').src=guidePhotoBase64; document.getElementById('guidePreview').style.display=guidePhotoBase64?'block':'none'; document.getElementById('busPreview').src=busPhotoBase64; document.getElementById('busPreview').style.display=busPhotoBase64?'block':'none'; document.getElementById('modalTitle').innerHTML = `${t('edit')} ${t('guide_name')}`; document.getElementById('guideModal').classList.add('show'); };
     document.getElementById('closeGuideBtn').onclick = ()=>document.getElementById('guideModal').classList.remove('show');
