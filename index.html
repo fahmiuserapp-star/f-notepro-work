@@ -286,7 +286,6 @@
         }
         .login-logo { width: 100px; margin-bottom: 15px; background: transparent; }
         
-        /* لغة تسجيل الدخول - قائمة منسدلة */
         .login-lang-dropdown {
             position: absolute;
             top: 15px;
@@ -353,11 +352,13 @@
         .save-numbers-buttons { display: flex; gap: 8px; margin-top: 8px; }
         .save-numbers-buttons button { flex: 1; padding: 8px; border-radius: 14px; font-weight: 600; }
         
-        .whatsapp-iframe-modal {
+        /* نافذة واتساب بالرقم السري */
+        .whatsapp-secret-modal {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 500;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 600;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -365,35 +366,35 @@
             opacity: 0;
             transition: 0.2s;
         }
-        .whatsapp-iframe-modal.show { visibility: visible; opacity: 1; }
-        .whatsapp-iframe-box {
-            width: 95%;
-            height: 85%;
-            background: white;
-            border-radius: 24px;
-            overflow: hidden;
+        .whatsapp-secret-modal.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        .whatsapp-secret-box {
+            background: var(--card);
+            border-radius: 28px;
+            padding: 24px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+        }
+        .whatsapp-secret-box h4 {
+            color: var(--olive);
+            margin-bottom: 16px;
+        }
+        .whatsapp-secret-box input {
+            direction: ltr;
+            text-align: center;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+        .whatsapp-secret-buttons {
             display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            gap: 10px;
+            margin-top: 20px;
         }
-        .whatsapp-iframe-header {
-            padding: 12px;
-            background: var(--olive);
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .whatsapp-iframe-header button {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-        }
-        .whatsapp-iframe-box iframe { flex: 1; width: 100%; border: none; }
         
-        /* قائمة المستخدمين - قسم المطور */
+        /* قسم المستخدمين */
         .users-list {
             max-height: 300px;
             overflow-y: auto;
@@ -405,16 +406,32 @@
             padding: 10px;
             border-bottom: 1px solid var(--border);
         }
-        .user-item .user-email {
-            font-size: 12px;
-            direction: ltr;
-            word-break: break-all;
+        .user-info {
+            flex: 1;
         }
-        .user-item .user-actions {
+        .user-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .user-email {
+            font-size: 11px;
+            color: var(--txt3);
+            direction: ltr;
+        }
+        .user-actions {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
-        .user-item .user-actions button {
+        .user-more-btn {
+            background: var(--olive);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .user-edit-btn, .user-delete-btn {
             padding: 4px 8px;
             border-radius: 20px;
             font-size: 10px;
@@ -429,6 +446,21 @@
         }
         .add-user-area input {
             margin-bottom: 8px;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--olive);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            z-index: 1000;
+            opacity: 0.9;
+            transition: opacity 0.5s;
         }
     </style>
 </head>
@@ -450,8 +482,8 @@
         <p style="color:var(--txt3);font-size:11px;margin-bottom:10px;" id="loginInfoText">🔐 يتم إنشاء الحسابات عن طريق السيد فهمي (مدير النظام)</p>
         <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr">
         <input type="password" id="loginPassword" placeholder="كلمة المرور">
-        <button id="loginBtn" style="width:100%;padding:12px;background:var(--olive);color:white;border-radius:14px;font-weight:700;font-size:14px;margin-top:10px;" id="loginBtnText">دخول</button>
-        <button id="offlineBtn" style="width:100%;padding:12px;background:var(--txt3);color:white;border-radius:14px;font-weight:700;font-size:13px;margin-top:6px;" id="offlineBtnText">🔄 بدون إنترنت</button>
+        <button id="loginBtn" style="width:100%;padding:12px;background:var(--olive);color:white;border-radius:14px;font-weight:700;font-size:14px;margin-top:10px;">دخول</button>
+        <button id="offlineBtn" style="width:100%;padding:12px;background:var(--txt3);color:white;border-radius:14px;font-weight:700;font-size:13px;margin-top:6px;">🔄 بدون إنترنت</button>
         <div id="loginError" style="color:var(--err);font-size:12px;margin-top:6px;display:none;"></div>
     </div>
 </div>
@@ -489,7 +521,7 @@
                 <button class="lang-btn" data-lang="en">English</button>
             </div>
         </div>
-        <!-- قسم المطور الجديد -->
+        <!-- قسم المطور -->
         <div class="sidebar-section" id="developerSection" style="display:none;">
             <div class="sidebar-section-title"><i class="fas fa-code"></i> <span data-i18n="developer_section">👨‍💻 قسم المطور</span></div>
             <div class="s-item" id="manageUsersBtn"><i class="fas fa-users-cog"></i> <span data-i18n="manage_users">👥 إدارة الحسابات</span></div>
@@ -525,7 +557,7 @@
     </div>
 </div>
 
-<!-- مودال رؤية جميع الإضافات (قسم المطور) -->
+<!-- مودال رؤية جميع الإضافات -->
 <div class="modal" id="allGuidesModal">
     <div class="modal-box" style="max-width:550px;">
         <h3 data-i18n="all_guides_title">📋 جميع الإضافات (خاصة وعامة)</h3>
@@ -534,6 +566,7 @@
     </div>
 </div>
 
+<!-- مودال اللوحة المخصصة -->
 <div id="customPlateModal" class="custom-plate-modal">
     <div class="custom-plate-box">
         <h4><i class="fas fa-plus-circle"></i> <span data-i18n="add_custom_plate">إضافة لوحة مخصصة</span></h4>
@@ -545,132 +578,34 @@
     </div>
 </div>
 
-<div id="whatsappIframeModal" class="whatsapp-iframe-modal">
-    <div class="whatsapp-iframe-box">
-        <div class="whatsapp-iframe-header">
-            <span><i class="fab fa-whatsapp"></i> WhatsApp</span>
-            <button id="closeWhatsappIframe"><i class="fas fa-times"></i></button>
+<!-- نافذة واتساب بالرقم السري (جديدة) -->
+<div id="whatsappSecretModal" class="whatsapp-secret-modal">
+    <div class="whatsapp-secret-box">
+        <h4><i class="fab fa-whatsapp"></i> <span data-i18n="whatsapp_secret_title">فتح واتساب الرسمي</span></h4>
+        <p style="font-size:13px; margin-bottom:10px;" data-i18n="whatsapp_secret_desc">أدخل رقمك السري (سيُحفظ محلياً)</p>
+        <input type="password" id="whatsappSecretInput" placeholder="******" maxlength="20" dir="ltr">
+        <div class="whatsapp-secret-buttons">
+            <button id="confirmWhatsappSecret" class="btn-primary" data-i18n="confirm">تأكيد وفتح</button>
+            <button id="cancelWhatsappSecret" class="btn-secondary" data-i18n="cancel">إلغاء</button>
         </div>
-        <iframe id="whatsappIframe" src="about:blank"></iframe>
+        <div id="whatsappSecretError" style="color:var(--err); font-size:11px; margin-top:8px;"></div>
     </div>
 </div>
 
-<div class="modal" id="guideModal">
-    <div class="modal-box">
-        <h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3>
-        <input type="text" id="gName" placeholder="اسم المرشد *" data-i18n-placeholder="guide_name">
-        <input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr" data-i18n-placeholder="phone">
-        <div style="display:flex;gap:5px;">
-            <input type="text" id="gNationality" placeholder="الجنسية" style="flex:1;" data-i18n-placeholder="nationality">
-            <input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1;" min="1" data-i18n-placeholder="people_count">
-        </div>
-        <select id="gTransport" data-i18n-placeholder="transport_type">
-            <option value="" data-i18n="transport_type">نوع النقل</option>
-            <option value="حافلة صغيرة" data-i18n="small_bus">حافلة صغيرة</option>
-            <option value="حافلة كبيرة" data-i18n="large_bus">حافلة كبيرة</option>
-            <option value="سيارة" data-i18n="car">سيارة</option>
-            <option value="فان" data-i18n="van">فان</option>
-            <option value="أخرى" data-i18n="other">أخرى</option>
-        </select>
-        <div style="display:flex;gap:5px;">
-            <input type="text" id="gFrom" placeholder="من" style="flex:1;" data-i18n-placeholder="from">
-            <input type="text" id="gTo" placeholder="إلى" style="flex:1;" data-i18n-placeholder="to">
-        </div>
-        <div class="plate-split">
-            <input type="text" id="gPlateRight" placeholder="الأرقام اليمنى" maxlength="5" style="text-align:center;">
-            <span>🇹🇳 تونس 🇹🇳</span>
-            <input type="text" id="gPlateLeft" placeholder="الأرقام اليسرى" maxlength="4" style="text-align:center;">
-            <button type="button" id="addCustomPlateBtn" class="plus-btn" title="إضافة لوحة مخصصة"><i class="fas fa-plus"></i></button>
-        </div>
-        <input type="hidden" id="gPlate" value="">
-        <div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> <span data-i18n="guide_photo">📸 صورة المرشد</span><img id="guidePreview" src="" style="display:none;"><div class="upload-spinner"><span class="spinner-small"></span></div><div class="progress-bar" id="guideProgress"><div class="progress-fill"></div></div></div>
-        <div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> <span data-i18n="bus_photo">🚌 صورة السيارة</span><img id="busPreview" src="" style="display:none;"><div class="upload-spinner"><span class="spinner-small"></span></div><div class="progress-bar" id="busProgress"><div class="progress-fill"></div></div></div>
-        <input type="text" id="gAgency" placeholder="الوكالة" data-i18n-placeholder="agency">
-        <textarea id="gNotes" placeholder="ملاحظات" data-i18n-placeholder="notes"></textarea>
-        <select id="gVisibility">
-            <option value="public" selected data-i18n="public">🌍 عام (يظهر للجميع)</option>
-            <option value="private" data-i18n="private">🔒 خاص</option>
-        </select>
-        <button class="btn-primary" id="saveGuideBtn" data-i18n="save_guide">💾 حفظ المرشد</button>
-        <button class="btn-secondary" id="closeGuideBtn" data-i18n="cancel">إلغاء</button>
-    </div>
-</div>
+<!-- باقي المودالات (المرشد، الوفد، المتابعة، عرض الصور) -->
+<div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3><input type="text" id="gName" placeholder="اسم المرشد *" data-i18n-placeholder="guide_name"><input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr" data-i18n-placeholder="phone"><div style="display:flex;gap:5px;"><input type="text" id="gNationality" placeholder="الجنسية" style="flex:1;" data-i18n-placeholder="nationality"><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1;" min="1" data-i18n-placeholder="people_count"></div><select id="gTransport" data-i18n-placeholder="transport_type"><option value="" data-i18n="transport_type">نوع النقل</option><option value="حافلة صغيرة" data-i18n="small_bus">حافلة صغيرة</option><option value="حافلة كبيرة" data-i18n="large_bus">حافلة كبيرة</option><option value="سيارة" data-i18n="car">سيارة</option><option value="فان" data-i18n="van">فان</option><option value="أخرى" data-i18n="other">أخرى</option></select><div style="display:flex;gap:5px;"><input type="text" id="gFrom" placeholder="من" style="flex:1;" data-i18n-placeholder="from"><input type="text" id="gTo" placeholder="إلى" style="flex:1;" data-i18n-placeholder="to"></div><div class="plate-split"><input type="text" id="gPlateRight" placeholder="الأرقام اليمنى" maxlength="5" style="text-align:center;"><span>🇹🇳 تونس 🇹🇳</span><input type="text" id="gPlateLeft" placeholder="الأرقام اليسرى" maxlength="4" style="text-align:center;"><button type="button" id="addCustomPlateBtn" class="plus-btn" title="إضافة لوحة مخصصة"><i class="fas fa-plus"></i></button></div><input type="hidden" id="gPlate" value=""><div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> <span data-i18n="guide_photo">📸 صورة المرشد</span><img id="guidePreview" src="" style="display:none;"><div class="upload-spinner"><span class="spinner-small"></span></div><div class="progress-bar" id="guideProgress"><div class="progress-fill"></div></div></div><div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> <span data-i18n="bus_photo">🚌 صورة السيارة</span><img id="busPreview" src="" style="display:none;"><div class="upload-spinner"><span class="spinner-small"></span></div><div class="progress-bar" id="busProgress"><div class="progress-fill"></div></div></div><input type="text" id="gAgency" placeholder="الوكالة" data-i18n-placeholder="agency"><textarea id="gNotes" placeholder="ملاحظات" data-i18n-placeholder="notes"></textarea><select id="gVisibility"><option value="public" selected data-i18n="public">🌍 عام (يظهر للجميع)</option><option value="private" data-i18n="private">🔒 خاص</option></select><button class="btn-primary" id="saveGuideBtn" data-i18n="save_guide">💾 حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn" data-i18n="cancel">إلغاء</button></div></div>
 
-<!-- بطاقة الوفد -->
-<div class="modal" id="delegationModal">
-    <div class="modal-box" style="padding:0; max-width:520px;">
-        <div id="delegationCard" class="delegation-card">
-            <div class="datetime-bar">
-                <span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span>
-                <span><i class="far fa-clock"></i> <span id="delegationTime"></span></span>
-                <div id="delegationWeather" class="weather-info"></div>
-            </div>
-            <div class="card-img-area">
-                <img id="delegationMainImg" class="main-img" src="" crossorigin="anonymous">
-                <img id="delegationAvatar" class="overlay-avatar" src="" crossorigin="anonymous">
-            </div>
-            <div class="guide-info-row">
-                <span class="guide-name-card" id="delegationGuideName"></span>
-                <span class="guide-phone-card" id="delegationPhone"></span>
-            </div>
-            <div class="card-content">
-                <div class="info-grid">
-                    <div class="info-item"><span class="label" data-i18n="nationality">الجنسية</span><span id="delegationNationality" class="value"></span></div>
-                    <div class="info-item"><span class="label" data-i18n="people_count">عدد الأفراد</span><span id="delegationPeopleCount" class="value"></span></div>
-                    <div class="info-item"><span class="label" data-i18n="transport">نوع النقل</span><span id="delegationTransport" class="value"></span></div>
-                    <div class="info-item"><span class="label" data-i18n="plate">رقم السيارة</span><span id="delegationPlate" class="value plate-display"></span></div>
-                    <div class="info-item"><span class="label" data-i18n="from">من</span><span id="delegationFrom" class="value"></span></div>
-                    <div class="info-item"><span class="label" data-i18n="to">إلى</span><span id="delegationTo" class="value"></span></div>
-                </div>
-                <div class="agency-box"><span class="label" data-i18n="agency">الوكالة</span><span id="delegationAgency" class="value"></span></div>
-                <div id="delegationNotesRow" class="notes-box" style="display:none;"><span class="label" data-i18n="notes">ملاحظات</span><span id="delegationNotes" style="font-size:13px;"></span></div>
-                <div class="timestamp-row">
-                    <span><i class="far fa-plus-square"></i> <span data-i18n="created_at">تاريخ الإضافة:</span> <span id="creationTimestamp"></span></span>
-                    <span><i class="fab fa-whatsapp"></i> <span data-i18n="sent_at">تاريخ الإرسال:</span> <span id="sendTimestamp"></span></span>
-                    <span><i class="fas fa-user-check"></i> <span data-i18n="created_by">المنشئ:</span> <span id="creatorName"></span></span>
-                </div>
-            </div>
-        </div>
-        <div class="flex-btns"><button class="btn-primary" style="background:var(--ok);" id="shareDelegationBtn" data-i18n="share_card"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button></div>
-        <button class="btn-secondary" id="closeDelegationBtn" data-i18n="close">إغلاق</button>
-    </div>
-</div>
+<div class="modal" id="delegationModal"><div class="modal-box" style="padding:0; max-width:520px;"><div id="delegationCard" class="delegation-card"><div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span><span><i class="far fa-clock"></i> <span id="delegationTime"></span></span><div id="delegationWeather" class="weather-info"></div></div><div class="card-img-area"><img id="delegationMainImg" class="main-img" src="" crossorigin="anonymous"><img id="delegationAvatar" class="overlay-avatar" src="" crossorigin="anonymous"></div><div class="guide-info-row"><span class="guide-name-card" id="delegationGuideName"></span><span class="guide-phone-card" id="delegationPhone"></span></div><div class="card-content"><div class="info-grid"><div class="info-item"><span class="label" data-i18n="nationality">الجنسية</span><span id="delegationNationality" class="value"></span></div><div class="info-item"><span class="label" data-i18n="people_count">عدد الأفراد</span><span id="delegationPeopleCount" class="value"></span></div><div class="info-item"><span class="label" data-i18n="transport">نوع النقل</span><span id="delegationTransport" class="value"></span></div><div class="info-item"><span class="label" data-i18n="plate">رقم السيارة</span><span id="delegationPlate" class="value plate-display"></span></div><div class="info-item"><span class="label" data-i18n="from">من</span><span id="delegationFrom" class="value"></span></div><div class="info-item"><span class="label" data-i18n="to">إلى</span><span id="delegationTo" class="value"></span></div></div><div class="agency-box"><span class="label" data-i18n="agency">الوكالة</span><span id="delegationAgency" class="value"></span></div><div id="delegationNotesRow" class="notes-box" style="display:none;"><span class="label" data-i18n="notes">ملاحظات</span><span id="delegationNotes" style="font-size:13px;"></span></div><div class="timestamp-row"><span><i class="far fa-plus-square"></i> <span data-i18n="created_at">تاريخ الإضافة:</span> <span id="creationTimestamp"></span></span><span><i class="fab fa-whatsapp"></i> <span data-i18n="sent_at">تاريخ الإرسال:</span> <span id="sendTimestamp"></span></span><span><i class="fas fa-user-check"></i> <span data-i18n="created_by">المنشئ:</span> <span id="creatorName"></span></span></div></div></div><div class="flex-btns"><button class="btn-primary" style="background:var(--ok);" id="shareDelegationBtn" data-i18n="share_card"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button></div><button class="btn-secondary" id="closeDelegationBtn" data-i18n="close">إغلاق</button></div></div>
 
-<!-- كرت التنسيق والمتابعة -->
-<div class="modal" id="securityModal">
-    <div class="modal-box">
-        <h3><i class="fas fa-exchange-alt"></i> <span data-i18n="security_card_title">كرت التنسيق والمتابعة</span></h3>
-        <div id="securityCardPreview" class="delegation-card" style="margin-bottom:12px;"></div>
-        
-        <label data-i18n="custom_group_label">🏷️ الفقرة المخصصة:</label>
-        <input type="text" id="securityGroupLabel" placeholder="مثال: دخول المجموعة إلى hôtel les oliviers palace بأمان">
-        <div class="example-text" style="font-size:11px; color:var(--txt3); margin-bottom:10px;">📌 مثال: دخول المجموعة إلى hôtel les oliviers palace بأمان</div>
-        
-        <label data-i18n="saved_numbers_label">📋 الأرقام المحفوظة (اضغط للإرسال):</label>
-        <div id="savedNumbersList" class="saved-numbers-list"></div>
-        
-        <div class="save-numbers-area">
-            <label data-i18n="add_numbers_label">➕ إضافة أرقام جديدة (رقم واحد في كل سطر):</label>
-            <textarea id="securityPhonesList" rows="3" placeholder="+216XXXXXXXX"></textarea>
-            <div class="save-numbers-buttons">
-                <button id="saveNumbersBtn" class="btn-primary" style="background:var(--olive);">💾 حفظ الأرقام</button>
-                <button id="generateCardBtn" class="btn-primary" style="background:var(--ok);">🔄 إنشاء البطاقة</button>
-            </div>
-        </div>
-        
-        <div id="securityLinksContainer" style="margin-top:12px; max-height:250px; overflow-y:auto; background:var(--bg); border-radius:12px; padding:8px; display:none;"></div>
-        <button class="btn-secondary" id="closeSecurityBtn" data-i18n="close">إغلاق</button>
-    </div>
-</div>
+<div class="modal" id="securityModal"><div class="modal-box"><h3><i class="fas fa-exchange-alt"></i> <span data-i18n="security_card_title">كرت التنسيق والمتابعة</span></h3><div id="securityCardPreview" class="delegation-card" style="margin-bottom:12px;"></div><label data-i18n="custom_group_label">🏷️ الفقرة المخصصة:</label><input type="text" id="securityGroupLabel" placeholder="مثال: دخول المجموعة إلى hôtel les oliviers palace بأمان"><div class="example-text" style="font-size:11px; color:var(--txt3); margin-bottom:10px;">📌 مثال: دخول المجموعة إلى hôtel les oliviers palace بأمان</div><label data-i18n="saved_numbers_label">📋 الأرقام المحفوظة (اضغط للإرسال):</label><div id="savedNumbersList" class="saved-numbers-list"></div><div class="save-numbers-area"><label data-i18n="add_numbers_label">➕ إضافة أرقام جديدة (رقم واحد في كل سطر):</label><textarea id="securityPhonesList" rows="3" placeholder="+216XXXXXXXX"></textarea><div class="save-numbers-buttons"><button id="saveNumbersBtn" class="btn-primary" style="background:var(--olive);">💾 حفظ الأرقام</button><button id="generateCardBtn" class="btn-primary" style="background:var(--ok);">🔄 إنشاء البطاقة</button></div></div><div id="securityLinksContainer" style="margin-top:12px; max-height:250px; overflow-y:auto; background:var(--bg); border-radius:12px; padding:8px; display:none;"></div><button class="btn-secondary" id="closeSecurityBtn" data-i18n="close">إغلاق</button></div></div>
 
 <div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box" style="position:relative;"><div class="close-viewer" id="closeImageViewer">&times;</div><img id="fullImageView" src=""></div></div>
 
 <script>
-    // Cloudinary Configuration
+    // ======================= التكوينات الأساسية =======================
     const CLOUDINARY_CLOUD_NAME = 'dmhtx93nj';
     const CLOUDINARY_UPLOAD_PRESET = 'fcloud_preset';
     
-    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
         authDomain: "f-notepromax-work.firebaseapp.com",
@@ -689,7 +624,7 @@
     db.enablePersistence({ synchronizeTabs: true }).catch(err => console.warn("Persistence:", err));
 
     const LDB = {
-        get(k) { try { return JSON.parse(localStorage.getItem('fnote_'+k)||'null'); } catch(e){return null;}},
+        get(k) { try { return JSON.parse(localStorage.getItem('fnote_'+k)||'null'); } catch(e){ return null; } },
         set(k,v){ localStorage.setItem('fnote_'+k, JSON.stringify(v)); },
         getGuides(){ return this.get('guides')||[]; },
         saveGuides(arr){ this.set('guides',arr); },
@@ -702,7 +637,9 @@
             return history;
         },
         getSavedNumbers(guideId) { return this.get('numbers_'+guideId) || []; },
-        saveNumbers(guideId, numbers) { this.set('numbers_'+guideId, numbers); }
+        saveNumbers(guideId, numbers) { this.set('numbers_'+guideId, numbers); },
+        getWhatsAppSecret() { return this.get('whatsapp_secret') || ''; },
+        setWhatsAppSecret(secret) { this.set('whatsapp_secret', secret); }
     };
 
     let currentUser = null, guides = LDB.getGuides(), editId = null;
@@ -713,9 +650,10 @@
     let currentWeather = { temp: '', condition: '', city: CITY };
     let unsubscribeFirestore = null;
     let currentCardImageUrl = '';
-    let isDeveloper = false; // صلاحية المطور
+    let isDeveloper = false;
+    let pendingWhatsAppCallback = null; // لحفظ الدالة التي سيتم استدعاؤها بعد إدخال الرقم السري
 
-    // الترجمات الكاملة
+    // ======================= الترجمات =======================
     const translations = {
         ar: {
             login_sub:"إدارة الوفود السياحية والدبلوماسية", login_btn:"دخول", offline_btn:"🔄 بدون إنترنت",
@@ -734,8 +672,7 @@
             delegation_info:"📋 معلومات الوفد", transport:"نوع النقل", plate:"رقم السيارة", from:"من", to:"إلى",
             created_at:"تاريخ الإضافة:", sent_at:"تاريخ الإرسال:", created_by:"المنشئ:",
             share_card:"مشاركة البطاقة", security_card_title:"كرت التنسيق والمتابعة",
-            custom_group_label:"🏷️ الفقرة المخصصة:",
-            saved_numbers_label:"📋 الأرقام المحفوظة (اضغط للإرسال):",
+            custom_group_label:"🏷️ الفقرة المخصصة:", saved_numbers_label:"📋 الأرقام المحفوظة (اضغط للإرسال):",
             add_numbers_label:"➕ إضافة أرقام جديدة (رقم واحد في كل سطر):",
             save_numbers:"💾 حفظ الأرقام", generate_card:"🔄 إنشاء البطاقة",
             search_placeholder:"🔍 بحث عن مرشد...",
@@ -745,7 +682,9 @@
             add:"إضافة", more:"المزيد", call:"اتصل", card:"البطاقة", follow_up:"متابعة", edit:"تعديل", delete:"حذف", send:"إرسال", link:"رابط", sent_history:"سجل الإرسال", resend:"إعادة إرسال",
             developer_section:"👨‍💻 قسم المطور", manage_users:"👥 إدارة الحسابات", view_all_guides:"📋 رؤية جميع الإضافات (خاصة/عامة)",
             manage_users_title:"👥 إدارة المستخدمين", create_user:"➕ إنشاء حساب جديد", all_guides_title:"📋 جميع الإضافات (خاصة وعامة)",
-            no_users:"لا يوجد مستخدمين", loading:"جاري التحميل...", private_badge:"🔒 خاص", public_badge:"🌍 عام"
+            no_users:"لا يوجد مستخدمين", loading:"جاري التحميل...", private_badge:"🔒 خاص", public_badge:"🌍 عام",
+            whatsapp_secret_title:"فتح واتساب الرسمي", whatsapp_secret_desc:"أدخل رقمك السري (سيُحفظ محلياً)", confirm:"تأكيد وفتح",
+            show_uid:"إظهار UID", uid_label:"المعرف الفريد (UID):"
         },
         fr: {
             login_sub:"Gestion des délégations touristiques et diplomatiques", login_btn:"Connexion", offline_btn:"🔄 Hors ligne",
@@ -764,8 +703,7 @@
             delegation_info:"📋 Informations de la délégation", transport:"Type de transport", plate:"Plaque d'immatriculation", from:"De", to:"À",
             created_at:"Date d'ajout :", sent_at:"Date d'envoi :", created_by:"Créé par :",
             share_card:"Partager la carte", security_card_title:"Fiche de coordination",
-            custom_group_label:"🏷️ Paragraphe personnalisé :",
-            saved_numbers_label:"📋 Numéros enregistrés (cliquer pour envoyer):",
+            custom_group_label:"🏷️ Paragraphe personnalisé :", saved_numbers_label:"📋 Numéros enregistrés (cliquer pour envoyer):",
             add_numbers_label:"➕ Ajouter de nouveaux numéros (un par ligne):",
             save_numbers:"💾 Enregistrer les numéros", generate_card:"🔄 Générer la carte",
             search_placeholder:"🔍 Rechercher un guide...",
@@ -775,7 +713,9 @@
             add:"Ajouter", more:"Plus", call:"Appeler", card:"Carte", follow_up:"Suivi", edit:"Modifier", delete:"Supprimer", send:"Envoyer", link:"Lien", sent_history:"Historique d'envoi", resend:"Renvoyer",
             developer_section:"👨‍💻 Section développeur", manage_users:"👥 Gérer les comptes", view_all_guides:"📋 Voir tous les ajouts (privé/public)",
             manage_users_title:"👥 Gérer les utilisateurs", create_user:"➕ Créer un nouveau compte", all_guides_title:"📋 Tous les ajouts (privés et publics)",
-            no_users:"Aucun utilisateur", loading:"Chargement...", private_badge:"🔒 Privé", public_badge:"🌍 Public"
+            no_users:"Aucun utilisateur", loading:"Chargement...", private_badge:"🔒 Privé", public_badge:"🌍 Public",
+            whatsapp_secret_title:"Ouvrir WhatsApp officiel", whatsapp_secret_desc:"Entrez votre code secret (sauvegardé localement)", confirm:"Confirmer et ouvrir",
+            show_uid:"Afficher UID", uid_label:"Identifiant unique (UID):"
         },
         en: {
             login_sub:"Touristic & Diplomatic Delegations Management", login_btn:"Login", offline_btn:"🔄 Offline",
@@ -794,8 +734,7 @@
             delegation_info:"📋 Delegation Information", transport:"Transport Type", plate:"Vehicle Plate", from:"From", to:"To",
             created_at:"Added on:", sent_at:"Sent on:", created_by:"Created by:",
             share_card:"Share Card", security_card_title:"Coordination Card",
-            custom_group_label:"🏷️ Custom Paragraph:",
-            saved_numbers_label:"📋 Saved Numbers (click to send):",
+            custom_group_label:"🏷️ Custom Paragraph:", saved_numbers_label:"📋 Saved Numbers (click to send):",
             add_numbers_label:"➕ Add New Numbers (one per line):",
             save_numbers:"💾 Save Numbers", generate_card:"🔄 Generate Card",
             search_placeholder:"🔍 Search guide...",
@@ -805,7 +744,9 @@
             add:"Add", more:"More", call:"Call", card:"Card", follow_up:"Follow up", edit:"Edit", delete:"Delete", send:"Send", link:"Link", sent_history:"Send History", resend:"Resend",
             developer_section:"👨‍💻 Developer Section", manage_users:"👥 Manage Accounts", view_all_guides:"📋 View All Additions (Private/Public)",
             manage_users_title:"👥 Manage Users", create_user:"➕ Create New Account", all_guides_title:"📋 All Additions (Private & Public)",
-            no_users:"No users found", loading:"Loading...", private_badge:"🔒 Private", public_badge:"🌍 Public"
+            no_users:"No users found", loading:"Loading...", private_badge:"🔒 Private", public_badge:"🌍 Public",
+            whatsapp_secret_title:"Open Official WhatsApp", whatsapp_secret_desc:"Enter your secret number (saved locally)", confirm:"Confirm & Open",
+            show_uid:"Show UID", uid_label:"Unique ID (UID):"
         }
     };
 
@@ -845,8 +786,18 @@
         renderGuides();
     }
 
-    // ========== دوال الضغط والرفع ==========
-    async function compressToBase64(file, maxSize = 500, quality = 0.6) {
+    // ======================= دوال مساعدة =======================
+    function toast(msg) {
+        const div = document.createElement('div');
+        div.className = 'toast';
+        div.textContent = msg;
+        document.body.appendChild(div);
+        setTimeout(() => { div.style.opacity = '0'; }, 2000);
+        setTimeout(() => div.remove(), 2500);
+    }
+
+    // تحسين جودة الصورة: رفع maxSize إلى 1200 وجودة 0.9
+    async function compressToBase64(file, maxSize = 1200, quality = 0.9) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -883,18 +834,14 @@
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-            
             fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                if (data.secure_url) {
-                    resolve(data.secure_url);
-                } else {
-                    reject(new Error('فشل الرفع إلى Cloudinary'));
-                }
+                if (data.secure_url) resolve(data.secure_url);
+                else reject(new Error('فشل الرفع إلى Cloudinary'));
             })
             .catch(err => reject(err));
         });
@@ -910,7 +857,6 @@
         const img = document.getElementById(imgId);
         const progressBar = document.getElementById(progressId);
         if (!btn) return;
-        
         btn.onclick = () => {
             const input = document.createElement('input');
             input.type = 'file';
@@ -918,25 +864,22 @@
             input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                
                 const previewUrl = URL.createObjectURL(file);
                 img.src = previewUrl;
                 img.style.display = 'block';
-                
                 btn.classList.add('uploading');
                 if (progressBar) progressBar.style.display = 'block';
                 const fill = progressBar?.querySelector('.progress-fill');
                 if (fill) fill.style.width = '30%';
-                
                 try {
                     let finalUrl = previewUrl;
                     if (useFirebase && navigator.onLine) {
-                        const compressed = await compressToBase64(file, 500, 0.6);
+                        const compressed = await compressToBase64(file, 1200, 0.9);
                         const blob = await (await fetch(compressed)).blob();
                         finalUrl = await uploadToFirebaseStorage(blob, 'guides');
                         if (fill) fill.style.width = '100%';
                     } else {
-                        const base64 = await compressToBase64(file, 500, 0.6);
+                        const base64 = await compressToBase64(file, 1200, 0.9);
                         finalUrl = base64;
                         if (fill) fill.style.width = '100%';
                     }
@@ -946,7 +889,7 @@
                 } catch (err) {
                     console.error(err);
                     toast('❌ فشل الرفع، تم الحفظ محلياً');
-                    const base64 = await compressToBase64(file, 500, 0.6);
+                    const base64 = await compressToBase64(file, 1200, 0.9);
                     img.src = base64;
                     callback(base64);
                 } finally {
@@ -979,35 +922,104 @@
     document.getElementById('gPlateRight')?.addEventListener('input', updatePlateValue);
     document.getElementById('gPlateLeft')?.addEventListener('input', updatePlateValue);
 
-    async function fetchWeather(){ if(!WEATHER_API_KEY){ currentWeather={temp:'?', condition:translations[currentLang].weather_unavailable, city:CITY}; return; } try{ const url = `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=${currentLang==='ar'?'ar':'en'}`; const res = await fetch(url); if(!res.ok) throw new Error(); const data = await res.json(); currentWeather = { temp: Math.round(data.main.temp), condition: data.weather[0].description, city: data.name }; } catch(e){ currentWeather = { temp:'?', condition:translations[currentLang].weather_unavailable, city:CITY }; } }
-    function getWeatherHtml(){ return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
-    function toast(msg){ const div = document.createElement('div'); div.className = 'toast'; div.textContent = msg; document.body.appendChild(div); setTimeout(()=>{ div.style.opacity='0'; },2000); setTimeout(()=>div.remove(),2500); }
+    async function fetchWeather() {
+        if (!WEATHER_API_KEY) { currentWeather = { temp: '?', condition: translations[currentLang].weather_unavailable, city: CITY }; return; }
+        try {
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=${currentLang === 'ar' ? 'ar' : 'en'}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            currentWeather = { temp: Math.round(data.main.temp), condition: data.weather[0].description, city: data.name };
+        } catch (e) {
+            currentWeather = { temp: '?', condition: translations[currentLang].weather_unavailable, city: CITY };
+        }
+    }
+    function getWeatherHtml() { return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
 
-    function showFullImage(url){ if(url && url.startsWith('http')) { document.getElementById('fullImageView').src = url; document.getElementById('imageViewerModal').classList.add('show'); } }
-    document.getElementById('closeImageViewer')?.addEventListener('click',()=>document.getElementById('imageViewerModal').classList.remove('show'));
-    document.getElementById('imageViewerModal')?.addEventListener('click',e=>{ if(e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); });
+    function showFullImage(url) { if (url && url.startsWith('http')) { document.getElementById('fullImageView').src = url; document.getElementById('imageViewerModal').classList.add('show'); } }
+    document.getElementById('closeImageViewer')?.addEventListener('click', () => document.getElementById('imageViewerModal').classList.remove('show'));
+    document.getElementById('imageViewerModal')?.addEventListener('click', e => { if (e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); });
 
-    function renderGuides(){
-        let filtered = guides;
-        if(currentUser && currentUser.uid !== 'offline') {
-            if (isDeveloper) {
-                filtered = guides; // المطور يرى كل شيء
+    // ======================= نافذة واتساب بالرقم السري =======================
+    function openWhatsAppWithSecret(phoneNumber, message) {
+        return new Promise((resolve, reject) => {
+            const savedSecret = LDB.getWhatsAppSecret();
+            if (savedSecret) {
+                // الرقم السري موجود، نفتح واتساب فوراً
+                const finalMessage = message + `\n\n🔐 رقمي السري: ${savedSecret}`;
+                const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(finalMessage)}`;
+                window.open(waUrl, '_blank');
+                resolve(true);
             } else {
-                filtered = guides.filter(g => g.visibility === 'public' || g.userId === currentUser.uid);
+                // نعرض النافذة المنبثقة لطلب الرقم السري
+                pendingWhatsAppCallback = async (secret) => {
+                    LDB.setWhatsAppSecret(secret);
+                    const finalMessage = message + `\n\n🔐 رقمي السري: ${secret}`;
+                    const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(finalMessage)}`;
+                    window.open(waUrl, '_blank');
+                    resolve(true);
+                };
+                const modal = document.getElementById('whatsappSecretModal');
+                const input = document.getElementById('whatsappSecretInput');
+                const errorDiv = document.getElementById('whatsappSecretError');
+                input.value = '';
+                errorDiv.textContent = '';
+                modal.classList.add('show');
             }
+        });
+    }
+
+    // أحداث نافذة الرقم السري
+    document.getElementById('confirmWhatsappSecret')?.addEventListener('click', () => {
+        const secret = document.getElementById('whatsappSecretInput').value.trim();
+        if (!secret) {
+            document.getElementById('whatsappSecretError').textContent = '⚠️ الرجاء إدخال الرقم السري';
+            return;
+        }
+        document.getElementById('whatsappSecretModal').classList.remove('show');
+        if (pendingWhatsAppCallback) {
+            pendingWhatsAppCallback(secret);
+            pendingWhatsAppCallback = null;
+        }
+    });
+    document.getElementById('cancelWhatsappSecret')?.addEventListener('click', () => {
+        document.getElementById('whatsappSecretModal').classList.remove('show');
+        pendingWhatsAppCallback = null;
+    });
+    document.getElementById('whatsappSecretModal')?.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('whatsappSecretModal')) {
+            document.getElementById('whatsappSecretModal').classList.remove('show');
+            pendingWhatsAppCallback = null;
+        }
+    });
+
+    // استبدال جميع دوال فتح واتساب القديمة بهذه الوظيفة الجديدة
+    window.openWhatsAppNumber = function(phone, customMessage = '') {
+        let cleanPhone = phone.replace(/[^0-9+]/g, '');
+        if (!cleanPhone.startsWith('+')) cleanPhone = '+216' + cleanPhone.replace(/^0+/, '');
+        const message = customMessage || (translations[currentLang].security_card_title || 'معلومات الوفد');
+        openWhatsAppWithSecret(cleanPhone, message);
+    };
+
+    // ======================= عرض قائمة المرشدين =======================
+    function renderGuides() {
+        let filtered = guides;
+        if (currentUser && currentUser.uid !== 'offline') {
+            if (isDeveloper) filtered = guides;
+            else filtered = guides.filter(g => g.visibility === 'public' || g.userId === currentUser.uid);
         } else {
             filtered = guides.filter(g => g.visibility === 'public');
         }
         const q = document.getElementById('searchInput').value.toLowerCase();
         filtered = filtered.filter(g => (g.name || '').toLowerCase().includes(q) || (g.phone || '').includes(q));
         const container = document.getElementById('guidesContainer');
-        if(!filtered.length){ container.innerHTML = `<div style="text-align:center;padding:30px;">😕 ${translations[currentLang].no_results}</div>`; return; }
+        if (!filtered.length) { container.innerHTML = `<div style="text-align:center;padding:30px;">😕 ${translations[currentLang].no_results}</div>`; return; }
         container.innerHTML = filtered.map(g => `
             <div class="guide-card" data-id="${g.id}">
                 <div class="card-top">
                     <img class="avatar" src="${g.guidePhoto || ''}" onclick="showFullImage('${g.guidePhoto || ''}')" onerror="this.style.display='none'">
                     <div class="card-mid">
-                        <div class="name">${g.name || ''} ${g.nationality ? '('+g.nationality+')' : ''}</div>
+                        <div class="name">${g.name || ''} ${g.nationality ? '(' + g.nationality + ')' : ''}</div>
                         <div style="font-size:10px;color:var(--txt3);">🚐 ${g.transportType || '—'} | 👥 ${g.peopleCount || '—'} | ${g.visibility === 'private' ? '🔒' : '🌍'}</div>
                         <div class="phone">📞 ${g.phone || ''}</div>
                     </div>
@@ -1016,7 +1028,7 @@
                     <button class="more-btn" data-id="${g.id}"><i class="fas fa-ellipsis-h"></i> ${translations[currentLang].more}</button>
                     <div class="hidden-buttons" id="hidden-buttons-${g.id}">
                         <button class="c-btn c-call" onclick="location.href='tel:${g.phone}'"><i class="fas fa-phone-alt"></i> ${translations[currentLang].call}</button>
-                        <button class="c-btn c-wa" onclick="window.open('https://wa.me/${(g.phone || '').replace(/[^0-9]/g, '')}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                        <button class="c-btn c-wa" onclick="openWhatsAppNumber('${g.phone}', 'مرشد: ${g.name}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
                         <button class="c-btn c-card" onclick="showDelegationCard('${g.id}')"><i class="fas fa-id-card"></i> ${translations[currentLang].card}</button>
                         <button class="c-btn c-security" onclick="showSecurityCard('${g.id}')"><i class="fas fa-exchange-alt"></i> ${translations[currentLang].follow_up}</button>
                         ${(g.userId === currentUser?.uid || isDeveloper) ? `<button class="c-btn c-edit" onclick="editGuide('${g.id}')"><i class="fas fa-edit"></i> ${translations[currentLang].edit}</button>
@@ -1025,20 +1037,32 @@
                 </div>
             </div>
         `).join('');
-        document.querySelectorAll('.more-btn').forEach(btn => { btn.addEventListener('click', (e) => { e.stopPropagation(); const id = btn.getAttribute('data-id'); const hiddenDiv = document.getElementById(`hidden-buttons-${id}`); if(hiddenDiv) hiddenDiv.classList.toggle('show'); }); });
+        document.querySelectorAll('.more-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                const hiddenDiv = document.getElementById(`hidden-buttons-${id}`);
+                if (hiddenDiv) hiddenDiv.classList.toggle('show');
+            });
+        });
     }
 
-    window.deleteGuide = async function(id){
-        if(confirm(translations[currentLang].delete_confirm)){
-            guides = guides.filter(g=>g.id !== id); LDB.saveGuides(guides);
-            if(currentUser && currentUser.uid !== 'offline' && navigator.onLine) await db.collection('guides').doc(id).delete().catch(e=>console.warn(e));
-            renderGuides(); toast(translations[currentLang].deleted);
+    window.deleteGuide = async function(id) {
+        if (confirm(translations[currentLang].delete_confirm)) {
+            guides = guides.filter(g => g.id !== id);
+            LDB.saveGuides(guides);
+            if (currentUser && currentUser.uid !== 'offline' && navigator.onLine) await db.collection('guides').doc(id).delete().catch(e => console.warn(e));
+            renderGuides();
+            toast(translations[currentLang].deleted);
         }
     };
 
-    window.editGuide = function(id){
-        const g = guides.find(x=>x.id===id); if(!g) return;
-        editId = id; guidePhotoBase64 = g.guidePhoto || ''; busPhotoBase64 = g.busPhoto || '';
+    window.editGuide = function(id) {
+        const g = guides.find(x => x.id === id);
+        if (!g) return;
+        editId = id;
+        guidePhotoBase64 = g.guidePhoto || '';
+        busPhotoBase64 = g.busPhoto || '';
         document.getElementById('gName').value = g.name || '';
         document.getElementById('gPhone').value = g.phone || '';
         document.getElementById('gNationality').value = g.nationality || '';
@@ -1060,32 +1084,43 @@
             document.getElementById('gPlateLeft').value = '';
         }
         document.getElementById('gPlate').value = plateValue;
-        document.getElementById('guidePreview').src = guidePhotoBase64; document.getElementById('guidePreview').style.display = guidePhotoBase64 ? 'block' : 'none';
-        document.getElementById('busPreview').src = busPhotoBase64; document.getElementById('busPreview').style.display = busPhotoBase64 ? 'block' : 'none';
+        document.getElementById('guidePreview').src = guidePhotoBase64;
+        document.getElementById('guidePreview').style.display = guidePhotoBase64 ? 'block' : 'none';
+        document.getElementById('busPreview').src = busPhotoBase64;
+        document.getElementById('busPreview').style.display = busPhotoBase64 ? 'block' : 'none';
         document.getElementById('modalTitle').innerHTML = translations[currentLang].edit + ' ' + translations[currentLang].guide_name;
         document.getElementById('guideModal').classList.add('show');
     };
 
     document.getElementById('addGuideBtn').onclick = () => {
-        editId = null; guidePhotoBase64 = ''; busPhotoBase64 = '';
-        document.getElementById('gName').value = ''; document.getElementById('gPhone').value = '';
-        document.getElementById('gNationality').value = ''; document.getElementById('gPeopleCount').value = '';
-        document.getElementById('gTransport').value = ''; document.getElementById('gFrom').value = '';
-        document.getElementById('gTo').value = ''; document.getElementById('gPlateRight').value = '';
-        document.getElementById('gPlateLeft').value = ''; document.getElementById('gPlate').value = '';
-        document.getElementById('gAgency').value = ''; document.getElementById('gNotes').value = '';
+        editId = null;
+        guidePhotoBase64 = '';
+        busPhotoBase64 = '';
+        document.getElementById('gName').value = '';
+        document.getElementById('gPhone').value = '';
+        document.getElementById('gNationality').value = '';
+        document.getElementById('gPeopleCount').value = '';
+        document.getElementById('gTransport').value = '';
+        document.getElementById('gFrom').value = '';
+        document.getElementById('gTo').value = '';
+        document.getElementById('gPlateRight').value = '';
+        document.getElementById('gPlateLeft').value = '';
+        document.getElementById('gPlate').value = '';
+        document.getElementById('gAgency').value = '';
+        document.getElementById('gNotes').value = '';
         document.getElementById('gVisibility').value = 'public';
-        document.getElementById('guidePreview').style.display = 'none'; document.getElementById('busPreview').style.display = 'none';
+        document.getElementById('guidePreview').style.display = 'none';
+        document.getElementById('busPreview').style.display = 'none';
         document.getElementById('modalTitle').innerHTML = translations[currentLang].add_guide_title;
         document.getElementById('guideModal').classList.add('show');
     };
 
+    // اللوحة المخصصة
     const customPlateModal = document.getElementById('customPlateModal');
     const addCustomPlateBtn = document.getElementById('addCustomPlateBtn');
     const confirmCustomPlate = document.getElementById('confirmCustomPlate');
     const cancelCustomPlate = document.getElementById('cancelCustomPlate');
     const customPlateInput = document.getElementById('customPlateInput');
-
     function openCustomPlateModal() { customPlateInput.value = ''; customPlateModal.classList.add('show'); }
     function closeCustomPlateModal() { customPlateModal.classList.remove('show'); }
     addCustomPlateBtn?.addEventListener('click', openCustomPlateModal);
@@ -1102,15 +1137,15 @@
         closeCustomPlateModal();
     });
     cancelCustomPlate?.addEventListener('click', closeCustomPlateModal);
-    customPlateModal?.addEventListener('click', (e) => { if(e.target === customPlateModal) closeCustomPlateModal(); });
+    customPlateModal?.addEventListener('click', (e) => { if (e.target === customPlateModal) closeCustomPlateModal(); });
 
-    // رفع الصور (للمرشد والسيارة) - Firebase Storage
+    // رفع الصور
     setupImageUpload('guideUploadBtn', 'guidePreview', 'guideProgress', (url) => { guidePhotoBase64 = url; }, true);
     setupImageUpload('busUploadBtn', 'busPreview', 'busProgress', (url) => { busPhotoBase64 = url; }, true);
     setupImageUpload('profileUploadBtn', 'profileAvatar', null, async (url) => {
         userProfile.photoURL = url;
-        if(currentUser) await currentUser.updateProfile({photoURL:url});
-        await db.collection('users').doc(currentUser.uid).set({photoURL:url},{merge:true});
+        if (currentUser) await currentUser.updateProfile({ photoURL: url });
+        await db.collection('users').doc(currentUser.uid).set({ photoURL: url }, { merge: true });
         toast('✅ ' + (currentLang === 'ar' ? 'تم تحديث الصورة' : (currentLang === 'fr' ? 'Photo mise à jour' : 'Photo updated')));
         loadProfile();
     }, true);
@@ -1120,8 +1155,9 @@
         const phone = document.getElementById('gPhone').value.trim();
         if (!name) return toast('⚠️ ' + (currentLang === 'ar' ? 'الاسم مطلوب' : (currentLang === 'fr' ? 'Nom requis' : 'Name required')));
         if (!phone) return toast('⚠️ ' + (currentLang === 'ar' ? 'رقم الجوال مطلوب' : (currentLang === 'fr' ? 'Téléphone requis' : 'Phone required')));
-        
-        const saveBtn = this; saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-small"></span> ' + (currentLang === 'ar' ? 'حفظ...' : (currentLang === 'fr' ? 'Enregistrement...' : 'Saving...'));
+        const saveBtn = this;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-small"></span> ' + (currentLang === 'ar' ? 'حفظ...' : (currentLang === 'fr' ? 'Enregistrement...' : 'Saving...'));
         try {
             const now = new Date();
             let plateValue = document.getElementById('gPlate').value.trim();
@@ -1157,31 +1193,77 @@
             else guides.unshift(data);
             LDB.saveGuides(guides);
             if (currentUser && currentUser.uid !== 'offline' && navigator.onLine) await db.collection('guides').doc(data.id).set(data, { merge: true });
-            renderGuides(); document.getElementById('guideModal').classList.remove('show'); toast(translations[currentLang].saved);
-        } catch (err) { toast(translations[currentLang].save_error + ': ' + err.message); }
-        finally { saveBtn.disabled = false; saveBtn.innerHTML = '💾 ' + (currentLang === 'ar' ? 'حفظ المرشد' : (currentLang === 'fr' ? 'Enregistrer le guide' : 'Save guide')); }
+            renderGuides();
+            document.getElementById('guideModal').classList.remove('show');
+            toast(translations[currentLang].saved);
+        } catch (err) {
+            toast(translations[currentLang].save_error + ': ' + err.message);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '💾 ' + (currentLang === 'ar' ? 'حفظ المرشد' : (currentLang === 'fr' ? 'Enregistrer le guide' : 'Save guide'));
+        }
     };
 
-    async function loadProfile(){
-        document.getElementById('profileDisplayName').value = userProfile.displayName || (currentUser?currentUser.email:'');
-        document.getElementById('profileEmail').value = currentUser?currentUser.email:'';
-        document.getElementById('profileAvatar').src = userProfile.photoURL || 'https://ui-avatars.com/api/?background=556B2F&color=fff&name='+encodeURIComponent(userProfile.displayName||'User');
+    async function loadProfile() {
+        document.getElementById('profileDisplayName').value = userProfile.displayName || (currentUser ? currentUser.email : '');
+        document.getElementById('profileEmail').value = currentUser ? currentUser.email : '';
+        document.getElementById('profileAvatar').src = userProfile.photoURL || 'https://ui-avatars.com/api/?background=556B2F&color=fff&name=' + encodeURIComponent(userProfile.displayName || 'User');
         document.getElementById('sidebarDisplayName').innerHTML = userProfile.displayName || currentUser?.email || '...';
         document.getElementById('sidebarEmail').innerHTML = currentUser?.email || '';
-        document.getElementById('sidebarAvatar').src = userProfile.photoURL || 'https://ui-avatars.com/api/?background=556B2F&color=fff&name='+encodeURIComponent(userProfile.displayName||'User');
+        document.getElementById('sidebarAvatar').src = userProfile.photoURL || 'https://ui-avatars.com/api/?background=556B2F&color=fff&name=' + encodeURIComponent(userProfile.displayName || 'User');
     }
 
-    document.getElementById('editProfileSidebarBtn').onclick = ()=>document.getElementById('profileModal').classList.add('show');
-    document.getElementById('closeProfileBtn').onclick = ()=>document.getElementById('profileModal').classList.remove('show');
-    document.getElementById('saveProfileBtn').onclick = async ()=>{ const newName = document.getElementById('profileDisplayName').value.trim(); if(newName && currentUser){ await currentUser.updateProfile({displayName:newName}); userProfile.displayName = newName; await db.collection('users').doc(currentUser.uid).set({displayName:newName, photoURL:userProfile.photoURL},{merge:true}); toast('✅ ' + (currentLang === 'ar' ? 'تم تحديث الاسم' : (currentLang === 'fr' ? 'Nom mis à jour' : 'Name updated'))); loadProfile(); } document.getElementById('profileModal').classList.remove('show'); };
-    document.getElementById('changePasswordBtn').onclick = ()=>document.getElementById('passwordModal').classList.add('show');
-    document.getElementById('closePasswordBtn').onclick = ()=>document.getElementById('passwordModal').classList.remove('show');
-    document.getElementById('confirmPasswordBtn').onclick = async ()=>{ const oldPwd = document.getElementById('oldPassword').value, newPwd = document.getElementById('newPassword').value, confirm = document.getElementById('confirmPassword').value; if(newPwd !== confirm) return toast('❌ ' + (currentLang === 'ar' ? 'كلمة المرور الجديدة غير متطابقة' : (currentLang === 'fr' ? 'Les mots de passe ne correspondent pas' : 'Passwords do not match'))); try{ const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, oldPwd); await currentUser.reauthenticateWithCredential(credential); await currentUser.updatePassword(newPwd); toast('✅ ' + (currentLang === 'ar' ? 'تم تغيير كلمة المرور' : (currentLang === 'fr' ? 'Mot de passe changé' : 'Password changed'))); document.getElementById('passwordModal').classList.remove('show'); } catch(err){ toast('❌ ' + (currentLang === 'ar' ? 'فشل التغيير: ' : (currentLang === 'fr' ? 'Échec : ' : 'Failed: ')) + err.message); } };
+    document.getElementById('editProfileSidebarBtn').onclick = () => document.getElementById('profileModal').classList.add('show');
+    document.getElementById('closeProfileBtn').onclick = () => document.getElementById('profileModal').classList.remove('show');
+    document.getElementById('saveProfileBtn').onclick = async () => {
+        const newName = document.getElementById('profileDisplayName').value.trim();
+        if (newName && currentUser) {
+            await currentUser.updateProfile({ displayName: newName });
+            userProfile.displayName = newName;
+            await db.collection('users').doc(currentUser.uid).set({ displayName: newName, photoURL: userProfile.photoURL }, { merge: true });
+            toast('✅ ' + (currentLang === 'ar' ? 'تم تحديث الاسم' : (currentLang === 'fr' ? 'Nom mis à jour' : 'Name updated')));
+            loadProfile();
+        }
+        document.getElementById('profileModal').classList.remove('show');
+    };
+    document.getElementById('changePasswordBtn').onclick = () => document.getElementById('passwordModal').classList.add('show');
+    document.getElementById('closePasswordBtn').onclick = () => document.getElementById('passwordModal').classList.remove('show');
+    document.getElementById('confirmPasswordBtn').onclick = async () => {
+        const oldPwd = document.getElementById('oldPassword').value, newPwd = document.getElementById('newPassword').value, confirm = document.getElementById('confirmPassword').value;
+        if (newPwd !== confirm) return toast('❌ ' + (currentLang === 'ar' ? 'كلمة المرور الجديدة غير متطابقة' : (currentLang === 'fr' ? 'Les mots de passe ne correspondent pas' : 'Passwords do not match')));
+        try {
+            const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, oldPwd);
+            await currentUser.reauthenticateWithCredential(credential);
+            await currentUser.updatePassword(newPwd);
+            toast('✅ ' + (currentLang === 'ar' ? 'تم تغيير كلمة المرور' : (currentLang === 'fr' ? 'Mot de passe changé' : 'Password changed')));
+            document.getElementById('passwordModal').classList.remove('show');
+        } catch (err) {
+            toast('❌ ' + (currentLang === 'ar' ? 'فشل التغيير: ' : (currentLang === 'fr' ? 'Échec : ' : 'Failed: ')) + err.message);
+        }
+    };
 
-    async function prepareElementForCanvas(element){ const images = element.querySelectorAll('img'); for(let img of images){ if(img.src && (img.src.startsWith('http://')||img.src.startsWith('https://')) && !img.crossOrigin){ try{ const resp = await fetch(img.src, {mode:'cors'}); const blob = await resp.blob(); const url = URL.createObjectURL(blob); img.crossOrigin = 'anonymous'; img.src = url; } catch(e){ console.warn(e); } } } return element; }
+    // ======================= بطاقة الوفد =======================
+    async function prepareElementForCanvas(element) {
+        const images = element.querySelectorAll('img');
+        for (let img of images) {
+            if (img.src && (img.src.startsWith('http://') || img.src.startsWith('https://')) && !img.crossOrigin) {
+                try {
+                    const resp = await fetch(img.src, { mode: 'cors' });
+                    const blob = await resp.blob();
+                    const url = URL.createObjectURL(blob);
+                    img.crossOrigin = 'anonymous';
+                    img.src = url;
+                } catch (e) { console.warn(e); }
+            }
+        }
+        return element;
+    }
 
-    window.showDelegationCard = async function(id){
-        const g = guides.find(x=>x.id===id); if(!g) return; currentGuideForCards = g; await fetchWeather();
+    window.showDelegationCard = async function(id) {
+        const g = guides.find(x => x.id === id);
+        if (!g) return;
+        currentGuideForCards = g;
+        await fetchWeather();
         document.getElementById('delegationMainImg').src = g.busPhoto || '';
         document.getElementById('delegationAvatar').src = g.guidePhoto || '';
         document.getElementById('delegationGuideName').innerHTML = g.name || '—';
@@ -1206,16 +1288,35 @@
         document.getElementById('creationTimestamp').innerHTML = g.createdAt ? new Date(g.createdAt).toLocaleString('ar-TN') : (currentLang === 'ar' ? 'غير معروف' : (currentLang === 'fr' ? 'Inconnu' : 'Unknown'));
         document.getElementById('sendTimestamp').innerHTML = (currentLang === 'ar' ? 'لم يرسل بعد' : (currentLang === 'fr' ? 'Non envoyé' : 'Not sent yet'));
         document.getElementById('creatorName').innerHTML = g.creatorName || (currentLang === 'ar' ? 'غير معروف' : (currentLang === 'fr' ? 'Inconnu' : 'Unknown'));
-        document.getElementById('delegationMainImg').onclick = ()=>showFullImage(g.busPhoto||g.guidePhoto);
-        document.getElementById('delegationAvatar').onclick = ()=>showFullImage(g.guidePhoto);
+        document.getElementById('delegationMainImg').onclick = () => showFullImage(g.busPhoto || g.guidePhoto);
+        document.getElementById('delegationAvatar').onclick = () => showFullImage(g.guidePhoto);
         document.getElementById('delegationModal').classList.add('show');
     };
 
-    document.getElementById('shareDelegationBtn').onclick = async ()=>{ const card = document.getElementById('delegationCard'); try{ const now = new Date(); document.getElementById('sendTimestamp').innerHTML = now.toLocaleString('ar-TN'); const preparedCard = await prepareElementForCanvas(card); const canvas = await html2canvas(preparedCard, {scale:2, backgroundColor:'#ffffff', useCORS:true}); const blob = await new Promise(r=>canvas.toBlob(r,'image/png')); const file = new File([blob],'delegation.png',{type:'image/png'}); if(navigator.share && navigator.canShare({files:[file]})) await navigator.share({files:[file], title: (currentLang === 'ar' ? 'معلومات الوفد' : (currentLang === 'fr' ? 'Informations de la délégation' : 'Delegation Information'))}); else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'delegation.png'; a.click(); toast('📥 ' + (currentLang === 'ar' ? 'تم التحميل' : (currentLang === 'fr' ? 'Téléchargé' : 'Downloaded'))); } } catch(err){ toast('⚠️ '+err.message); } };
+    document.getElementById('shareDelegationBtn').onclick = async () => {
+        const card = document.getElementById('delegationCard');
+        try {
+            const now = new Date();
+            document.getElementById('sendTimestamp').innerHTML = now.toLocaleString('ar-TN');
+            const preparedCard = await prepareElementForCanvas(card);
+            const canvas = await html2canvas(preparedCard, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+            const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+            const file = new File([blob], 'delegation.png', { type: 'image/png' });
+            if (navigator.share && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: (currentLang === 'ar' ? 'معلومات الوفد' : (currentLang === 'fr' ? 'Informations de la délégation' : 'Delegation Information')) });
+            else {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'delegation.png';
+                a.click();
+                toast('📥 ' + (currentLang === 'ar' ? 'تم التحميل' : (currentLang === 'fr' ? 'Téléchargé' : 'Downloaded')));
+            }
+        } catch (err) { toast('⚠️ ' + err.message); }
+    };
 
-    // ========== دوال كرت التنسيق والمتابعة ==========
-    function updateSecurityPreview(g, customText){
-        const preview = document.getElementById('securityCardPreview'); const now = new Date();
+    // ======================= كرت التنسيق والمتابعة =======================
+    function updateSecurityPreview(g, customText) {
+        const preview = document.getElementById('securityCardPreview');
+        const now = new Date();
         preview.innerHTML = `
             <div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString()}</span><span><i class="far fa-clock"></i> ${now.toLocaleTimeString()}</span><div class="weather-info">${getWeatherHtml()}</div></div>
             <div class="card-img-area" style="height:130px;"><img class="main-img" src="${g.busPhoto || ''}"><img class="overlay-avatar" src="${g.guidePhoto || ''}" style="width:45px;height:45px;"></div>
@@ -1232,7 +1333,7 @@
                 <div class="agency-box"><span class="label">${translations[currentLang].agency}</span><span class="value">${g.agency || '—'}</span></div>
                 ${g.notes ? `<div class="notes-box"><span class="label">${translations[currentLang].notes}</span><span class="value">${g.notes}</span></div>` : ''}
                 ${customText ? `<div class="notes-box" style="background:#fff3cd;"><span class="label">${translations[currentLang].custom_group_label}</span><span class="value">${customText}</span></div>` : ''}
-                <div class="timestamp-row"><span><i class="far fa-plus-square"></i> ${translations[currentLang].created_at} ${g.createdAt?new Date(g.createdAt).toLocaleString():'غير معروف'}</span><span><i class="fab fa-whatsapp"></i> ${translations[currentLang].sent_at} ${new Date().toLocaleString()}</span><span><i class="fas fa-user-check"></i> ${translations[currentLang].created_by} ${g.creatorName||'غير معروف'}</span></div>
+                <div class="timestamp-row"><span><i class="far fa-plus-square"></i> ${translations[currentLang].created_at} ${g.createdAt ? new Date(g.createdAt).toLocaleString() : 'غير معروف'}</span><span><i class="fab fa-whatsapp"></i> ${translations[currentLang].sent_at} ${new Date().toLocaleString()}</span><span><i class="fas fa-user-check"></i> ${translations[currentLang].created_by} ${g.creatorName || 'غير معروف'}</span></div>
             </div>
         `;
     }
@@ -1267,7 +1368,7 @@
         if (!currentGuideForCards) return;
         const phonesRaw = document.getElementById('securityPhonesList').value;
         if (!phonesRaw.trim()) return toast('⚠️ ' + (currentLang === 'ar' ? 'أدخل أرقاماً للحفظ' : 'Entrez des numéros à sauvegarder'));
-        const newNumbers = phonesRaw.split(/\r?\n/).map(p=>p.trim()).filter(p=>p.match(/[\+]?\d{8,15}/));
+        const newNumbers = phonesRaw.split(/\r?\n/).map(p => p.trim()).filter(p => p.match(/[\+]?\d{8,15}/));
         if (newNumbers.length === 0) return toast('⚠️ ' + (currentLang === 'ar' ? 'لم يتم التعرف على أرقام صحيحة' : 'Numéros non valides'));
         const existingNumbers = LDB.getSavedNumbers(currentGuideForCards.id);
         const allNumbers = [...new Set([...existingNumbers, ...newNumbers])];
@@ -1285,22 +1386,22 @@
         toast('⏳ ' + (currentLang === 'ar' ? 'جاري إنشاء البطاقة...' : 'Génération de la carte...'));
         try {
             const prepared = await prepareElementForCanvas(cardEl);
-            const canvas = await html2canvas(prepared, {scale:2, backgroundColor:'#ffffff', useCORS:true});
-            const blob = await new Promise(r=>canvas.toBlob(r,'image/png'));
+            const canvas = await html2canvas(prepared, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+            const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
             currentCardImageUrl = await uploadCardToCloudinary(blob);
             toast('✅ تم رفع البطاقة إلى Cloudinary');
-            
+
             const sentHistory = LDB.getSentHistory(currentGuideForCards.id);
             const savedNumbers = LDB.getSavedNumbers(currentGuideForCards.id);
             const container = document.getElementById('securityLinksContainer');
             container.innerHTML = '';
-            const msg = encodeURIComponent(`📢 ${translations[currentLang].security_card_title}:\n${currentCardImageUrl}\n${groupLabel?`${translations[currentLang].custom_group_label}: ${groupLabel}`:''}\n${getWeatherHtml()}\n${translations[currentLang].guide_name}: ${currentGuideForCards.name || ''} 📞 ${currentGuideForCards.phone || ''}\n${translations[currentLang].agency}: ${currentGuideForCards.agency || ''}\n${currentGuideForCards.notes ? `${translations[currentLang].notes}: ${currentGuideForCards.notes}` : ''}`);
-            
+            const msg = encodeURIComponent(`📢 ${translations[currentLang].security_card_title}:\n${currentCardImageUrl}\n${groupLabel ? `${translations[currentLang].custom_group_label}: ${groupLabel}` : ''}\n${getWeatherHtml()}\n${translations[currentLang].guide_name}: ${currentGuideForCards.name || ''} 📞 ${currentGuideForCards.phone || ''}\n${translations[currentLang].agency}: ${currentGuideForCards.agency || ''}\n${currentGuideForCards.notes ? `${translations[currentLang].notes}: ${currentGuideForCards.notes}` : ''}`);
+
             if (savedNumbers.length > 0) {
                 const sentPhones = new Set(sentHistory.map(h => h.phone));
                 savedNumbers.forEach(phone => {
-                    let clean = phone.replace(/[^0-9+]/g,'');
-                    if(!clean.startsWith('+')) clean = '+216'+clean.replace(/^0+/,'');
+                    let clean = phone.replace(/[^0-9+]/g, '');
+                    if (!clean.startsWith('+')) clean = '+216' + clean.replace(/^0+/, '');
                     const isSent = sentPhones.has(phone);
                     const div = document.createElement('div');
                     div.className = 'link-item';
@@ -1334,7 +1435,7 @@
             }
             container.style.display = 'block';
             toast(`✅ ${translations[currentLang].sync_ok}`);
-        } catch(err) {
+        } catch (err) {
             toast('❌ ' + (currentLang === 'ar' ? 'فشل: ' : (currentLang === 'fr' ? 'Échec : ' : 'Failed: ')) + err.message);
         }
     });
@@ -1348,50 +1449,36 @@
         toast('⏳ ' + (currentLang === 'ar' ? 'جاري تجهيز الإرسال...' : 'Préparation de l\'envoi...'));
         try {
             const groupLabel = document.getElementById('securityGroupLabel').value.trim();
-            const msg = `📢 ${translations[currentLang].security_card_title}:\n${currentCardImageUrl}\n${groupLabel?`${translations[currentLang].custom_group_label}: ${groupLabel}`:''}\n${getWeatherHtml()}\n${translations[currentLang].guide_name}: ${currentGuideForCards.name || ''} 📞 ${currentGuideForCards.phone || ''}\n${translations[currentLang].agency}: ${currentGuideForCards.agency || ''}\n${currentGuideForCards.notes ? `${translations[currentLang].notes}: ${currentGuideForCards.notes}` : ''}`;
-            let clean = phoneNumber.replace(/[^0-9+]/g,'');
-            if(!clean.startsWith('+')) clean = '+216'+clean.replace(/^0+/,'');
-            openWhatsAppPopup(clean, msg);
+            const msg = `📢 ${translations[currentLang].security_card_title}:\n${currentCardImageUrl}\n${groupLabel ? `${translations[currentLang].custom_group_label}: ${groupLabel}` : ''}\n${getWeatherHtml()}\n${translations[currentLang].guide_name}: ${currentGuideForCards.name || ''} 📞 ${currentGuideForCards.phone || ''}\n${translations[currentLang].agency}: ${currentGuideForCards.agency || ''}\n${currentGuideForCards.notes ? `${translations[currentLang].notes}: ${currentGuideForCards.notes}` : ''}`;
+            let clean = phoneNumber.replace(/[^0-9+]/g, '');
+            if (!clean.startsWith('+')) clean = '+216' + clean.replace(/^0+/, '');
+            await openWhatsAppWithSecret(clean, msg);
             LDB.addSentHistory(currentGuideForCards.id, phoneNumber, new Date().toISOString());
             updateSavedNumbersDisplay();
             const container = document.getElementById('securityLinksContainer');
             if (container && container.style.display === 'block') {
                 await document.getElementById('generateCardBtn')?.click();
             }
-        } catch(err) {
+        } catch (err) {
             toast('❌ ' + (currentLang === 'ar' ? 'فشل: ' : (currentLang === 'fr' ? 'Échec : ' : 'Failed: ')) + err.message);
         }
     }
 
-    function openWhatsAppPopup(phoneNumber, message) {
-        const iframe = document.getElementById('whatsappIframe');
-        const modal = document.getElementById('whatsappIframeModal');
-        iframe.src = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
-        modal.classList.add('show');
-    }
-
-    document.getElementById('closeWhatsappIframe')?.addEventListener('click', () => {
-        const modal = document.getElementById('whatsappIframeModal');
-        const iframe = document.getElementById('whatsappIframe');
-        iframe.src = 'about:blank';
-        modal.classList.remove('show');
-    });
-
-    window.showSecurityCard = async function(id){
-        const g = guides.find(x=>x.id===id);
-        if(!g) return;
+    window.showSecurityCard = async function(id) {
+        const g = guides.find(x => x.id === id);
+        if (!g) return;
         currentGuideForCards = g;
         await fetchWeather();
         document.getElementById('securityGroupLabel').value = '';
         document.getElementById('securityPhonesList').value = '';
         document.getElementById('securityLinksContainer').style.display = 'none';
         currentCardImageUrl = '';
-        updateSecurityPreview(g,'');
+        updateSecurityPreview(g, '');
         updateSavedNumbersDisplay();
         document.getElementById('securityModal').classList.add('show');
     };
 
-    // ========== دوال قسم المطور ==========
+    // ======================= قسم المطور - إدارة المستخدمين (إخفاء UID مع إظهاره عند "المزيد") =======================
     async function loadUsersList() {
         if (!isDeveloper) return;
         const usersListDiv = document.getElementById('usersList');
@@ -1408,13 +1495,27 @@
             }
             usersListDiv.innerHTML = users.map(user => `
                 <div class="user-item">
-                    <div class="user-email">${user.email || user.id}</div>
+                    <div class="user-info">
+                        <div class="user-name">${user.displayName || user.email?.split('@')[0] || 'مستخدم'}</div>
+                        <div class="user-email">${user.email || user.id}</div>
+                    </div>
                     <div class="user-actions">
+                        <button class="user-more-btn" data-uid="${user.id}" data-email="${user.email || ''}"><i class="fas fa-ellipsis-h"></i> ${translations[currentLang].show_uid}</button>
                         <button class="user-edit-btn" data-email="${user.email || user.id}" data-id="${user.id}"><i class="fas fa-edit"></i></button>
                         <button class="user-delete-btn" data-email="${user.email || user.id}" data-id="${user.id}"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `).join('');
+
+            // زر "المزيد" لإظهار UID
+            document.querySelectorAll('.user-more-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const uid = btn.getAttribute('data-uid');
+                    const email = btn.getAttribute('data-email');
+                    alert(`${translations[currentLang].uid_label}\n${uid}\n(${email})`);
+                });
+            });
+
             document.querySelectorAll('.user-edit-btn').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const email = btn.getAttribute('data-email');
@@ -1424,12 +1525,13 @@
                             const user = await auth.getUserByEmail(email);
                             await auth.updateUser(user.uid, { password: newPassword });
                             toast('✅ تم تحديث كلمة المرور');
-                        } catch(e) {
+                        } catch (e) {
                             toast('❌ لا يمكن تغيير كلمة المرور لهذا المستخدم');
                         }
                     }
                 });
             });
+
             document.querySelectorAll('.user-delete-btn').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const email = btn.getAttribute('data-email');
@@ -1440,13 +1542,13 @@
                             await db.collection('users').doc(user.uid).delete();
                             toast('✅ تم حذف المستخدم');
                             loadUsersList();
-                        } catch(e) {
+                        } catch (e) {
                             toast('❌ فشل حذف المستخدم');
                         }
                     }
                 });
             });
-        } catch(e) {
+        } catch (e) {
             usersListDiv.innerHTML = `<div style="color:var(--err);">❌ خطأ في تحميل المستخدمين</div>`;
         }
     }
@@ -1473,7 +1575,7 @@
             document.getElementById('newUserPassword').value = '';
             loadUsersList();
             setTimeout(() => { resultDiv.textContent = ''; }, 3000);
-        } catch(e) {
+        } catch (e) {
             resultDiv.textContent = '❌ ' + e.message;
         }
     });
@@ -1485,9 +1587,7 @@
         try {
             const snapshot = await db.collection('guides').get();
             const allGuides = [];
-            snapshot.forEach(doc => {
-                allGuides.push({ id: doc.id, ...doc.data() });
-            });
+            snapshot.forEach(doc => { allGuides.push({ id: doc.id, ...doc.data() }); });
             if (allGuides.length === 0) {
                 allGuidesList.innerHTML = `<div style="text-align:center;padding:20px;">😕 لا توجد إضافات</div>`;
                 return;
@@ -1497,7 +1597,7 @@
                     <div class="card-top">
                         <img class="avatar" src="${g.guidePhoto || ''}" onerror="this.style.display='none'" style="width:40px;height:40px;">
                         <div class="card-mid">
-                            <div class="name">${g.name || '—'} ${g.nationality ? '('+g.nationality+')' : ''}</div>
+                            <div class="name">${g.name || '—'} ${g.nationality ? '(' + g.nationality + ')' : ''}</div>
                             <div style="font-size:11px;">🚐 ${g.transportType || '—'} | 👥 ${g.peopleCount || '—'} | ${g.visibility === 'private' ? '🔒 خاص' : '🌍 عام'}</div>
                             <div class="phone">📞 ${g.phone || ''}</div>
                             <div style="font-size:10px;color:var(--txt3);">👤 المنشئ: ${g.creatorName || 'غير معروف'}</div>
@@ -1505,7 +1605,7 @@
                     </div>
                 </div>
             `).join('');
-        } catch(e) {
+        } catch (e) {
             allGuidesList.innerHTML = `<div style="color:var(--err);">❌ خطأ في التحميل</div>`;
         }
     });
@@ -1523,52 +1623,61 @@
         document.getElementById('usersModal').classList.remove('show');
     });
 
-    // دوال المزامنة
-    async function syncGuicesToCloud(){ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userDocs = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicDocs = await db.collection('guides').where('visibility','==','public').get(); const cloudMap = new Map(); userDocs.forEach(doc=>cloudMap.set(doc.id, {id:doc.id, ...doc.data()})); publicDocs.forEach(doc=>{ if(!cloudMap.has(doc.id)) cloudMap.set(doc.id, {id:doc.id, ...doc.data()}); }); let changed = false; for(let cloud of cloudMap.values()){ const local = guides.find(g=>g.id===cloud.id); if(!local){ guides.push(cloud); changed = true; } else if(new Date(cloud.updatedAt||0) > new Date(local.updatedAt||0)){ const index = guides.findIndex(g=>g.id===cloud.id); guides[index] = cloud; changed = true; } } for(let local of guides){ const cloud = cloudMap.get(local.id); if(!cloud && (local.userId === currentUser.uid || local.visibility === 'public')){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } else if(cloud && new Date(local.updatedAt||0) > new Date(cloud.updatedAt||0) && local.userId === currentUser.uid){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } return true; } catch(e){ console.error(e); return false; } }
-    async function syncGuidesFromCloud(){ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userSnap = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicSnap = await db.collection('guides').where('visibility','==','public').get(); let cloudGuides = []; userSnap.forEach(d=>cloudGuides.push({id:d.id, ...d.data()})); publicSnap.forEach(d=>{ if(!cloudGuides.find(c=>c.id===d.id)) cloudGuides.push({id:d.id, ...d.data()}); }); const merged = [...guides]; for(let cloud of cloudGuides){ const idx = merged.findIndex(l=>l.id===cloud.id); if(idx === -1) merged.push(cloud); else if(new Date(cloud.updatedAt||0) > new Date(merged[idx].updatedAt||0)) merged[idx] = cloud; } guides = merged; LDB.saveGuides(guides); renderGuides(); return true; } catch(e){ console.error(e); return false; } }
-    async function fullSync(){ toast('⏳ ' + (currentLang === 'ar' ? 'جاري المزامنة...' : (currentLang === 'fr' ? 'Synchronisation...' : 'Syncing...'))); const ok = await syncGuicesToCloud() && await syncGuidesFromCloud(); if(ok) toast(translations[currentLang].sync_ok); else toast(translations[currentLang].sync_fail); }
-    function startFirestoreListener(){ if(unsubscribeFirestore) unsubscribeFirestore(); if(!currentUser || currentUser.uid==='offline') return; unsubscribeFirestore = db.collection('guides').onSnapshot(async snapshot=>{ let changed = false; for(let change of snapshot.docChanges()){ const newData = {id:change.doc.id, ...change.doc.data()}; const index = guides.findIndex(g=>g.id===newData.id); if(change.type === 'added' || change.type === 'modified'){ if(index !== -1){ if(new Date(newData.updatedAt||0) > new Date(guides[index].updatedAt||0)){ guides[index] = newData; changed = true; } } else { guides.push(newData); changed = true; } } else if(change.type === 'removed'){ guides = guides.filter(g=>g.id !== change.doc.id); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } }, err=>{ console.warn("Listener error, retrying in 5s", err); setTimeout(startFirestoreListener,5000); }); }
+    // ======================= المزامنة والإعدادات العامة =======================
+    async function syncGuicesToCloud() { if (!currentUser || currentUser.uid === 'offline' || !navigator.onLine) return false; try { const userDocs = await db.collection('guides').where('userId', '==', currentUser.uid).get(); const publicDocs = await db.collection('guides').where('visibility', '==', 'public').get(); const cloudMap = new Map(); userDocs.forEach(doc => cloudMap.set(doc.id, { id: doc.id, ...doc.data() })); publicDocs.forEach(doc => { if (!cloudMap.has(doc.id)) cloudMap.set(doc.id, { id: doc.id, ...doc.data() }); }); let changed = false; for (let cloud of cloudMap.values()) { const local = guides.find(g => g.id === cloud.id); if (!local) { guides.push(cloud); changed = true; } else if (new Date(cloud.updatedAt || 0) > new Date(local.updatedAt || 0)) { const index = guides.findIndex(g => g.id === cloud.id); guides[index] = cloud; changed = true; } } for (let local of guides) { const cloud = cloudMap.get(local.id); if (!cloud && (local.userId === currentUser.uid || local.visibility === 'public')) { await db.collection('guides').doc(local.id).set(local, { merge: true }); changed = true; } else if (cloud && new Date(local.updatedAt || 0) > new Date(cloud.updatedAt || 0) && local.userId === currentUser.uid) { await db.collection('guides').doc(local.id).set(local, { merge: true }); changed = true; } } if (changed) { LDB.saveGuides(guides); renderGuides(); } return true; } catch (e) { console.error(e); return false; } }
+    async function syncGuidesFromCloud() { if (!currentUser || currentUser.uid === 'offline' || !navigator.onLine) return false; try { const userSnap = await db.collection('guides').where('userId', '==', currentUser.uid).get(); const publicSnap = await db.collection('guides').where('visibility', '==', 'public').get(); let cloudGuides = []; userSnap.forEach(d => cloudGuides.push({ id: d.id, ...d.data() })); publicSnap.forEach(d => { if (!cloudGuides.find(c => c.id === d.id)) cloudGuides.push({ id: d.id, ...d.data() }); }); const merged = [...guides]; for (let cloud of cloudGuides) { const idx = merged.findIndex(l => l.id === cloud.id); if (idx === -1) merged.push(cloud); else if (new Date(cloud.updatedAt || 0) > new Date(merged[idx].updatedAt || 0)) merged[idx] = cloud; } guides = merged; LDB.saveGuides(guides); renderGuides(); return true; } catch (e) { console.error(e); return false; } }
+    async function fullSync() { toast('⏳ ' + (currentLang === 'ar' ? 'جاري المزامنة...' : (currentLang === 'fr' ? 'Synchronisation...' : 'Syncing...'))); const ok = await syncGuicesToCloud() && await syncGuidesFromCloud(); if (ok) toast(translations[currentLang].sync_ok); else toast(translations[currentLang].sync_fail); }
+    function startFirestoreListener() { if (unsubscribeFirestore) unsubscribeFirestore(); if (!currentUser || currentUser.uid === 'offline') return; unsubscribeFirestore = db.collection('guides').onSnapshot(async snapshot => { let changed = false; for (let change of snapshot.docChanges()) { const newData = { id: change.doc.id, ...change.doc.data() }; const index = guides.findIndex(g => g.id === newData.id); if (change.type === 'added' || change.type === 'modified') { if (index !== -1) { if (new Date(newData.updatedAt || 0) > new Date(guides[index].updatedAt || 0)) { guides[index] = newData; changed = true; } } else { guides.push(newData); changed = true; } } else if (change.type === 'removed') { guides = guides.filter(g => g.id !== change.doc.id); changed = true; } } if (changed) { LDB.saveGuides(guides); renderGuides(); } }, err => { console.warn("Listener error, retrying in 5s", err); setTimeout(startFirestoreListener, 5000); }); }
 
-    document.getElementById('refreshBtn').onclick = async ()=>{ if(!currentUser || currentUser.uid==='offline') return toast('⚠️ ' + (currentLang === 'ar' ? 'المزامنة تتطلب اتصالاً' : (currentLang === 'fr' ? 'La synchronisation nécessite une connexion' : 'Sync requires connection'))); await fullSync(); };
-    document.getElementById('syncBtn').onclick = async ()=>{ if(!currentUser || currentUser.uid==='offline') return toast('⚠️ ' + (currentLang === 'ar' ? 'تتطلب اتصالاً' : (currentLang === 'fr' ? 'Connexion requise' : 'Connection required'))); await fullSync(); };
-    document.getElementById('voiceSearchBtn').onclick = ()=>{ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if(!SpeechRecognition) return toast('⚠️ ' + (currentLang === 'ar' ? 'غير مدعوم' : (currentLang === 'fr' ? 'Non supporté' : 'Not supported'))); const rec = new SpeechRecognition(); rec.lang = currentLang === 'ar' ? 'ar-TN' : (currentLang === 'fr' ? 'fr-FR' : 'en-US'); rec.start(); rec.onresult = e=>{ document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); }; rec.onerror = ()=>toast('⚠️ ' + (currentLang === 'ar' ? 'لم يتم التعرف' : (currentLang === 'fr' ? 'Non reconnu' : 'Not recognized'))); };
+    document.getElementById('refreshBtn').onclick = async () => { if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ ' + (currentLang === 'ar' ? 'المزامنة تتطلب اتصالاً' : (currentLang === 'fr' ? 'La synchronisation nécessite une connexion' : 'Sync requires connection'))); await fullSync(); };
+    document.getElementById('syncBtn').onclick = async () => { if (!currentUser || currentUser.uid === 'offline') return toast('⚠️ ' + (currentLang === 'ar' ? 'تتطلب اتصالاً' : (currentLang === 'fr' ? 'Connexion requise' : 'Connection required'))); await fullSync(); };
+    document.getElementById('voiceSearchBtn').onclick = () => { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) return toast('⚠️ ' + (currentLang === 'ar' ? 'غير مدعوم' : (currentLang === 'fr' ? 'Non supporté' : 'Not supported'))); const rec = new SpeechRecognition(); rec.lang = currentLang === 'ar' ? 'ar-TN' : (currentLang === 'fr' ? 'fr-FR' : 'en-US'); rec.start(); rec.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); }; rec.onerror = () => toast('⚠️ ' + (currentLang === 'ar' ? 'لم يتم التعرف' : (currentLang === 'fr' ? 'Non reconnu' : 'Not recognized'))); };
     document.getElementById('searchInput').oninput = renderGuides;
-    if(localStorage.getItem('fnote_dark')==='true') document.body.classList.add('dark');
-    document.getElementById('darkToggle').onclick = ()=>{ document.body.classList.toggle('dark'); localStorage.setItem('fnote_dark', document.body.classList.contains('dark')); };
-    document.getElementById('menuBtn').onclick = ()=>{ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
-    document.getElementById('overlay').onclick = ()=>{ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
-    
-    document.querySelectorAll('.lang-btn').forEach(btn => { btn.addEventListener('click', function() { const lang = this.getAttribute('data-lang'); setLanguage(lang, false); }); });
-    document.getElementById('loginLangSelect')?.addEventListener('change', (e) => {
-        setLanguage(e.target.value, true);
-    });
-    
-    document.getElementById('closeGuideBtn').onclick = ()=>document.getElementById('guideModal').classList.remove('show');
-    document.getElementById('closeDelegationBtn').onclick = ()=>document.getElementById('delegationModal').classList.remove('show');
-    document.getElementById('closeSecurityBtn').onclick = ()=>document.getElementById('securityModal').classList.remove('show');
-    document.getElementById('termsBtn')?.addEventListener('click', ()=>document.getElementById('termsModal').classList.add('show'));
-    document.getElementById('closeTermsBtn')?.addEventListener('click', ()=>document.getElementById('termsModal').classList.remove('show'));
-    document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
+    if (localStorage.getItem('fnote_dark') === 'true') document.body.classList.add('dark');
+    document.getElementById('darkToggle').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('fnote_dark', document.body.classList.contains('dark')); };
+    document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
+    document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+    document.querySelectorAll('.lang-btn').forEach(btn => { btn.addEventListener('click', function () { const lang = this.getAttribute('data-lang'); setLanguage(lang, false); }); });
+    document.getElementById('loginLangSelect')?.addEventListener('change', (e) => { setLanguage(e.target.value, true); });
+    document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
+    document.getElementById('closeDelegationBtn').onclick = () => document.getElementById('delegationModal').classList.remove('show');
+    document.getElementById('closeSecurityBtn').onclick = () => document.getElementById('securityModal').classList.remove('show');
+    document.getElementById('termsBtn')?.addEventListener('click', () => document.getElementById('termsModal').classList.add('show'));
+    document.getElementById('closeTermsBtn')?.addEventListener('click', () => document.getElementById('termsModal').classList.remove('show'));
+    document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }));
 
-    document.getElementById('loginBtn').onclick = async ()=>{ const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPassword').value; if(!email || !pass) return toast('⚠️ ' + (currentLang === 'ar' ? 'أدخل البريد وكلمة المرور' : (currentLang === 'fr' ? 'Entrez email et mot de passe' : 'Enter email and password'))); try{ await auth.signInWithEmailAndPassword(email,pass); } catch(e){ document.getElementById('loginError').textContent = 'خطأ: '+e.message; document.getElementById('loginError').style.display = 'block'; toast('❌ ' + (currentLang === 'ar' ? 'فشل تسجيل الدخول' : (currentLang === 'fr' ? 'Échec de connexion' : 'Login failed'))); } };
-    document.getElementById('offlineBtn').onclick = ()=>{ currentUser = { uid:'offline', email:'offline@local' }; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; guides = LDB.getGuides(); renderGuides(); if(unsubscribeFirestore) unsubscribeFirestore(); isDeveloper = true; document.getElementById('developerSection').style.display = 'block'; };
-    document.getElementById('signOutBtn').onclick = ()=>auth.signOut();
-    document.getElementById('exportJsonBtn').onclick = ()=>{ const blob = new Blob([JSON.stringify(guides,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'guides_backup.json'; a.click(); toast('📄 ' + (currentLang === 'ar' ? 'تم التصدير' : (currentLang === 'fr' ? 'Exporté' : 'Exported'))); };
-    document.getElementById('exportPdfBtn').onclick = ()=>{ const el = document.createElement('div'); el.style.padding = '20px'; el.innerHTML = '<h1>F-Note Pro Max</h1><hr>'+guides.map(g=>`<p><strong>${g.name}</strong> – ${g.phone} | ${g.nationality||''} | ${g.transportType||''}</p>`).join(''); html2pdf().from(el).save('guides.pdf'); toast('📕 ' + (currentLang === 'ar' ? 'تم التصدير' : (currentLang === 'fr' ? 'Exporté' : 'Exported'))); };
+    document.getElementById('loginBtn').onclick = async () => { const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPassword').value; if (!email || !pass) return toast('⚠️ ' + (currentLang === 'ar' ? 'أدخل البريد وكلمة المرور' : (currentLang === 'fr' ? 'Entrez email et mot de passe' : 'Enter email and password'))); try { await auth.signInWithEmailAndPassword(email, pass); } catch (e) { document.getElementById('loginError').textContent = 'خطأ: ' + e.message; document.getElementById('loginError').style.display = 'block'; toast('❌ ' + (currentLang === 'ar' ? 'فشل تسجيل الدخول' : (currentLang === 'fr' ? 'Échec de connexion' : 'Login failed'))); } };
+    document.getElementById('offlineBtn').onclick = () => { currentUser = { uid: 'offline', email: 'offline@local' }; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; guides = LDB.getGuides(); renderGuides(); if (unsubscribeFirestore) unsubscribeFirestore(); isDeveloper = true; document.getElementById('developerSection').style.display = 'block'; };
+    document.getElementById('signOutBtn').onclick = () => auth.signOut();
+    document.getElementById('exportJsonBtn').onclick = () => { const blob = new Blob([JSON.stringify(guides, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'guides_backup.json'; a.click(); toast('📄 ' + (currentLang === 'ar' ? 'تم التصدير' : (currentLang === 'fr' ? 'Exporté' : 'Exported'))); };
+    document.getElementById('exportPdfBtn').onclick = () => { const el = document.createElement('div'); el.style.padding = '20px'; el.innerHTML = '<h1>F-Note Pro Max</h1><hr>' + guides.map(g => `<p><strong>${g.name}</strong> – ${g.phone} | ${g.nationality || ''} | ${g.transportType || ''}</p>`).join(''); html2pdf().from(el).save('guides.pdf'); toast('📕 ' + (currentLang === 'ar' ? 'تم التصدير' : (currentLang === 'fr' ? 'Exporté' : 'Exported'))); };
 
-    auth.onAuthStateChanged(async u=>{
-        if(u){
-            currentUser = u; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block';
+    auth.onAuthStateChanged(async u => {
+        if (u) {
+            currentUser = u;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
             const doc = await db.collection('users').doc(u.uid).get();
-            if(doc.exists) userProfile = doc.data(); else { userProfile = { displayName: u.email, photoURL: '' }; await db.collection('users').doc(u.uid).set(userProfile); }
-            // التحقق من صلاحية المطور (أي مستخدم مسجل الدخول يعتبر مطور مؤقتاً، يمكنك تعديل البريد الإلكتروني للمطور الحقيقي)
-            const developerEmails = ['fahmi@example.com', 'admin@example.com', currentUser.email]; // يمكنك إضافة البريد الإلكتروني للمطور الحقيقي هنا
-            isDeveloper = true; // تفعيل قسم المطور لجميع المستخدمين المسجلين (للتجربة)
+            if (doc.exists) userProfile = doc.data();
+            else { userProfile = { displayName: u.email, photoURL: '' }; await db.collection('users').doc(u.uid).set(userProfile); }
+            // تفعيل قسم المطور لجميع المستخدمين المسجلين (يمكنك تعديل الشرط حسب البريد الإلكتروني للمطور الحقيقي)
+            isDeveloper = true;
             document.getElementById('developerSection').style.display = 'block';
-            await loadProfile(); await fullSync(); startFirestoreListener();
-        } else { if(unsubscribeFirestore) unsubscribeFirestore(); currentUser = null; isDeveloper = false; document.getElementById('appContainer').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('loginEmail').value = ''; document.getElementById('loginPassword').value = ''; document.getElementById('loginError').style.display = 'none'; }
+            await loadProfile();
+            await fullSync();
+            startFirestoreListener();
+        } else {
+            if (unsubscribeFirestore) unsubscribeFirestore();
+            currentUser = null;
+            isDeveloper = false;
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').style.display = 'none';
+        }
     });
-    
+
     setLanguage(currentLang, true);
     document.getElementById('loginLangSelect').value = currentLang;
     renderGuides();
