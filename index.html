@@ -2,549 +2,1339 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>منصة اللوحات التونسية الذكية | تطابق تلقائي مع الأوصاف الحقيقية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>F-Note Pro Max | إدارة الوفود</title>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+
+    <!-- html2canvas + html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <!-- Font Awesome + Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- libphonenumber -->
+    <script src="https://unpkg.com/libphonenumber-js@1.10.51/bundle/libphonenumber-min.js"></script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --olive: #556B2F;
+            --olive-dark: #3d4d21;
+            --gold: #D4AF37;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --txt: #1e293b;
+            --txt2: #475569;
+            --txt3: #94a3b8;
+            --border: #e2e8f0;
+            --err: #ef4444;
+            --ok: #10b981;
+            --wa: #25D366;
         }
-
-        body {
-            background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%);
-            font-family: 'Segoe UI', 'Cairo', 'Tahoma', system-ui, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+        body.dark {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --txt: #f1f5f9;
+            --txt2: #cbd5e1;
+            --txt3: #64748b;
+            --border: #334155;
         }
-
-        .app-wrapper {
-            max-width: 1350px;
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: var(--txt); min-height: 100vh; transition: 0.2s; overflow-x: hidden; }
+        @media(min-width:768px) { body { max-width: 520px; margin: auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); } }
+        button { cursor: pointer; border: none; background: none; transition: all 0.1s ease; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        button:active { transform: translateY(2px); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+        input, textarea, select { width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 14px; background: var(--bg); color: var(--txt); font-size: 14px; outline: none; margin: 4px 0 12px 0; }
+        textarea { resize: vertical; min-height: 60px; }
+        .field-label { font-size: 13px; font-weight: 600; color: var(--olive); margin-bottom: 4px; display: block; }
+        
+        .header { background: var(--card); padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--border); }
+        .header .logo-area { display: flex; align-items: center; gap: 6px; }
+        .header .logo-area img { height: 34px; }
+        .header .logo-text { font-weight: 900; font-size: 16px; color: var(--olive); }
+        .h-btn { width: 36px; height: 36px; border-radius: 12px; background: var(--bg); border: 1px solid var(--border); color: var(--txt2); font-size: 15px; display: flex; align-items: center; justify-content: center; }
+        .h-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .sidebar { position: fixed; top: 0; right: -320px; width: 300px; height: 100%; background: var(--card); z-index: 200; transition: 0.3s; box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2); overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; border-radius: 20px 0 0 20px; }
+        .sidebar.open { right: 0; }
+        .profile-card-sidebar { background: linear-gradient(135deg, var(--olive-dark), var(--olive)); border-radius: 24px; padding: 16px; color: white; text-align: center; }
+        .profile-avatar-sidebar { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid var(--gold); margin: 0 auto 10px; display: block; cursor: pointer; }
+        .profile-name-sidebar { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+        .profile-email-sidebar { font-size: 11px; opacity: 0.8; margin-bottom: 12px; word-break: break-all; }
+        .edit-profile-btn { background: rgba(255,255,255,0.2); border: none; padding: 8px; border-radius: 30px; color: white; font-size: 12px; width: 100%; cursor: pointer; transition: 0.2s; }
+        .sidebar-section { background: var(--bg); border-radius: 20px; padding: 12px; margin-top: 10px; }
+        .sidebar-section-title { font-size: 13px; font-weight: 700; color: var(--olive); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .s-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; cursor: pointer; color: var(--txt); font-size: 13px; margin: 3px 0; transition: 0.1s; }
+        .s-item:hover { background: var(--border); }
+        .s-item i { width: 22px; text-align: center; color: var(--olive); }
+        .lang-row { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+        .lang-btn { flex: 1; padding: 8px; text-align: center; border-radius: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--txt2); font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .footer-links { font-size: 10px; color: var(--txt3); text-align: center; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 150; display: none; }
+        .overlay.show { display: block; }
+        .toolbar { display: flex; gap: 8px; padding: 8px 12px; background: var(--bg); position: sticky; top: 52px; z-index: 40; flex-wrap: wrap; align-items: center; }
+        .search { flex: 1; padding: 10px 12px; border-radius: 30px; background: var(--card); color: var(--txt); font-size: 13px; border: 1px solid var(--border); }
+        .t-btn { width: 42px; height: 42px; border-radius: 14px; background: var(--card); border: 1px solid var(--border); color: var(--txt2); font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .t-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .t-btn.accent { background: var(--primary); color: white; border-color: var(--primary); width: 48px; height: 48px; font-size: 22px; }
+        .guides { padding: 8px 12px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
+        .guide-card { background: var(--card); border-radius: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); border: 1px solid var(--border); transition: 0.2s; }
+        .card-top { display: flex; gap: 12px; padding: 12px; }
+        .avatar { width: 50px; height: 50px; border-radius: 16px; object-fit: cover; border: 2px solid var(--olive); flex-shrink: 0; background: var(--bg); cursor: pointer; }
+        .card-mid { flex: 1; min-width: 0; }
+        .name { font-weight: 800; font-size: 16px; word-break: break-word; }
+        .phone { font-size: 13px; color: var(--olive); font-weight: 700; direction: ltr; margin-top: 4px; }
+        .more-btn { background: var(--primary); color: white; padding: 6px 14px; border-radius: 30px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin-top: 8px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .more-btn:hover { background: var(--primary-dark); }
+        .hidden-buttons { display: none; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 8px; padding: 10px; border-top: 1px solid var(--border); background: var(--bg); margin-top: 8px; }
+        .hidden-buttons.show { display: grid; }
+        .c-btn { padding: 8px 5px; border-radius: 30px; font-size: 12px; font-weight: 600; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .c-call { background: var(--ok); }
+        .c-wa { background: var(--wa); }
+        .c-card { background: var(--primary); }
+        .c-edit { background: #f59e0b; }
+        .c-del { background: var(--err); }
+        .c-security { background: #8b5cf6; }
+        .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal.show { visibility: visible; opacity: 1; }
+        .modal-box { background: var(--card); border-radius: 28px; padding: 24px; width: 92%; max-width: 500px; max-height: 88vh; overflow-y: auto; }
+        .modal-box h3 { text-align: center; color: var(--primary); margin-bottom: 16px; font-size: 20px; }
+        .upload-area { border: 2px dashed var(--primary); border-radius: 20px; padding: 16px; text-align: center; margin: 8px 0; cursor: pointer; position: relative; transition: 0.2s; background: var(--bg); }
+        .upload-area:hover { border-color: var(--primary-dark); background: rgba(99, 102, 241, 0.05); }
+        .upload-area img { width: 60px; height: 60px; object-fit: cover; border-radius: 16px; margin-top: 8px; }
+        .upload-area .upload-spinner { display: none; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.7); border-radius: 20px; align-items: center; justify-content: center; font-size: 24px; color: var(--primary); }
+        .upload-area.uploading .upload-spinner { display: flex; }
+        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: white; border-radius: 16px; font-weight: 700; font-size: 15px; margin-top: 12px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary { width: 100%; padding: 12px; background: #64748b; color: white; border-radius: 16px; font-weight: 700; margin-top: 8px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-secondary:hover { background: #475569; }
+        .image-delete-btn { background: var(--err); color: white; border: none; border-radius: 30px; padding: 4px 12px; font-size: 11px; margin-top: 8px; cursor: pointer; width: auto; display: inline-block; }
+        
+        .delegation-card, .security-card-preview {
+            background: var(--card);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border);
             width: 100%;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(3px);
-            border-radius: 60px;
-            padding: 28px 24px 36px;
-            box-shadow: 18px 18px 35px rgba(0, 0, 0, 0.2), -6px -6px 15px rgba(255, 255, 255, 0.7);
         }
-
-        h1 {
-            text-align: center;
-            font-size: 2rem;
-            background: linear-gradient(130deg, #1e3a5f, #0f2c44);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-bottom: 8px;
-        }
-
-        .sub {
-            text-align: center;
-            color: #1f4e6e;
-            font-weight: 500;
-            background: #eef2ffb3;
-            width: fit-content;
-            margin: 0 auto 25px auto;
-            padding: 6px 24px;
-            border-radius: 40px;
-            font-size: 0.85rem;
-        }
-
-        .flex-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            justify-content: center;
-        }
-
-        .control-panel {
-            flex: 1.2;
-            min-width: 280px;
-            background: #f1f5f9;
-            border-radius: 48px;
-            padding: 24px 22px;
-            box-shadow: inset 0 1px 4px white, 8px 8px 18px rgba(0, 0, 0, 0.08);
-        }
-
-        .plate-viewer {
-            flex: 1.8;
-            min-width: 420px;
-            background: #eef2f9;
-            border-radius: 48px;
-            padding: 24px 22px;
-            box-shadow: inset 0 1px 3px white, 12px 12px 28px rgba(0, 0, 0, 0.1);
-        }
-
-        .section-title {
-            font-weight: 700;
-            font-size: 1.35rem;
-            border-right: 5px solid #0b5e7e;
-            padding-right: 16px;
-            margin-bottom: 22px;
-            color: #1a3c50;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        select {
-            width: 100%;
-            padding: 14px 18px;
-            font-size: 1rem;
-            border-radius: 60px;
-            border: none;
-            background: white;
-            font-weight: 600;
-            color: #0c2c3b;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05), inset 0 0 0 1px #cbdde9;
-            cursor: pointer;
-            margin-bottom: 25px;
-            font-family: 'Cairo', monospace;
-        }
-
-        select:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px #3c83a0;
-        }
-
-        .desc-minimal {
-            background: #e2e8f0cc;
-            padding: 12px 18px;
-            border-radius: 32px;
-            font-size: 0.82rem;
-            line-height: 1.45;
-            color: #1e3b4f;
-            font-weight: 500;
-            border-left: 4px solid #2c7da0;
-            margin: 18px 0 10px;
-        }
-
-        /* اللوحة الرئيسية الموحدة (سطر واحد) */
-        .plate-unified-card {
-            background: #0a0f1c;
-            border-radius: 32px;
-            padding: 16px 20px;
-            margin: 20px 0;
-            box-shadow: 0 12px 22px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.1);
-            transition: 0.2s;
-        }
-
-        .plate-row {
-            background: #f8fafd;
-            border-radius: 28px;
+        .datetime-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
-            padding: 8px 18px;
-            direction: ltr;
-        }
-
-        .letters-block {
-            background: #d9e2ef;
-            padding: 8px 28px;
-            border-radius: 60px;
-            font-size: 1.7rem;
-            font-weight: 800;
-            font-family: 'Courier New', 'Cairo mono', monospace;
-            color: #0a2b3b;
-            box-shadow: inset 0 0 0 1px #fff, 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .numbers-block {
-            background: #ffffff;
-            padding: 8px 30px;
-            border-radius: 60px;
-            font-size: 2rem;
-            font-weight: 800;
-            font-family: monospace;
-            letter-spacing: 3px;
-            color: #022231;
-            box-shadow: inset 0 0 0 1px #b9c4d4, 0 3px 8px rgba(0,0,0,0.05);
-        }
-
-        .badge-side {
-            background: #1e2c3c;
-            padding: 8px 24px;
-            border-radius: 60px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #ffd966;
-            font-family: monospace;
-        }
-
-        .plate-footnote {
-            text-align: center;
-            font-size: 0.7rem;
-            margin-top: 12px;
-            color: #d4e2f0;
+            gap: 6px;
+            padding: 10px 14px;
+            background: var(--olive);
+            color: white;
+            font-size: 11px;
             font-weight: 500;
         }
-
-        .extra-info {
-            background: #dce5f0;
-            border-radius: 28px;
-            padding: 10px 16px;
-            margin-top: 20px;
-            font-size: 0.75rem;
-            text-align: center;
-            color: #1f5068;
+        .weather-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 30px;
         }
-
-        button {
-            background: #305f7a;
-            border: none;
+        .card-img-area {
+            position: relative;
+            width: 100%;
+            height: 130px;
+            background: #1a1a2e;
+            overflow: hidden;
+        }
+        .card-img-area .main-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-img-area .overlay-avatar {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+            background: white;
+        }
+        .guide-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--olive-dark);
+            padding: 8px 14px;
             color: white;
-            padding: 8px 18px;
-            border-radius: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 16px;
-            transition: 0.1s;
+            gap: 8px;
         }
-
-        button:active {
-            transform: scale(0.97);
+        .guide-name-card {
+            font-size: 16px;
+            font-weight: 800;
         }
-
-        @media (max-width: 750px) {
-            .plate-viewer { min-width: 280px; }
-            .numbers-block { font-size: 1.3rem; padding: 4px 15px; }
-            .letters-block { font-size: 1.2rem; padding: 4px 18px; }
+        .guide-phone-card {
+            font-size: 12px;
+            direction: ltr;
+            font-weight: 500;
         }
+        .card-content {
+            padding: 12px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .info-item {
+            background: var(--bg);
+            border-radius: 14px;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+        }
+        .info-item .label {
+            font-size: 10px;
+            color: var(--txt3);
+            display: block;
+            margin-bottom: 2px;
+        }
+        .info-item .value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            word-break: break-word;
+        }
+        .notes-box {
+            background: #f0f9ff;
+            border-radius: 14px;
+            padding: 8px;
+            border: 1px solid #bae6fd;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #1e293b;
+        }
+        body.dark .notes-box {
+            background: #1e293b;
+            border-color: #3b82f6;
+            color: #e2e8f0;
+        }
+        .timestamp-row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px solid var(--border);
+            font-size: 9px;
+            color: var(--txt3);
+        }
+        .qr-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin: 10px 0 6px;
+            padding: 10px;
+            background: #ffffff;
+            border-radius: 20px;
+            border: 2px solid var(--gold);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        body.dark .qr-section {
+            background: #1e293b;
+            border-color: var(--gold);
+        }
+        .qr-code {
+            width: 70px;
+            height: 70px;
+        }
+        .security-note {
+            font-size: 9px;
+            text-align: center;
+            color: var(--ok);
+            margin-top: 6px;
+        }
+        .real-plate {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 3px 10px;
+            display: inline-block;
+            font-family: monospace;
+            font-weight: 900;
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: white !important;
+        }
+        .plate-display {
+            font-family: monospace;
+            font-weight: 700;
+            direction: ltr;
+            background: #1a1a1a;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 12px;
+        }
+        .plate-split { display: flex; gap: 8px; align-items: center; justify-content: center; }
+        .plate-split input { flex: 1; text-align: center; font-family: monospace; font-size: 14px; min-width: 70px; margin-bottom: 0; }
+        .plate-split span { font-weight: 900; color: var(--primary); font-size: 14px; white-space: nowrap; }
+        .plus-btn { width: 40px; height: 40px; border-radius: 30px; background: var(--primary); color: white; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .custom-plate-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 400; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .custom-plate-modal.show { visibility: visible; opacity: 1; }
+        .custom-plate-box { background: var(--card); border-radius: 32px; padding: 20px; width: 90%; max-width: 320px; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 6px 14px; border-radius: 30px; font-size: 12px; z-index: 1000; }
+        .spinner-small { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; border-top-color: transparent; animation: spin 0.6s linear infinite; margin-right: 5px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-sent { font-size: 11px; color: var(--ok); }
+        .error-message { background: #fee2e2; color: #dc2626; padding: 10px; border-radius: 14px; font-size: 13px; margin-top: 8px; text-align: center; }
+        body.dark .error-message { background: #7f1d1d; color: #fecaca; }
+        .qr-sidebar { display: flex; justify-content: center; margin: 10px 0; }
+        .copy-link-btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 30px; font-size: 12px; margin-top: 6px; cursor: pointer; width: 100%; }
+        .number-chip { background: var(--bg); border: 1px solid var(--border); border-radius: 30px; padding: 6px 12px; margin: 4px; display: inline-block; cursor: pointer; font-size: 13px; }
+        .number-chip.sent { opacity: 0.7; background: var(--ok); color: white; }
+        .link-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); }
+        .send-btn, .resend-btn { background: var(--wa); color: white; border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; margin-right: 8px; }
+        .sent-history { margin-top: 12px; border-top: 1px solid var(--gold); padding-top: 8px; }
+        .sent-item { display: flex; justify-content: space-between; font-size: 12px; margin: 4px 0; }
     </style>
 </head>
 <body>
-<div class="app-wrapper">
-    <h1>📟 نظام اللوحات التونسية الذكي</h1>
-    <div class="sub">🚔 تطابق أوتوماتيكي مع الأوصاف الحقيقية • توليد أرقام حقيقية عشوائية</div>
 
-    <div class="flex-grid">
-        <!-- لوحة الاختيار والوصف المقتضب -->
-        <div class="control-panel">
-            <div class="section-title">
-                <span>⚙️</span> صنف المركبة
-            </div>
-            <select id="vehicleSelect" class="vehicle-select">
-                <optgroup label="🇹🇳 سيارات أمنية وحكومية تونسية">
-                    <option value="police">🚔 شرطة / أمن وطني (لوحات: أمن + أرقام 3-4 خانات)</option>
-                    <option value="national_guard">🛡️ الحرس الوطني (ح ن + رقم 3-4)</option>
-                    <option value="civil_protection">🚒 الحماية المدنية (ح م + رقم)</option>
-                    <option value="customs">🛃 الديوانة (د و + رقم)</option>
-                </optgroup>
-                <optgroup label="⭐ حماية الشخصيات (دولية / تونسية)">
-                    <option value="presidential">🛡️ حماية رئاسية (ح ر + أرقام خاصة)</option>
-                    <option value="dignitary">🎖️ كبار المسؤولين (وز + رقم رمزي)</option>
-                    <option value="intl_protection">🌍 حماية شخصيات دولية (CD Diplomatique)</option>
-                </optgroup>
-                <optgroup label="📄 سياحي / دبلوماسي / إداري">
-                    <option value="tourist">🚐 سياحي - كراء (كراء + رقم + ت)</option>
-                    <option value="temporary">🔄 لوحات مؤقتة TM</option>
-                    <option value="diplomatic_cd">🏛️ دبلوماسي CD (سلك دبلوماسي)</option>
-                    <option value="nt_admin">🏢 ن.ت إدارة عامة</option>
-                    <option value="dn_state">🏛️ د.ن سيارات الدولة</option>
-                </optgroup>
-                <optgroup label="🚗 سيارات أجنبية (ليبيا - جزائر - إيطاليا)">
-                    <option value="libyan">🇱🇾 ليبي (نظام ليبي: حروف + أرقام)</option>
-                    <option value="algerian">🇩🇿 جزائري (ولاية + أرقام)</option>
-                    <option value="italian">🇮🇹 إيطالي (IT + حروف وأرقام)</option>
-                    <option value="european">🇪🇺 أوروبي عادي (EU + رمز دولة)</option>
-                </optgroup>
-                <optgroup label="🚜 معدات وخاصة">
-                    <option value="am_public">⚙️ ع.م معدات عمومية</option>
-                    <option value="mkh_special">📌 م.خ إداري خاص</option>
-                    <option value="agricultural">🚜 جرار فلاحي</option>
-                </optgroup>
+<!-- شاشة الدخول -->
+<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:var(--bg);">
+    <div class="login-container" style="background:var(--card);border-radius:32px;padding:32px 24px;max-width:380px;width:100%;text-align:center;position:relative;">
+        <div style="position:absolute;top:20px;left:20px;">
+            <select id="loginLangSelect" style="padding:6px 12px;border-radius:30px;background:var(--bg);border:1px solid var(--border);">
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇬🇧 English</option>
             </select>
-
-            <div class="desc-minimal" id="smartDescription">
-                ✨ اختر نوع المركبة — سيتم توليد لوحة مطابقة للأوصاف الحقيقية تلقائياً (حروف + أرقام حقيقية عشوائية ضمن النطاقات المعتمدة في تونس).
-            </div>
-            <button id="refreshPlateBtn">🔄 تحديث الرقم (نفس النوع)</button>
-            <div class="extra-info">
-                💡 ملاحظة: كل ضغطة على "تحديث الرقم" تولّد أرقاماً جديدة مع الحفاظ على نفس النوع والحروف، وفق أنظمة الترقيم الواقعية.
-            </div>
         </div>
-
-        <!-- عارض اللوحة الموحدة -->
-        <div class="plate-viewer">
-            <div class="section-title">
-                <span>🚘</span> اللوحة الموحدة (حروف + أرقام في سطر واحد)
-            </div>
-            <div id="livePlateContainer">
-                <!-- سيتم رسم اللوحة ديناميكياً -->
-            </div>
-            <div style="font-size:0.7rem; text-align:center; background:#ffffffb3; border-radius: 30px; padding: 6px; margin-top: 10px;">
-                📌 نظام دمج الخانات: الحروف على اليمين أو اليسار بحسب السياق، في خانة عرض واحدة أفقية مع رمز جانبي (شرطة، حماية...)
-            </div>
-        </div>
+        <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" style="width:80px;margin-bottom:16px;">
+        <h1 style="color:var(--olive);">F‑Note Pro Max</h1>
+        <p style="color:var(--gold);margin-bottom:12px;" id="loginSubText">إدارة الوفود السياحية والدبلوماسية</p>
+        <p style="color:var(--txt3);margin-bottom:12px;" id="loginInfoText">🔐 يتم إنشاء الحسابات عن طريق السيد فهمي (مدير النظام)</p>
+        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr" style="margin-bottom:10px;">
+        <input type="password" id="loginPassword" placeholder="كلمة المرور" style="margin-bottom:10px;">
+        <button id="loginBtn" style="width:100%;padding:12px;background:var(--primary);color:white;border-radius:20px;font-weight:700;margin-top:6px;">دخول</button>
+        <button id="offlineBtn" style="width:100%;padding:10px;background:#64748b;color:white;border-radius:20px;font-weight:600;margin-top:8px;">🔄 بدون إنترنت</button>
+        <div id="loginError" class="error-message" style="display:none;"></div>
     </div>
 </div>
 
+<!-- التطبيق الرئيسي -->
+<div id="appContainer" style="display:none;">
+    <div class="header">
+        <div class="logo-area"><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png"><span class="logo-text">F‑Note Pro</span></div>
+        <div style="display:flex;gap:8px;">
+            <button class="h-btn" id="refreshBtn"><i class="fa-solid fa-arrows-rotate"></i></button>
+            <button class="h-btn" id="darkToggle"><i class="fa-solid fa-moon"></i></button>
+            <button class="h-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
+        </div>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="profile-card-sidebar">
+            <img id="sidebarAvatar" class="profile-avatar-sidebar" src="">
+            <div class="profile-name-sidebar" id="sidebarDisplayName">...</div>
+            <div class="profile-email-sidebar" id="sidebarEmail">...</div>
+            <button class="edit-profile-btn" id="editProfileSidebarBtn"><i class="fas fa-edit"></i> <span data-i18n="edit_profile">تعديل الملف الشخصي</span></button>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-title"><i class="fas fa-download"></i> <span>📲 رابط تحميل التطبيق</span></div>
+            <div class="qr-sidebar" id="sidebarQrCode"></div>
+            <button id="copyAppLinkBtn" class="copy-link-btn"><i class="fas fa-copy"></i> نسخ الرابط</button>
+            <button id="shareAppLinkBtn" class="copy-link-btn" style="background:var(--wa); margin-top:4px;"><i class="fab fa-whatsapp"></i> مشاركة عبر واتساب</button>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-title"><i class="fas fa-tools"></i> <span data-i18n="tools_section">أدوات متقدمة</span></div>
+            <div class="s-item" id="syncBtn"><i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="sync">مزامنة السحابة</span></div>
+            <div class="s-item" id="exportJsonBtn"><i class="fa-solid fa-file-export"></i> <span data-i18n="export_json">تصدير JSON</span></div>
+            <div class="s-item" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> <span data-i18n="export_pdf">تصدير PDF</span></div>
+            <div class="s-item" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="logout">تسجيل الخروج</span></div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-title"><i class="fas fa-globe"></i> <span data-i18n="language">اللغة</span></div>
+            <div class="lang-row">
+                <button class="lang-btn" data-lang="ar">العربية</button>
+                <button class="lang-btn" data-lang="fr">Français</button>
+                <button class="lang-btn" data-lang="en">English</button>
+            </div>
+        </div>
+        <div class="sidebar-section" id="developerSection" style="display:none;">
+            <div class="sidebar-section-title"><i class="fas fa-code"></i> <span data-i18n="developer_section">👨‍💻 قسم المطور</span></div>
+            <div class="s-item" id="manageUsersBtn"><i class="fas fa-users-cog"></i> <span data-i18n="manage_users">👥 إدارة الحسابات</span></div>
+            <div class="s-item" id="viewAllGuidesBtn"><i class="fas fa-eye"></i> <span data-i18n="view_all_guides">📋 رؤية جميع الإضافات</span></div>
+        </div>
+        <div class="footer-links"><span id="termsBtn">📜 <span data-i18n="terms">شروط الخدمة والحقوق</span></span></div>
+    </div>
+    <div class="toolbar">
+        <input type="text" id="searchInput" class="search" placeholder="🔍 بحث...">
+        <button class="t-btn" id="voiceSearchBtn"><i class="fa-solid fa-microphone"></i></button>
+        <button class="t-btn accent" id="addGuideBtn">+</button>
+    </div>
+    <div id="guidesContainer" class="guides"><div style="text-align:center;padding:30px;color:var(--txt3);">⏳ جاري التحميل...</div></div>
+</div>
+
+<!-- المودالات -->
+<div class="modal" id="termsModal"><div class="modal-box"><h3 data-i18n="terms_title">📜 شروط الخدمة والحقوق</h3><div style="font-size:13px; max-height:60vh; overflow-y:auto;"><p data-i18n="terms_text">باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.</p><hr><div class="sidebar-section-title"><i class="fas fa-shield-alt"></i> 🔒 الأمان والخصوصية</div><div style="font-size:12px; padding:6px;">✅ البيانات مشفرة أثناء النقل والتخزين<br>✅ لا يتم مشاركة بياناتك مع أي طرف ثالث<br>✅ يمكنك طلب حذف حسابك بالكامل<br>✅ يتم حفظ بياناتك فقط في Firebase وجميع الاتصالات عبر HTTPS<br>✅ يمكنك تصدير بياناتك في أي وقت بصيغة JSON</div></div><button class="btn-secondary" id="closeTermsBtn" data-i18n="close">إغلاق</button></div></div>
+<div class="modal" id="profileModal"><div class="modal-box"><h3 data-i18n="profile_title">👤 تعديل الملف الشخصي</h3><div class="upload-area" id="profileUploadBtn"><img id="profileAvatar" src=""><i class="fa-solid fa-camera"></i> <span data-i18n="change_photo">تغيير الصورة</span><div class="upload-spinner"><div class="spinner-small"></div></div></div><label for="profileDisplayName" class="field-label" data-i18n="display_name">اسم العرض</label><input type="text" id="profileDisplayName"><label for="profileEmail" class="field-label">البريد الإلكتروني</label><input type="email" id="profileEmail" disabled><button id="changePasswordBtn" class="btn-secondary" data-i18n="change_password">🔑 تغيير كلمة المرور</button><button id="saveProfileBtn" class="btn-primary" data-i18n="save_profile">💾 حفظ التغييرات</button><button id="closeProfileBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
+<div class="modal" id="passwordModal"><div class="modal-box"><h3 data-i18n="change_password_title">🔑 تغيير كلمة المرور</h3><label for="oldPassword" class="field-label" data-i18n="old_password">كلمة المرور الحالية</label><input type="password" id="oldPassword"><label for="newPassword" class="field-label" data-i18n="new_password">كلمة المرور الجديدة</label><input type="password" id="newPassword"><label for="confirmPassword" class="field-label" data-i18n="confirm_password">تأكيد كلمة المرور</label><input type="password" id="confirmPassword"><button id="confirmPasswordBtn" class="btn-primary" data-i18n="change">تغيير</button><button id="closePasswordBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
+<div class="modal" id="usersModal"><div class="modal-box"><h3 data-i18n="manage_users_title">👥 إدارة المستخدمين</h3><div id="usersList"></div><div class="add-user-area"><label for="newUserEmail" class="field-label">البريد الإلكتروني</label><input type="email" id="newUserEmail" dir="ltr"><label for="newUserPassword" class="field-label">كلمة المرور المؤقتة</label><input type="password" id="newUserPassword"><button id="createUserBtn" class="btn-primary" data-i18n="create_user">➕ إنشاء حساب جديد</button><div id="createUserResult" style="font-size:12px; margin-top:8px; color:var(--err);"></div></div><button class="btn-secondary" id="closeUsersBtn" data-i18n="close">إغلاق</button></div></div>
+<div class="modal" id="allGuidesModal"><div class="modal-box"><h3 data-i18n="all_guides_title">📋 جميع الإضافات</h3><div id="allGuidesList"></div><button class="btn-secondary" id="closeAllGuidesBtn" data-i18n="close">إغلاق</button></div></div>
+<div id="customPlateModal" class="custom-plate-modal"><div class="custom-plate-box"><h4><i class="fas fa-plus-circle"></i> <span data-i18n="add_custom_plate">إضافة لوحة مخصصة</span></h4><label for="customPlateInput" class="field-label">رقم اللوحة</label><input type="text" id="customPlateInput" placeholder="مثال: CD 12345 | POL 789" dir="ltr"><div style="display:flex; gap:10px; margin-top:16px;"><button id="confirmCustomPlate" style="background:var(--ok);color:white;flex:1;padding:8px;border-radius:14px;">إضافة</button><button id="cancelCustomPlate" style="background:#64748b;color:white;flex:1;padding:8px;border-radius:14px;">إلغاء</button></div></div></div>
+<div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3><label for="gName" class="field-label" data-i18n="guide_name">اسم المرشد *</label><input type="text" id="gName"><label for="gPhone" class="field-label" data-i18n="phone">رقم الجوال *</label><input type="tel" id="gPhone" dir="ltr"><div style="display:flex;gap:8px;"><div style="flex:1"><label for="gNationality" class="field-label" data-i18n="nationality">الجنسية</label><input type="text" id="gNationality"></div><div style="flex:1"><label for="gPeopleCount" class="field-label" data-i18n="people_count">عدد الأفراد</label><input type="number" id="gPeopleCount" min="1"></div></div><label for="gTransport" class="field-label" data-i18n="transport_type">نوع النقل</label><select id="gTransport"><option value="">اختر نوع النقل</option><option value="حافلة صغيرة">حافلة صغيرة</option><option value="حافلة كبيرة">حافلة كبيرة</option><option value="سيارة">سيارة</option><option value="فان">فان</option><option value="أخرى">أخرى</option></select><label class="field-label" data-i18n="plate">رقم السيارة</label><div class="plate-split"><input type="text" id="gPlateRight" placeholder="يمين" maxlength="5" style="text-align:center;"><span>🇹🇳 TN 🇹🇳</span><input type="text" id="gPlateLeft" placeholder="يسار" maxlength="4" style="text-align:center;"><button type="button" id="addCustomPlateBtn" class="plus-btn" title="إضافة لوحة مخصصة"><i class="fas fa-plus"></i></button></div><input type="hidden" id="gPlate"><label class="field-label" data-i18n="guide_photo">صورة المرشد</label><div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> <span>📸 اختر صورة</span><img id="guidePreview" src="" style="display:none; max-width:100%;"><div class="upload-spinner"><div class="spinner-small"></div></div></div><button type="button" id="deleteGuidePhotoBtn" class="image-delete-btn" style="display:none;">🗑️ حذف الصورة</button><label class="field-label" data-i18n="bus_photo">صورة السيارة</label><div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> <span>🚌 اختر صورة</span><img id="busPreview" src="" style="display:none; max-width:100%;"><div class="upload-spinner"><div class="spinner-small"></div></div></div><button type="button" id="deleteBusPhotoBtn" class="image-delete-btn" style="display:none;">🗑️ حذف الصورة</button><label for="gNotes" class="field-label" data-i18n="notes">ملاحظات</label><textarea id="gNotes"></textarea><label for="gVisibility" class="field-label" data-i18n="visibility">الرؤية</label><select id="gVisibility"><option value="public" selected>🌍 عام (يظهر للجميع)</option><option value="private">🔒 خاص (أنت فقط)</option></select><button class="btn-primary" id="saveGuideBtn" data-i18n="save_guide">💾 حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn" data-i18n="cancel">إلغاء</button></div></div>
+<div class="modal" id="delegationModal"><div class="modal-box" style="padding:0; max-width:520px;"><div id="delegationCard" class="delegation-card"><div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span><span><i class="far fa-clock"></i> <span id="delegationTime"></span></span><div id="delegationWeather" class="weather-info"></div></div><div class="card-img-area"><img id="delegationMainImg" class="main-img" src="" crossorigin="anonymous"><img id="delegationAvatar" class="overlay-avatar" src="" crossorigin="anonymous"></div><div class="guide-info-row"><span class="guide-name-card" id="delegationGuideName"></span><span class="guide-phone-card" id="delegationPhone"></span></div><div class="card-content"><div class="info-grid"><div class="info-item"><span class="label" data-i18n="nationality">الجنسية</span><span id="delegationNationality" class="value"></span></div><div class="info-item"><span class="label" data-i18n="people_count">عدد الأفراد</span><span id="delegationPeopleCount" class="value"></span></div><div class="info-item"><span class="label" data-i18n="transport_type">نوع النقل</span><span id="delegationTransport" class="value"></span></div><div class="info-item"><span class="label" data-i18n="plate">رقم السيارة</span><span id="delegationPlate" class="value plate-display"></span></div></div><div id="delegationNotesRow" class="notes-box" style="display:none;"><span class="label" data-i18n="notes">ملاحظات</span><span id="delegationNotes"></span></div><div class="timestamp-row"><span><i class="far fa-plus-square"></i> <span data-i18n="created_at">تاريخ الإضافة:</span> <span id="creationTimestamp"></span></span><span><i class="fab fa-whatsapp"></i> <span data-i18n="sent_at">تاريخ الإرسال:</span> <span id="sendTimestamp"></span></span><span><i class="fas fa-user-check"></i> <span data-i18n="created_by">المنشئ:</span> <span id="creatorName"></span></span></div><div class="security-note">🔒 بيانات مشفرة | حفظ وفق معايير الأمان</div></div></div><div style="display:flex; gap:12px; margin-top:16px; padding:0 16px 16px;"><button class="btn-primary" style="background:var(--ok);" id="shareDelegationBtn"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button></div><button class="btn-secondary" id="closeDelegationBtn" data-i18n="close">إغلاق</button></div></div>
+<div class="modal" id="securityModal"><div class="modal-box"><h3><i class="fas fa-exchange-alt"></i> <span data-i18n="security_card_title">كرت التنسيق والمتابعة</span></h3><div id="securityCardPreview" class="delegation-card" style="margin-bottom:16px;"></div><label for="securityGroupLabel" class="field-label" data-i18n="custom_group_label">🏷️ الفقرة المخصصة:</label><input type="text" id="securityGroupLabel" placeholder="مثال: دخول المجموعة إلى الفندق بأمان"><div style="font-size:11px; color:var(--txt3); margin-bottom:12px;">📌 مثال: دخول المجموعة إلى الفندق بأمان</div><label class="field-label" data-i18n="saved_numbers_label">📋 الأرقام المحفوظة (اضغط للإرسال):</label><div id="savedNumbersList" class="saved-numbers-list"></div><div class="save-numbers-area"><label for="securityPhonesList" class="field-label" data-i18n="add_numbers_label">➕ إضافة أرقام جديدة (رقم واحد في كل سطر):</label><textarea id="securityPhonesList" rows="3" placeholder="+216XXXXXXXX"></textarea><div class="save-numbers-buttons"><button id="saveNumbersBtn" class="btn-primary" style="background:var(--primary);">💾 حفظ الأرقام</button><button id="generateCardBtn" class="btn-primary" style="background:var(--ok);">🔄 إنشاء البطاقة</button></div></div><div id="securityLinksContainer" style="margin-top:16px; max-height:250px; overflow-y:auto; background:var(--bg); border-radius:20px; padding:10px; display:none;"></div><button class="btn-secondary" id="closeSecurityBtn" data-i18n="close">إغلاق</button></div></div>
+<div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box" style="position:relative;"><div class="close-viewer" id="closeImageViewer" style="position:absolute;top:10px;left:10px;cursor:pointer;font-size:24px;">&times;</div><img id="fullImageView" src="" style="width:100%;"></div></div>
+
 <script>
-    // --------------------------------------------------------------
-    // قاعدة بيانات محسنة مع مولدات أرقام حقيقية عشوائية بناءً على الواقع التونسي والدولي
-    // --------------------------------------------------------------
-    const vehicleDB = {
-        police: {
-            name: "الشرطة / الأمن الوطني",
-            letters: "أمن",
-            generateNumber: () => Math.floor(Math.random() * (9999 - 100 + 1) + 100).toString(), // 100 -> 9999
-            suffix: "شرطة",
-            bgColor: "#0a2f44",
-            textColor: "#f9eec1"
+    // Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
+        authDomain: "f-notepromax-work.firebaseapp.com",
+        projectId: "f-notepromax-work",
+        storageBucket: "f-notepromax-work.firebasestorage.app",
+        messagingSenderId: "125749698617",
+        appId: "1:125749698617:web:ff9709a863fd5a5053ede8"
+    };
+    const WEATHER_API_KEY = '8d3316e943ba32112e54a2c8e75fe242';
+    const CITY = 'Sfax';
+    const CLOUDINARY_CLOUD_NAME = 'dye93zbag';
+    const CLOUDINARY_UPLOAD_PRESET = 'pd1e4lst';   // الـ preset الذي ظهر في بياناتك (unsigned)
+    const APP_DOWNLOAD_LINK = 'https://fahmiuserapp-star.github.io/f-notepro-work/';
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const functions = firebase.functions();
+    db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn(e));
+
+    // Local storage helper
+    const LDB = {
+        get(k){ try{ return JSON.parse(localStorage.getItem('fnote_'+k)||'null'); }catch(e){return null;} },
+        set(k,v){ localStorage.setItem('fnote_'+k, JSON.stringify(v)); },
+        getGuides(){ return this.get('guides')||[]; },
+        saveGuides(arr){ this.set('guides',arr); },
+        getSentHistory(guideId){ return this.get('sent_'+guideId)||[]; },
+        addSentHistory(guideId, phone, timestamp){
+            let h = this.getSentHistory(guideId);
+            h.unshift({phone, timestamp, status:'sent'});
+            if(h.length>50) h.pop();
+            this.set('sent_'+guideId, h);
+            return h;
         },
-        national_guard: {
-            name: "الحرس الوطني",
-            letters: "ح ن",
-            generateNumber: () => Math.floor(Math.random() * 9000 + 1000).toString(),
-            suffix: "حرس وطني",
-            bgColor: "#1a3a3f",
-            textColor: "#f5e1a0"
+        getSavedNumbers(guideId){ return this.get('numbers_'+guideId)||[]; },
+        saveNumbers(guideId, numbers){ this.set('numbers_'+guideId, numbers); }
+    };
+
+    let currentUser=null, guides=[], editId=null;
+    let guidePhotoUrl='', busPhotoUrl='';
+    let userProfile={displayName:'', photoURL:''};
+    let currentLang = localStorage.getItem('fnote_lang')||'ar';
+    let currentGuideForCards=null;
+    let currentWeather={temp:'', condition:'', city:CITY};
+    let unsubscribeFirestore=null;
+    let currentCardImageUrl='';
+    const DEVELOPER_UID = 'OK7lshSuUrhVBV7WHn2EL0tiOJo2';
+    let isDeveloper=false;
+
+    // Translations
+    const translations = {
+        ar: {
+            search_placeholder: "🔍 بحث في الاسم، الجوال...", delete_confirm: "هل أنت متأكد؟", saved: "✅ تم الحفظ",
+            sync_ok: "✅ تمت المزامنة", sync_fail: "❌ فشلت المزامنة", no_results: "😕 لا توجد نتائج",
+            save_error: "❌ خطأ في الحفظ", weather_unavailable: "غير متوفر", edit_profile: "تعديل الملف الشخصي",
+            tools_section: "أدوات متقدمة", sync: "مزامنة", export_json: "تصدير JSON", export_pdf: "تصدير PDF",
+            logout: "تسجيل الخروج", language: "اللغة", terms: "شروط الخدمة", terms_title: "شروط الخدمة والحقوق",
+            terms_text: "باستخدامك لهذا التطبيق فإنك توافق على جميع الشروط المذكورة.", close: "إغلاق",
+            profile_title: "تعديل الملف الشخصي", change_photo: "تغيير الصورة", display_name: "اسم العرض",
+            change_password: "تغيير كلمة المرور", save_profile: "حفظ", cancel: "إلغاء",
+            change_password_title: "تغيير كلمة المرور", change: "تغيير", add_guide_title: "إضافة مرشد",
+            guide_name: "الاسم", phone: "الجوال", nationality: "الجنسية", people_count: "عدد الأفراد",
+            transport_type: "نوع النقل", guide_photo: "صورة المرشد", bus_photo: "صورة السيارة", notes: "ملاحظات",
+            private: "خاص", public: "عام", save_guide: "حفظ", delegation_info: "معلومات الوفد", transport: "النقل",
+            plate: "اللوحة", created_at: "تاريخ الإضافة:", sent_at: "تاريخ الإرسال:", created_by: "المنشئ:",
+            share_card: "مشاركة", security_card_title: "كرت التنسيق والمتابعة", custom_group_label: "الفقرة المخصصة",
+            saved_numbers_label: "الأرقام المحفوظة", add_numbers_label: "إضافة أرقام", save_numbers: "حفظ",
+            generate_card: "إنشاء البطاقة", more: "المزيد", call: "اتصال", card: "البطاقة", follow_up: "متابعة",
+            edit: "تعديل", delete: "حذف", send: "إرسال", sent_history: "سجل الإرسال", resend: "إعادة إرسال",
+            developer_section: "المطور", manage_users: "إدارة الحسابات", view_all_guides: "كل الإضافات",
+            manage_users_title: "إدارة المستخدمين", create_user: "إنشاء حساب", all_guides_title: "جميع الإضافات",
+            no_users: "لا يوجد مستخدمين", loading: "جاري التحميل", confirm_logout: "تسجيل الخروج؟",
+            delete_photo: "حذف الصورة", upload_failed: "فشل رفع الصورة", invalid_phone: "رقم غير صحيح",
+            old_password: "كلمة المرور الحالية", new_password: "كلمة المرور الجديدة", confirm_password: "تأكيد كلمة المرور",
+            choose_photo: "اختر صورة", visibility: "الرؤية", login_error: "فشل تسجيل الدخول",
+            share_app: "مشاركة الرابط", app_link_copied: "تم نسخ الرابط"
         },
-        civil_protection: {
-            name: "الحماية المدنية",
-            letters: "ح م",
-            generateNumber: () => Math.floor(Math.random() * 900 + 100).toString(),
-            suffix: "حماية مدنية",
-            bgColor: "#982424",
-            textColor: "#ffffff"
-        },
-        customs: {
-            name: "الديوانة",
-            letters: "د و",
-            generateNumber: () => Math.floor(Math.random() * 800 + 200).toString(),
-            suffix: "ديوانة",
-            bgColor: "#2c4c5c",
-            textColor: "#ffcf9a"
-        },
-        presidential: {
-            name: "حماية رئاسية",
-            letters: "ح ر",
-            generateNumber: () => "00" + Math.floor(Math.random() * 50 + 1).toString(),
-            suffix: "حماية رئاسية",
-            bgColor: "#1f3e48",
-            textColor: "#fae67a"
-        },
-        dignitary: {
-            name: "كبار المسؤولين",
-            letters: "وز",
-            generateNumber: () => "0" + Math.floor(Math.random() * 30 + 1).toString() + "-" + Math.floor(Math.random() * 9 + 1),
-            suffix: "وزارة سيادية",
-            bgColor: "#1e4a3b",
-            textColor: "#f4e2b0"
-        },
-        intl_protection: {
-            name: "حماية شخصيات دولية",
-            letters: "CD",
-            generateNumber: () => Math.floor(Math.random() * 900 + 100).toString() + String.fromCharCode(65 + Math.floor(Math.random() * 26)),
-            suffix: "دبلوماسي",
-            bgColor: "#3e2c5e",
-            textColor: "#ffe2aa"
-        },
-        tourist: {
-            name: "سياحي - كراء",
-            letters: "كراء",
-            generateNumber: () => Math.floor(Math.random() * 9000 + 1000).toString() + "-ت",
-            suffix: "سياحي",
-            bgColor: "#1d6f8f",
-            textColor: "#fbf5cf"
-        },
-        temporary: {
-            name: "لوحات مؤقتة TM",
-            letters: "TM",
-            generateNumber: () => Math.floor(Math.random() * 90000 + 10000).toString(),
-            suffix: "مؤقت",
-            bgColor: "#dba53f",
-            textColor: "#1e2f3a"
-        },
-        diplomatic_cd: {
-            name: "دبلوماسي CD",
-            letters: "CD",
-            generateNumber: () => Math.floor(Math.random() * 400 + 1).toString(),
-            suffix: "سلك دبلوماسي",
-            bgColor: "#fef3da",
-            textColor: "#b11e1e"
-        },
-        nt_admin: {
-            name: "ن.ت إدارة عامة",
-            letters: "ن.ت",
-            generateNumber: () => Math.floor(Math.random() * 9000 + 1000).toString(),
-            suffix: "إدارة",
-            bgColor: "#254c66",
-            textColor: "#f0edd0"
-        },
-        dn_state: {
-            name: "د.ن سيارات الدولة",
-            letters: "د.ن",
-            generateNumber: () => Math.floor(Math.random() * 9000 + 1000).toString(),
-            suffix: "الدولة",
-            bgColor: "#1b3b55",
-            textColor: "#e9ddb0"
-        },
-        libyan: {
-            name: "سيارة ليبية",
-            letters: "ليبي",
-            generateNumber: () => Math.floor(Math.random() * 90000 + 10000).toString(),
-            suffix: "ليبيا",
-            bgColor: "#fff2df",
-            textColor: "#1a4d2e"
-        },
-        algerian: {
-            name: "سيارة جزائرية",
-            letters: "الجزائر",
-            generateNumber: () => Math.floor(Math.random() * 48 + 1).toString() + "-" + Math.floor(Math.random() * 9000 + 1000),
-            suffix: "DZ",
-            bgColor: "#eaf3f5",
-            textColor: "#1a6e3b"
-        },
-        italian: {
-            name: "سيارة إيطالية",
-            letters: "IT",
-            generateNumber: () => {
-                const lettersPart = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + String.fromCharCode(65 + Math.floor(Math.random() * 26));
-                const nums = Math.floor(Math.random() * 900 + 100);
-                return lettersPart + "-" + nums;
-            },
-            suffix: "Italia",
-            bgColor: "#eef3ff",
-            textColor: "#13478b"
-        },
-        european: {
-            name: "لوحة أوروبية",
-            letters: "EU",
-            generateNumber: () => {
-                const country = ["F", "D", "I", "E", "P"][Math.floor(Math.random() * 5)];
-                return country + "-" + Math.floor(Math.random() * 9000 + 1000) + "-" + String.fromCharCode(65 + Math.floor(Math.random() * 26));
-            },
-            suffix: "أوروبي",
-            bgColor: "#f2f6fc",
-            textColor: "#003366"
-        },
-        am_public: {
-            name: "معدات عمومية",
-            letters: "ع.م",
-            generateNumber: () => Math.floor(Math.random() * 9000 + 1000).toString(),
-            suffix: "معدات",
-            bgColor: "#3e5a6f",
-            textColor: "#f5eaca"
-        },
-        mkh_special: {
-            name: "م.خ إداري خاص",
-            letters: "م.خ",
-            generateNumber: () => Math.floor(Math.random() * 800 + 100).toString(),
-            suffix: "خاص",
-            bgColor: "#4a5c70",
-            textColor: "#fae6b3"
-        },
-        agricultural: {
-            name: "جرار فلاحي",
-            letters: "جرار",
-            generateNumber: () => Math.floor(Math.random() * 9000 + 1000).toString(),
-            suffix: "فلاحي",
-            bgColor: "#5a6e3c",
-            textColor: "#fff2c9"
+        fr: { search_placeholder: "🔍 Rechercher...", delete_confirm: "Supprimer ?", saved: "✅ Enregistré",
+            sync_ok: "✅ Synchronisé", sync_fail: "❌ Échec", no_results: "😕 Aucun résultat", save_error: "❌ Erreur",
+            weather_unavailable: "Indisponible", confirm_logout: "Déconnexion ?", delete_photo: "Supprimer",
+            upload_failed: "Échec", invalid_phone: "Numéro invalide", login_error: "Échec connexion",
+            share_app: "Partager le lien", app_link_copied: "Lien copié" },
+        en: { search_placeholder: "🔍 Search...", delete_confirm: "Delete?", saved: "✅ Saved",
+            sync_ok: "✅ Synced", sync_fail: "❌ Failed", no_results: "😕 No results", save_error: "❌ Error",
+            weather_unavailable: "Unavailable", confirm_logout: "Logout?", delete_photo: "Delete photo",
+            upload_failed: "Upload failed", invalid_phone: "Invalid number", login_error: "Login failed",
+            share_app: "Share link", app_link_copied: "Link copied" }
+    };
+    for(let lang of ['fr','en']){
+        for(let key in translations.ar){
+            if(!translations[lang][key]) translations[lang][key]=translations.ar[key];
+        }
+    }
+
+    function applyTranslations(){
+        document.querySelectorAll('[data-i18n]').forEach(el=>{
+            let key=el.getAttribute('data-i18n');
+            if(translations[currentLang][key]) el.textContent=translations[currentLang][key];
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+            let key=el.getAttribute('data-i18n-placeholder');
+            if(translations[currentLang][key]) el.placeholder=translations[currentLang][key];
+        });
+        let searchInput = document.getElementById('searchInput');
+        if(searchInput) searchInput.placeholder = translations[currentLang].search_placeholder;
+        document.getElementById('loginSubText').textContent = translations[currentLang].login_sub || 'إدارة الوفود';
+        document.getElementById('loginInfoText').textContent = translations[currentLang].login_info || '🔐 يتم إنشاء الحسابات عن طريق السيد فهمي';
+        document.getElementById('loginBtn').textContent = translations[currentLang].login_btn || 'دخول';
+        document.getElementById('offlineBtn').textContent = translations[currentLang].offline_btn || '🔄 بدون إنترنت';
+        document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+        document.querySelectorAll('.lang-btn').forEach(btn=>{
+            if(btn.getAttribute('data-lang')===currentLang) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        renderGuides();
+    }
+    function setLanguage(lang){ currentLang=lang; localStorage.setItem('fnote_lang',lang); applyTranslations(); }
+    function toast(msg){ let d=document.createElement('div'); d.className='toast'; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>{d.style.opacity='0'; setTimeout(()=>d.remove(),500);},2000); }
+
+    // Cloudinary upload with retry
+    async function uploadToCloudinary(file, retries=2){
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        try {
+            let fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: fd, signal: controller.signal });
+            clearTimeout(timeout);
+            if(!res.ok) throw new Error(`HTTP ${res.status}`);
+            let data = await res.json();
+            if(!data.secure_url) throw new Error('No secure_url');
+            return data.secure_url;
+        } catch(e) {
+            if(retries > 0) return uploadToCloudinary(file, retries-1);
+            throw e;
+        } finally { clearTimeout(timeout); }
+    }
+
+    async function compressImage(file, maxSize=500, quality=0.6){
+        return new Promise(resolve => {
+            let reader = new FileReader();
+            reader.onload = e => {
+                let img = new Image();
+                img.onload = () => {
+                    let canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    if(w > maxSize) { h = (h * maxSize) / w; w = maxSize; }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    canvas.toBlob(resolve, 'image/jpeg', quality);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function compressAndUpload(file, onStart, onSuccess, onError){
+        onStart && onStart();
+        try {
+            let compressedBlob = await compressImage(file, 500, 0.6);
+            let compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
+            let url = await uploadToCloudinary(compressedFile);
+            onSuccess && onSuccess(url);
+        } catch(e) {
+            onError && onError(e);
+        }
+    }
+
+    function setupImageUpload(uploadBtnId, previewImgId, deleteBtnId, onUrlChange){
+        let btn = document.getElementById(uploadBtnId);
+        let preview = document.getElementById(previewImgId);
+        let del = document.getElementById(deleteBtnId);
+        btn.onclick = () => {
+            let input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                let file = e.target.files[0];
+                if(!file) return;
+                btn.classList.add('uploading');
+                compressAndUpload(file,
+                    ()=>{},
+                    (url)=>{ preview.src = url; preview.style.display = 'block'; if(del) del.style.display = 'inline-block'; onUrlChange(url); btn.classList.remove('uploading'); toast(translations[currentLang].saved); },
+                    (err)=>{ toast((translations[currentLang].upload_failed || 'فشل الرفع') + ': ' + (err.message || 'خطأ غير معروف')); btn.classList.remove('uploading'); }
+                );
+            };
+            input.click();
+        };
+        if(del) del.onclick = () => { preview.src = ''; preview.style.display = 'none'; del.style.display = 'none'; onUrlChange(''); toast(translations[currentLang].delete_photo); };
+    }
+
+    function updatePlateValue(){
+        let right = document.getElementById('gPlateRight').value.trim();
+        let left = document.getElementById('gPlateLeft').value.trim();
+        let val = '';
+        if(right && left) val = `${right} TN ${left}`;
+        else if(right) val = `${right} TN`;
+        else if(left) val = `TN ${left}`;
+        else val = 'TN';
+        document.getElementById('gPlate').value = val;
+    }
+    function formatPlateDisplay(plate){ if(!plate) return '—'; let p = plate.replace(/تونس/g,'TN'); return `<span class="real-plate">${p}</span>`; }
+    document.getElementById('gPlateRight')?.addEventListener('input', updatePlateValue);
+    document.getElementById('gPlateLeft')?.addEventListener('input', updatePlateValue);
+
+    // Save guide
+    document.getElementById('saveGuideBtn').onclick = async function(){
+        let name = document.getElementById('gName').value.trim();
+        let phone = document.getElementById('gPhone').value.trim();
+        if(!name || !phone) return toast('⚠️ الاسم والرقم مطلوبان');
+        try {
+            let phoneUtil = window.libphonenumber;
+            let parsed = phoneUtil.parsePhoneNumber(phone, 'TN');
+            if(!parsed.isValid()) throw new Error();
+            phone = parsed.formatInternational();
+        } catch(e) { return toast(translations[currentLang].invalid_phone); }
+        let saveBtn = this;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<div class="spinner-small"></div> حفظ...';
+        try {
+            let now = new Date();
+            let plateValue = document.getElementById('gPlate').value.trim() || 'TN';
+            let data = {
+                id: editId || 'local_' + Date.now(),
+                userId: currentUser ? currentUser.uid : 'offline',
+                creatorName: userProfile.displayName || (currentUser ? currentUser.email : 'مستخدم'),
+                name, phone,
+                nationality: document.getElementById('gNationality').value.trim(),
+                peopleCount: document.getElementById('gPeopleCount').value,
+                transportType: document.getElementById('gTransport').value,
+                plate: plateValue,
+                guidePhoto: guidePhotoUrl || null,
+                busPhoto: busPhotoUrl || null,
+                notes: document.getElementById('gNotes').value.trim(),
+                visibility: document.getElementById('gVisibility').value,
+                updatedAt: now.toISOString(),
+                createdAt: editId ? (guides.find(g=>g.id===editId)?.createdAt || now.toISOString()) : now.toISOString()
+            };
+            if(editId) guides = guides.map(g => g.id === editId ? data : g);
+            else guides.unshift(data);
+            LDB.saveGuides(guides);
+            if(currentUser && currentUser.uid !== 'offline' && navigator.onLine) await db.collection('guides').doc(data.id).set(data, { merge: true });
+            renderGuides();
+            document.getElementById('guideModal').classList.remove('show');
+            toast(translations[currentLang].saved);
+        } catch(err) { toast((translations[currentLang].save_error || 'خطأ في الحفظ') + ': ' + (err.message || 'غير معروف')); }
+        finally { saveBtn.disabled = false; saveBtn.innerHTML = translations[currentLang].save_guide; }
+    };
+
+    setupImageUpload('guideUploadBtn', 'guidePreview', 'deleteGuidePhotoBtn', (url)=>guidePhotoUrl=url);
+    setupImageUpload('busUploadBtn', 'busPreview', 'deleteBusPhotoBtn', (url)=>busPhotoUrl=url);
+    setupImageUpload('profileUploadBtn', 'profileAvatar', null, (url)=>{ userProfile.photoURL=url; if(currentUser) currentUser.updateProfile({photoURL:url}); });
+
+    async function fetchWeather(){
+        try {
+            let url = `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=${currentLang==='ar'?'ar':'en'}`;
+            let res = await fetch(url);
+            if(!res.ok) throw new Error();
+            let data = await res.json();
+            currentWeather = { temp: Math.round(data.main.temp), condition: data.weather[0].description, city: data.name };
+        } catch(e) { currentWeather = { temp: '?', condition: translations[currentLang].weather_unavailable, city: CITY }; }
+    }
+    function getWeatherHtml(){ return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
+
+    function showFullImage(url){ if(url){ document.getElementById('fullImageView').src = url; document.getElementById('imageViewerModal').classList.add('show'); } }
+    document.getElementById('closeImageViewer')?.addEventListener('click', ()=>document.getElementById('imageViewerModal').classList.remove('show'));
+    document.getElementById('imageViewerModal')?.addEventListener('click', e=>{ if(e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); });
+
+    function globalSearch(guide, term){
+        if(!term) return true;
+        let t = term.toLowerCase();
+        let fields = [guide.name, guide.phone, guide.nationality, guide.plate, guide.transportType, guide.notes];
+        return fields.some(f => f && f.toLowerCase().includes(t));
+    }
+
+    function renderGuides(){
+        let base = guides;
+        if(currentUser && currentUser.uid !== 'offline'){
+            if(isDeveloper) base = guides;
+            else base = guides.filter(g => g.visibility === 'public' || g.userId === currentUser.uid);
+        } else base = guides.filter(g => g.visibility === 'public');
+        let searchTerm = document.getElementById('searchInput').value;
+        let filtered = base.filter(g => globalSearch(g, searchTerm));
+        filtered.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+        let container = document.getElementById('guidesContainer');
+        if(!filtered.length){ container.innerHTML = `<div style="text-align:center;padding:30px;">😕 ${translations[currentLang].no_results}</div>`; return; }
+        container.innerHTML = filtered.map(g => `
+            <div class="guide-card" data-id="${g.id}">
+                <div class="card-top">
+                    <img class="avatar" src="${g.guidePhoto||''}" onclick="showFullImage('${g.guidePhoto||''}')" onerror="this.style.display='none'">
+                    <div class="card-mid">
+                        <div class="name">${g.name||''} ${g.nationality?'('+g.nationality+')':''}</div>
+                        <div style="font-size:11px;color:var(--txt3);">🚐 ${g.transportType||'—'} | 👥 ${g.peopleCount||'—'} | ${g.visibility==='private'?'🔒':'🌍'}</div>
+                        <div class="phone">📞 ${g.phone||''}</div>
+                    </div>
+                </div>
+                <div style="padding:0 12px 12px 12px;">
+                    <button class="more-btn" data-id="${g.id}"><i class="fas fa-ellipsis-h"></i> ${translations[currentLang].more}</button>
+                    <div class="hidden-buttons" id="hidden-buttons-${g.id}">
+                        <button class="c-btn c-call" onclick="location.href='tel:${g.phone}'"><i class="fas fa-phone-alt"></i> ${translations[currentLang].call}</button>
+                        <button class="c-btn c-wa" onclick="openWhatsApp('${g.phone}', 'مرحباً ${g.name}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                        <button class="c-btn c-card" onclick="showDelegationCard('${g.id}')"><i class="fas fa-id-card"></i> ${translations[currentLang].card}</button>
+                        <button class="c-btn c-security" onclick="showSecurityCard('${g.id}')"><i class="fas fa-exchange-alt"></i> ${translations[currentLang].follow_up}</button>
+                        ${(g.userId === currentUser?.uid || isDeveloper) ? `<button class="c-btn c-edit" onclick="editGuide('${g.id}')"><i class="fas fa-edit"></i> ${translations[currentLang].edit}</button>
+                        <button class="c-btn c-del" onclick="deleteGuide('${g.id}')"><i class="fas fa-trash-alt"></i> ${translations[currentLang].delete}</button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        document.querySelectorAll('.more-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                let id = btn.getAttribute('data-id');
+                document.getElementById(`hidden-buttons-${id}`)?.classList.toggle('show');
+            });
+        });
+    }
+
+    window.deleteGuide = async function(id){
+        if(confirm(translations[currentLang].delete_confirm)){
+            guides = guides.filter(g => g.id !== id);
+            LDB.saveGuides(guides);
+            if(currentUser && currentUser.uid !== 'offline' && navigator.onLine) await db.collection('guides').doc(id).delete().catch(e=>console.warn);
+            renderGuides();
+            toast(translations[currentLang].deleted || '🗑️ تم الحذف');
+        }
+    };
+    window.editGuide = function(id){
+        let g = guides.find(x => x.id === id);
+        if(!g) return;
+        editId = id;
+        guidePhotoUrl = g.guidePhoto || ''; busPhotoUrl = g.busPhoto || '';
+        document.getElementById('gName').value = g.name || '';
+        document.getElementById('gPhone').value = g.phone || '';
+        document.getElementById('gNationality').value = g.nationality || '';
+        document.getElementById('gPeopleCount').value = g.peopleCount || '';
+        document.getElementById('gTransport').value = g.transportType || '';
+        document.getElementById('gPlate').value = g.plate || '';
+        let parts = (g.plate || '').split(' TN ');
+        if(parts.length === 2){ document.getElementById('gPlateRight').value = parts[0]; document.getElementById('gPlateLeft').value = parts[1]; }
+        else{ document.getElementById('gPlateRight').value = ''; document.getElementById('gPlateLeft').value = ''; }
+        document.getElementById('gNotes').value = g.notes || '';
+        document.getElementById('gVisibility').value = g.visibility || 'public';
+        document.getElementById('guidePreview').src = guidePhotoUrl; document.getElementById('guidePreview').style.display = guidePhotoUrl ? 'block' : 'none';
+        document.getElementById('deleteGuidePhotoBtn').style.display = guidePhotoUrl ? 'inline-block' : 'none';
+        document.getElementById('busPreview').src = busPhotoUrl; document.getElementById('busPreview').style.display = busPhotoUrl ? 'block' : 'none';
+        document.getElementById('deleteBusPhotoBtn').style.display = busPhotoUrl ? 'inline-block' : 'none';
+        document.getElementById('modalTitle').innerHTML = translations[currentLang].edit + ' ' + translations[currentLang].guide_name;
+        document.getElementById('guideModal').classList.add('show');
+    };
+    document.getElementById('addGuideBtn').onclick = () => {
+        editId = null; guidePhotoUrl = ''; busPhotoUrl = '';
+        document.getElementById('gName').value = ''; document.getElementById('gPhone').value = ''; document.getElementById('gNationality').value = '';
+        document.getElementById('gPeopleCount').value = ''; document.getElementById('gTransport').value = '';
+        document.getElementById('gPlateRight').value = ''; document.getElementById('gPlateLeft').value = ''; document.getElementById('gPlate').value = '';
+        document.getElementById('gNotes').value = ''; document.getElementById('gVisibility').value = 'public';
+        document.getElementById('guidePreview').style.display = 'none'; document.getElementById('busPreview').style.display = 'none';
+        document.getElementById('deleteGuidePhotoBtn').style.display = 'none'; document.getElementById('deleteBusPhotoBtn').style.display = 'none';
+        document.getElementById('modalTitle').innerHTML = translations[currentLang].add_guide_title;
+        document.getElementById('guideModal').classList.add('show');
+    };
+
+    let customPlateModal = document.getElementById('customPlateModal');
+    document.getElementById('addCustomPlateBtn')?.addEventListener('click', ()=>{ document.getElementById('customPlateInput').value = ''; customPlateModal.classList.add('show'); });
+    document.getElementById('confirmCustomPlate')?.addEventListener('click', ()=>{
+        let val = document.getElementById('customPlateInput').value.trim();
+        if(val){ document.getElementById('gPlate').value = val; document.getElementById('gPlateRight').value = ''; document.getElementById('gPlateLeft').value = ''; toast('✅ تم'); }
+        else toast('⚠️ أدخل رقم اللوحة');
+        customPlateModal.classList.remove('show');
+    });
+    document.getElementById('cancelCustomPlate')?.addEventListener('click', ()=>customPlateModal.classList.remove('show'));
+    customPlateModal?.addEventListener('click', e=>{ if(e.target === customPlateModal) customPlateModal.classList.remove('show'); });
+
+    async function loadProfile(){
+        document.getElementById('profileDisplayName').value = userProfile.displayName || (currentUser ? currentUser.email : '');
+        document.getElementById('profileEmail').value = currentUser ? currentUser.email : '';
+        let avatarUrl = userProfile.photoURL || 'https://ui-avatars.com/api/?background=556B2F&color=fff&name='+encodeURIComponent(userProfile.displayName||'User');
+        document.getElementById('profileAvatar').src = avatarUrl;
+        document.getElementById('sidebarDisplayName').innerHTML = userProfile.displayName || currentUser?.email || '...';
+        document.getElementById('sidebarEmail').innerHTML = currentUser?.email || '';
+        document.getElementById('sidebarAvatar').src = avatarUrl;
+    }
+    document.getElementById('editProfileSidebarBtn').onclick = ()=>document.getElementById('profileModal').classList.add('show');
+    document.getElementById('closeProfileBtn').onclick = ()=>document.getElementById('profileModal').classList.remove('show');
+    document.getElementById('saveProfileBtn').onclick = async()=>{
+        let newName = document.getElementById('profileDisplayName').value.trim();
+        if(newName && currentUser){
+            await currentUser.updateProfile({ displayName: newName });
+            userProfile.displayName = newName;
+            await db.collection('users').doc(currentUser.uid).set({ displayName: newName, photoURL: userProfile.photoURL }, { merge: true });
+            toast('✅ تم');
+            loadProfile();
+        }
+        document.getElementById('profileModal').classList.remove('show');
+    };
+    document.getElementById('changePasswordBtn').onclick = ()=>document.getElementById('passwordModal').classList.add('show');
+    document.getElementById('closePasswordBtn').onclick = ()=>document.getElementById('passwordModal').classList.remove('show');
+    document.getElementById('confirmPasswordBtn').onclick = async()=>{
+        let old = document.getElementById('oldPassword').value, newp = document.getElementById('newPassword').value, conf = document.getElementById('confirmPassword').value;
+        if(newp !== conf) return toast('❌ غير متطابقة');
+        try {
+            let cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, old);
+            await currentUser.reauthenticateWithCredential(cred);
+            await currentUser.updatePassword(newp);
+            toast('✅ تم تغيير كلمة المرور');
+            document.getElementById('passwordModal').classList.remove('show');
+        } catch(err) { toast('❌ '+ (err.message || 'خطأ في المصادقة')); }
+    };
+
+    document.getElementById('shareAppLinkBtn')?.addEventListener('click', ()=>{
+        let msg = `📲 حمل تطبيق F-Note Pro Max من الرابط:\n${APP_DOWNLOAD_LINK}`;
+        openWhatsApp('', msg);
+    });
+    document.getElementById('copyAppLinkBtn')?.addEventListener('click', ()=>{
+        navigator.clipboard.writeText(APP_DOWNLOAD_LINK);
+        toast(translations[currentLang].app_link_copied);
+    });
+    let sidebarQr = document.getElementById('sidebarQrCode');
+    if(sidebarQr) new QRCode(sidebarQr, { text: APP_DOWNLOAD_LINK, width: 80, height: 80, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+
+    // دالة واتساب الموثوقة
+    function openWhatsApp(phoneNumber, message) {
+        let cleanNumber = phoneNumber.replace(/[^0-9+]/g, '');
+        if (cleanNumber && !cleanNumber.startsWith('+')) {
+            cleanNumber = '+216' + cleanNumber.replace(/^0+/, '');
+        }
+        const encodedMsg = encodeURIComponent(message);
+        let url = `https://api.whatsapp.com/send?text=${encodedMsg}`;
+        if (cleanNumber) url = `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodedMsg}`;
+        window.open(url, '_blank');
+    }
+
+    async function prepareElementForCanvas(element){
+        let imgs = element.querySelectorAll('img');
+        for(let img of imgs){
+            if(img.src && img.src.startsWith('http') && !img.crossOrigin){
+                try {
+                    let resp = await fetch(img.src, { mode: 'cors' });
+                    if(resp.ok){
+                        let blob = await resp.blob();
+                        let url = URL.createObjectURL(blob);
+                        img.crossOrigin = 'anonymous';
+                        img.src = url;
+                    }
+                } catch(e){ console.warn(e); }
+            }
+        }
+        await new Promise(r => setTimeout(r, 200));
+        return element;
+    }
+
+    function generateAutoParagraph(g, customText){
+        let people = g.peopleCount || '?';
+        let nationality = g.nationality || 'سائح';
+        let transport = g.transportType || 'وسيلة النقل';
+        let time = new Date().toLocaleTimeString();
+        let date = new Date().toLocaleDateString();
+        let paragraph = `📌 ${people} ${nationality}اً في رحلة باستخدام ${transport}. تم التسجيل في ${date} الساعة ${time}.`;
+        if(customText) paragraph += `\n📝 ملاحظة: ${customText}`;
+        return paragraph;
+    }
+
+    window.showDelegationCard = async function(id){
+        let g = guides.find(x => x.id === id);
+        if(!g) return;
+        currentGuideForCards = g;
+        await fetchWeather();
+        document.getElementById('delegationMainImg').src = g.busPhoto || '';
+        document.getElementById('delegationAvatar').src = g.guidePhoto || '';
+        document.getElementById('delegationGuideName').innerHTML = g.name || '—';
+        document.getElementById('delegationPhone').innerHTML = g.phone || '—';
+        document.getElementById('delegationNationality').innerHTML = g.nationality || '—';
+        document.getElementById('delegationPeopleCount').innerHTML = g.peopleCount || '—';
+        document.getElementById('delegationTransport').innerHTML = g.transportType || '—';
+        document.getElementById('delegationPlate').innerHTML = formatPlateDisplay(g.plate);
+        if(g.notes){ document.getElementById('delegationNotesRow').style.display = 'block'; document.getElementById('delegationNotes').innerHTML = g.notes; }
+        else document.getElementById('delegationNotesRow').style.display = 'none';
+        let now = new Date();
+        document.getElementById('delegationDate').innerHTML = now.toLocaleDateString();
+        document.getElementById('delegationTime').innerHTML = now.toLocaleTimeString();
+        document.getElementById('delegationWeather').innerHTML = getWeatherHtml();
+        document.getElementById('creationTimestamp').innerHTML = g.createdAt ? new Date(g.createdAt).toLocaleString() : 'غير معروف';
+        let sentHist = LDB.getSentHistory(g.id);
+        let lastSend = sentHist.length ? sentHist[0].timestamp : null;
+        document.getElementById('sendTimestamp').innerHTML = lastSend ? new Date(lastSend).toLocaleString() : (translations[currentLang].sent_at+' لم يرسل');
+        document.getElementById('creatorName').innerHTML = g.creatorName || 'غير معروف';
+        document.getElementById('delegationMainImg').onclick = ()=>showFullImage(g.busPhoto||g.guidePhoto);
+        document.getElementById('delegationAvatar').onclick = ()=>showFullImage(g.guidePhoto);
+        document.getElementById('delegationModal').classList.add('show');
+    };
+
+    document.getElementById('shareDelegationBtn').onclick = async () => {
+        let g = currentGuideForCards;
+        if(!g){ toast('⚠️ لم يتم اختيار مرشد'); return; }
+        toast('⏳ جاري تجهيز البطاقة...');
+        try {
+            let originalCard = document.getElementById('delegationCard');
+            let clonedCard = originalCard.cloneNode(true);
+            let prepared = await prepareElementForCanvas(clonedCard);
+            let canvas = await html2canvas(prepared, { scale: 3, backgroundColor: '#ffffff', useCORS: true, logging: false });
+            if(!canvas) throw new Error('فشل إنشاء canvas');
+            let blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+            if(!blob) throw new Error('فشل تحويل إلى صورة');
+            let file = new File([blob], 'delegation_card.png', { type: 'image/png' });
+            let imageUrl = await uploadToCloudinary(file);
+            let msg = `📢 ${translations[currentLang].delegation_info}\n👤 ${g.name}\n📞 ${g.phone}\n📸 رابط البطاقة:\n${imageUrl}\n📲 حمل التطبيق: ${APP_DOWNLOAD_LINK}`;
+            openWhatsApp(g.phone, msg);
+            toast('✅ تم فتح واتساب');
+        } catch(err) {
+            toast('❌ فشل نشر البطاقة: ' + (err.message || 'خطأ غير معروف'));
+            console.error(err);
         }
     };
 
-    // الحصول على العناصر
-    const selectEl = document.getElementById('vehicleSelect');
-    const descDiv = document.getElementById('smartDescription');
-    const container = document.getElementById('livePlateContainer');
-    const refreshBtn = document.getElementById('refreshPlateBtn');
-
-    let currentType = 'police';   // افتراضي
-    let currentPlateData = { letters: "", number: "", suffix: "" };
-
-    // تحديث الوصف المقتضض
-    function updateMinimalDesc(typeKey) {
-        const data = vehicleDB[typeKey];
-        if (!data) return "اختر نوعاً لعرض لوحة مطابقة للواقع";
-        return `🔹 ${data.name} · اللوحة تلقائية: (${data.letters} + رقم حقيقي ضمن نظام ${data.suffix}) · توليد عشوائي لكل ضغطة.`;
-    }
-
-    // توليد لوحة جديدة بناءً على النوع
-    function generatePlate(typeKey) {
-        const schema = vehicleDB[typeKey];
-        if (!schema) return null;
-        const generatedNumber = schema.generateNumber();
-        return {
-            letters: schema.letters,
-            number: generatedNumber,
-            suffix: schema.suffix,
-            bgColor: schema.bgColor,
-            textColor: schema.textColor,
-            name: schema.name
-        };
-    }
-
-    // عرض اللوحة بشكل موحد (حروف + أرقام في سطر واحد + شارة جانبية)
-    function renderPlate(plateObj, typeKey) {
-        if (!plateObj) return;
-        const schemaBG = vehicleDB[typeKey].bgColor;
-        const textColor = vehicleDB[typeKey].textColor;
-        const html = `
-            <div class="plate-unified-card" style="background: ${schemaBG};">
-                <div class="plate-row" style="background: rgba(250,250,252,0.18); backdrop-filter: blur(5px); justify-content: space-around;">
-                    <div class="letters-block" style="background: #fff1cf; color:#1f2c38;">
-                        ${plateObj.letters}
-                    </div>
-                    <div class="numbers-block" style="background: #fef7e6; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-                        ${plateObj.number}
-                    </div>
-                    <div class="badge-side" style="background: #0f1e2c; color: #ffde9c;">
-                        ${plateObj.suffix}
-                    </div>
+    // Security Card
+    function updateSecurityPreview(g, customText){
+        let preview = document.getElementById('securityCardPreview');
+        let now = new Date();
+        let autoPara = generateAutoParagraph(g, customText);
+        preview.innerHTML = `
+            <div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString()}</span><span><i class="far fa-clock"></i> ${now.toLocaleTimeString()}</span><div class="weather-info">${getWeatherHtml()}</div></div>
+            <div class="card-img-area" style="height:130px;"><img class="main-img" src="${g.busPhoto||''}" crossorigin="anonymous"><img class="overlay-avatar" src="${g.guidePhoto||''}" style="width:45px;height:45px;" crossorigin="anonymous"></div>
+            <div class="guide-info-row"><span class="guide-name-card">${g.name||'—'}</span><span class="guide-phone-card">${g.phone||'—'}</span></div>
+            <div class="card-content">
+                <div class="info-grid">
+                    <div class="info-item"><span class="label">${translations[currentLang].nationality}</span><span class="value">${g.nationality||'—'}</span></div>
+                    <div class="info-item"><span class="label">${translations[currentLang].people_count}</span><span class="value">${g.peopleCount||'—'}</span></div>
+                    <div class="info-item"><span class="label">${translations[currentLang].transport}</span><span class="value">${g.transportType||'—'}</span></div>
+                    <div class="info-item"><span class="label">${translations[currentLang].plate}</span><span class="value">${formatPlateDisplay(g.plate)}</span></div>
                 </div>
-                <div class="plate-footnote" style="color: ${textColor};">
-                    🚗 ${vehicleDB[typeKey].name} • نظام ترقيم حقيقي • حروف وأرقام في خانة واحدة أفقية
+                <div class="notes-box" style="background:#f0f9ff; border-left:4px solid #3b82f6;">
+                    <span class="label">✍️ فقرة تلقائية</span>
+                    <div class="value" style="color:#1e293b;">${autoPara}</div>
                 </div>
+                <!-- لا توجد ملاحظات قديمة -->
+                <div class="qr-section">
+                    <div id="securityQrCode" class="qr-code"></div>
+                    <div style="font-size:10px;">📲 مسح للمشاركة</div>
+                </div>
+                <div class="timestamp-row"><span><i class="far fa-plus-square"></i> ${translations[currentLang].created_at} ${g.createdAt?new Date(g.createdAt).toLocaleString():''}</span><span><i class="fab fa-whatsapp"></i> ${translations[currentLang].sent_at} ${now.toLocaleString()}</span><span><i class="fas fa-user-check"></i> ${g.creatorName||''}</span></div>
+                <div class="security-note">🔒 بيانات مشفرة | حفظ آمن</div>
             </div>
         `;
-        container.innerHTML = html;
-    }
-
-    // دالة أساسية لتحديث كل شيء
-    function refreshByType(typeKey, keepDescription = true) {
-        currentType = typeKey;
-        const newPlate = generatePlate(typeKey);
-        if (newPlate) {
-            currentPlateData = newPlate;
-            renderPlate(currentPlateData, typeKey);
-            if (keepDescription) {
-                descDiv.innerHTML = `📌 ${updateMinimalDesc(typeKey)}<br><span style="font-size:0.7rem;">🔢 الرقم الحالي: ${newPlate.number} (مُولَّد حسب الأوصاف الحقيقية)</span>`;
-            } else {
-                descDiv.innerHTML = `📌 ${updateMinimalDesc(typeKey)}`;
-            }
-        } else {
-            container.innerHTML = `<div style="padding:20px;text-align:center;">⚠️ لم يتم العثور على بيانات لهذا النوع</div>`;
+        let qrDiv = preview.querySelector('#securityQrCode');
+        if(qrDiv){
+            qrDiv.innerHTML = '';
+            new QRCode(qrDiv, { text: APP_DOWNLOAD_LINK, width: 70, height: 70, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
         }
     }
 
-    // معالج تغيير القائمة
-    function onTypeChange() {
-        const newType = selectEl.value;
-        refreshByType(newType, true);
+    function updateSavedNumbersDisplay(){
+        if(!currentGuideForCards) return;
+        let saved = LDB.getSavedNumbers(currentGuideForCards.id);
+        let sent = LDB.getSentHistory(currentGuideForCards.id);
+        let sentSet = new Set(sent.map(h => h.phone));
+        let cont = document.getElementById('savedNumbersList');
+        if(!saved.length){ cont.innerHTML = '<div style="color:var(--txt3);">⚠️ لا توجد أرقام محفوظة</div>'; return; }
+        cont.innerHTML = saved.map(phone => `<div class="number-chip ${sentSet.has(phone)?'sent':''}" data-phone="${phone}"><span>${phone}</span>${sentSet.has(phone)?'<span class="status-sent"> ✓</span>':''}</div>`).join('');
+        document.querySelectorAll('.number-chip').forEach(chip => {
+            chip.addEventListener('click', () => sendSecurityCardToNumber(chip.getAttribute('data-phone')));
+        });
     }
 
-    // تحديث نفس النوع (تجديد الرقم فقط)
-    function refreshSameType() {
-        refreshByType(currentType, true);
-    }
-
-    // ربط الأحداث
-    selectEl.addEventListener('change', onTypeChange);
-    refreshBtn.addEventListener('click', refreshSameType);
-
-    // التحميل الأولي
-    window.addEventListener('DOMContentLoaded', () => {
-        const initType = selectEl.value;
-        refreshByType(initType, true);
+    document.getElementById('saveNumbersBtn')?.addEventListener('click', () => {
+        if(!currentGuideForCards) return;
+        let raw = document.getElementById('securityPhonesList').value;
+        if(!raw.trim()) return toast('⚠️ أدخل أرقاماً');
+        let nums = raw.split(/\r?\n/).map(p => p.trim()).filter(p => p.match(/[\+]?\d{8,15}/));
+        if(!nums.length) return toast('⚠️ أرقام غير صحيحة');
+        let existing = LDB.getSavedNumbers(currentGuideForCards.id);
+        let all = [...new Set([...existing, ...nums])];
+        LDB.saveNumbers(currentGuideForCards.id, all);
+        updateSavedNumbersDisplay();
+        document.getElementById('securityPhonesList').value = '';
+        toast(translations[currentLang].saved);
     });
+
+    document.getElementById('generateCardBtn')?.addEventListener('click', async () => {
+        if(!currentGuideForCards) return;
+        let custom = document.getElementById('securityGroupLabel').value.trim();
+        updateSecurityPreview(currentGuideForCards, custom);
+        await new Promise(r => setTimeout(r, 300));
+        let cardEl = document.getElementById('securityCardPreview');
+        toast('⏳ جاري إنشاء البطاقة...');
+        try {
+            let cloned = cardEl.cloneNode(true);
+            let prepared = await prepareElementForCanvas(cloned);
+            let canvas = await html2canvas(prepared, { scale: 3, backgroundColor: '#ffffff', useCORS: true, logging: false });
+            if(!canvas) throw new Error('فشل إنشاء canvas');
+            let blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+            if(!blob) throw new Error('فشل تحويل canvas إلى blob');
+            let file = new File([blob], 'security_card.png', { type: 'image/png' });
+            currentCardImageUrl = await uploadToCloudinary(file);
+            toast('✅ تم رفع البطاقة إلى Cloudinary');
+
+            // تحديث QR code في البطاقة المعروضة ليشير إلى رابط الصورة
+            const livePreview = document.getElementById('securityCardPreview');
+            const qrContainer = livePreview.querySelector('#securityQrCode');
+            if (qrContainer) {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: currentCardImageUrl,
+                    width: 70,
+                    height: 70,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                toast('🔐 تم إنشاء رمز QR سري للبطاقة');
+            }
+
+            let saved = LDB.getSavedNumbers(currentGuideForCards.id);
+            let sent = LDB.getSentHistory(currentGuideForCards.id);
+            let sentSet = new Set(sent.map(h => h.phone));
+            let container = document.getElementById('securityLinksContainer');
+            container.innerHTML = '';
+            let autoPara = generateAutoParagraph(currentGuideForCards, custom);
+            let msg = `${autoPara}\n\n📸 رابط البطاقة (للمسح السريع أو المشاركة):\n${currentCardImageUrl}\n📲 حمل التطبيق: ${APP_DOWNLOAD_LINK}`;
+
+            if(saved.length){
+                saved.forEach(phone => {
+                    let clean = phone.replace(/[^0-9+]/g,'');
+                    if(!clean.startsWith('+')) clean = '+216' + clean.replace(/^0+/,'');
+                    let isSent = sentSet.has(phone);
+                    let div = document.createElement('div');
+                    div.className = 'link-item';
+                    div.innerHTML = `<span>${phone}</span><div>${isSent ? '<span class="status-sent">✓ تم</span>' : ''}<button class="send-btn" data-phone="${clean}" data-msg="${encodeURIComponent(msg)}">📲 ${translations[currentLang].send}</button></div>`;
+                    container.appendChild(div);
+                });
+                container.querySelectorAll('.send-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        let phone = btn.getAttribute('data-phone');
+                        let msgDec = decodeURIComponent(btn.getAttribute('data-msg'));
+                        await sendSecurityCardToNumber(phone, msgDec);
+                    });
+                });
+            }
+            if(sent.length){
+                let histDiv = document.createElement('div');
+                histDiv.className = 'sent-history';
+                histDiv.innerHTML = `<div class="sent-history-title">📋 ${translations[currentLang].sent_history}:</div>` + 
+                    sent.map(item => `<div class="sent-item"><span>${item.phone}</span><span>✅ ${new Date(item.timestamp).toLocaleString()}</span><button class="resend-btn" data-phone="${item.phone}" data-msg="${encodeURIComponent(msg)}">🔄 ${translations[currentLang].resend}</button></div>`).join('');
+                container.appendChild(histDiv);
+                histDiv.querySelectorAll('.resend-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        let phone = btn.getAttribute('data-phone');
+                        let msgDec = decodeURIComponent(btn.getAttribute('data-msg'));
+                        await sendSecurityCardToNumber(phone, msgDec);
+                    });
+                });
+            }
+            container.style.display = 'block';
+        } catch(err) {
+            toast('❌ فشل إنشاء البطاقة: ' + (err.message || 'خطأ غير معروف'));
+        }
+    });
+
+    async function sendSecurityCardToNumber(phoneNumber, customMsg = null){
+        if(!currentGuideForCards) return;
+        let msg = customMsg;
+        if(!msg){
+            let custom = document.getElementById('securityGroupLabel').value.trim();
+            let autoPara = generateAutoParagraph(currentGuideForCards, custom);
+            msg = `${autoPara}\n\n📸 رابط البطاقة (للاطلاع السريع):\n${currentCardImageUrl}\n📲 حمل التطبيق: ${APP_DOWNLOAD_LINK}`;
+        }
+        openWhatsApp(phoneNumber, msg);
+        LDB.addSentHistory(currentGuideForCards.id, phoneNumber, new Date().toISOString());
+        updateSavedNumbersDisplay();
+        toast('📲 تم توجيهك إلى واتساب');
+    }
+
+    window.showSecurityCard = async function(id){
+        let g = guides.find(x => x.id === id);
+        if(!g) return;
+        currentGuideForCards = g;
+        await fetchWeather();
+        document.getElementById('securityGroupLabel').value = '';
+        document.getElementById('securityPhonesList').value = '';
+        document.getElementById('securityLinksContainer').style.display = 'none';
+        currentCardImageUrl = '';
+        updateSecurityPreview(g, '');
+        updateSavedNumbersDisplay();
+        document.getElementById('securityModal').classList.add('show');
+    };
+
+    // Admin functions (مختصرة)
+    async function deleteUserCompletely(uid){
+        try {
+            const deleteUserFunction = functions.httpsCallable('deleteUser');
+            await deleteUserFunction({ uid });
+            return true;
+        } catch(e) {
+            await db.collection('users').doc(uid).delete();
+            toast("⚠️ تم حذف المستخدم من قاعدة البيانات فقط.");
+            return false;
+        }
+    }
+    async function loadUsersList(){
+        if(!isDeveloper) return;
+        let listDiv = document.getElementById('usersList');
+        listDiv.innerHTML = '<div style="text-align:center;padding:20px;">⏳ جاري التحميل...</div>';
+        try {
+            let snap = await db.collection('users').get();
+            let users = [];
+            snap.forEach(d => { if(d.id !== currentUser?.uid) users.push({ id: d.id, ...d.data() }); });
+            if(!users.length){ listDiv.innerHTML = '<div style="text-align:center;padding:20px;">😕 '+translations[currentLang].no_users+'</div>'; return; }
+            listDiv.innerHTML = users.map(u => `<div class="user-item"><div class="user-email">${u.email || u.id}</div><div class="user-actions"><button class="user-delete-btn" data-uid="${u.id}" data-email="${u.email || u.id}"><i class="fas fa-trash"></i> ${translations[currentLang].delete}</button></div></div>`).join('');
+            document.querySelectorAll('.user-delete-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    let uid = btn.getAttribute('data-uid');
+                    let email = btn.getAttribute('data-email');
+                    if(confirm(`${translations[currentLang].delete_confirm} ${email}?`)){
+                        toast('⏳ جاري حذف المستخدم...');
+                        try {
+                            await deleteUserCompletely(uid);
+                            toast('✅ تم حذف المستخدم');
+                            loadUsersList();
+                        } catch(e) { toast('❌ فشل الحذف: ' + (e.message || 'خطأ غير معروف')); }
+                    }
+                });
+            });
+        } catch(e) { listDiv.innerHTML = '<div style="color:var(--err);">❌ '+translations[currentLang].save_error+'</div>'; }
+    }
+    document.getElementById('createUserBtn')?.addEventListener('click', async () => {
+        if(!isDeveloper) return;
+        let email = document.getElementById('newUserEmail').value.trim();
+        let pwd = document.getElementById('newUserPassword').value.trim();
+        let resDiv = document.getElementById('createUserResult');
+        if(!email || !pwd){ resDiv.textContent = '⚠️ أدخل البريد وكلمة المرور'; return; }
+        resDiv.textContent = '⏳ جاري...';
+        try {
+            let cred = await auth.createUserWithEmailAndPassword(email, pwd);
+            await db.collection('users').doc(cred.user.uid).set({ email, displayName: email.split('@')[0], photoURL: '', createdAt: new Date().toISOString() });
+            resDiv.textContent = '✅ تم إنشاء الحساب بنجاح';
+            document.getElementById('newUserEmail').value = ''; document.getElementById('newUserPassword').value = '';
+            loadUsersList();
+            setTimeout(() => resDiv.textContent = '', 3000);
+        } catch(e) { resDiv.textContent = '❌ '+ (e.message || 'خطأ في إنشاء الحساب'); }
+    });
+    document.getElementById('viewAllGuidesBtn')?.addEventListener('click', async () => {
+        if(!isDeveloper) return;
+        let listDiv = document.getElementById('allGuidesList');
+        listDiv.innerHTML = '⏳ جاري التحميل...';
+        document.getElementById('allGuidesModal').classList.add('show');
+        try {
+            let snap = await db.collection('guides').get();
+            let all = [];
+            snap.forEach(d => all.push({ id: d.id, ...d.data() }));
+            if(!all.length){ listDiv.innerHTML = '<div style="padding:20px;">😕 لا توجد إضافات</div>'; return; }
+            listDiv.innerHTML = all.map(g => `<div class="guide-card" style="margin-bottom:12px;"><div class="card-top"><img class="avatar" src="${g.guidePhoto||''}" onerror="this.style.display='none'" style="width:45px;"><div class="card-mid"><div class="name">${g.name||'—'}</div><div class="phone">📞 ${g.phone||''}</div><div style="font-size:10px;">👤 ${g.creatorName||'غير معروف'} | ${g.visibility==='private'?'🔒 خاص':'🌍 عام'}</div></div></div></div>`).join('');
+        } catch(e) { listDiv.innerHTML = '<div style="color:red;">❌ خطأ: ' + (e.message || 'غير معروف') + '</div>'; }
+    });
+    document.getElementById('closeAllGuidesBtn')?.addEventListener('click', ()=>document.getElementById('allGuidesModal').classList.remove('show'));
+    document.getElementById('manageUsersBtn')?.addEventListener('click', ()=>{ if(isDeveloper){ loadUsersList(); document.getElementById('usersModal').classList.add('show'); } });
+    document.getElementById('closeUsersBtn')?.addEventListener('click', ()=>document.getElementById('usersModal').classList.remove('show'));
+
+    // Sync functions
+    async function syncToCloud(){
+        if(!currentUser || currentUser.uid === 'offline' || !navigator.onLine) return false;
+        try {
+            let userSnap = await db.collection('guides').where('userId', '==', currentUser.uid).get();
+            let publicSnap = await db.collection('guides').where('visibility', '==', 'public').get();
+            let cloudMap = new Map();
+            userSnap.forEach(d => cloudMap.set(d.id, { id: d.id, ...d.data() }));
+            publicSnap.forEach(d => { if(!cloudMap.has(d.id)) cloudMap.set(d.id, { id: d.id, ...d.data() }); });
+            let changed = false;
+            for(let c of cloudMap.values()){
+                let local = guides.find(g => g.id === c.id);
+                if(!local){ guides.push(c); changed = true; }
+                else if(new Date(c.updatedAt || 0) > new Date(local.updatedAt || 0)){ let idx = guides.findIndex(g => g.id === c.id); guides[idx] = c; changed = true; }
+            }
+            for(let local of guides){
+                let cloud = cloudMap.get(local.id);
+                if(!cloud && (local.userId === currentUser.uid || local.visibility === 'public')){
+                    await db.collection('guides').doc(local.id).set(local, { merge: true }); changed = true;
+                } else if(cloud && new Date(local.updatedAt || 0) > new Date(cloud.updatedAt || 0) && local.userId === currentUser.uid){
+                    await db.collection('guides').doc(local.id).set(local, { merge: true }); changed = true;
+                }
+            }
+            if(changed){ LDB.saveGuides(guides); renderGuides(); }
+            return true;
+        } catch(e) { return false; }
+    }
+    async function syncFromCloud(){
+        if(!currentUser || currentUser.uid === 'offline' || !navigator.onLine) return false;
+        try {
+            let userSnap = await db.collection('guides').where('userId', '==', currentUser.uid).get();
+            let publicSnap = await db.collection('guides').where('visibility', '==', 'public').get();
+            let cloud = [];
+            userSnap.forEach(d => cloud.push({ id: d.id, ...d.data() }));
+            publicSnap.forEach(d => { if(!cloud.find(c => c.id === d.id)) cloud.push({ id: d.id, ...d.data() }); });
+            let merged = [...guides];
+            for(let c of cloud){
+                let idx = merged.findIndex(l => l.id === c.id);
+                if(idx === -1) merged.push(c);
+                else if(new Date(c.updatedAt || 0) > new Date(merged[idx].updatedAt || 0)) merged[idx] = c;
+            }
+            guides = merged;
+            LDB.saveGuides(guides);
+            renderGuides();
+            return true;
+        } catch(e) { return false; }
+    }
+    async function fullSync(){ toast('⏳ جاري المزامنة...'); let ok = await syncToCloud() && await syncFromCloud(); toast(ok ? translations[currentLang].sync_ok : translations[currentLang].sync_fail); }
+    function startListener(){
+        if(unsubscribeFirestore) unsubscribeFirestore();
+        if(!currentUser || currentUser.uid === 'offline') return;
+        unsubscribeFirestore = db.collection('guides').onSnapshot(snap => {
+            let changed = false;
+            snap.docChanges().forEach(change => {
+                let data = { id: change.doc.id, ...change.doc.data() };
+                let idx = guides.findIndex(g => g.id === data.id);
+                if(change.type === 'added' || change.type === 'modified'){
+                    if(idx === -1){ guides.push(data); changed = true; }
+                    else if(new Date(data.updatedAt || 0) > new Date(guides[idx].updatedAt || 0)){ guides[idx] = data; changed = true; }
+                } else if(change.type === 'removed'){ guides = guides.filter(g => g.id !== change.doc.id); changed = true; }
+            });
+            if(changed){ LDB.saveGuides(guides); renderGuides(); }
+        }, err => { console.warn(err); setTimeout(startListener, 5000); });
+    }
+    async function mergeLocalAfterLogin(){
+        let local = LDB.getGuides();
+        if(!local.length) return;
+        toast('🔄 دمج البيانات المحلية...');
+        let merged = false;
+        for(let l of local){
+            if(l.userId === 'offline'){ l.userId = currentUser.uid; l.creatorName = userProfile.displayName || currentUser.email; l.updatedAt = new Date().toISOString(); if(!l.createdAt) l.createdAt = new Date().toISOString(); }
+            if(!guides.find(g => g.id === l.id)){ guides.push(l); merged = true; try{ await db.collection('guides').doc(l.id).set(l, { merge: true }); } catch(e){} }
+        }
+        if(merged){ LDB.saveGuides(guides); renderGuides(); toast('✅ تم دمج البيانات'); }
+    }
+
+    document.getElementById('refreshBtn').onclick = () => { if(currentUser?.uid !== 'offline') fullSync(); else toast('⚠️ يتطلب اتصالاً'); };
+    document.getElementById('syncBtn').onclick = () => { if(currentUser?.uid !== 'offline') fullSync(); else toast('⚠️ يتطلب اتصالاً'); };
+    document.getElementById('voiceSearchBtn').onclick = () => {
+        let SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(!SpeechRecognition) return toast('⚠️ غير مدعوم');
+        let rec = new SpeechRecognition();
+        rec.lang = currentLang === 'ar' ? 'ar-TN' : (currentLang === 'fr' ? 'fr-FR' : 'en-US');
+        rec.start();
+        rec.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); };
+        rec.onerror = () => toast('⚠️ لم يتم التعرف');
+    };
+    document.getElementById('searchInput').oninput = renderGuides;
+    if(localStorage.getItem('fnote_dark') === 'true') document.body.classList.add('dark');
+    document.getElementById('darkToggle').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('fnote_dark', document.body.classList.contains('dark')); };
+    document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
+    document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+    document.querySelectorAll('.lang-btn').forEach(btn => { btn.addEventListener('click', function(){ setLanguage(this.getAttribute('data-lang')); }); });
+    document.getElementById('loginLangSelect')?.addEventListener('change', (e) => setLanguage(e.target.value));
+    document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
+    document.getElementById('closeDelegationBtn').onclick = () => document.getElementById('delegationModal').classList.remove('show');
+    document.getElementById('closeSecurityBtn').onclick = () => document.getElementById('securityModal').classList.remove('show');
+    document.getElementById('termsBtn')?.addEventListener('click', () => document.getElementById('termsModal').classList.add('show'));
+    document.getElementById('closeTermsBtn')?.addEventListener('click', () => document.getElementById('termsModal').classList.remove('show'));
+    document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if(e.target === m) m.classList.remove('show'); }));
+
+    document.getElementById('loginBtn').onclick = async () => {
+        let email = document.getElementById('loginEmail').value.trim();
+        let pwd = document.getElementById('loginPassword').value;
+        let errorDiv = document.getElementById('loginError');
+        if(!email || !pwd){
+            errorDiv.textContent = (translations[currentLang].login_error || '⚠️ أدخل البريد وكلمة المرور');
+            errorDiv.style.display = 'block';
+            return;
+        }
+        errorDiv.style.display = 'none';
+        try {
+            await auth.signInWithEmailAndPassword(email, pwd);
+        } catch(e) {
+            let msg = '';
+            if(e.code === 'auth/user-not-found') msg = '❌ المستخدم غير موجود';
+            else if(e.code === 'auth/wrong-password') msg = '❌ كلمة مرور خاطئة';
+            else if(e.code === 'auth/invalid-email') msg = '❌ بريد إلكتروني غير صالح';
+            else msg = translations[currentLang].login_error + ': ' + (e.message || 'خطأ غير معروف');
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+            toast('❌ '+ (e.message || 'فشل تسجيل الدخول'));
+        }
+    };
+    document.getElementById('offlineBtn').onclick = () => {
+        currentUser = { uid: 'offline', email: 'offline@local' };
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        guides = LDB.getGuides();
+        renderGuides();
+        if(unsubscribeFirestore) unsubscribeFirestore();
+        isDeveloper = false;
+        document.getElementById('developerSection').style.display = 'none';
+    };
+    document.getElementById('signOutBtn').onclick = () => { if(confirm(translations[currentLang].confirm_logout)) auth.signOut(); };
+    document.getElementById('exportJsonBtn').onclick = () => {
+        let blob = new Blob([JSON.stringify(guides, null, 2)], { type: 'application/json' });
+        let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'guides_backup.json'; a.click(); toast('📄 تم التصدير');
+    };
+    document.getElementById('exportPdfBtn').onclick = () => {
+        let div = document.createElement('div'); div.innerHTML = '<h1>F-Note Pro Max</h1><hr>' + guides.map(g => `<p><strong>${g.name}</strong> – ${g.phone} | ${g.nationality||''} | ${g.transportType||''}</p>`).join('');
+        html2pdf().from(div).save('guides.pdf'); toast('📕 تم التصدير');
+    };
+
+    auth.onAuthStateChanged(async u => {
+        if(u){
+            currentUser = u;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            let doc = await db.collection('users').doc(u.uid).get();
+            if(doc.exists) userProfile = doc.data();
+            else{ userProfile = { displayName: u.email, photoURL: '' }; await db.collection('users').doc(u.uid).set(userProfile); }
+            isDeveloper = (u.uid === DEVELOPER_UID);
+            document.getElementById('developerSection').style.display = isDeveloper ? 'block' : 'none';
+            await loadProfile();
+            await mergeLocalAfterLogin();
+            await fullSync();
+            startListener();
+        } else {
+            if(unsubscribeFirestore) unsubscribeFirestore();
+            currentUser = null; isDeveloper = false;
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('loginEmail').value = ''; document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').style.display = 'none';
+        }
+    });
+    setLanguage(currentLang);
+    document.getElementById('loginLangSelect').value = currentLang;
+    renderGuides();
 </script>
 </body>
 </html>
