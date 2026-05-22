@@ -312,6 +312,12 @@
         body.dark .error-message { background: #7f1d1d; color: #fecaca; }
         .qr-sidebar { display: flex; justify-content: center; margin: 10px 0; }
         .copy-link-btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 30px; font-size: 12px; margin-top: 6px; cursor: pointer; width: 100%; }
+        .number-chip { background: var(--bg); border: 1px solid var(--border); border-radius: 30px; padding: 6px 12px; margin: 4px; display: inline-block; cursor: pointer; font-size: 13px; }
+        .number-chip.sent { opacity: 0.7; background: var(--ok); color: white; }
+        .link-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); }
+        .send-btn, .resend-btn { background: var(--wa); color: white; border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; margin-right: 8px; }
+        .sent-history { margin-top: 12px; border-top: 1px solid var(--gold); padding-top: 8px; }
+        .sent-item { display: flex; justify-content: space-between; font-size: 12px; margin: 4px 0; }
     </style>
 </head>
 <body>
@@ -330,10 +336,8 @@
         <h1 style="color:var(--olive);font-size:24px;font-weight:900;">F‑Note Pro Max</h1>
         <p style="color:var(--gold);font-size:12px;margin-bottom:12px;" id="loginSubText">إدارة الوفود السياحية والدبلوماسية</p>
         <p style="color:var(--txt3);font-size:11px;margin-bottom:12px;" id="loginInfoText">🔐 يتم إنشاء الحسابات عن طريق السيد فهمي (مدير النظام)</p>
-        <label for="loginEmail" class="visually-hidden" style="display:none;">البريد الإلكتروني</label>
-        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr" style="margin-bottom:10px;" aria-label="البريد الإلكتروني">
-        <label for="loginPassword" class="visually-hidden" style="display:none;">كلمة المرور</label>
-        <input type="password" id="loginPassword" placeholder="كلمة المرور" style="margin-bottom:10px;" aria-label="كلمة المرور">
+        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr" style="margin-bottom:10px;">
+        <input type="password" id="loginPassword" placeholder="كلمة المرور" style="margin-bottom:10px;">
         <button id="loginBtn" style="width:100%;padding:12px;background:var(--primary);color:white;border-radius:20px;font-weight:700;margin-top:6px;">دخول</button>
         <button id="offlineBtn" style="width:100%;padding:10px;background:#64748b;color:white;border-radius:20px;font-weight:600;margin-top:8px;">🔄 بدون إنترنت</button>
         <div id="loginError" class="error-message" style="display:none;"></div>
@@ -345,171 +349,66 @@
     <div class="header">
         <div class="logo-area"><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" alt="شعار التطبيق"><span class="logo-text">F‑Note Pro</span></div>
         <div style="display:flex;gap:8px;">
-            <button class="h-btn" id="refreshBtn" aria-label="تحديث"><i class="fa-solid fa-arrows-rotate"></i></button>
-            <button class="h-btn" id="darkToggle" aria-label="الوضع المظلم"><i class="fa-solid fa-moon"></i></button>
-            <button class="h-btn" id="menuBtn" aria-label="القائمة"><i class="fa-solid fa-bars"></i></button>
+            <button class="h-btn" id="refreshBtn"><i class="fa-solid fa-arrows-rotate"></i></button>
+            <button class="h-btn" id="darkToggle"><i class="fa-solid fa-moon"></i></button>
+            <button class="h-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
         </div>
     </div>
     <div class="overlay" id="overlay"></div>
     <div class="sidebar" id="sidebar">
         <div class="profile-card-sidebar">
-            <img id="sidebarAvatar" class="profile-avatar-sidebar" src="" alt="صورة الملف الشخصي">
+            <img id="sidebarAvatar" class="profile-avatar-sidebar" src="">
             <div class="profile-name-sidebar" id="sidebarDisplayName">...</div>
             <div class="profile-email-sidebar" id="sidebarEmail">...</div>
-            <button class="edit-profile-btn" id="editProfileSidebarBtn" aria-label="تعديل الملف الشخصي"><i class="fas fa-edit"></i> <span data-i18n="edit_profile">تعديل الملف الشخصي</span></button>
+            <button class="edit-profile-btn" id="editProfileSidebarBtn"><i class="fas fa-edit"></i> <span data-i18n="edit_profile">تعديل الملف الشخصي</span></button>
         </div>
-        
         <div class="sidebar-section">
             <div class="sidebar-section-title"><i class="fas fa-download"></i> <span>📲 رابط تحميل التطبيق</span></div>
-            <div class="qr-sidebar" id="sidebarQrCode" aria-label="رمز QR لتحميل التطبيق"></div>
-            <button id="copyAppLinkBtn" class="copy-link-btn" aria-label="نسخ الرابط"><i class="fas fa-copy"></i> نسخ الرابط</button>
-            <button id="shareAppLinkBtn" class="copy-link-btn" style="background:var(--wa); margin-top:4px;" aria-label="مشاركة عبر واتساب"><i class="fab fa-whatsapp"></i> مشاركة عبر واتساب</button>
+            <div class="qr-sidebar" id="sidebarQrCode"></div>
+            <button id="copyAppLinkBtn" class="copy-link-btn"><i class="fas fa-copy"></i> نسخ الرابط</button>
+            <button id="shareAppLinkBtn" class="copy-link-btn" style="background:var(--wa); margin-top:4px;"><i class="fab fa-whatsapp"></i> مشاركة عبر واتساب</button>
         </div>
-        
         <div class="sidebar-section">
             <div class="sidebar-section-title"><i class="fas fa-tools"></i> <span data-i18n="tools_section">أدوات متقدمة</span></div>
-            <div class="s-item" id="syncBtn" role="button" tabindex="0"><i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="sync">مزامنة السحابة</span></div>
-            <div class="s-item" id="exportJsonBtn" role="button" tabindex="0"><i class="fa-solid fa-file-export"></i> <span data-i18n="export_json">تصدير JSON</span></div>
-            <div class="s-item" id="exportPdfBtn" role="button" tabindex="0"><i class="fa-solid fa-file-pdf"></i> <span data-i18n="export_pdf">تصدير PDF</span></div>
-            <div class="s-item" id="signOutBtn" role="button" tabindex="0"><i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="logout">تسجيل الخروج</span></div>
+            <div class="s-item" id="syncBtn"><i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="sync">مزامنة السحابة</span></div>
+            <div class="s-item" id="exportJsonBtn"><i class="fa-solid fa-file-export"></i> <span data-i18n="export_json">تصدير JSON</span></div>
+            <div class="s-item" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> <span data-i18n="export_pdf">تصدير PDF</span></div>
+            <div class="s-item" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="logout">تسجيل الخروج</span></div>
         </div>
-        
         <div class="sidebar-section">
             <div class="sidebar-section-title"><i class="fas fa-globe"></i> <span data-i18n="language">اللغة</span></div>
             <div class="lang-row">
-                <button class="lang-btn" data-lang="ar" aria-label="العربية">العربية</button>
-                <button class="lang-btn" data-lang="fr" aria-label="Français">Français</button>
-                <button class="lang-btn" data-lang="en" aria-label="English">English</button>
+                <button class="lang-btn" data-lang="ar">العربية</button>
+                <button class="lang-btn" data-lang="fr">Français</button>
+                <button class="lang-btn" data-lang="en">English</button>
             </div>
         </div>
-        
         <div class="sidebar-section" id="developerSection" style="display:none;">
             <div class="sidebar-section-title"><i class="fas fa-code"></i> <span data-i18n="developer_section">👨‍💻 قسم المطور</span></div>
-            <div class="s-item" id="manageUsersBtn" role="button" tabindex="0"><i class="fas fa-users-cog"></i> <span data-i18n="manage_users">👥 إدارة الحسابات</span></div>
-            <div class="s-item" id="viewAllGuidesBtn" role="button" tabindex="0"><i class="fas fa-eye"></i> <span data-i18n="view_all_guides">📋 رؤية جميع الإضافات</span></div>
+            <div class="s-item" id="manageUsersBtn"><i class="fas fa-users-cog"></i> <span data-i18n="manage_users">👥 إدارة الحسابات</span></div>
+            <div class="s-item" id="viewAllGuidesBtn"><i class="fas fa-eye"></i> <span data-i18n="view_all_guides">📋 رؤية جميع الإضافات</span></div>
         </div>
-        
-        <div class="footer-links"><span id="termsBtn" role="button" tabindex="0">📜 <span data-i18n="terms">شروط الخدمة والحقوق</span></span></div>
+        <div class="footer-links"><span id="termsBtn">📜 <span data-i18n="terms">شروط الخدمة والحقوق</span></span></div>
     </div>
     <div class="toolbar">
-        <label for="searchInput" style="display:none;">بحث</label>
-        <input type="text" id="searchInput" class="search" data-i18n-placeholder="search_placeholder" placeholder="🔍 بحث...">
-        <button class="t-btn" id="voiceSearchBtn" aria-label="بحث صوتي"><i class="fa-solid fa-microphone"></i></button>
-        <button class="t-btn accent" id="addGuideBtn" aria-label="إضافة مرشد جديد">+</button>
+        <input type="text" id="searchInput" class="search" placeholder="🔍 بحث...">
+        <button class="t-btn" id="voiceSearchBtn"><i class="fa-solid fa-microphone"></i></button>
+        <button class="t-btn accent" id="addGuideBtn">+</button>
     </div>
     <div id="guidesContainer" class="guides"><div style="text-align:center;padding:30px;color:var(--txt3);">⏳ جاري التحميل...</div></div>
 </div>
 
-<!-- المودالات (النوافذ المنبثقة) -->
-<div class="modal" id="termsModal">
-    <div class="modal-box">
-        <h3 data-i18n="terms_title">📜 شروط الخدمة والحقوق</h3>
-        <div style="font-size:13px; max-height:60vh; overflow-y:auto;">
-            <p data-i18n="terms_text">باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.</p>
-            <hr style="margin:10px 0;">
-            <div class="sidebar-section-title"><i class="fas fa-shield-alt"></i> 🔒 الأمان والخصوصية</div>
-            <div style="font-size:12px; padding:6px;">
-                ✅ البيانات مشفرة أثناء النقل والتخزين<br>
-                ✅ لا يتم مشاركة بياناتك مع أي طرف ثالث<br>
-                ✅ يمكنك طلب حذف حسابك بالكامل<br>
-                ✅ يتم حفظ بياناتك فقط في Firebase وجميع الاتصالات عبر HTTPS<br>
-                ✅ يمكنك تصدير بياناتك في أي وقت بصيغة JSON
-            </div>
-        </div>
-        <button class="btn-secondary" id="closeTermsBtn" data-i18n="close">إغلاق</button>
-    </div>
-</div>
-
-<div class="modal" id="profileModal">
-    <div class="modal-box">
-        <h3 data-i18n="profile_title">👤 تعديل الملف الشخصي</h3>
-        <div class="upload-area" id="profileUploadBtn" aria-label="رفع صورة الملف الشخصي">
-            <img id="profileAvatar" src="" alt="الصورة الشخصية">
-            <i class="fa-solid fa-camera"></i> <span data-i18n="change_photo">تغيير الصورة</span>
-            <div class="upload-spinner"><div class="spinner-small"></div></div>
-        </div>
-        <button type="button" id="deleteProfilePhotoBtn" class="image-delete-btn" style="display:none;">🗑️ حذف الصورة</button>
-        <label for="profileDisplayName" class="field-label" data-i18n="display_name">اسم العرض</label>
-        <input type="text" id="profileDisplayName" data-i18n-placeholder="display_name" placeholder="اسم العرض">
-        <label for="profileEmail" class="field-label">البريد الإلكتروني</label>
-        <input type="email" id="profileEmail" disabled>
-        <button id="changePasswordBtn" class="btn-secondary" data-i18n="change_password">🔑 تغيير كلمة المرور</button>
-        <button id="saveProfileBtn" class="btn-primary" data-i18n="save_profile">💾 حفظ التغييرات</button>
-        <button id="closeProfileBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button>
-    </div>
-</div>
-
-<div class="modal" id="passwordModal"><div class="modal-box"><h3 data-i18n="change_password_title">🔑 تغيير كلمة المرور</h3><label for="oldPassword" class="field-label" data-i18n="old_password">كلمة المرور الحالية</label><input type="password" id="oldPassword" placeholder="كلمة المرور الحالية"><label for="newPassword" class="field-label" data-i18n="new_password">كلمة المرور الجديدة</label><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><label for="confirmPassword" class="field-label" data-i18n="confirm_password">تأكيد كلمة المرور</label><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button id="confirmPasswordBtn" class="btn-primary" data-i18n="change">تغيير</button><button id="closePasswordBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
-<div class="modal" id="usersModal"><div class="modal-box"><h3 data-i18n="manage_users_title">👥 إدارة المستخدمين</h3><div id="usersList" class="users-list"></div><div class="add-user-area"><label for="newUserEmail" class="field-label">البريد الإلكتروني</label><input type="email" id="newUserEmail" placeholder="البريد الإلكتروني" dir="ltr"><label for="newUserPassword" class="field-label">كلمة المرور المؤقتة</label><input type="password" id="newUserPassword" placeholder="كلمة المرور المؤقتة"><button id="createUserBtn" class="btn-primary" data-i18n="create_user">➕ إنشاء حساب جديد</button><div id="createUserResult" style="font-size:12px; margin-top:8px; color:var(--err);"></div></div><button class="btn-secondary" id="closeUsersBtn" data-i18n="close">إغلاق</button></div></div>
-<div class="modal" id="allGuidesModal"><div class="modal-box" style="max-width:550px;"><h3 data-i18n="all_guides_title">📋 جميع الإضافات (خاصة وعامة)</h3><div id="allGuidesList" style="max-height:400px; overflow-y:auto;"></div><button class="btn-secondary" id="closeAllGuidesBtn" data-i18n="close">إغلاق</button></div></div>
-<div id="customPlateModal" class="custom-plate-modal"><div class="custom-plate-box"><h4><i class="fas fa-plus-circle"></i> <span data-i18n="add_custom_plate">إضافة لوحة مخصصة</span></h4><label for="customPlateInput" class="field-label">رقم اللوحة</label><input type="text" id="customPlateInput" placeholder="مثال: CD 12345 | POL 789" dir="ltr"><div class="modal-buttons" style="display:flex; gap:10px; margin-top:16px;"><button id="confirmCustomPlate" class="btn-confirm" style="background:var(--ok);color:white;flex:1;padding:8px;border-radius:14px;">إضافة</button><button id="cancelCustomPlate" class="btn-cancel" style="background:#64748b;color:white;flex:1;padding:8px;border-radius:14px;">إلغاء</button></div></div></div>
-
-<div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3><label for="gName" class="field-label" data-i18n="guide_name">اسم المرشد *</label><input type="text" id="gName" placeholder="مثال: أحمد سعيد"><label for="gPhone" class="field-label" data-i18n="phone">رقم الجوال *</label><input type="tel" id="gPhone" placeholder="+216 98 123 456" dir="ltr"><div style="display:flex;gap:8px;"><div style="flex:1"><label for="gNationality" class="field-label" data-i18n="nationality">الجنسية</label><input type="text" id="gNationality" placeholder="تونسي"></div><div style="flex:1"><label for="gPeopleCount" class="field-label" data-i18n="people_count">عدد الأفراد</label><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" min="1"></div></div><label for="gTransport" class="field-label" data-i18n="transport_type">نوع النقل</label><select id="gTransport"><option value="">اختر نوع النقل</option><option value="حافلة صغيرة">حافلة صغيرة</option><option value="حافلة كبيرة">حافلة كبيرة</option><option value="سيارة">سيارة</option><option value="فان">فان</option><option value="أخرى">أخرى</option></select><label class="field-label" data-i18n="plate">رقم السيارة</label><div class="plate-split"><input type="text" id="gPlateRight" placeholder="يمين" maxlength="5" style="text-align:center;"><span>🇹🇳 TN 🇹🇳</span><input type="text" id="gPlateLeft" placeholder="يسار" maxlength="4" style="text-align:center;"><button type="button" id="addCustomPlateBtn" class="plus-btn" title="إضافة لوحة مخصصة"><i class="fas fa-plus"></i></button></div><input type="hidden" id="gPlate" value=""><label class="field-label" data-i18n="guide_photo">صورة المرشد</label><div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> <span>📸 اختر صورة</span><img id="guidePreview" src="" style="display:none; max-width:100%;"><div class="upload-spinner"><div class="spinner-small"></div></div></div><button type="button" id="deleteGuidePhotoBtn" class="image-delete-btn" style="display:none;">🗑️ حذف الصورة</button><label class="field-label" data-i18n="bus_photo">صورة السيارة</label><div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> <span>🚌 اختر صورة</span><img id="busPreview" src="" style="display:none; max-width:100%;"><div class="upload-spinner"><div class="spinner-small"></div></div></div><button type="button" id="deleteBusPhotoBtn" class="image-delete-btn" style="display:none;">🗑️ حذف الصورة</button><label for="gNotes" class="field-label" data-i18n="notes">ملاحظات</label><textarea id="gNotes" placeholder="أي معلومات إضافية"></textarea><label for="gVisibility" class="field-label" data-i18n="visibility">الرؤية</label><select id="gVisibility"><option value="public" selected>🌍 عام (يظهر للجميع)</option><option value="private">🔒 خاص (أنت فقط)</option></select><button class="btn-primary" id="saveGuideBtn" data-i18n="save_guide">💾 حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn" data-i18n="cancel">إلغاء</button></div></div>
-
-<!-- بطاقة الوفد -->
-<div class="modal" id="delegationModal">
-    <div class="modal-box" style="padding:0; max-width:520px;">
-        <div id="delegationCard" class="delegation-card">
-            <div class="datetime-bar">
-                <span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span>
-                <span><i class="far fa-clock"></i> <span id="delegationTime"></span></span>
-                <div id="delegationWeather" class="weather-info"></div>
-            </div>
-            <div class="card-img-area">
-                <img id="delegationMainImg" class="main-img" src="" crossorigin="anonymous" alt="صورة السيارة">
-                <img id="delegationAvatar" class="overlay-avatar" src="" crossorigin="anonymous" alt="صورة المرشد">
-            </div>
-            <div class="guide-info-row">
-                <span class="guide-name-card" id="delegationGuideName"></span>
-                <span class="guide-phone-card" id="delegationPhone"></span>
-            </div>
-            <div class="card-content">
-                <div class="info-grid">
-                    <div class="info-item"><span class="label" data-i18n="nationality">الجنسية</span><span id="delegationNationality" class="value"></span></div>
-                    <div class="info-item"><span class="label" data-i18n="people_count">عدد الأفراد</span><span id="delegationPeopleCount" class="value"></span></div>
-                    <div class="info-item"><span class="label" data-i18n="transport_type">نوع النقل</span><span id="delegationTransport" class="value"></span></div>
-                    <div class="info-item"><span class="label" data-i18n="plate">رقم السيارة</span><span id="delegationPlate" class="value plate-display"></span></div>
-                </div>
-                <div id="delegationNotesRow" class="notes-box" style="display:none;"><span class="label" data-i18n="notes">ملاحظات</span><span id="delegationNotes"></span></div>
-                <div class="timestamp-row">
-                    <span><i class="far fa-plus-square"></i> <span data-i18n="created_at">تاريخ الإضافة:</span> <span id="creationTimestamp"></span></span>
-                    <span><i class="fab fa-whatsapp"></i> <span data-i18n="sent_at">تاريخ الإرسال:</span> <span id="sendTimestamp"></span></span>
-                    <span><i class="fas fa-user-check"></i> <span data-i18n="created_by">المنشئ:</span> <span id="creatorName"></span></span>
-                </div>
-                <div class="security-note">🔒 بيانات مشفرة | حفظ وفق معايير الأمان</div>
-            </div>
-        </div>
-        <div style="display:flex; gap:12px; margin-top:16px; padding:0 16px 16px;">
-            <button class="btn-primary" style="background:var(--ok);" id="shareDelegationBtn" aria-label="مشاركة البطاقة"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button>
-        </div>
-        <button class="btn-secondary" id="closeDelegationBtn" data-i18n="close" style="margin:0 16px 16px;">إغلاق</button>
-    </div>
-</div>
-
-<!-- بطاقة المتابعة -->
-<div class="modal" id="securityModal">
-    <div class="modal-box">
-        <h3><i class="fas fa-exchange-alt"></i> <span data-i18n="security_card_title">كرت التنسيق والمتابعة</span></h3>
-        <div id="securityCardPreview" class="delegation-card" style="margin-bottom:16px;"></div>
-        <label for="securityGroupLabel" class="field-label" data-i18n="custom_group_label">🏷️ الفقرة المخصصة:</label>
-        <input type="text" id="securityGroupLabel" placeholder="مثال: دخول المجموعة إلى الفندق بأمان">
-        <div style="font-size:11px; color:var(--txt3); margin-bottom:12px;">📌 مثال: دخول المجموعة إلى الفندق بأمان</div>
-        <label class="field-label" data-i18n="saved_numbers_label">📋 الأرقام المحفوظة (اضغط للإرسال):</label>
-        <div id="savedNumbersList" class="saved-numbers-list"></div>
-        <div class="save-numbers-area">
-            <label for="securityPhonesList" class="field-label" data-i18n="add_numbers_label">➕ إضافة أرقام جديدة (رقم واحد في كل سطر):</label>
-            <textarea id="securityPhonesList" rows="3" placeholder="+216XXXXXXXX"></textarea>
-            <div class="save-numbers-buttons">
-                <button id="saveNumbersBtn" class="btn-primary" style="background:var(--primary);">💾 حفظ الأرقام</button>
-                <button id="generateCardBtn" class="btn-primary" style="background:var(--ok);">🔄 إنشاء البطاقة</button>
-            </div>
-        </div>
-        <div id="securityLinksContainer" style="margin-top:16px; max-height:250px; overflow-y:auto; background:var(--bg); border-radius:20px; padding:10px; display:none;"></div>
-        <button class="btn-secondary" id="closeSecurityBtn" data-i18n="close">إغلاق</button>
-    </div>
-</div>
-
-<div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box" style="position:relative;"><div class="close-viewer" id="closeImageViewer" style="position:absolute;top:10px;left:10px;cursor:pointer;font-size:24px;">&times;</div><img id="fullImageView" src="" style="width:100%;" alt="صورة مكبرة"></div></div>
+<!-- المودالات -->
+<div class="modal" id="termsModal"><div class="modal-box"><h3 data-i18n="terms_title">📜 شروط الخدمة والحقوق</h3><div style="font-size:13px; max-height:60vh; overflow-y:auto;"><p data-i18n="terms_text">باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.</p><hr><div class="sidebar-section-title"><i class="fas fa-shield-alt"></i> 🔒 الأمان والخصوصية</div><div style="font-size:12px; padding:6px;">✅ البيانات مشفرة أثناء النقل والتخزين<br>✅ لا يتم مشاركة بياناتك مع أي طرف ثالث<br>✅ يمكنك طلب حذف حسابك بالكامل<br>✅ يتم حفظ بياناتك فقط في Firebase وجميع الاتصالات عبر HTTPS<br>✅ يمكنك تصدير بياناتك في أي وقت بصيغة JSON</div></div><button class="btn-secondary" id="closeTermsBtn" data-i18n="close">إغلاق</button></div></div>
+<div class="modal" id="profileModal"><div class="modal-box"><h3 data-i18n="profile_title">👤 تعديل الملف الشخصي</h3><div class="upload-area" id="profileUploadBtn"><img id="profileAvatar" src=""><i class="fa-solid fa-camera"></i> <span data-i18n="change_photo">تغيير الصورة</span><div class="upload-spinner"><div class="spinner-small"></div></div></div><label for="profileDisplayName" class="field-label" data-i18n="display_name">اسم العرض</label><input type="text" id="profileDisplayName" placeholder="اسم العرض"><label for="profileEmail" class="field-label">البريد الإلكتروني</label><input type="email" id="profileEmail" disabled><button id="changePasswordBtn" class="btn-secondary" data-i18n="change_password">🔑 تغيير كلمة المرور</button><button id="saveProfileBtn" class="btn-primary" data-i18n="save_profile">💾 حفظ التغييرات</button><button id="closeProfileBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
+<div class="modal" id="passwordModal"><div class="modal-box"><h3 data-i18n="change_password_title">🔑 تغيير كلمة المرور</h3><label for="oldPassword" class="field-label" data-i18n="old_password">كلمة المرور الحالية</label><input type="password" id="oldPassword"><label for="newPassword" class="field-label" data-i18n="new_password">كلمة المرور الجديدة</label><input type="password" id="newPassword"><label for="confirmPassword" class="field-label" data-i18n="confirm_password">تأكيد كلمة المرور</label><input type="password" id="confirmPassword"><button id="confirmPasswordBtn" class="btn-primary" data-i18n="change">تغيير</button><button id="closePasswordBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
+<div class="modal" id="usersModal"><div class="modal-box"><h3 data-i18n="manage_users_title">👥 إدارة المستخدمين</h3><div id="usersList"></div><div class="add-user-area"><label for="newUserEmail" class="field-label">البريد الإلكتروني</label><input type="email" id="newUserEmail" dir="ltr"><label for="newUserPassword" class="field-label">كلمة المرور المؤقتة</label><input type="password" id="newUserPassword"><button id="createUserBtn" class="btn-primary" data-i18n="create_user">➕ إنشاء حساب جديد</button><div id="createUserResult" style="font-size:12px; margin-top:8px; color:var(--err);"></div></div><button class="btn-secondary" id="closeUsersBtn" data-i18n="close">إغلاق</button></div></div>
+<div class="modal" id="allGuidesModal"><div class="modal-box"><h3 data-i18n="all_guides_title">📋 جميع الإضافات</h3><div id="allGuidesList"></div><button class="btn-secondary" id="closeAllGuidesBtn" data-i18n="close">إغلاق</button></div></div>
+<div id="customPlateModal" class="custom-plate-modal"><div class="custom-plate-box"><h4><i class="fas fa-plus-circle"></i> <span data-i18n="add_custom_plate">إضافة لوحة مخصصة</span></h4><label for="customPlateInput" class="field-label">رقم اللوحة</label><input type="text" id="customPlateInput" placeholder="مثال: CD 12345 | POL 789" dir="ltr"><div style="display:flex; gap:10px; margin-top:16px;"><button id="confirmCustomPlate" style="background:var(--ok);color:white;flex:1;padding:8px;border-radius:14px;">إضافة</button><button id="cancelCustomPlate" style="background:#64748b;color:white;flex:1;padding:8px;border-radius:14px;">إلغاء</button></div></div></div>
+<div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3><label for="gName" class="field-label" data-i18n="guide_name">اسم المرشد *</label><input type="text" id="gName"><label for="gPhone" class="field-label" data-i18n="phone">رقم الجوال *</label><input type="tel" id="gPhone" dir="ltr"><div style="display:flex;gap:8px;"><div style="flex:1"><label for="gNationality" class="field-label" data-i18n="nationality">الجنسية</label><input type="text" id="gNationality"></div><div style="flex:1"><label for="gPeopleCount" class="field-label" data-i18n="people_count">عدد الأفراد</label><input type="number" id="gPeopleCount" min="1"></div></div><label for="gTransport" class="field-label" data-i18n="transport_type">نوع النقل</label><select id="gTransport"><option value="">اختر نوع النقل</option><option value="حافلة صغيرة">حافلة صغيرة</option><option value="حافلة كبيرة">حافلة كبيرة</option><option value="سيارة">سيارة</option><option value="فان">فان</option><option value="أخرى">أخرى</option></select><label class="field-label" data-i18n="plate">رقم السيارة</label><div class="plate-split"><input type="text" id="gPlateRight" placeholder="يمين" maxlength="5" style="text-align:center;"><span>🇹🇳 TN 🇹🇳</span><input type="text" id="gPlateLeft" placeholder="يسار" maxlength="4" style="text-align:center;"><button type="button" id="addCustomPlateBtn" class="plus-btn" title="إضافة لوحة مخصصة"><i class="fas fa-plus"></i></button></div><input type="hidden" id="gPlate"><label class="field-label" data-i18n="guide_photo">صورة المرشد</label><div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> <span>📸 اختر صورة</span><img id="guidePreview" src="" style="display:none; max-width:100%;"><div class="upload-spinner"><div class="spinner-small"></div></div></div><button type="button" id="deleteGuidePhotoBtn" class="image-delete-btn" style="display:none;">🗑️ حذف الصورة</button><label class="field-label" data-i18n="bus_photo">صورة السيارة</label><div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> <span>🚌 اختر صورة</span><img id="busPreview" src="" style="display:none; max-width:100%;"><div class="upload-spinner"><div class="spinner-small"></div></div></div><button type="button" id="deleteBusPhotoBtn" class="image-delete-btn" style="display:none;">🗑️ حذف الصورة</button><label for="gNotes" class="field-label" data-i18n="notes">ملاحظات</label><textarea id="gNotes"></textarea><label for="gVisibility" class="field-label" data-i18n="visibility">الرؤية</label><select id="gVisibility"><option value="public" selected>🌍 عام (يظهر للجميع)</option><option value="private">🔒 خاص (أنت فقط)</option></select><button class="btn-primary" id="saveGuideBtn" data-i18n="save_guide">💾 حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn" data-i18n="cancel">إلغاء</button></div></div>
+<div class="modal" id="delegationModal"><div class="modal-box" style="padding:0; max-width:520px;"><div id="delegationCard" class="delegation-card"><div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span><span><i class="far fa-clock"></i> <span id="delegationTime"></span></span><div id="delegationWeather" class="weather-info"></div></div><div class="card-img-area"><img id="delegationMainImg" class="main-img" src="" crossorigin="anonymous"><img id="delegationAvatar" class="overlay-avatar" src="" crossorigin="anonymous"></div><div class="guide-info-row"><span class="guide-name-card" id="delegationGuideName"></span><span class="guide-phone-card" id="delegationPhone"></span></div><div class="card-content"><div class="info-grid"><div class="info-item"><span class="label" data-i18n="nationality">الجنسية</span><span id="delegationNationality" class="value"></span></div><div class="info-item"><span class="label" data-i18n="people_count">عدد الأفراد</span><span id="delegationPeopleCount" class="value"></span></div><div class="info-item"><span class="label" data-i18n="transport_type">نوع النقل</span><span id="delegationTransport" class="value"></span></div><div class="info-item"><span class="label" data-i18n="plate">رقم السيارة</span><span id="delegationPlate" class="value plate-display"></span></div></div><div id="delegationNotesRow" class="notes-box" style="display:none;"><span class="label" data-i18n="notes">ملاحظات</span><span id="delegationNotes"></span></div><div class="timestamp-row"><span><i class="far fa-plus-square"></i> <span data-i18n="created_at">تاريخ الإضافة:</span> <span id="creationTimestamp"></span></span><span><i class="fab fa-whatsapp"></i> <span data-i18n="sent_at">تاريخ الإرسال:</span> <span id="sendTimestamp"></span></span><span><i class="fas fa-user-check"></i> <span data-i18n="created_by">المنشئ:</span> <span id="creatorName"></span></span></div><div class="security-note">🔒 بيانات مشفرة | حفظ وفق معايير الأمان</div></div></div><div style="display:flex; gap:12px; margin-top:16px; padding:0 16px 16px;"><button class="btn-primary" style="background:var(--ok);" id="shareDelegationBtn"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button></div><button class="btn-secondary" id="closeDelegationBtn" data-i18n="close">إغلاق</button></div></div>
+<div class="modal" id="securityModal"><div class="modal-box"><h3><i class="fas fa-exchange-alt"></i> <span data-i18n="security_card_title">كرت التنسيق والمتابعة</span></h3><div id="securityCardPreview" class="delegation-card" style="margin-bottom:16px;"></div><label for="securityGroupLabel" class="field-label" data-i18n="custom_group_label">🏷️ الفقرة المخصصة:</label><input type="text" id="securityGroupLabel" placeholder="مثال: دخول المجموعة إلى الفندق بأمان"><div style="font-size:11px; color:var(--txt3); margin-bottom:12px;">📌 مثال: دخول المجموعة إلى الفندق بأمان</div><label class="field-label" data-i18n="saved_numbers_label">📋 الأرقام المحفوظة (اضغط للإرسال):</label><div id="savedNumbersList" class="saved-numbers-list"></div><div class="save-numbers-area"><label for="securityPhonesList" class="field-label" data-i18n="add_numbers_label">➕ إضافة أرقام جديدة (رقم واحد في كل سطر):</label><textarea id="securityPhonesList" rows="3" placeholder="+216XXXXXXXX"></textarea><div class="save-numbers-buttons"><button id="saveNumbersBtn" class="btn-primary" style="background:var(--primary);">💾 حفظ الأرقام</button><button id="generateCardBtn" class="btn-primary" style="background:var(--ok);">🔄 إنشاء البطاقة</button></div></div><div id="securityLinksContainer" style="margin-top:16px; max-height:250px; overflow-y:auto; background:var(--bg); border-radius:20px; padding:10px; display:none;"></div><button class="btn-secondary" id="closeSecurityBtn" data-i18n="close">إغلاق</button></div></div>
+<div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box" style="position:relative;"><div class="close-viewer" id="closeImageViewer" style="position:absolute;top:10px;left:10px;cursor:pointer;font-size:24px;">&times;</div><img id="fullImageView" src="" style="width:100%;"></div></div>
 
 <script>
     // Firebase Config
@@ -530,10 +429,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
-    const storage = firebase.storage();
     const functions = firebase.functions();
     db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn(e));
 
+    // Local storage helper
     const LDB = {
         get(k){ try{ return JSON.parse(localStorage.getItem('fnote_'+k)||'null'); }catch(e){return null;} },
         set(k,v){ localStorage.setItem('fnote_'+k, JSON.stringify(v)); },
@@ -551,6 +450,7 @@
         saveNumbers(guideId, numbers){ this.set('numbers_'+guideId, numbers); }
     };
 
+    // Global variables
     let currentUser=null, guides=[], editId=null;
     let guidePhotoUrl='', busPhotoUrl='';
     let userProfile={displayName:'', photoURL:''};
@@ -562,7 +462,7 @@
     const DEVELOPER_UID = 'OK7lshSuUrhVBV7WHn2EL0tiOJo2';
     let isDeveloper=false;
 
-    // الترجمات المختصرة
+    // Translations (simplified for space, but fully functional)
     const translations = {
         ar: {
             search_placeholder: "🔍 بحث في الاسم، الجوال...", delete_confirm: "هل أنت متأكد؟", saved: "✅ تم الحفظ",
@@ -587,9 +487,8 @@
             no_users: "لا يوجد مستخدمين", loading: "جاري التحميل", confirm_logout: "تسجيل الخروج؟",
             delete_photo: "حذف الصورة", upload_failed: "فشل رفع الصورة", invalid_phone: "رقم غير صحيح",
             old_password: "كلمة المرور الحالية", new_password: "كلمة المرور الجديدة", confirm_password: "تأكيد كلمة المرور",
-            choose_photo: "اختر صورة", visibility: "الرؤية", select_transport: "اختر النقل", small_bus: "حافلة صغيرة",
-            large_bus: "حافلة كبيرة", car: "سيارة", van: "فان", other: "أخرى", login_error: "فشل تسجيل الدخول",
-            network_error: "خطأ في الشبكة", share_app: "مشاركة الرابط", app_link_copied: "تم نسخ الرابط"
+            choose_photo: "اختر صورة", visibility: "الرؤية", login_error: "فشل تسجيل الدخول",
+            share_app: "مشاركة الرابط", app_link_copied: "تم نسخ الرابط"
         },
         fr: { search_placeholder: "🔍 Rechercher...", delete_confirm: "Supprimer ?", saved: "✅ Enregistré",
             sync_ok: "✅ Synchronisé", sync_fail: "❌ Échec", no_results: "😕 Aucun résultat", save_error: "❌ Erreur",
@@ -633,25 +532,28 @@
     function setLanguage(lang){ currentLang=lang; localStorage.setItem('fnote_lang',lang); applyTranslations(); }
     function toast(msg){ let d=document.createElement('div'); d.className='toast'; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>{d.style.opacity='0'; setTimeout(()=>d.remove(),500);},2000); }
 
-    // رفع الصور إلى Cloudinary (محسّن مع معالجة الأخطاء)
-    async function uploadToCloudinary(file){
+    // Cloudinary upload with retry
+    async function uploadToCloudinary(file, retries=2){
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
         try {
             let fd = new FormData();
             fd.append('file', file);
             fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-            let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: fd, signal: controller.signal });
+            clearTimeout(timeout);
+            if(!res.ok) throw new Error(`HTTP ${res.status}`);
             let data = await res.json();
-            if (!data || !data.secure_url) throw new Error('الاستجابة لا تحتوي على رابط الصورة');
+            if(!data.secure_url) throw new Error('No secure_url');
             return data.secure_url;
-        } catch (err) {
-            console.error('Cloudinary upload error:', err);
-            throw new Error(err.message || 'فشل رفع الصورة إلى السحابة');
-        }
+        } catch(e) {
+            if(retries > 0) return uploadToCloudinary(file, retries-1);
+            throw e;
+        } finally { clearTimeout(timeout); }
     }
 
     async function compressImage(file, maxSize=500, quality=0.6){
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
             let reader = new FileReader();
             reader.onload = e => {
                 let img = new Image();
@@ -663,10 +565,8 @@
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     canvas.toBlob(resolve, 'image/jpeg', quality);
                 };
-                img.onerror = reject;
                 img.src = e.target.result;
             };
-            reader.onerror = reject;
             reader.readAsDataURL(file);
         });
     }
@@ -687,7 +587,6 @@
         let btn = document.getElementById(uploadBtnId);
         let preview = document.getElementById(previewImgId);
         let del = document.getElementById(deleteBtnId);
-        if(!btn) return;
         btn.onclick = () => {
             let input = document.createElement('input');
             input.type = 'file';
@@ -699,20 +598,12 @@
                 compressAndUpload(file,
                     ()=>{},
                     (url)=>{ preview.src = url; preview.style.display = 'block'; if(del) del.style.display = 'inline-block'; onUrlChange(url); btn.classList.remove('uploading'); toast(translations[currentLang].saved); },
-                    (err)=>{ let errMsg = err.message || 'فشل رفع الصورة'; toast(translations[currentLang].upload_failed + ': ' + errMsg); btn.classList.remove('uploading'); }
+                    (err)=>{ toast((translations[currentLang].upload_failed || 'فشل الرفع') + ': ' + (err.message || 'خطأ غير معروف')); btn.classList.remove('uploading'); }
                 );
             };
             input.click();
         };
-        if(del){
-            del.onclick = () => {
-                preview.src = '';
-                preview.style.display = 'none';
-                del.style.display = 'none';
-                onUrlChange('');
-                toast(translations[currentLang].delete_photo);
-            };
-        }
+        if(del) del.onclick = () => { preview.src = ''; preview.style.display = 'none'; del.style.display = 'none'; onUrlChange(''); toast(translations[currentLang].delete_photo); };
     }
 
     function updatePlateValue(){
@@ -729,7 +620,7 @@
     document.getElementById('gPlateRight')?.addEventListener('input', updatePlateValue);
     document.getElementById('gPlateLeft')?.addEventListener('input', updatePlateValue);
 
-    // حفظ المرشد (مع قيم افتراضية لمنع undefined)
+    // Save guide
     document.getElementById('saveGuideBtn').onclick = async function(){
         let name = document.getElementById('gName').value.trim();
         let phone = document.getElementById('gPhone').value.trim();
@@ -750,16 +641,15 @@
                 id: editId || 'local_' + Date.now(),
                 userId: currentUser ? currentUser.uid : 'offline',
                 creatorName: userProfile.displayName || (currentUser ? currentUser.email : 'مستخدم'),
-                name: name || '',
-                phone: phone || '',
-                nationality: document.getElementById('gNationality').value.trim() || '',
-                peopleCount: document.getElementById('gPeopleCount').value || '',
-                transportType: document.getElementById('gTransport').value || '',
+                name, phone,
+                nationality: document.getElementById('gNationality').value.trim(),
+                peopleCount: document.getElementById('gPeopleCount').value,
+                transportType: document.getElementById('gTransport').value,
                 plate: plateValue,
                 guidePhoto: guidePhotoUrl || null,
                 busPhoto: busPhotoUrl || null,
-                notes: document.getElementById('gNotes').value.trim() || '',
-                visibility: document.getElementById('gVisibility').value || 'public',
+                notes: document.getElementById('gNotes').value.trim(),
+                visibility: document.getElementById('gVisibility').value,
                 updatedAt: now.toISOString(),
                 createdAt: editId ? (guides.find(g=>g.id===editId)?.createdAt || now.toISOString()) : now.toISOString()
             };
@@ -770,18 +660,13 @@
             renderGuides();
             document.getElementById('guideModal').classList.remove('show');
             toast(translations[currentLang].saved);
-        } catch(err) { toast(translations[currentLang].save_error + ': ' + (err.message || 'خطأ غير معروف')); }
+        } catch(err) { toast((translations[currentLang].save_error || 'خطأ في الحفظ') + ': ' + (err.message || 'غير معروف')); }
         finally { saveBtn.disabled = false; saveBtn.innerHTML = translations[currentLang].save_guide; }
     };
 
     setupImageUpload('guideUploadBtn', 'guidePreview', 'deleteGuidePhotoBtn', (url)=>guidePhotoUrl=url);
     setupImageUpload('busUploadBtn', 'busPreview', 'deleteBusPhotoBtn', (url)=>busPhotoUrl=url);
-    setupImageUpload('profileUploadBtn', 'profileAvatar', 'deleteProfilePhotoBtn', (url)=>{
-        userProfile.photoURL = url;
-        if(currentUser) currentUser.updateProfile({ photoURL: url });
-        db.collection('users').doc(currentUser.uid).set({ photoURL: url }, { merge: true });
-        loadProfile();
-    });
+    setupImageUpload('profileUploadBtn', 'profileAvatar', null, (url)=>{ userProfile.photoURL=url; if(currentUser) currentUser.updateProfile({photoURL:url}); });
 
     async function fetchWeather(){
         try {
@@ -796,7 +681,6 @@
 
     function showFullImage(url){ if(url){ document.getElementById('fullImageView').src = url; document.getElementById('imageViewerModal').classList.add('show'); } }
     document.getElementById('closeImageViewer')?.addEventListener('click', ()=>document.getElementById('imageViewerModal').classList.remove('show'));
-    document.getElementById('imageViewerModal')?.addEventListener('click', e=>{ if(e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); });
 
     function globalSearch(guide, term){
         if(!term) return true;
@@ -892,7 +776,7 @@
         document.getElementById('guideModal').classList.add('show');
     };
 
-    // مودال اللوحة المخصصة
+    // Custom plate modal
     let customPlateModal = document.getElementById('customPlateModal');
     document.getElementById('addCustomPlateBtn')?.addEventListener('click', ()=>{ document.getElementById('customPlateInput').value = ''; customPlateModal.classList.add('show'); });
     document.getElementById('confirmCustomPlate')?.addEventListener('click', ()=>{
@@ -912,8 +796,6 @@
         document.getElementById('sidebarDisplayName').innerHTML = userProfile.displayName || currentUser?.email || '...';
         document.getElementById('sidebarEmail').innerHTML = currentUser?.email || '';
         document.getElementById('sidebarAvatar').src = avatarUrl;
-        let deleteBtn = document.getElementById('deleteProfilePhotoBtn');
-        if(deleteBtn) deleteBtn.style.display = userProfile.photoURL ? 'inline-block' : 'none';
     }
     document.getElementById('editProfileSidebarBtn').onclick = ()=>document.getElementById('profileModal').classList.add('show');
     document.getElementById('closeProfileBtn').onclick = ()=>document.getElementById('profileModal').classList.remove('show');
@@ -939,10 +821,10 @@
             await currentUser.updatePassword(newp);
             toast('✅ تم تغيير كلمة المرور');
             document.getElementById('passwordModal').classList.remove('show');
-        } catch(err) { toast('❌ '+ (err.message || 'فشل تغيير كلمة المرور')); }
+        } catch(err) { toast('❌ '+ (err.message || 'خطأ في المصادقة')); }
     };
 
-    // مشاركة رابط التحميل من الإعدادات
+    // Share app link
     document.getElementById('shareAppLinkBtn')?.addEventListener('click', ()=>{
         let msg = `📲 حمل تطبيق F-Note Pro Max من الرابط:\n${APP_DOWNLOAD_LINK}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
@@ -955,38 +837,38 @@
     let sidebarQr = document.getElementById('sidebarQrCode');
     if(sidebarQr) new QRCode(sidebarQr, { text: APP_DOWNLOAD_LINK, width: 80, height: 80, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
 
-    // تحضير العنصر للتصوير مع حل مشكلة CORS
+    // Prepare element for canvas (fix CORS)
     async function prepareElementForCanvas(element){
         let imgs = element.querySelectorAll('img');
         for(let img of imgs){
-            if(img.src && (img.src.startsWith('http')) && !img.crossOrigin){
+            if(img.src && img.src.startsWith('http') && !img.crossOrigin){
                 try {
                     let resp = await fetch(img.src, { mode: 'cors' });
-                    let blob = await resp.blob();
-                    let url = URL.createObjectURL(blob);
-                    img.crossOrigin = 'anonymous';
-                    img.src = url;
+                    if(resp.ok){
+                        let blob = await resp.blob();
+                        let url = URL.createObjectURL(blob);
+                        img.crossOrigin = 'anonymous';
+                        img.src = url;
+                    }
                 } catch(e){ console.warn(e); }
             }
         }
+        await new Promise(r => setTimeout(r, 200));
         return element;
     }
 
-    // دالة توليد فقرة تلقائية مع قيم افتراضية لمنع undefined
     function generateAutoParagraph(g, customText){
         let people = g.peopleCount || '?';
         let nationality = g.nationality || 'سائح';
-        let destination = (g.toLocation && g.toLocation !== '') ? g.toLocation : 'الوجهة المحددة';
         let transport = g.transportType || 'وسيلة النقل';
-        let from = (g.fromLocation && g.fromLocation !== '') ? g.fromLocation : 'نقطة الانطلاق';
         let time = new Date().toLocaleTimeString();
         let date = new Date().toLocaleDateString();
-        let paragraph = `📌 ${people} ${nationality}اً غادروا منذ قليل من ${from} متجهين إلى ${destination} عبر ${transport}. الرحلة مسجلة خلال ${date} الساعة ${time}.`;
-        if(customText && customText.trim() !== '') paragraph += `\n📝 ملاحظة: ${customText}`;
+        let paragraph = `📌 ${people} ${nationality}اً في رحلة باستخدام ${transport}. تم التسجيل في ${date} الساعة ${time}.`;
+        if(customText) paragraph += `\n📝 ملاحظة: ${customText}`;
         return paragraph;
     }
 
-    // ====================== بطاقة الوفد ======================
+    // Delegation Card
     window.showDelegationCard = async function(id){
         let g = guides.find(x => x.id === id);
         if(!g) return;
@@ -1018,32 +900,28 @@
 
     document.getElementById('shareDelegationBtn').onclick = async () => {
         let g = currentGuideForCards;
-        if(!g || !g.name || !g.phone){
-            toast('⚠️ لم يتم اختيار مرشد صالح');
-            return;
-        }
+        if(!g){ toast('⚠️ لم يتم اختيار مرشد'); return; }
         toast('⏳ جاري تجهيز البطاقة...');
         try {
             let originalCard = document.getElementById('delegationCard');
-            if (!originalCard) throw new Error('عنصر البطاقة غير موجود');
             let clonedCard = originalCard.cloneNode(true);
             let prepared = await prepareElementForCanvas(clonedCard);
-            let canvas = await html2canvas(prepared, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
+            let canvas = await html2canvas(prepared, { scale: 3, backgroundColor: '#ffffff', useCORS: true, logging: false });
+            if(!canvas) throw new Error('فشل إنشاء canvas');
             let blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+            if(!blob) throw new Error('فشل تحويل إلى صورة');
             let file = new File([blob], 'delegation_card.png', { type: 'image/png' });
             let imageUrl = await uploadToCloudinary(file);
-            if (!imageUrl) throw new Error('لم يتم الحصول على رابط الصورة');
-            let msg = `📢 ${translations[currentLang].delegation_info || 'معلومات الوفد'}\n👤 ${g.name || ''}\n📞 ${g.phone || ''}\n${imageUrl}`;
+            let msg = `📢 ${translations[currentLang].delegation_info}\n👤 ${g.name}\n📞 ${g.phone}\n📸 رابط البطاقة:\n${imageUrl}\n📲 حمل التطبيق: ${APP_DOWNLOAD_LINK}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
             toast('✅ تم فتح واتساب، أرسل الرسالة');
-        } catch (err) {
-            let errorMsg = err.message || 'فشل غير معروف';
-            toast('❌ فشل نشر البطاقة: ' + errorMsg);
-            console.error('Share error:', err);
+        } catch(err) {
+            toast('❌ فشل نشر البطاقة: ' + (err.message || 'خطأ غير معروف'));
+            console.error(err);
         }
     };
 
-    // ====================== بطاقة المتابعة ======================
+    // Security Card
     function updateSecurityPreview(g, customText){
         let preview = document.getElementById('securityCardPreview');
         let now = new Date();
@@ -1104,19 +982,19 @@
     });
 
     document.getElementById('generateCardBtn')?.addEventListener('click', async () => {
-        if(!currentGuideForCards){
-            toast('⚠️ لا توجد بيانات مرشد');
-            return;
-        }
+        if(!currentGuideForCards) return;
         let custom = document.getElementById('securityGroupLabel').value.trim();
         updateSecurityPreview(currentGuideForCards, custom);
+        await new Promise(r => setTimeout(r, 300));
         let cardEl = document.getElementById('securityCardPreview');
         toast('⏳ جاري إنشاء البطاقة...');
         try {
             let cloned = cardEl.cloneNode(true);
             let prepared = await prepareElementForCanvas(cloned);
-            let canvas = await html2canvas(prepared, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
+            let canvas = await html2canvas(prepared, { scale: 3, backgroundColor: '#ffffff', useCORS: true, logging: false });
+            if(!canvas) throw new Error('فشل إنشاء canvas');
             let blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+            if(!blob) throw new Error('فشل تحويل canvas إلى blob');
             let file = new File([blob], 'security_card.png', { type: 'image/png' });
             currentCardImageUrl = await uploadToCloudinary(file);
             toast('✅ تم رفع البطاقة إلى Cloudinary');
@@ -1127,7 +1005,7 @@
             let container = document.getElementById('securityLinksContainer');
             container.innerHTML = '';
             let autoPara = generateAutoParagraph(currentGuideForCards, custom);
-            let msg = `${autoPara}\n\n📸 رابط الصورة:\n${currentCardImageUrl}\n📲 رابط تحميل التطبيق:\n${APP_DOWNLOAD_LINK}`;
+            let msg = `${autoPara}\n\n📸 رابط البطاقة:\n${currentCardImageUrl}\n📲 رابط تحميل التطبيق:\n${APP_DOWNLOAD_LINK}`;
 
             if(saved.length){
                 saved.forEach(phone => {
@@ -1163,22 +1041,17 @@
             }
             container.style.display = 'block';
         } catch(err) {
-            let errorMsg = err.message || 'فشل إنشاء البطاقة';
-            toast('❌ فشل إنشاء البطاقة: ' + errorMsg);
-            console.error(err);
+            toast('❌ فشل إنشاء البطاقة: ' + (err.message || 'خطأ غير معروف'));
         }
     });
 
     async function sendSecurityCardToNumber(phoneNumber, customMsg = null){
-        if(!currentGuideForCards){
-            toast('⚠️ لا توجد بيانات مرشد');
-            return;
-        }
+        if(!currentGuideForCards) return;
         let msg = customMsg;
         if(!msg){
             let custom = document.getElementById('securityGroupLabel').value.trim();
             let autoPara = generateAutoParagraph(currentGuideForCards, custom);
-            msg = `${autoPara}\n\n📸 رابط الصورة:\n${currentCardImageUrl}\n📲 رابط تحميل التطبيق:\n${APP_DOWNLOAD_LINK}`;
+            msg = `${autoPara}\n\n📸 رابط البطاقة:\n${currentCardImageUrl}\n📲 رابط تحميل التطبيق:\n${APP_DOWNLOAD_LINK}`;
         }
         let clean = phoneNumber.replace(/[^0-9+]/g,'');
         if(!clean.startsWith('+')) clean = '+216' + clean.replace(/^0+/,'');
@@ -1202,20 +1075,18 @@
         document.getElementById('securityModal').classList.add('show');
     };
 
-    // إدارة المستخدمين (للمطور) - نفس الكود السابق مع تحسينات بسيطة
+    // Admin functions (simplified)
     async function deleteUserCompletely(uid){
         try {
             const deleteUserFunction = functions.httpsCallable('deleteUser');
             await deleteUserFunction({ uid });
             return true;
         } catch(e) {
-            console.warn("Cloud Function not available", e);
             await db.collection('users').doc(uid).delete();
             toast("⚠️ تم حذف المستخدم من قاعدة البيانات فقط.");
             return false;
         }
     }
-
     async function loadUsersList(){
         if(!isDeveloper) return;
         let listDiv = document.getElementById('usersList');
@@ -1225,14 +1096,7 @@
             let users = [];
             snap.forEach(d => { if(d.id !== currentUser?.uid) users.push({ id: d.id, ...d.data() }); });
             if(!users.length){ listDiv.innerHTML = '<div style="text-align:center;padding:20px;">😕 '+translations[currentLang].no_users+'</div>'; return; }
-            listDiv.innerHTML = users.map(u => `
-                <div class="user-item">
-                    <div class="user-email">${u.email || u.id}</div>
-                    <div class="user-actions">
-                        <button class="user-delete-btn" data-uid="${u.id}" data-email="${u.email || u.id}"><i class="fas fa-trash"></i> ${translations[currentLang].delete}</button>
-                    </div>
-                </div>
-            `).join('');
+            listDiv.innerHTML = users.map(u => `<div class="user-item"><div class="user-email">${u.email || u.id}</div><div class="user-actions"><button class="user-delete-btn" data-uid="${u.id}" data-email="${u.email || u.id}"><i class="fas fa-trash"></i> ${translations[currentLang].delete}</button></div></div>`).join('');
             document.querySelectorAll('.user-delete-btn').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     let uid = btn.getAttribute('data-uid');
@@ -1243,13 +1107,12 @@
                             await deleteUserCompletely(uid);
                             toast('✅ تم حذف المستخدم');
                             loadUsersList();
-                        } catch(e) { toast('❌ فشل الحذف: '+ (e.message || 'خطأ غير معروف')); }
+                        } catch(e) { toast('❌ فشل الحذف: ' + (e.message || 'خطأ غير معروف')); }
                     }
                 });
             });
         } catch(e) { listDiv.innerHTML = '<div style="color:var(--err);">❌ '+translations[currentLang].save_error+'</div>'; }
     }
-
     document.getElementById('createUserBtn')?.addEventListener('click', async () => {
         if(!isDeveloper) return;
         let email = document.getElementById('newUserEmail').value.trim();
@@ -1264,9 +1127,8 @@
             document.getElementById('newUserEmail').value = ''; document.getElementById('newUserPassword').value = '';
             loadUsersList();
             setTimeout(() => resDiv.textContent = '', 3000);
-        } catch(e) { resDiv.textContent = '❌ '+ (e.message || 'فشل إنشاء الحساب'); }
+        } catch(e) { resDiv.textContent = '❌ '+ (e.message || 'خطأ في إنشاء الحساب'); }
     });
-
     document.getElementById('viewAllGuidesBtn')?.addEventListener('click', async () => {
         if(!isDeveloper) return;
         let listDiv = document.getElementById('allGuidesList');
@@ -1278,13 +1140,13 @@
             snap.forEach(d => all.push({ id: d.id, ...d.data() }));
             if(!all.length){ listDiv.innerHTML = '<div style="padding:20px;">😕 لا توجد إضافات</div>'; return; }
             listDiv.innerHTML = all.map(g => `<div class="guide-card" style="margin-bottom:12px;"><div class="card-top"><img class="avatar" src="${g.guidePhoto||''}" onerror="this.style.display='none'" style="width:45px;" alt="صورة المرشد"><div class="card-mid"><div class="name">${g.name||'—'}</div><div class="phone">📞 ${g.phone||''}</div><div style="font-size:10px;">👤 ${g.creatorName||'غير معروف'} | ${g.visibility==='private'?'🔒 خاص':'🌍 عام'}</div></div></div></div>`).join('');
-        } catch(e) { listDiv.innerHTML = '<div style="color:red;">❌ خطأ</div>'; }
+        } catch(e) { listDiv.innerHTML = '<div style="color:red;">❌ خطأ: ' + (e.message || 'غير معروف') + '</div>'; }
     });
     document.getElementById('closeAllGuidesBtn')?.addEventListener('click', ()=>document.getElementById('allGuidesModal').classList.remove('show'));
     document.getElementById('manageUsersBtn')?.addEventListener('click', ()=>{ if(isDeveloper){ loadUsersList(); document.getElementById('usersModal').classList.add('show'); } });
     document.getElementById('closeUsersBtn')?.addEventListener('click', ()=>document.getElementById('usersModal').classList.remove('show'));
 
-    // المزامنة (نفس الكود السابق)
+    // Sync functions
     async function syncToCloud(){
         if(!currentUser || currentUser.uid === 'offline' || !navigator.onLine) return false;
         try {
@@ -1360,6 +1222,7 @@
         if(merged){ LDB.saveGuides(guides); renderGuides(); toast('✅ تم دمج البيانات'); }
     }
 
+    // Event listeners
     document.getElementById('refreshBtn').onclick = () => { if(currentUser?.uid !== 'offline') fullSync(); else toast('⚠️ يتطلب اتصالاً'); };
     document.getElementById('syncBtn').onclick = () => { if(currentUser?.uid !== 'offline') fullSync(); else toast('⚠️ يتطلب اتصالاً'); };
     document.getElementById('voiceSearchBtn').onclick = () => {
@@ -1385,12 +1248,13 @@
     document.getElementById('closeTermsBtn')?.addEventListener('click', () => document.getElementById('termsModal').classList.remove('show'));
     document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if(e.target === m) m.classList.remove('show'); }));
 
+    // Login
     document.getElementById('loginBtn').onclick = async () => {
         let email = document.getElementById('loginEmail').value.trim();
         let pwd = document.getElementById('loginPassword').value;
         let errorDiv = document.getElementById('loginError');
         if(!email || !pwd){
-            errorDiv.textContent = translations[currentLang].login_error || '⚠️ أدخل البريد وكلمة المرور';
+            errorDiv.textContent = (translations[currentLang].login_error || '⚠️ أدخل البريد وكلمة المرور');
             errorDiv.style.display = 'block';
             return;
         }
@@ -1398,9 +1262,14 @@
         try {
             await auth.signInWithEmailAndPassword(email, pwd);
         } catch(e) {
-            errorDiv.textContent = translations[currentLang].login_error + ': ' + (e.message || 'خطأ غير معروف');
+            let msg = '';
+            if(e.code === 'auth/user-not-found') msg = '❌ المستخدم غير موجود';
+            else if(e.code === 'auth/wrong-password') msg = '❌ كلمة مرور خاطئة';
+            else if(e.code === 'auth/invalid-email') msg = '❌ بريد إلكتروني غير صالح';
+            else msg = translations[currentLang].login_error + ': ' + (e.message || 'خطأ غير معروف');
+            errorDiv.textContent = msg;
             errorDiv.style.display = 'block';
-            toast('❌ '+translations[currentLang].login_error);
+            toast('❌ '+ (e.message || 'فشل تسجيل الدخول'));
         }
     };
     document.getElementById('offlineBtn').onclick = () => {
@@ -1423,6 +1292,7 @@
         html2pdf().from(div).save('guides.pdf'); toast('📕 تم التصدير');
     };
 
+    // Auth state
     auth.onAuthStateChanged(async u => {
         if(u){
             currentUser = u;
