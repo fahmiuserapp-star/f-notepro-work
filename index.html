@@ -129,7 +129,6 @@
         .btn-secondary:hover { background: #475569; }
         .image-delete-btn { background: var(--err); color: white; border: none; border-radius: 30px; padding: 4px 12px; font-size: 11px; margin-top: 8px; cursor: pointer; width: auto; display: inline-block; }
         
-        /* بطاقات متناسقة */
         .delegation-card, .security-card-preview {
             background: var(--card);
             border-radius: 24px;
@@ -429,6 +428,7 @@
             <i class="fa-solid fa-camera"></i> <span data-i18n="change_photo">تغيير الصورة</span>
             <div class="upload-spinner"><div class="spinner-small"></div></div>
         </div>
+        <button type="button" id="deleteProfilePhotoBtn" class="image-delete-btn" style="display:none;">🗑️ حذف الصورة</button>
         <label for="profileDisplayName" class="field-label" data-i18n="display_name">اسم العرض</label>
         <input type="text" id="profileDisplayName" data-i18n-placeholder="display_name" placeholder="اسم العرض">
         <label for="profileEmail" class="field-label">البريد الإلكتروني</label>
@@ -562,7 +562,7 @@
     const DEVELOPER_UID = 'OK7lshSuUrhVBV7WHn2EL0tiOJo2';
     let isDeveloper=false;
 
-    // الترجمات المختصرة
+    // الترجمات المختصرة (نفس السابقة)
     const translations = {
         ar: {
             search_placeholder: "🔍 بحث في الاسم، الجوال...", delete_confirm: "هل أنت متأكد؟", saved: "✅ تم الحفظ",
@@ -633,7 +633,7 @@
     function setLanguage(lang){ currentLang=lang; localStorage.setItem('fnote_lang',lang); applyTranslations(); }
     function toast(msg){ let d=document.createElement('div'); d.className='toast'; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>{d.style.opacity='0'; setTimeout(()=>d.remove(),500);},2000); }
 
-    // رفع الصور إلى Cloudinary
+    // رفع الصور إلى Cloudinary (محسّن)
     async function uploadToCloudinary(file){
         let fd = new FormData();
         fd.append('file', file);
@@ -676,10 +676,12 @@
         }
     }
 
+    // إعداد رفع الصورة مع زر الحذف
     function setupImageUpload(uploadBtnId, previewImgId, deleteBtnId, onUrlChange){
         let btn = document.getElementById(uploadBtnId);
         let preview = document.getElementById(previewImgId);
         let del = document.getElementById(deleteBtnId);
+        if(!btn) return;
         btn.onclick = () => {
             let input = document.createElement('input');
             input.type = 'file';
@@ -696,7 +698,15 @@
             };
             input.click();
         };
-        if(del) del.onclick = () => { preview.src = ''; preview.style.display = 'none'; del.style.display = 'none'; onUrlChange(''); toast(translations[currentLang].delete_photo); };
+        if(del){
+            del.onclick = () => {
+                preview.src = '';
+                preview.style.display = 'none';
+                del.style.display = 'none';
+                onUrlChange('');
+                toast(translations[currentLang].delete_photo);
+            };
+        }
     }
 
     function updatePlateValue(){
@@ -757,8 +767,16 @@
         finally { saveBtn.disabled = false; saveBtn.innerHTML = translations[currentLang].save_guide; }
     };
 
+    // إعداد رفع الصور للمرشد والسيارة
     setupImageUpload('guideUploadBtn', 'guidePreview', 'deleteGuidePhotoBtn', (url)=>guidePhotoUrl=url);
     setupImageUpload('busUploadBtn', 'busPreview', 'deleteBusPhotoBtn', (url)=>busPhotoUrl=url);
+    // إعداد رفع الصورة الشخصية مع الحذف
+    setupImageUpload('profileUploadBtn', 'profileAvatar', 'deleteProfilePhotoBtn', (url)=>{
+        userProfile.photoURL = url;
+        if(currentUser) currentUser.updateProfile({ photoURL: url });
+        db.collection('users').doc(currentUser.uid).set({ photoURL: url }, { merge: true });
+        loadProfile();
+    });
 
     async function fetchWeather(){
         try {
@@ -889,6 +907,9 @@
         document.getElementById('sidebarDisplayName').innerHTML = userProfile.displayName || currentUser?.email || '...';
         document.getElementById('sidebarEmail').innerHTML = currentUser?.email || '';
         document.getElementById('sidebarAvatar').src = avatarUrl;
+        // إظهار زر حذف الصورة إذا كانت موجودة
+        let deleteBtn = document.getElementById('deleteProfilePhotoBtn');
+        if(deleteBtn) deleteBtn.style.display = userProfile.photoURL ? 'inline-block' : 'none';
     }
     document.getElementById('editProfileSidebarBtn').onclick = ()=>document.getElementById('profileModal').classList.add('show');
     document.getElementById('closeProfileBtn').onclick = ()=>document.getElementById('profileModal').classList.remove('show');
@@ -930,7 +951,7 @@
     let sidebarQr = document.getElementById('sidebarQrCode');
     if(sidebarQr) new QRCode(sidebarQr, { text: APP_DOWNLOAD_LINK, width: 80, height: 80, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
 
-    // تحضير العنصر للتصوير مع حل مشكلة CORS
+    // تحضير العنصر للتصوير مع حل مشكلة CORS (تحويل الصور إلى Blob مؤقتاً)
     async function prepareElementForCanvas(element){
         let imgs = element.querySelectorAll('img');
         for(let img of imgs){
@@ -1163,7 +1184,7 @@
         document.getElementById('securityModal').classList.add('show');
     };
 
-    // إدارة المستخدمين (للمطور)
+    // إدارة المستخدمين (للمطور) - نفس الكود السابق مع تحسينات بسيطة
     async function deleteUserCompletely(uid){
         try {
             const deleteUserFunction = functions.httpsCallable('deleteUser');
@@ -1245,7 +1266,7 @@
     document.getElementById('manageUsersBtn')?.addEventListener('click', ()=>{ if(isDeveloper){ loadUsersList(); document.getElementById('usersModal').classList.add('show'); } });
     document.getElementById('closeUsersBtn')?.addEventListener('click', ()=>document.getElementById('usersModal').classList.remove('show'));
 
-    // المزامنة
+    // المزامنة (نفس الكود السابق)
     async function syncToCloud(){
         if(!currentUser || currentUser.uid === 'offline' || !navigator.onLine) return false;
         try {
