@@ -418,7 +418,7 @@
     const WEATHER_API_KEY = '8d3316e943ba32112e54a2c8e75fe242';
     const CITY = 'Sfax';
     const CLOUDINARY_CLOUD_NAME = 'dye93zbag';
-    const CLOUDINARY_UPLOAD_PRESET = 'fnote_unsigned';  // يجب إنشاؤه يدوياً كنوع Unsigned
+    const CLOUDINARY_UPLOAD_PRESET = 'fnote_unsigned';
     const APP_DOWNLOAD_LINK = 'https://fahmiuserapp-star.github.io/f-notepro-work/';
 
     firebase.initializeApp(firebaseConfig);
@@ -427,7 +427,6 @@
     const functions = firebase.functions();
     db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn(e));
 
-    // Local storage helper
     const LDB = {
         get(k){ try{ return JSON.parse(localStorage.getItem('fnote_'+k)||'null'); }catch(e){return null;} },
         set(k,v){ localStorage.setItem('fnote_'+k, JSON.stringify(v)); },
@@ -456,7 +455,6 @@
     const DEVELOPER_UID = 'OK7lshSuUrhVBV7WHn2EL0tiOJo2';
     let isDeveloper=false;
 
-    // Translations
     const translations = {
         ar: {
             search_placeholder: "🔍 بحث في الاسم، الجوال...", delete_confirm: "هل أنت متأكد؟", saved: "✅ تم الحفظ",
@@ -526,7 +524,6 @@
     function setLanguage(lang){ currentLang=lang; localStorage.setItem('fnote_lang',lang); applyTranslations(); }
     function toast(msg){ let d=document.createElement('div'); d.className='toast'; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>{d.style.opacity='0'; setTimeout(()=>d.remove(),500);},2000); }
 
-    // Cloudinary upload with retry
     async function uploadToCloudinary(file, retries=2){
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 30000);
@@ -614,7 +611,6 @@
     document.getElementById('gPlateRight')?.addEventListener('input', updatePlateValue);
     document.getElementById('gPlateLeft')?.addEventListener('input', updatePlateValue);
 
-    // Save guide
     document.getElementById('saveGuideBtn').onclick = async function(){
         let name = document.getElementById('gName').value.trim();
         let phone = document.getElementById('gPhone').value.trim();
@@ -675,6 +671,7 @@
 
     function showFullImage(url){ if(url){ document.getElementById('fullImageView').src = url; document.getElementById('imageViewerModal').classList.add('show'); } }
     document.getElementById('closeImageViewer')?.addEventListener('click', ()=>document.getElementById('imageViewerModal').classList.remove('show'));
+    document.getElementById('imageViewerModal')?.addEventListener('click', e=>{ if(e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); });
 
     function globalSearch(guide, term){
         if(!term) return true;
@@ -708,7 +705,7 @@
                     <button class="more-btn" data-id="${g.id}"><i class="fas fa-ellipsis-h"></i> ${translations[currentLang].more}</button>
                     <div class="hidden-buttons" id="hidden-buttons-${g.id}">
                         <button class="c-btn c-call" onclick="location.href='tel:${g.phone}'"><i class="fas fa-phone-alt"></i> ${translations[currentLang].call}</button>
-                        <button class="c-btn c-wa" onclick="openWhatsAppDirect('${g.phone}', 'مرحباً ${g.name}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                        <button class="c-btn c-wa" onclick="openWhatsApp('${g.phone}', 'مرحباً ${g.name}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
                         <button class="c-btn c-card" onclick="showDelegationCard('${g.id}')"><i class="fas fa-id-card"></i> ${translations[currentLang].card}</button>
                         <button class="c-btn c-security" onclick="showSecurityCard('${g.id}')"><i class="fas fa-exchange-alt"></i> ${translations[currentLang].follow_up}</button>
                         ${(g.userId === currentUser?.uid || isDeveloper) ? `<button class="c-btn c-edit" onclick="editGuide('${g.id}')"><i class="fas fa-edit"></i> ${translations[currentLang].edit}</button>
@@ -819,7 +816,7 @@
 
     document.getElementById('shareAppLinkBtn')?.addEventListener('click', ()=>{
         let msg = `📲 حمل تطبيق F-Note Pro Max من الرابط:\n${APP_DOWNLOAD_LINK}`;
-        openWhatsAppDirect('', msg);
+        openWhatsApp('', msg);
     });
     document.getElementById('copyAppLinkBtn')?.addEventListener('click', ()=>{
         navigator.clipboard.writeText(APP_DOWNLOAD_LINK);
@@ -828,19 +825,15 @@
     let sidebarQr = document.getElementById('sidebarQrCode');
     if(sidebarQr) new QRCode(sidebarQr, { text: APP_DOWNLOAD_LINK, width: 80, height: 80, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
 
-    // دالة فتح واتساب مباشرة باستخدام api.whatsapp.com (الأكثر توافقاً)
-    function openWhatsAppDirect(phoneNumber, message) {
-        // تنظيف رقم الهاتف
+    // دالة واتساب الموثوقة
+    function openWhatsApp(phoneNumber, message) {
         let cleanNumber = phoneNumber.replace(/[^0-9+]/g, '');
         if (cleanNumber && !cleanNumber.startsWith('+')) {
             cleanNumber = '+216' + cleanNumber.replace(/^0+/, '');
         }
         const encodedMsg = encodeURIComponent(message);
         let url = `https://api.whatsapp.com/send?text=${encodedMsg}`;
-        if (cleanNumber) {
-            url = `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodedMsg}`;
-        }
-        // فتح الرابط (سيطلب فتح التطبيق أو المتصفح)
+        if (cleanNumber) url = `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodedMsg}`;
         window.open(url, '_blank');
     }
 
@@ -874,6 +867,7 @@
         return paragraph;
     }
 
+    // بطاقة الوفد
     window.showDelegationCard = async function(id){
         let g = guides.find(x => x.id === id);
         if(!g) return;
@@ -918,7 +912,7 @@
             let file = new File([blob], 'delegation_card.png', { type: 'image/png' });
             let imageUrl = await uploadToCloudinary(file);
             let msg = `📢 ${translations[currentLang].delegation_info}\n👤 ${g.name}\n📞 ${g.phone}\n📸 رابط البطاقة:\n${imageUrl}\n📲 حمل التطبيق: ${APP_DOWNLOAD_LINK}`;
-            openWhatsAppDirect(g.phone, msg);
+            openWhatsApp(g.phone, msg);
             toast('✅ تم فتح واتساب');
         } catch(err) {
             toast('❌ فشل نشر البطاقة: ' + (err.message || 'خطأ غير معروف'));
@@ -926,7 +920,7 @@
         }
     };
 
-    // Security Card
+    // بطاقة المتابعة
     function updateSecurityPreview(g, customText){
         let preview = document.getElementById('securityCardPreview');
         let now = new Date();
@@ -942,13 +936,13 @@
                     <div class="info-item"><span class="label">${translations[currentLang].transport}</span><span class="value">${g.transportType||'—'}</span></div>
                     <div class="info-item"><span class="label">${translations[currentLang].plate}</span><span class="value">${formatPlateDisplay(g.plate)}</span></div>
                 </div>
-                <div class="notes-box" style="background:#f0f9ff; border-left:4px solid #3b82f6; color:#1e293b;">
+                <div class="notes-box" style="background:#f0f9ff; border-left:4px solid #3b82f6;">
                     <span class="label">✍️ فقرة تلقائية</span>
                     <div class="value" style="color:#1e293b;">${autoPara}</div>
                 </div>
-                ${g.notes ? `<div class="notes-box" style="background:#fef9c3; border-left:4px solid #eab308; color:#1e293b;"><span class="label">${translations[currentLang].notes}</span><span class="value" style="color:#1e293b;">${g.notes}</span></div>` : ''}
+                <!-- لا نضيف ملاحظات المرشد القديمة -->
                 <div class="qr-section">
-                    <div id="securityQrCode" class="qr-code" alt="رمز QR"></div>
+                    <div id="securityQrCode" class="qr-code"></div>
                     <div style="font-size:10px;">📲 مسح للمشاركة</div>
                 </div>
                 <div class="timestamp-row"><span><i class="far fa-plus-square"></i> ${translations[currentLang].created_at} ${g.createdAt?new Date(g.createdAt).toLocaleString():''}</span><span><i class="fab fa-whatsapp"></i> ${translations[currentLang].sent_at} ${now.toLocaleString()}</span><span><i class="fas fa-user-check"></i> ${g.creatorName||''}</span></div>
@@ -1077,7 +1071,7 @@
             let autoPara = generateAutoParagraph(currentGuideForCards, custom);
             msg = `${autoPara}\n\n📸 رابط البطاقة (للاطلاع السريع):\n${currentCardImageUrl}\n📲 حمل التطبيق: ${APP_DOWNLOAD_LINK}`;
         }
-        openWhatsAppDirect(phoneNumber, msg);
+        openWhatsApp(phoneNumber, msg);
         LDB.addSentHistory(currentGuideForCards.id, phoneNumber, new Date().toISOString());
         updateSavedNumbersDisplay();
         toast('📲 تم توجيهك إلى واتساب');
@@ -1097,7 +1091,7 @@
         document.getElementById('securityModal').classList.add('show');
     };
 
-    // Admin functions (simplified)
+    // دوال الإدارة (مختصرة للاختصار)
     async function deleteUserCompletely(uid){
         try {
             const deleteUserFunction = functions.httpsCallable('deleteUser');
@@ -1168,7 +1162,7 @@
     document.getElementById('manageUsersBtn')?.addEventListener('click', ()=>{ if(isDeveloper){ loadUsersList(); document.getElementById('usersModal').classList.add('show'); } });
     document.getElementById('closeUsersBtn')?.addEventListener('click', ()=>document.getElementById('usersModal').classList.remove('show'));
 
-    // Sync functions
+    // المزامنة
     async function syncToCloud(){
         if(!currentUser || currentUser.uid === 'offline' || !navigator.onLine) return false;
         try {
