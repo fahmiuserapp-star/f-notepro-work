@@ -562,7 +562,7 @@
     const DEVELOPER_UID = 'OK7lshSuUrhVBV7WHn2EL0tiOJo2';
     let isDeveloper=false;
 
-    // الترجمات المختصرة (نفس السابقة)
+    // الترجمات المختصرة
     const translations = {
         ar: {
             search_placeholder: "🔍 بحث في الاسم، الجوال...", delete_confirm: "هل أنت متأكد؟", saved: "✅ تم الحفظ",
@@ -633,20 +633,25 @@
     function setLanguage(lang){ currentLang=lang; localStorage.setItem('fnote_lang',lang); applyTranslations(); }
     function toast(msg){ let d=document.createElement('div'); d.className='toast'; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>{d.style.opacity='0'; setTimeout(()=>d.remove(),500);},2000); }
 
-    // رفع الصور إلى Cloudinary (محسّن)
+    // رفع الصور إلى Cloudinary (محسّن مع معالجة الأخطاء)
     async function uploadToCloudinary(file){
-        let fd = new FormData();
-        fd.append('file', file);
-        fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-        let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-        if(!res.ok) throw new Error('فشل رفع الصورة إلى Cloudinary');
-        let data = await res.json();
-        if(!data.secure_url) throw new Error('لم يتم استلام رابط الصورة');
-        return data.secure_url;
+        try {
+            let fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            let data = await res.json();
+            if (!data || !data.secure_url) throw new Error('الاستجابة لا تحتوي على رابط الصورة');
+            return data.secure_url;
+        } catch (err) {
+            console.error('Cloudinary upload error:', err);
+            throw new Error(err.message || 'فشل رفع الصورة إلى السحابة');
+        }
     }
 
     async function compressImage(file, maxSize=500, quality=0.6){
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             let reader = new FileReader();
             reader.onload = e => {
                 let img = new Image();
@@ -658,8 +663,10 @@
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     canvas.toBlob(resolve, 'image/jpeg', quality);
                 };
+                img.onerror = reject;
                 img.src = e.target.result;
             };
+            reader.onerror = reject;
             reader.readAsDataURL(file);
         });
     }
@@ -676,7 +683,6 @@
         }
     }
 
-    // إعداد رفع الصورة مع زر الحذف
     function setupImageUpload(uploadBtnId, previewImgId, deleteBtnId, onUrlChange){
         let btn = document.getElementById(uploadBtnId);
         let preview = document.getElementById(previewImgId);
@@ -693,7 +699,7 @@
                 compressAndUpload(file,
                     ()=>{},
                     (url)=>{ preview.src = url; preview.style.display = 'block'; if(del) del.style.display = 'inline-block'; onUrlChange(url); btn.classList.remove('uploading'); toast(translations[currentLang].saved); },
-                    (err)=>{ toast(translations[currentLang].upload_failed + ': ' + err.message); btn.classList.remove('uploading'); }
+                    (err)=>{ let errMsg = err.message || 'فشل رفع الصورة'; toast(translations[currentLang].upload_failed + ': ' + errMsg); btn.classList.remove('uploading'); }
                 );
             };
             input.click();
@@ -723,7 +729,7 @@
     document.getElementById('gPlateRight')?.addEventListener('input', updatePlateValue);
     document.getElementById('gPlateLeft')?.addEventListener('input', updatePlateValue);
 
-    // حفظ المرشد
+    // حفظ المرشد (مع قيم افتراضية لمنع undefined)
     document.getElementById('saveGuideBtn').onclick = async function(){
         let name = document.getElementById('gName').value.trim();
         let phone = document.getElementById('gPhone').value.trim();
@@ -744,15 +750,16 @@
                 id: editId || 'local_' + Date.now(),
                 userId: currentUser ? currentUser.uid : 'offline',
                 creatorName: userProfile.displayName || (currentUser ? currentUser.email : 'مستخدم'),
-                name, phone,
-                nationality: document.getElementById('gNationality').value.trim(),
-                peopleCount: document.getElementById('gPeopleCount').value,
-                transportType: document.getElementById('gTransport').value,
+                name: name || '',
+                phone: phone || '',
+                nationality: document.getElementById('gNationality').value.trim() || '',
+                peopleCount: document.getElementById('gPeopleCount').value || '',
+                transportType: document.getElementById('gTransport').value || '',
                 plate: plateValue,
                 guidePhoto: guidePhotoUrl || null,
                 busPhoto: busPhotoUrl || null,
-                notes: document.getElementById('gNotes').value.trim(),
-                visibility: document.getElementById('gVisibility').value,
+                notes: document.getElementById('gNotes').value.trim() || '',
+                visibility: document.getElementById('gVisibility').value || 'public',
                 updatedAt: now.toISOString(),
                 createdAt: editId ? (guides.find(g=>g.id===editId)?.createdAt || now.toISOString()) : now.toISOString()
             };
@@ -763,14 +770,12 @@
             renderGuides();
             document.getElementById('guideModal').classList.remove('show');
             toast(translations[currentLang].saved);
-        } catch(err) { toast(translations[currentLang].save_error + ': ' + err.message); }
+        } catch(err) { toast(translations[currentLang].save_error + ': ' + (err.message || 'خطأ غير معروف')); }
         finally { saveBtn.disabled = false; saveBtn.innerHTML = translations[currentLang].save_guide; }
     };
 
-    // إعداد رفع الصور للمرشد والسيارة
     setupImageUpload('guideUploadBtn', 'guidePreview', 'deleteGuidePhotoBtn', (url)=>guidePhotoUrl=url);
     setupImageUpload('busUploadBtn', 'busPreview', 'deleteBusPhotoBtn', (url)=>busPhotoUrl=url);
-    // إعداد رفع الصورة الشخصية مع الحذف
     setupImageUpload('profileUploadBtn', 'profileAvatar', 'deleteProfilePhotoBtn', (url)=>{
         userProfile.photoURL = url;
         if(currentUser) currentUser.updateProfile({ photoURL: url });
@@ -907,7 +912,6 @@
         document.getElementById('sidebarDisplayName').innerHTML = userProfile.displayName || currentUser?.email || '...';
         document.getElementById('sidebarEmail').innerHTML = currentUser?.email || '';
         document.getElementById('sidebarAvatar').src = avatarUrl;
-        // إظهار زر حذف الصورة إذا كانت موجودة
         let deleteBtn = document.getElementById('deleteProfilePhotoBtn');
         if(deleteBtn) deleteBtn.style.display = userProfile.photoURL ? 'inline-block' : 'none';
     }
@@ -935,7 +939,7 @@
             await currentUser.updatePassword(newp);
             toast('✅ تم تغيير كلمة المرور');
             document.getElementById('passwordModal').classList.remove('show');
-        } catch(err) { toast('❌ '+err.message); }
+        } catch(err) { toast('❌ '+ (err.message || 'فشل تغيير كلمة المرور')); }
     };
 
     // مشاركة رابط التحميل من الإعدادات
@@ -951,7 +955,7 @@
     let sidebarQr = document.getElementById('sidebarQrCode');
     if(sidebarQr) new QRCode(sidebarQr, { text: APP_DOWNLOAD_LINK, width: 80, height: 80, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
 
-    // تحضير العنصر للتصوير مع حل مشكلة CORS (تحويل الصور إلى Blob مؤقتاً)
+    // تحضير العنصر للتصوير مع حل مشكلة CORS
     async function prepareElementForCanvas(element){
         let imgs = element.querySelectorAll('img');
         for(let img of imgs){
@@ -968,17 +972,17 @@
         return element;
     }
 
-    // دالة لتوليد فقرة تلقائية (ذكاء اصطناعي بسيط)
+    // دالة توليد فقرة تلقائية مع قيم افتراضية لمنع undefined
     function generateAutoParagraph(g, customText){
         let people = g.peopleCount || '?';
         let nationality = g.nationality || 'سائح';
-        let destination = g.toLocation || 'الوجهة';
+        let destination = (g.toLocation && g.toLocation !== '') ? g.toLocation : 'الوجهة المحددة';
         let transport = g.transportType || 'وسيلة النقل';
-        let from = g.fromLocation || 'نقطة الانطلاق';
+        let from = (g.fromLocation && g.fromLocation !== '') ? g.fromLocation : 'نقطة الانطلاق';
         let time = new Date().toLocaleTimeString();
         let date = new Date().toLocaleDateString();
         let paragraph = `📌 ${people} ${nationality}اً غادروا منذ قليل من ${from} متجهين إلى ${destination} عبر ${transport}. الرحلة مسجلة خلال ${date} الساعة ${time}.`;
-        if(customText) paragraph += `\n📝 ملاحظة: ${customText}`;
+        if(customText && customText.trim() !== '') paragraph += `\n📝 ملاحظة: ${customText}`;
         return paragraph;
     }
 
@@ -1014,22 +1018,28 @@
 
     document.getElementById('shareDelegationBtn').onclick = async () => {
         let g = currentGuideForCards;
-        if(!g){ toast('⚠️ لم يتم اختيار مرشد'); return; }
+        if(!g || !g.name || !g.phone){
+            toast('⚠️ لم يتم اختيار مرشد صالح');
+            return;
+        }
         toast('⏳ جاري تجهيز البطاقة...');
         try {
             let originalCard = document.getElementById('delegationCard');
+            if (!originalCard) throw new Error('عنصر البطاقة غير موجود');
             let clonedCard = originalCard.cloneNode(true);
             let prepared = await prepareElementForCanvas(clonedCard);
             let canvas = await html2canvas(prepared, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
             let blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
             let file = new File([blob], 'delegation_card.png', { type: 'image/png' });
             let imageUrl = await uploadToCloudinary(file);
-            let msg = `📢 ${translations[currentLang].delegation_info}\n👤 ${g.name}\n📞 ${g.phone}\n${imageUrl}`;
+            if (!imageUrl) throw new Error('لم يتم الحصول على رابط الصورة');
+            let msg = `📢 ${translations[currentLang].delegation_info || 'معلومات الوفد'}\n👤 ${g.name || ''}\n📞 ${g.phone || ''}\n${imageUrl}`;
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
             toast('✅ تم فتح واتساب، أرسل الرسالة');
-        } catch(err) {
-            toast('❌ فشل نشر البطاقة: ' + err.message);
-            console.error(err);
+        } catch (err) {
+            let errorMsg = err.message || 'فشل غير معروف';
+            toast('❌ فشل نشر البطاقة: ' + errorMsg);
+            console.error('Share error:', err);
         }
     };
 
@@ -1094,7 +1104,10 @@
     });
 
     document.getElementById('generateCardBtn')?.addEventListener('click', async () => {
-        if(!currentGuideForCards) return;
+        if(!currentGuideForCards){
+            toast('⚠️ لا توجد بيانات مرشد');
+            return;
+        }
         let custom = document.getElementById('securityGroupLabel').value.trim();
         updateSecurityPreview(currentGuideForCards, custom);
         let cardEl = document.getElementById('securityCardPreview');
@@ -1150,12 +1163,17 @@
             }
             container.style.display = 'block';
         } catch(err) {
-            toast('❌ فشل إنشاء البطاقة: ' + err.message);
+            let errorMsg = err.message || 'فشل إنشاء البطاقة';
+            toast('❌ فشل إنشاء البطاقة: ' + errorMsg);
+            console.error(err);
         }
     });
 
     async function sendSecurityCardToNumber(phoneNumber, customMsg = null){
-        if(!currentGuideForCards) return;
+        if(!currentGuideForCards){
+            toast('⚠️ لا توجد بيانات مرشد');
+            return;
+        }
         let msg = customMsg;
         if(!msg){
             let custom = document.getElementById('securityGroupLabel').value.trim();
@@ -1225,7 +1243,7 @@
                             await deleteUserCompletely(uid);
                             toast('✅ تم حذف المستخدم');
                             loadUsersList();
-                        } catch(e) { toast('❌ فشل الحذف: '+e.message); }
+                        } catch(e) { toast('❌ فشل الحذف: '+ (e.message || 'خطأ غير معروف')); }
                     }
                 });
             });
@@ -1246,7 +1264,7 @@
             document.getElementById('newUserEmail').value = ''; document.getElementById('newUserPassword').value = '';
             loadUsersList();
             setTimeout(() => resDiv.textContent = '', 3000);
-        } catch(e) { resDiv.textContent = '❌ '+e.message; }
+        } catch(e) { resDiv.textContent = '❌ '+ (e.message || 'فشل إنشاء الحساب'); }
     });
 
     document.getElementById('viewAllGuidesBtn')?.addEventListener('click', async () => {
@@ -1380,7 +1398,7 @@
         try {
             await auth.signInWithEmailAndPassword(email, pwd);
         } catch(e) {
-            errorDiv.textContent = translations[currentLang].login_error + ': ' + e.message;
+            errorDiv.textContent = translations[currentLang].login_error + ': ' + (e.message || 'خطأ غير معروف');
             errorDiv.style.display = 'block';
             toast('❌ '+translations[currentLang].login_error);
         }
