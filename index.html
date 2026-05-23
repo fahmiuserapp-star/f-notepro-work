@@ -406,33 +406,6 @@
 <div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box" style="position:relative;"><div class="close-viewer" id="closeImageViewer" style="position:absolute;top:10px;left:10px;cursor:pointer;font-size:24px;">&times;</div><img id="fullImageView" src="" style="width:100%;"></div></div>
 
 <script>
-    // ========== إعدادات Cloudinary (باستخدام preset ml_default الموجود) ==========
-    const CLOUDINARY_CLOUD_NAME = 'dye93zbag';
-    const CLOUDINARY_UPLOAD_PRESET = 'ml_default';   // هذا موجود بالفعل وهو Unsigned
-    const APP_DOWNLOAD_LINK = 'https://fahmiuserapp-star.github.io/f-notepro-work/';
-    const WEATHER_API_KEY = '8d3316e943ba32112e54a2c8e75fe242';
-    const CITY = 'Sfax';
-    
-    // اختبار Cloudinary فوراً عند تحميل الصفحة
-    (async function testCloudinary() {
-        try {
-            const testForm = new FormData();
-            testForm.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                method: 'POST',
-                body: testForm
-            });
-            if (res.status === 401 || res.status === 403) {
-                console.error('❌ خطأ في Cloudinary: preset غير صالح أو غير مصرح به');
-            } else {
-                console.log('✅ Cloudinary متاح وجاهز باستخدام preset:', CLOUDINARY_UPLOAD_PRESET);
-                toast('✅ Cloudinary جاهز');
-            }
-        } catch(e) {
-            console.warn('لا يمكن الاتصال بـ Cloudinary حالياً', e);
-        }
-    })();
-    
     // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
@@ -442,12 +415,17 @@
         messagingSenderId: "125749698617",
         appId: "1:125749698617:web:ff9709a863fd5a5053ede8"
     };
+    const WEATHER_API_KEY = '8d3316e943ba32112e54a2c8e75fe242';
+    const CITY = 'Sfax';
+    const APP_DOWNLOAD_LINK = 'https://fahmiuserapp-star.github.io/f-notepro-work/';
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
     const functions = firebase.functions();
+    const storage = firebase.storage();
     db.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn(e));
-    
+
     // Local storage helper
     const LDB = {
         get(k){ try{ return JSON.parse(localStorage.getItem('fnote_'+k)||'null'); }catch(e){return null;} },
@@ -465,7 +443,7 @@
         getSavedNumbers(guideId){ return this.get('numbers_'+guideId)||[]; },
         saveNumbers(guideId, numbers){ this.set('numbers_'+guideId, numbers); }
     };
-    
+
     let currentUser=null, guides=[], editId=null;
     let guidePhotoUrl='', busPhotoUrl='';
     let userProfile={displayName:'', photoURL:''};
@@ -476,8 +454,8 @@
     let currentCardImageUrl='';
     const DEVELOPER_UID = 'OK7lshSuUrhVBV7WHn2EL0tiOJo2';
     let isDeveloper=false;
-    
-    // الترجمات (لن أكررها للاختصار، لكنها نفس الكود السابق)
+
+    // Translations
     const translations = {
         ar: {
             search_placeholder: "🔍 بحث في الاسم، الجوال...", delete_confirm: "هل أنت متأكد؟", saved: "✅ تم الحفظ",
@@ -521,7 +499,7 @@
             if(!translations[lang][key]) translations[lang][key]=translations.ar[key];
         }
     }
-    
+
     function applyTranslations(){
         document.querySelectorAll('[data-i18n]').forEach(el=>{
             let key=el.getAttribute('data-i18n');
@@ -546,37 +524,10 @@
     }
     function setLanguage(lang){ currentLang=lang; localStorage.setItem('fnote_lang',lang); applyTranslations(); }
     function toast(msg){ let d=document.createElement('div'); d.className='toast'; d.textContent=msg; document.body.appendChild(d); setTimeout(()=>{d.style.opacity='0'; setTimeout(()=>d.remove(),500);},2000); }
-    
-    // دالة رفع الصور إلى Cloudinary
-    async function uploadToCloudinary(file, retries=2) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000);
-        try {
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                method: 'POST',
-                body: fd,
-                signal: controller.signal
-            });
-            clearTimeout(timeout);
-            const data = await res.json();
-            if (!res.ok) {
-                let errMsg = `HTTP ${res.status}`;
-                if (data.error && data.error.message) errMsg = data.error.message;
-                throw new Error(errMsg);
-            }
-            if (!data.secure_url) throw new Error('لم يتم استلام رابط الصورة');
-            return data.secure_url;
-        } catch(e) {
-            if (retries > 0) return uploadToCloudinary(file, retries-1);
-            throw e;
-        } finally {
-            clearTimeout(timeout);
-        }
-    }
-    
+
+    // ============================================================
+    // دوال رفع الصور إلى Firebase Storage (بدلاً من Cloudinary)
+    // ============================================================
     async function compressImage(file, maxSize=500, quality=0.6) {
         return new Promise(resolve => {
             const reader = new FileReader();
@@ -585,7 +536,7 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     let w = img.width, h = img.height;
-                    if (w > maxSize) { h = (h * maxSize) / w; w = maxSize; }
+                    if(w > maxSize) { h = (h * maxSize) / w; w = maxSize; }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     canvas.toBlob(resolve, 'image/jpeg', quality);
@@ -595,23 +546,40 @@
             reader.readAsDataURL(file);
         });
     }
-    
+
+    async function uploadToFirebase(file, path) {
+        return new Promise((resolve, reject) => {
+            const storageRef = storage.ref();
+            const imageRef = storageRef.child(path);
+            const uploadTask = imageRef.put(file);
+            uploadTask.on('state_changed', null,
+                (error) => reject(error),
+                () => {
+                    imageRef.getDownloadURL().then(url => resolve(url));
+                }
+            );
+        });
+    }
+
     async function compressAndUpload(file, onStart, onSuccess, onError) {
         onStart && onStart();
         try {
             const compressed = await compressImage(file, 500, 0.6);
             const compressedFile = new File([compressed], file.name, { type: 'image/jpeg' });
-            const url = await uploadToCloudinary(compressedFile);
+            const uniqueId = Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+            const path = `cards/${uniqueId}.jpg`;
+            const url = await uploadToFirebase(compressedFile, path);
             onSuccess && onSuccess(url);
         } catch(e) {
             onError && onError(e);
         }
     }
-    
+
     function setupImageUpload(uploadBtnId, previewImgId, deleteBtnId, onUrlChange){
         let btn = document.getElementById(uploadBtnId);
         let preview = document.getElementById(previewImgId);
         let del = document.getElementById(deleteBtnId);
+        if(!btn) return;
         btn.onclick = () => {
             let input = document.createElement('input');
             input.type = 'file';
@@ -630,7 +598,7 @@
         };
         if(del) del.onclick = () => { preview.src = ''; preview.style.display = 'none'; del.style.display = 'none'; onUrlChange(''); toast(translations[currentLang].delete_photo); };
     }
-    
+
     function updatePlateValue(){
         let right = document.getElementById('gPlateRight').value.trim();
         let left = document.getElementById('gPlateLeft').value.trim();
@@ -644,8 +612,8 @@
     function formatPlateDisplay(plate){ if(!plate) return '—'; let p = plate.replace(/تونس/g,'TN'); return `<span class="real-plate">${p}</span>`; }
     document.getElementById('gPlateRight')?.addEventListener('input', updatePlateValue);
     document.getElementById('gPlateLeft')?.addEventListener('input', updatePlateValue);
-    
-    // حفظ المرشد
+
+    // Save guide
     document.getElementById('saveGuideBtn').onclick = async function(){
         let name = document.getElementById('gName').value.trim();
         let phone = document.getElementById('gPhone').value.trim();
@@ -688,11 +656,11 @@
         } catch(err) { toast((translations[currentLang].save_error || 'خطأ في الحفظ') + ': ' + (err.message || 'غير معروف')); }
         finally { saveBtn.disabled = false; saveBtn.innerHTML = translations[currentLang].save_guide; }
     };
-    
+
     setupImageUpload('guideUploadBtn', 'guidePreview', 'deleteGuidePhotoBtn', (url)=>guidePhotoUrl=url);
     setupImageUpload('busUploadBtn', 'busPreview', 'deleteBusPhotoBtn', (url)=>busPhotoUrl=url);
     setupImageUpload('profileUploadBtn', 'profileAvatar', null, (url)=>{ userProfile.photoURL=url; if(currentUser) currentUser.updateProfile({photoURL:url}); });
-    
+
     async function fetchWeather(){
         try {
             let url = `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=${currentLang==='ar'?'ar':'en'}`;
@@ -703,18 +671,18 @@
         } catch(e) { currentWeather = { temp: '?', condition: translations[currentLang].weather_unavailable, city: CITY }; }
     }
     function getWeatherHtml(){ return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
-    
+
     function showFullImage(url){ if(url){ document.getElementById('fullImageView').src = url; document.getElementById('imageViewerModal').classList.add('show'); } }
     document.getElementById('closeImageViewer')?.addEventListener('click', ()=>document.getElementById('imageViewerModal').classList.remove('show'));
     document.getElementById('imageViewerModal')?.addEventListener('click', e=>{ if(e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); });
-    
+
     function globalSearch(guide, term){
         if(!term) return true;
         let t = term.toLowerCase();
         let fields = [guide.name, guide.phone, guide.nationality, guide.plate, guide.transportType, guide.notes];
         return fields.some(f => f && f.toLowerCase().includes(t));
     }
-    
+
     function renderGuides(){
         let base = guides;
         if(currentUser && currentUser.uid !== 'offline'){
@@ -757,7 +725,7 @@
             });
         });
     }
-    
+
     window.deleteGuide = async function(id){
         if(confirm(translations[currentLang].delete_confirm)){
             guides = guides.filter(g => g.id !== id);
@@ -801,7 +769,7 @@
         document.getElementById('modalTitle').innerHTML = translations[currentLang].add_guide_title;
         document.getElementById('guideModal').classList.add('show');
     };
-    
+
     let customPlateModal = document.getElementById('customPlateModal');
     document.getElementById('addCustomPlateBtn')?.addEventListener('click', ()=>{ document.getElementById('customPlateInput').value = ''; customPlateModal.classList.add('show'); });
     document.getElementById('confirmCustomPlate')?.addEventListener('click', ()=>{
@@ -812,7 +780,7 @@
     });
     document.getElementById('cancelCustomPlate')?.addEventListener('click', ()=>customPlateModal.classList.remove('show'));
     customPlateModal?.addEventListener('click', e=>{ if(e.target === customPlateModal) customPlateModal.classList.remove('show'); });
-    
+
     async function loadProfile(){
         document.getElementById('profileDisplayName').value = userProfile.displayName || (currentUser ? currentUser.email : '');
         document.getElementById('profileEmail').value = currentUser ? currentUser.email : '';
@@ -848,7 +816,7 @@
             document.getElementById('passwordModal').classList.remove('show');
         } catch(err) { toast('❌ '+ (err.message || 'خطأ في المصادقة')); }
     };
-    
+
     document.getElementById('shareAppLinkBtn')?.addEventListener('click', ()=>{
         let msg = `📲 حمل تطبيق F-Note Pro Max من الرابط:\n${APP_DOWNLOAD_LINK}`;
         openWhatsApp('', msg);
@@ -859,8 +827,7 @@
     });
     let sidebarQr = document.getElementById('sidebarQrCode');
     if(sidebarQr) new QRCode(sidebarQr, { text: APP_DOWNLOAD_LINK, width: 80, height: 80, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
-    
-    // دالة واتساب الموثوقة
+
     function openWhatsApp(phoneNumber, message) {
         let cleanNumber = phoneNumber.replace(/[^0-9+]/g, '');
         if (cleanNumber && !cleanNumber.startsWith('+')) {
@@ -871,7 +838,7 @@
         if (cleanNumber) url = `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodedMsg}`;
         window.open(url, '_blank');
     }
-    
+
     async function prepareElementForCanvas(element){
         let imgs = element.querySelectorAll('img');
         for(let img of imgs){
@@ -890,7 +857,7 @@
         await new Promise(r => setTimeout(r, 200));
         return element;
     }
-    
+
     function generateAutoParagraph(g, customText){
         let people = g.peopleCount || '?';
         let nationality = g.nationality || 'سائح';
@@ -901,8 +868,7 @@
         if(customText) paragraph += `\n📝 ملاحظة: ${customText}`;
         return paragraph;
     }
-    
-    // بطاقة الوفد
+
     window.showDelegationCard = async function(id){
         let g = guides.find(x => x.id === id);
         if(!g) return;
@@ -931,7 +897,7 @@
         document.getElementById('delegationAvatar').onclick = ()=>showFullImage(g.guidePhoto);
         document.getElementById('delegationModal').classList.add('show');
     };
-    
+
     document.getElementById('shareDelegationBtn').onclick = async () => {
         let g = currentGuideForCards;
         if(!g){ toast('⚠️ لم يتم اختيار مرشد'); return; }
@@ -945,7 +911,9 @@
             let blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
             if(!blob) throw new Error('فشل تحويل إلى صورة');
             let file = new File([blob], 'delegation_card.png', { type: 'image/png' });
-            let imageUrl = await uploadToCloudinary(file);
+            const uniqueId = Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+            const path = `delegations/${uniqueId}.png`;
+            const imageUrl = await uploadToFirebase(file, path);
             let msg = `📢 ${translations[currentLang].delegation_info}\n👤 ${g.name}\n📞 ${g.phone}\n📸 رابط البطاقة:\n${imageUrl}\n📲 حمل التطبيق: ${APP_DOWNLOAD_LINK}`;
             openWhatsApp(g.phone, msg);
             toast('✅ تم فتح واتساب');
@@ -954,8 +922,8 @@
             console.error(err);
         }
     };
-    
-    // بطاقة المتابعة
+
+    // Security Card
     function updateSecurityPreview(g, customText){
         let preview = document.getElementById('securityCardPreview');
         let now = new Date();
@@ -989,7 +957,7 @@
             new QRCode(qrDiv, { text: APP_DOWNLOAD_LINK, width: 70, height: 70, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
         }
     }
-    
+
     function updateSavedNumbersDisplay(){
         if(!currentGuideForCards) return;
         let saved = LDB.getSavedNumbers(currentGuideForCards.id);
@@ -1002,7 +970,7 @@
             chip.addEventListener('click', () => sendSecurityCardToNumber(chip.getAttribute('data-phone')));
         });
     }
-    
+
     document.getElementById('saveNumbersBtn')?.addEventListener('click', () => {
         if(!currentGuideForCards) return;
         let raw = document.getElementById('securityPhonesList').value;
@@ -1016,7 +984,7 @@
         document.getElementById('securityPhonesList').value = '';
         toast(translations[currentLang].saved);
     });
-    
+
     document.getElementById('generateCardBtn')?.addEventListener('click', async () => {
         if(!currentGuideForCards) return;
         let custom = document.getElementById('securityGroupLabel').value.trim();
@@ -1032,9 +1000,11 @@
             let blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
             if(!blob) throw new Error('فشل تحويل canvas إلى blob');
             let file = new File([blob], 'security_card.png', { type: 'image/png' });
-            currentCardImageUrl = await uploadToCloudinary(file);
-            toast('✅ تم رفع البطاقة إلى Cloudinary');
-            
+            const uniqueId = Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+            const path = `security_cards/${uniqueId}.png`;
+            currentCardImageUrl = await uploadToFirebase(file, path);
+            toast('✅ تم رفع البطاقة إلى Firebase Storage');
+
             // تحديث QR code في البطاقة المعروضة ليشير إلى رابط الصورة
             const livePreview = document.getElementById('securityCardPreview');
             const qrContainer = livePreview.querySelector('#securityQrCode');
@@ -1050,7 +1020,7 @@
                 });
                 toast('🔐 تم إنشاء رمز QR سري للبطاقة');
             }
-            
+
             let saved = LDB.getSavedNumbers(currentGuideForCards.id);
             let sent = LDB.getSentHistory(currentGuideForCards.id);
             let sentSet = new Set(sent.map(h => h.phone));
@@ -1058,7 +1028,7 @@
             container.innerHTML = '';
             let autoPara = generateAutoParagraph(currentGuideForCards, custom);
             let msg = `${autoPara}\n\n📸 رابط البطاقة (للمسح السريع أو المشاركة):\n${currentCardImageUrl}\n📲 حمل التطبيق: ${APP_DOWNLOAD_LINK}`;
-            
+
             if(saved.length){
                 saved.forEach(phone => {
                     let clean = phone.replace(/[^0-9+]/g,'');
@@ -1097,7 +1067,7 @@
             console.error(err);
         }
     });
-    
+
     async function sendSecurityCardToNumber(phoneNumber, customMsg = null){
         if(!currentGuideForCards) return;
         let msg = customMsg;
@@ -1111,7 +1081,7 @@
         updateSavedNumbersDisplay();
         toast('📲 تم توجيهك إلى واتساب');
     }
-    
+
     window.showSecurityCard = async function(id){
         let g = guides.find(x => x.id === id);
         if(!g) return;
@@ -1125,8 +1095,8 @@
         updateSavedNumbersDisplay();
         document.getElementById('securityModal').classList.add('show');
     };
-    
-    // دوال الإدارة (مختصرة للاختصار، ولكنها تعمل)
+
+    // Admin functions (simplified)
     async function deleteUserCompletely(uid){
         try {
             const deleteUserFunction = functions.httpsCallable('deleteUser');
@@ -1196,8 +1166,8 @@
     document.getElementById('closeAllGuidesBtn')?.addEventListener('click', ()=>document.getElementById('allGuidesModal').classList.remove('show'));
     document.getElementById('manageUsersBtn')?.addEventListener('click', ()=>{ if(isDeveloper){ loadUsersList(); document.getElementById('usersModal').classList.add('show'); } });
     document.getElementById('closeUsersBtn')?.addEventListener('click', ()=>document.getElementById('usersModal').classList.remove('show'));
-    
-    // المزامنة
+
+    // Sync functions
     async function syncToCloud(){
         if(!currentUser || currentUser.uid === 'offline' || !navigator.onLine) return false;
         try {
@@ -1272,7 +1242,7 @@
         }
         if(merged){ LDB.saveGuides(guides); renderGuides(); toast('✅ تم دمج البيانات'); }
     }
-    
+
     document.getElementById('refreshBtn').onclick = () => { if(currentUser?.uid !== 'offline') fullSync(); else toast('⚠️ يتطلب اتصالاً'); };
     document.getElementById('syncBtn').onclick = () => { if(currentUser?.uid !== 'offline') fullSync(); else toast('⚠️ يتطلب اتصالاً'); };
     document.getElementById('voiceSearchBtn').onclick = () => {
@@ -1297,7 +1267,7 @@
     document.getElementById('termsBtn')?.addEventListener('click', () => document.getElementById('termsModal').classList.add('show'));
     document.getElementById('closeTermsBtn')?.addEventListener('click', () => document.getElementById('termsModal').classList.remove('show'));
     document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if(e.target === m) m.classList.remove('show'); }));
-    
+
     document.getElementById('loginBtn').onclick = async () => {
         let email = document.getElementById('loginEmail').value.trim();
         let pwd = document.getElementById('loginPassword').value;
@@ -1340,7 +1310,7 @@
         let div = document.createElement('div'); div.innerHTML = '<h1>F-Note Pro Max</h1><hr>' + guides.map(g => `<p><strong>${g.name}</strong> – ${g.phone} | ${g.nationality||''} | ${g.transportType||''}</p>`).join('');
         html2pdf().from(div).save('guides.pdf'); toast('📕 تم التصدير');
     };
-    
+
     auth.onAuthStateChanged(async u => {
         if(u){
             currentUser = u;
