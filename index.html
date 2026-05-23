@@ -20,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* الأنماط الأساسية */
+        /* الأنماط الأساسية (لم تتغير كثيراً) */
         :root {
             --olive: #556B2F;
             --gold: #D4AF37;
@@ -138,35 +138,33 @@
         .card-img-area .overlay-avatar { position: absolute; bottom: 12px; right: 12px; width: 55px; height: 55px; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); cursor: pointer; }
         .info-box { background: var(--bg); border-radius: 10px; padding: 8px; border: 1px solid var(--border); }
         .info-box .value { font-weight: 800; font-size: 14px; color: var(--olive); }
-        /* لوحة سيارة جديدة - بسيطة وواضحة للتصوير */
-        .plate-container-new {
-            background: #ffffff !important;
-            border: 1px solid #94a3b8;
-            border-radius: 12px;
+        /* لوحة سوداء بسيطة - لا تحتوي على flex/gap */
+        .plate-black {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border-radius: 8px;
             padding: 6px 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: inline-block;
             font-family: monospace;
-        }
-        .plate-numbers-new {
-            font-size: 15px;
-            font-weight: 800;
-            color: #0f172a !important;
-            letter-spacing: 1px;
+            font-weight: bold;
+            text-align: center;
             direction: ltr;
+            border: 1px solid #333;
+            box-shadow: none;
+            text-shadow: none;
+        }
+        .plate-black span {
+            color: #ffffff !important;
+            font-size: 14px;
             background: transparent;
         }
-        .plate-function-new {
-            font-size: 10px;
-            background: #f1f5f9;
-            padding: 2px 8px;
-            border-radius: 30px;
-            color: #1e293b;
-            font-weight: 600;
+        .plate-function-tag {
+            background: #222;
+            padding: 2px 6px;
+            border-radius: 20px;
+            font-size: 9px;
+            color: #ddd;
+            margin-right: 6px;
         }
         .datetime-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; padding: 8px 12px; background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%); border-bottom: 1px solid var(--border); font-size: 10px; color: #1e293b; font-weight: 600; }
         .dark .datetime-bar { background: linear-gradient(135deg, #4a5b2e 0%, #6b8c23 100%); color: white; }
@@ -192,12 +190,60 @@
         .contact-buttons .call-btn { background: var(--ok); }
         .contact-buttons .wa-btn { background: var(--wa); }
         .guide-phone-number { font-size: 13px; font-weight: 700; color: var(--olive); direction: ltr; }
+        /* زر اللغة في شاشة الدخول */
+        .login-lang-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--olive);
+            display: flex;
+            gap: 6px;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .login-lang-btn i { font-size: 14px; }
+        .login-lang-menu {
+            position: absolute;
+            top: 50px;
+            left: 15px;
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 5px 0;
+            display: none;
+            z-index: 20;
+            min-width: 90px;
+        }
+        .login-lang-menu button {
+            width: 100%;
+            text-align: center;
+            padding: 8px;
+            background: transparent;
+            font-size: 13px;
+            color: var(--txt);
+            border: none;
+        }
+        .login-lang-menu button:hover { background: var(--bg); }
+        .login-lang-menu.active { display: block; }
     </style>
 </head>
 <body>
 
 <!-- شاشة الدخول -->
-<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;">
+<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px; position:relative;">
+    <div class="login-lang-btn" id="loginLangBtn">
+        <i class="fas fa-globe"></i> <span id="loginLangText">🇹🇳 العربية</span>
+    </div>
+    <div class="login-lang-menu" id="loginLangMenu">
+        <button data-lang="ar">🇹🇳 العربية</button>
+        <button data-lang="fr">🇫🇷 Français</button>
+    </div>
     <div style="background:var(--card);border-radius:24px;padding:30px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.1);">
         <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" class="logo-pulse" style="width:100px;margin-bottom:15px;border-radius:20px;">
         <h1 style="color:var(--olive);font-size:24px;font-weight:900;margin-bottom:4px;">F‑Note Pro Max</h1>
@@ -254,13 +300,12 @@
 <div class="modal" id="profileModal"><div class="modal-box"><h3 data-i18n="profile_title">👤 تعديل الملف الشخصي</h3><div class="upload-area" id="profileUploadBtn" style="text-align:center;"><img id="profileAvatar" class="profile-avatar" src=""><i class="fa-solid fa-camera"></i> <span data-i18n="change_photo">تغيير الصورة</span><div class="upload-spinner"><span class="spinner-small"></span></div></div><input type="text" id="profileDisplayName" placeholder="اسم العرض" data-i18n-placeholder="display_name"><input type="email" id="profileEmail" disabled><button id="changePasswordBtn" class="btn-secondary" style="margin-top:0;" data-i18n="change_password">🔑 تغيير كلمة المرور</button><button id="saveProfileBtn" class="btn-primary" data-i18n="save_profile">💾 حفظ التغييرات</button><button id="closeProfileBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
 <div class="modal" id="passwordModal"><div class="modal-box"><h3 data-i18n="change_password_title">🔑 تغيير كلمة المرور</h3><input type="password" id="oldPassword" placeholder="كلمة المرور الحالية"><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button id="confirmPasswordBtn" class="btn-primary" data-i18n="change">تغيير</button><button id="closePasswordBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
 <div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3><input type="text" id="gName" placeholder="اسم المرشد *" data-i18n-placeholder="guide_name"><div id="phoneFieldContainer"><input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr"></div><div style="display:flex;gap:5px;"><input type="text" id="gNationality" placeholder="الجنسية" style="flex:1;" data-i18n-placeholder="nationality"><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1;" min="1" data-i18n-placeholder="people_count"></div><select id="gDelegationType"><option value="سياحي" data-i18n="touristic_delegation">وفد سياحي</option><option value="دبلوماسي" data-i18n="diplomatic_delegation">وفد دبلوماسي</option><option value="قنصلي" data-i18n="consular_delegation">وفد قنصلي</option><option value="إعلامي" data-i18n="media_delegation">وفد إعلامي</option><option value="أمني" data-i18n="security_delegation">وفد أمني</option></select><select id="gTransport"><option value="" data-i18n="transport_type">نوع النقل</option><option value="حافلة صغيرة" data-i18n="small_bus">حافلة صغيرة</option><option value="حافلة كبيرة" data-i18n="large_bus">حافلة كبيرة</option><option value="سيارة" data-i18n="car">سيارة</option><option value="سيارة دبلوماسية" data-i18n="diplomatic_car">سيارة دبلوماسية</option><option value="سيارة قنصلية" data-i18n="consular_car">سيارة قنصلية</option><option value="فان" data-i18n="van">فان</option><option value="أخرى" data-i18n="other">أخرى</option></select>
-            <!-- حقول اللوحة الجديدة مع خانة يدوية مخصصة -->
             <div style="display:flex;gap:5px;align-items:center;">
                 <input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2;text-align:center;font-weight:800;font-size:14px;" maxlength="5">
                 <span style="font-weight:900;color:var(--olive);">🇹🇳</span>
                 <input type="text" id="gPlate2" placeholder="XXX" style="flex:1;text-align:center;font-weight:800;font-size:14px;" maxlength="3">
             </div>
-            <input type="text" id="gCustomPlate" placeholder="اللوحة كاملة (لللوحات الأجنبية/الدبلوماسية/الشرطة/القنصلية)" style="margin-top:4px;">
+            <input type="text" id="gCustomPlate" placeholder="اللوحة كاملة (للدبلوماسية / الشرطة / القنصلية / الأجنبية)" data-i18n-placeholder="custom_plate">
             <input type="text" id="gPlateFunction" placeholder="الوظيفة / الغرض من اللوحة (اختياري)" data-i18n-placeholder="plate_function">
             <div style="display:flex;gap:5px;"><input type="text" id="gFrom" placeholder="من" style="flex:1;" data-i18n-placeholder="from"><input type="text" id="gTo" placeholder="إلى" style="flex:1;" data-i18n-placeholder="to"></div>
             <div id="stayDurationContainer" style="display:none;"><input type="number" id="gStayDuration" placeholder="مدة الإقامة (بالأيام)" min="1" data-i18n-placeholder="stay_duration"></div>
@@ -274,7 +319,7 @@
 <div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box" style="position:relative;"><div class="close-viewer" id="closeImageViewer">&times;</div><img id="fullImageView" src=""></div></div>
 
 <script>
-    // ========== إعدادات Firebase ==========
+    // ========== إعدادات Firebase (نفسها) ==========
     const firebaseConfig = {
         apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
         authDomain: "f-notepromax-work.firebaseapp.com",
@@ -309,13 +354,27 @@
     let currentWeather = { temp: '', condition: '', city: CITY };
     let unsubscribeFirestore = null;
 
-    // الترجمات (مختصرة للاختصار، كما هي موجودة مسبقاً)
+    // الترجمات الكاملة (مع إضافة custom_plate)
     const translations = {
-        ar: { login_sub:"إدارة الوفود السياحية والدبلوماسية", login_btn:"دخول", offline_btn:"🔄 بدون إنترنت", edit_profile:"تعديل الملف الشخصي", tools_section:"أدوات متقدمة", sync:"مزامنة السحابة", export_json:"تصدير JSON", export_pdf:"تصدير PDF", logout:"تسجيل الخروج", language:"اللغة", terms:"📜 شروط الخدمة والحقوق", terms_title:"📜 شروط الخدمة والحقوق", terms_text:"باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.", close:"إغلاق", profile_title:"👤 تعديل الملف الشخصي", change_photo:"تغيير الصورة", display_name:"اسم العرض", change_password:"🔑 تغيير كلمة المرور", save_profile:"💾 حفظ التغييرات", cancel:"إلغاء", change_password_title:"🔑 تغيير كلمة المرور", change:"تغيير", add_guide_title:"➕ إضافة مرشد جديد", guide_name:"اسم المرشد", nationality:"الجنسية", people_count:"عدد الأفراد", touristic_delegation:"وفد سياحي", diplomatic_delegation:"وفد دبلوماسي", consular_delegation:"وفد قنصلي", media_delegation:"وفد إعلامي", security_delegation:"وفد أمني", transport_type:"نوع النقل", small_bus:"حافلة صغيرة", large_bus:"حافلة كبيرة", car:"سيارة", diplomatic_car:"سيارة دبلوماسية", consular_car:"سيارة قنصلية", van:"فان", other:"أخرى", plate_function:"الوظيفة / الغرض من اللوحة (اختياري)", from:"من", to:"إلى", stay_duration:"مدة الإقامة (بالأيام)", guide_photo:"📸 صورة المرشد", bus_photo:"🚌 صورة وسيلة النقل", agency:"الوكالة", notes:"ملاحظات", private:"🔒 خاص", public:"🌍 عام (يظهر للجميع)", save_guide:"💾 حفظ المرشد", delegation_info:"📋 معلومات الوفد", transport:"نوع النقل", plate:"رقم اللوحة", created_at:"تاريخ الإضافة:", sent_at:"تاريخ الإرسال:", created_by:"المنشئ:", share_card:"مشاركة البطاقة", security_card_title:"كرت التنسيق والمتابعة", custom_group_label:"🏷️ تحديد المجموعة / الفقرة المخصصة:", target_numbers_label:"📞 أرقام الواتساب المستهدفة (رقم واحد في كل سطر):", generate_card_links:"🔄 إنشاء البطاقة والروابط", search_placeholder:"🔍 بحث عن مرشد...", loading:"⏳ جاري التحميل...", delete_confirm:"هل أنت متأكد من الحذف؟", deleted:"🗑️ تم الحذف", saved:"✅ تم الحفظ بنجاح", sync_ok:"✅ تمت المزامنة", sync_fail:"❌ فشلت المزامنة", no_results:"😕 لا توجد نتائج", offline_mode:"📴 وضع بدون إنترنت", save_error:"❌ خطأ في الحفظ", weather_unavailable:"غير متوفر" },
-        fr: { login_sub:"Gestion des délégations touristiques et diplomatiques", login_btn:"Connexion", offline_btn:"🔄 Hors ligne", edit_profile:"Modifier le profil", tools_section:"Outils avancés", sync:"Synchronisation", export_json:"Exporter JSON", export_pdf:"Exporter PDF", logout:"Déconnexion", language:"Langue", terms:"📜 Conditions d'utilisation", terms_title:"📜 Conditions d'utilisation", terms_text:"En utilisant cette application, vous acceptez toutes les conditions mentionnées.", close:"Fermer", profile_title:"👤 Modifier le profil", change_photo:"Changer la photo", display_name:"Nom d'affichage", change_password:"🔑 Changer le mot de passe", save_profile:"💾 Enregistrer", cancel:"Annuler", change_password_title:"🔑 Changer le mot de passe", change:"Changer", add_guide_title:"➕ Ajouter un guide", guide_name:"Nom du guide", nationality:"Nationalité", people_count:"Nombre de personnes", touristic_delegation:"Délégation touristique", diplomatic_delegation:"Délégation diplomatique", consular_delegation:"Délégation consulaire", media_delegation:"Délégation médiatique", security_delegation:"Délégation sécuritaire", transport_type:"Type de transport", small_bus:"Petit bus", large_bus:"Grand bus", car:"Voiture", diplomatic_car:"Voiture diplomatique", consular_car:"Voiture consulaire", van:"Van", other:"Autre", plate_function:"Fonction de la plaque (optionnel)", from:"De", to:"À", stay_duration:"Durée de séjour (jours)", guide_photo:"📸 Photo du guide", bus_photo:"🚌 Photo du véhicule", agency:"Agence", notes:"Notes", private:"🔒 Privé", public:"🌍 Public (visible par tous)", save_guide:"💾 Enregistrer le guide", delegation_info:"📋 Informations de la délégation", transport:"Type de transport", plate:"Plaque d'immatriculation", created_at:"Date d'ajout :", sent_at:"Date d'envoi :", created_by:"Créé par :", share_card:"Partager la carte", security_card_title:"Fiche de coordination", custom_group_label:"🏷️ Désignation du groupe :", target_numbers_label:"📞 Numéros WhatsApp cibles (un par ligne) :", generate_card_links:"🔄 Générer la carte et les liens", search_placeholder:"🔍 Rechercher un guide...", loading:"⏳ Chargement...", delete_confirm:"Supprimer ce guide ?", deleted:"🗑️ Supprimé", saved:"✅ Enregistré avec succès", sync_ok:"✅ Synchronisation réussie", sync_fail:"❌ Échec de synchronisation", no_results:"😕 Aucun résultat", offline_mode:"📴 Mode hors ligne", save_error:"❌ Erreur d'enregistrement", weather_unavailable:"Non disponible" }
+        ar: { login_sub:"إدارة الوفود السياحية والدبلوماسية", login_btn:"دخول", offline_btn:"🔄 بدون إنترنت", edit_profile:"تعديل الملف الشخصي", tools_section:"أدوات متقدمة", sync:"مزامنة السحابة", export_json:"تصدير JSON", export_pdf:"تصدير PDF", logout:"تسجيل الخروج", language:"اللغة", terms:"📜 شروط الخدمة والحقوق", terms_title:"📜 شروط الخدمة والحقوق", terms_text:"باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.", close:"إغلاق", profile_title:"👤 تعديل الملف الشخصي", change_photo:"تغيير الصورة", display_name:"اسم العرض", change_password:"🔑 تغيير كلمة المرور", save_profile:"💾 حفظ التغييرات", cancel:"إلغاء", change_password_title:"🔑 تغيير كلمة المرور", change:"تغيير", add_guide_title:"➕ إضافة مرشد جديد", guide_name:"اسم المرشد", nationality:"الجنسية", people_count:"عدد الأفراد", touristic_delegation:"وفد سياحي", diplomatic_delegation:"وفد دبلوماسي", consular_delegation:"وفد قنصلي", media_delegation:"وفد إعلامي", security_delegation:"وفد أمني", transport_type:"نوع النقل", small_bus:"حافلة صغيرة", large_bus:"حافلة كبيرة", car:"سيارة", diplomatic_car:"سيارة دبلوماسية", consular_car:"سيارة قنصلية", van:"فان", other:"أخرى", plate_function:"الوظيفة / الغرض من اللوحة (اختياري)", from:"من", to:"إلى", stay_duration:"مدة الإقامة (بالأيام)", guide_photo:"📸 صورة المرشد", bus_photo:"🚌 صورة وسيلة النقل", agency:"الوكالة", notes:"ملاحظات", private:"🔒 خاص", public:"🌍 عام (يظهر للجميع)", save_guide:"💾 حفظ المرشد", delegation_info:"📋 معلومات الوفد", transport:"نوع النقل", plate:"رقم اللوحة", created_at:"تاريخ الإضافة:", sent_at:"تاريخ الإرسال:", created_by:"المنشئ:", share_card:"مشاركة البطاقة", security_card_title:"كرت التنسيق والمتابعة", custom_group_label:"🏷️ تحديد المجموعة / الفقرة المخصصة:", target_numbers_label:"📞 أرقام الواتساب المستهدفة (رقم واحد في كل سطر):", generate_card_links:"🔄 إنشاء البطاقة والروابط", search_placeholder:"🔍 بحث عن مرشد...", loading:"⏳ جاري التحميل...", delete_confirm:"هل أنت متأكد من الحذف؟", deleted:"🗑️ تم الحذف", saved:"✅ تم الحفظ بنجاح", sync_ok:"✅ تمت المزامنة", sync_fail:"❌ فشلت المزامنة", no_results:"😕 لا توجد نتائج", offline_mode:"📴 وضع بدون إنترنت", save_error:"❌ خطأ في الحفظ", weather_unavailable:"غير متوفر", custom_plate:"اللوحة كاملة (للدبلوماسية / الشرطة / القنصلية / الأجنبية)" },
+        fr: { login_sub:"Gestion des délégations touristiques et diplomatiques", login_btn:"Connexion", offline_btn:"🔄 Hors ligne", edit_profile:"Modifier le profil", tools_section:"Outils avancés", sync:"Synchronisation", export_json:"Exporter JSON", export_pdf:"Exporter PDF", logout:"Déconnexion", language:"Langue", terms:"📜 Conditions d'utilisation", terms_title:"📜 Conditions d'utilisation", terms_text:"En utilisant cette application, vous acceptez toutes les conditions mentionnées.", close:"Fermer", profile_title:"👤 Modifier le profil", change_photo:"Changer la photo", display_name:"Nom d'affichage", change_password:"🔑 Changer le mot de passe", save_profile:"💾 Enregistrer", cancel:"Annuler", change_password_title:"🔑 Changer le mot de passe", change:"Changer", add_guide_title:"➕ Ajouter un guide", guide_name:"Nom du guide", nationality:"Nationalité", people_count:"Nombre de personnes", touristic_delegation:"Délégation touristique", diplomatic_delegation:"Délégation diplomatique", consular_delegation:"Délégation consulaire", media_delegation:"Délégation médiatique", security_delegation:"Délégation sécuritaire", transport_type:"Type de transport", small_bus:"Petit bus", large_bus:"Grand bus", car:"Voiture", diplomatic_car:"Voiture diplomatique", consular_car:"Voiture consulaire", van:"Van", other:"Autre", plate_function:"Fonction de la plaque (optionnel)", from:"De", to:"À", stay_duration:"Durée de séjour (jours)", guide_photo:"📸 Photo du guide", bus_photo:"🚌 Photo du véhicule", agency:"Agence", notes:"Notes", private:"🔒 Privé", public:"🌍 Public (visible par tous)", save_guide:"💾 Enregistrer le guide", delegation_info:"📋 Informations de la délégation", transport:"Type de transport", plate:"Plaque d'immatriculation", created_at:"Date d'ajout :", sent_at:"Date d'envoi :", created_by:"Créé par :", share_card:"Partager la carte", security_card_title:"Fiche de coordination", custom_group_label:"🏷️ Désignation du groupe :", target_numbers_label:"📞 Numéros WhatsApp cibles (un par ligne) :", generate_card_links:"🔄 Générer la carte et les liens", search_placeholder:"🔍 Rechercher un guide...", loading:"⏳ Chargement...", delete_confirm:"Supprimer ce guide ?", deleted:"🗑️ Supprimé", saved:"✅ Enregistré avec succès", sync_ok:"✅ Synchronisation réussie", sync_fail:"❌ Échec de synchronisation", no_results:"😕 Aucun résultat", offline_mode:"📴 Mode hors ligne", save_error:"❌ Erreur d'enregistrement", weather_unavailable:"Non disponible", custom_plate:"Plaque complète (diplomatique / police / consulaire / étrangère)" }
     };
 
-    function setLanguage(lang){ currentLang = lang; document.querySelectorAll('[data-i18n]').forEach(el=>{ const key = el.getAttribute('data-i18n'); if(translations[lang][key]) el.textContent = translations[lang][key]; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ const key = el.getAttribute('data-i18n-placeholder'); if(translations[lang][key]) el.placeholder = translations[lang][key]; }); document.documentElement.lang = (lang==='ar')?'ar':'fr'; document.documentElement.dir = (lang==='ar')?'rtl':'ltr'; }
+    function setLanguage(lang){ 
+        currentLang = lang; 
+        document.querySelectorAll('[data-i18n]').forEach(el=>{ const key = el.getAttribute('data-i18n'); if(translations[lang][key]) el.textContent = translations[lang][key]; }); 
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ const key = el.getAttribute('data-i18n-placeholder'); if(translations[lang][key]) el.placeholder = translations[lang][key]; }); 
+        document.documentElement.lang = (lang==='ar')?'ar':'fr'; 
+        document.documentElement.dir = (lang==='ar')?'rtl':'ltr';
+        // تحديث النص في زر اللغة بشاشة الدخول
+        const loginLangText = document.getElementById('loginLangText');
+        if(loginLangText) loginLangText.innerText = (lang === 'ar') ? '🇹🇳 العربية' : '🇫🇷 Français';
+        // تحديث الأزرار النشطة
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            if(btn.dataset.lang === lang) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+    }
 
     async function compressImage(file, maxW=800, quality=0.7){ return new Promise(resolve=>{ const reader = new FileReader(); reader.onload = ev=>{ const img = new Image(); img.onload = ()=>{ const canvas = document.createElement('canvas'); let w = img.width, h = img.height; if(w>maxW){ h *= maxW/w; w = maxW; } canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img,0,0,w,h); canvas.toBlob(resolve,'image/jpeg',quality); }; img.src = ev.target.result; }; reader.readAsDataURL(file); }); }
 
@@ -341,44 +400,24 @@
     async function fetchWeather(){ if(!WEATHER_API_KEY){ currentWeather={temp:'?', condition:translations[currentLang].weather_unavailable, city:CITY}; return; } try{ const url = `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=${currentLang==='ar'?'ar':'fr'}`; const res = await fetch(url); if(!res.ok) throw new Error(); const data = await res.json(); currentWeather = { temp: Math.round(data.main.temp), condition: data.weather[0].description, city: data.name }; } catch(e){ currentWeather = { temp:'?', condition:translations[currentLang].weather_unavailable, city:CITY }; } }
     function getWeatherHtml(){ return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
     function toast(msg){ const div = document.createElement('div'); div.className = 'toast'; div.textContent = msg; document.body.appendChild(div); setTimeout(()=>{ div.style.opacity='0'; div.style.transition='0.3s'; },2200); setTimeout(()=>div.remove(),2600); }
+    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m;}); }
 
-    // ========== دالة اللوحة الجديدة (واضحة وتدعم customPlate) ==========
-    function getPlateHtml(guideData){
-        // guideData يحتوي على: plate1, plate2, customPlate, delegationType, transportType, plateFunction
-        const custom = guideData.customPlate ? guideData.customPlate.trim() : '';
-        if(custom !== ''){
-            // عرض النص المخصص كما هو (للوحات الأجنبية، الدبلوماسية، الشرطة، إلخ)
-            return `<div class="plate-container-new" style="background:white; border:1px solid #94a3b8;">
-                        <span class="plate-numbers-new" style="font-weight:800; color:#0f172a;">${escapeHtml(custom)}</span>
-                        ${ guideData.plateFunction ? `<span class="plate-function-new">${escapeHtml(guideData.plateFunction)}</span>` : '' }
+    // ========== لوحة السيارة السوداء (بدون أي كلمة سياحي) ==========
+    function getPlateHtml(guideData) {
+        const custom = (guideData.customPlate || '').trim();
+        if (custom !== '') {
+            return `<div class="plate-black" style="background:#000 !important; color:#fff !important;">
+                        <span style="color:#fff !important;">${escapeHtml(custom)}</span>
+                        ${ guideData.plateFunction ? `<span class="plate-function-tag">${escapeHtml(guideData.plateFunction)}</span>` : '' }
                     </div>`;
         }
-        // اللوحة العادية: plate1 + علم تونس + plate2
-        let plate1 = guideData.plate1 || '—';
-        let plate2 = guideData.plate2 || '—';
-        let prefix = '';
-        let typeLabel = guideData.delegationType || 'سياحي';
-        if(guideData.transportType === 'سيارة دبلوماسية'){ prefix = 'CD '; typeLabel = 'دبلوماسي'; }
-        else if(guideData.transportType === 'سيارة قنصلية'){ prefix = 'CC '; typeLabel = 'قنصلي'; }
-        else {
-            switch(guideData.delegationType){
-                case 'دبلوماسي': prefix = 'CD '; break;
-                case 'قنصلي': prefix = 'CC '; break;
-                case 'إعلامي': prefix = 'MED '; break;
-                case 'أمني': prefix = 'SEC '; break;
-                default: prefix = '';
-            }
-        }
-        let funcText = guideData.plateFunction ? ` (${guideData.plateFunction})` : '';
-        return `<div class="plate-container-new" style="background:white; border:1px solid #94a3b8; display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:12px;">
-                    <span class="plate-numbers-new" style="font-size:15px; font-weight:800; color:#0f172a; direction:ltr;">
-                        ${prefix ? `<span style="font-weight:900;">${prefix}</span> ` : ''}
-                        ${plate1} 🇹🇳 TN ${plate2}
-                    </span>
-                    <span class="plate-function-new" style="background:#f1f5f9; padding:2px 8px; border-radius:30px; font-size:10px;">${typeLabel}${funcText}</span>
+        let plate1 = (guideData.plate1 || '—').toUpperCase();
+        let plate2 = (guideData.plate2 || '—').toUpperCase();
+        return `<div class="plate-black" style="background:#000 !important; color:#fff !important; direction:ltr;">
+                    <span style="color:#fff !important;">${plate1} &nbsp;🇹🇳 TN&nbsp; ${plate2}</span>
+                    ${ guideData.plateFunction ? `<span class="plate-function-tag">${escapeHtml(guideData.plateFunction)}</span>` : '' }
                 </div>`;
     }
-    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m;}); }
 
     function showFullImage(url){ if(!url) return; document.getElementById('fullImageView').src = url; document.getElementById('imageViewerModal').classList.add('show'); }
     document.getElementById('closeImageViewer')?.addEventListener('click',()=>document.getElementById('imageViewerModal').classList.remove('show'));
@@ -438,14 +477,14 @@
         document.getElementById('gVisibility').value = g.visibility || 'private';
         document.getElementById('guidePreview').src = guidePhotoUrl; document.getElementById('guidePreview').style.display = guidePhotoUrl ? 'block' : 'none';
         document.getElementById('busPreview').src = busPhotoUrl; document.getElementById('busPreview').style.display = busPhotoUrl ? 'block' : 'none';
-        document.getElementById('modalTitle').innerHTML = '✏️ تعديل مرشد';
+        document.getElementById('modalTitle').innerHTML = (currentLang==='ar'?'✏️ تعديل مرشد':'✏️ Modifier guide');
         const isTouristic = g.delegationType === 'سياحي';
         document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none';
         document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block';
         document.getElementById('guideModal').classList.add('show');
     };
 
-    document.getElementById('addGuideBtn').onclick = () => { editId = null; guidePhotoUrl = ''; busPhotoUrl = ''; document.getElementById('gName').value = ''; document.getElementById('gPhone').value = ''; document.getElementById('gNationality').value = ''; document.getElementById('gPeopleCount').value = ''; document.getElementById('gDelegationType').value = 'سياحي'; document.getElementById('gTransport').value = ''; document.getElementById('gPlate1').value = ''; document.getElementById('gPlate2').value = ''; document.getElementById('gCustomPlate').value = ''; document.getElementById('gPlateFunction').value = ''; document.getElementById('gFrom').value = ''; document.getElementById('gTo').value = ''; document.getElementById('gStayDuration').value = ''; document.getElementById('gAgency').value = ''; document.getElementById('gNotes').value = ''; document.getElementById('gVisibility').value = 'private'; document.getElementById('guidePreview').style.display = 'none'; document.getElementById('busPreview').style.display = 'none'; document.getElementById('modalTitle').innerHTML = '➕ إضافة مرشد جديد'; document.getElementById('guideModal').classList.add('show'); document.getElementById('phoneFieldContainer').style.display = 'block'; document.getElementById('stayDurationContainer').style.display = 'none'; };
+    document.getElementById('addGuideBtn').onclick = () => { editId = null; guidePhotoUrl = ''; busPhotoUrl = ''; document.getElementById('gName').value = ''; document.getElementById('gPhone').value = ''; document.getElementById('gNationality').value = ''; document.getElementById('gPeopleCount').value = ''; document.getElementById('gDelegationType').value = 'سياحي'; document.getElementById('gTransport').value = ''; document.getElementById('gPlate1').value = ''; document.getElementById('gPlate2').value = ''; document.getElementById('gCustomPlate').value = ''; document.getElementById('gPlateFunction').value = ''; document.getElementById('gFrom').value = ''; document.getElementById('gTo').value = ''; document.getElementById('gStayDuration').value = ''; document.getElementById('gAgency').value = ''; document.getElementById('gNotes').value = ''; document.getElementById('gVisibility').value = 'private'; document.getElementById('guidePreview').style.display = 'none'; document.getElementById('busPreview').style.display = 'none'; document.getElementById('modalTitle').innerHTML = (currentLang==='ar'?'➕ إضافة مرشد جديد':'➕ Ajouter un guide'); document.getElementById('guideModal').classList.add('show'); document.getElementById('phoneFieldContainer').style.display = 'block'; document.getElementById('stayDurationContainer').style.display = 'none'; };
     document.getElementById('gDelegationType').onchange = function(){ const isTouristic = this.value === 'سياحي'; document.getElementById('phoneFieldContainer').style.display = isTouristic ? 'block' : 'none'; document.getElementById('stayDurationContainer').style.display = isTouristic ? 'none' : 'block'; };
 
     document.getElementById('saveGuideBtn').onclick = async function(){
@@ -485,8 +524,7 @@
     document.getElementById('profileUploadBtn').onclick = ()=>pickAndUploadImg('profileAvatar','profileUploadBtn', async (url)=>{ userProfile.photoURL = url; if(currentUser) await currentUser.updateProfile({photoURL:url}); await db.collection('users').doc(currentUser.uid).set({photoURL:url},{merge:true}); toast('✅ '+(currentLang==='ar'?'تم تحديث الصورة':'Photo mise à jour')); loadProfile(); }, blob=>profilePhotoBlob=blob);
 
     async function prepareElementForCanvas(element){
-        // انتظار قليل لاستقرار الأنماط
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 300));
         const images = element.querySelectorAll('img');
         for(let img of images){
             if(img.src && (img.src.startsWith('http://')||img.src.startsWith('https://')) && !img.crossOrigin){
@@ -499,6 +537,7 @@
                 } catch(e){ console.warn(e); }
             }
         }
+        await new Promise(r => setTimeout(r, 100));
         return element;
     }
 
@@ -507,7 +546,6 @@
         document.getElementById('delegationMainImg').src = g.busPhoto || g.guidePhoto || ''; document.getElementById('delegationAvatar').src = g.guidePhoto || '';
         document.getElementById('delegationPeopleCount').innerHTML = g.peopleCount || '—'; document.getElementById('delegationNationality').innerHTML = g.nationality || '—';
         document.getElementById('delegationTransport').innerHTML = g.transportType || '—';
-        // استخدام دالة اللوحة المحسنة
         document.getElementById('delegationPlateDisplay').innerHTML = getPlateHtml(g);
         document.getElementById('delegationFrom').innerHTML = g.fromLocation || '—'; document.getElementById('delegationTo').innerHTML = g.toLocation || '—';
         if(g.delegationType === 'سياحي') document.getElementById('guideInfoBox').style.display = 'block'; else document.getElementById('guideInfoBox').style.display = 'none';
@@ -531,12 +569,13 @@
     window.showSecurityCard = async function(id){ const g = guides.find(x=>x.id===id); if(!g) return; currentGuideForCards = g; await fetchWeather(); document.getElementById('securityGroupLabel').value = ''; document.getElementById('securityPhonesList').value = ''; document.getElementById('securityLinksContainer').style.display = 'none'; updateSecurityPreview(g,''); document.getElementById('securityModal').classList.add('show'); };
     document.getElementById('generateSecurityCardBtn').onclick = async ()=>{ const groupLabel = document.getElementById('securityGroupLabel').value.trim(); const phonesRaw = document.getElementById('securityPhonesList').value; if(!phonesRaw.trim()) return toast('⚠️ '+(currentLang==='ar'?'أدخل رقم واحد على الأقل':'Entrez au moins un numéro')); const phoneNumbers = phonesRaw.split(/\r?\n/).map(p=>p.trim()).filter(p=>p.match(/[\+]?\d{8,15}/)); if(!phoneNumbers.length) return toast('⚠️ '+(currentLang==='ar'?'لم يتم التعرف على أرقام صحيحة':'Numéros non valides')); updateSecurityPreview(currentGuideForCards, groupLabel); const cardEl = document.getElementById('securityCardPreview'); toast('⏳ '+(currentLang==='ar'?'جاري الإنشاء...':'Génération...')); try{ const prepared = await prepareElementForCanvas(cardEl); const canvas = await html2canvas(prepared, {scale:2, backgroundColor:'#ffffff', useCORS:true}); const blob = await new Promise(r=>canvas.toBlob(r,'image/png')); const imageUrl = await uploadImage(blob); const container = document.getElementById('securityLinksContainer'); container.innerHTML = ''; const msg = encodeURIComponent(`📢 بطاقة التنسيق والمتابعة:\n${imageUrl}\n${groupLabel?`المجموعة: ${groupLabel}`:''}\n${getWeatherHtml()}`); phoneNumbers.forEach(phone=>{ let clean = phone.replace(/[^0-9+]/g,''); if(!clean.startsWith('+')) clean = '+216'+clean.replace(/^0+/,''); const link = `https://wa.me/${clean}?text=${msg}`; const div = document.createElement('div'); div.className = 'link-item'; div.innerHTML = `<span>${clean}</span><a href="${link}" target="_blank">📲 إرسال</a>`; container.appendChild(div); }); container.style.display = 'block'; toast(`✅ ${translations[currentLang].sync_ok} ${phoneNumbers.length} رابط`); } catch(err){ toast('❌ '+(currentLang==='ar'?'فشل: '+err.message:'Échec : '+err.message)); } };
 
-    // دوال المزامنة والتسجيل (كما هي)
-    async function syncGuicesToCloud(){ /* نفس الكود السابق */ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userDocs = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicDocs = await db.collection('guides').where('visibility','==','public').get(); const cloudMap = new Map(); userDocs.forEach(doc=>cloudMap.set(doc.id, {id:doc.id, ...doc.data()})); publicDocs.forEach(doc=>{ if(!cloudMap.has(doc.id)) cloudMap.set(doc.id, {id:doc.id, ...doc.data()}); }); let changed = false; for(let cloud of cloudMap.values()){ const local = guides.find(g=>g.id===cloud.id); if(!local){ guides.push(cloud); changed = true; } else if(new Date(cloud.updatedAt||0) > new Date(local.updatedAt||0)){ const index = guides.findIndex(g=>g.id===cloud.id); guides[index] = cloud; changed = true; } } for(let local of guides){ const cloud = cloudMap.get(local.id); if(!cloud && (local.userId === currentUser.uid || local.visibility === 'public')){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } else if(cloud && new Date(local.updatedAt||0) > new Date(cloud.updatedAt||0) && local.userId === currentUser.uid){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } return true; } catch(e){ console.error(e); return false; } }
+    // دوال المزامنة الأساسية (محفوظة كما هي)
+    async function syncGuicesToCloud(){ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userDocs = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicDocs = await db.collection('guides').where('visibility','==','public').get(); const cloudMap = new Map(); userDocs.forEach(doc=>cloudMap.set(doc.id, {id:doc.id, ...doc.data()})); publicDocs.forEach(doc=>{ if(!cloudMap.has(doc.id)) cloudMap.set(doc.id, {id:doc.id, ...doc.data()}); }); let changed = false; for(let cloud of cloudMap.values()){ const local = guides.find(g=>g.id===cloud.id); if(!local){ guides.push(cloud); changed = true; } else if(new Date(cloud.updatedAt||0) > new Date(local.updatedAt||0)){ const index = guides.findIndex(g=>g.id===cloud.id); guides[index] = cloud; changed = true; } } for(let local of guides){ const cloud = cloudMap.get(local.id); if(!cloud && (local.userId === currentUser.uid || local.visibility === 'public')){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } else if(cloud && new Date(local.updatedAt||0) > new Date(cloud.updatedAt||0) && local.userId === currentUser.uid){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } return true; } catch(e){ console.error(e); return false; } }
     async function syncGuidesFromCloud(){ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userSnap = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicSnap = await db.collection('guides').where('visibility','==','public').get(); let cloudGuides = []; userSnap.forEach(d=>cloudGuides.push({id:d.id, ...d.data()})); publicSnap.forEach(d=>{ if(!cloudGuides.find(c=>c.id===d.id)) cloudGuides.push({id:d.id, ...d.data()}); }); const merged = [...guides]; for(let cloud of cloudGuides){ const idx = merged.findIndex(l=>l.id===cloud.id); if(idx === -1) merged.push(cloud); else if(new Date(cloud.updatedAt||0) > new Date(merged[idx].updatedAt||0)) merged[idx] = cloud; } guides = merged; LDB.saveGuides(guides); renderGuides(); return true; } catch(e){ console.error(e); return false; } }
     async function fullSync(){ toast('⏳ '+(currentLang==='ar'?'جاري المزامنة...':'Synchronisation...')); const ok = await syncGuicesToCloud() && await syncGuidesFromCloud(); if(ok) toast(translations[currentLang].sync_ok); else toast(translations[currentLang].sync_fail); }
     function startFirestoreListener(){ if(unsubscribeFirestore) unsubscribeFirestore(); if(!currentUser || currentUser.uid==='offline') return; unsubscribeFirestore = db.collection('guides').onSnapshot(async snapshot=>{ let changed = false; for(let change of snapshot.docChanges()){ const newData = {id:change.doc.id, ...change.doc.data()}; const index = guides.findIndex(g=>g.id===newData.id); if(change.type === 'added' || change.type === 'modified'){ if(index !== -1){ if(new Date(newData.updatedAt||0) > new Date(guides[index].updatedAt||0)){ guides[index] = newData; changed = true; } } else { guides.push(newData); changed = true; } } else if(change.type === 'removed'){ guides = guides.filter(g=>g.id !== change.doc.id); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } }, err=>{ console.warn("Listener error, retrying in 5s", err); setTimeout(startFirestoreListener,5000); }); }
 
+    // ربط الأحداث
     document.getElementById('refreshBtn').onclick = async ()=>{ if(!currentUser || currentUser.uid==='offline') return toast('⚠️ '+(currentLang==='ar'?'المزامنة تتطلب اتصالاً':'Synchronisation nécessite une connexion')); await fullSync(); };
     document.getElementById('syncBtn').onclick = async ()=>{ if(!currentUser || currentUser.uid==='offline') return toast('⚠️ '+(currentLang==='ar'?'تتطلب اتصالاً':'Connexion requise')); await fullSync(); };
     document.getElementById('voiceSearchBtn').onclick = ()=>{ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if(!SpeechRecognition) return toast('⚠️ '+(currentLang==='ar'?'غير مدعوم':'Non supporté')); const rec = new SpeechRecognition(); rec.lang = 'ar-TN'; rec.start(); rec.onresult = e=>{ document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); }; rec.onerror = ()=>toast('⚠️ '+(currentLang==='ar'?'لم يتم التعرف':'Non reconnu')); };
@@ -545,13 +584,37 @@
     document.getElementById('darkToggle').onclick = ()=>{ document.body.classList.toggle('dark'); localStorage.setItem('fnote_dark', document.body.classList.contains('dark')); };
     document.getElementById('menuBtn').onclick = ()=>{ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
     document.getElementById('overlay').onclick = ()=>{ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
-    document.querySelectorAll('.lang-btn').forEach(btn=>btn.addEventListener('click', function(){ document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); setLanguage(this.dataset.lang); renderGuides(); }));
+    document.querySelectorAll('.lang-btn').forEach(btn=>btn.addEventListener('click', function(){ setLanguage(this.dataset.lang); renderGuides(); }));
     document.getElementById('closeGuideBtn').onclick = ()=>document.getElementById('guideModal').classList.remove('show');
     document.getElementById('closeDelegationBtn').onclick = ()=>document.getElementById('delegationModal').classList.remove('show');
     document.getElementById('closeSecurityBtn').onclick = ()=>document.getElementById('securityModal').classList.remove('show');
     document.getElementById('termsBtn').onclick = ()=>document.getElementById('termsModal').classList.add('show');
     document.getElementById('closeTermsBtn').onclick = ()=>document.getElementById('termsModal').classList.remove('show');
     document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
+
+    // أحداث اللغة في شاشة الدخول
+    const loginLangBtn = document.getElementById('loginLangBtn');
+    const loginLangMenu = document.getElementById('loginLangMenu');
+    if(loginLangBtn && loginLangMenu){
+        loginLangBtn.addEventListener('click', (e) => { e.stopPropagation(); loginLangMenu.classList.toggle('active'); });
+        document.querySelectorAll('#loginLangMenu button').forEach(btn => {
+            btn.addEventListener('click', (e) => { 
+                const lang = btn.dataset.lang;
+                setLanguage(lang);
+                loginLangMenu.classList.remove('active');
+                // تحديث النصوص في شاشة الدخول ديناميكياً (إذا كانت مرئية)
+                document.querySelectorAll('#loginScreen [data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if(translations[lang][key]) el.textContent = translations[lang][key];
+                });
+                document.querySelectorAll('#loginScreen [data-i18n-placeholder]').forEach(el => {
+                    const key = el.getAttribute('data-i18n-placeholder');
+                    if(translations[lang][key]) el.placeholder = translations[lang][key];
+                });
+            });
+        });
+        document.addEventListener('click', () => loginLangMenu.classList.remove('active'));
+    }
 
     document.getElementById('loginBtn').onclick = async ()=>{ const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPassword').value; if(!email || !pass) return toast('⚠️ '+(currentLang==='ar'?'أدخل البريد وكلمة المرور':'Entrez email et mot de passe')); try{ await auth.signInWithEmailAndPassword(email,pass); } catch(e){ document.getElementById('loginError').textContent = 'خطأ: '+e.message; document.getElementById('loginError').style.display = 'block'; toast('❌ '+(currentLang==='ar'?'فشل تسجيل الدخول':'Échec de connexion')); } };
     document.getElementById('offlineBtn').onclick = ()=>{ currentUser = { uid:'offline', email:'offline@local' }; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; guides = LDB.getGuides(); renderGuides(); if(unsubscribeFirestore) unsubscribeFirestore(); };
