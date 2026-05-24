@@ -212,6 +212,20 @@
             line-height: 1.6;
             text-align: justify;
         }
+        .security-images {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .security-images img {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid var(--gold);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -377,8 +391,8 @@
     let extraPlateValue = '';
     let selectedFlag = '🇹🇳';
     const flagsList = ["🇹🇳","🇸🇦","🇪🇬","🇩🇿","🇲🇦","🇱🇾","🇸🇩","🇮🇶","🇸🇾","🇯🇴","🇱🇧","🇵🇸","🇦🇪","🇶🇦","🇰🇼","🇧🇭","🇴🇲","🇾🇪","🇫🇷","🇺🇸","🇬🇧","🇩🇪","🇮🇹","🇪🇸","🇨🇦","🇦🇺","🇹🇷","🇮🇷","🇵🇰","🇮🇳","🇨🇳","🇯🇵","🇰🇷","🇷🇺","🇧🇷","🇿🇦","🇳🇬","🇰🇪","🇲🇾","🇮🇩"];
-    window.lastGeneratedImageUrl = null;      // تخزين رابط الصورة بعد الإنشاء
-    window.lastGeneratedCardHtml = null;      // تخزين نسخة HTML للبطاقة (احتياطي)
+    window.lastGeneratedImageUrl = null;
+    window.lastGeneratedCardHtml = null;
 
     // ============================================================
     // 2. دوال مساعدة عامة (UTILITIES)
@@ -499,7 +513,6 @@
         return `وفد مكون من ${people} فرداً من ${nationality}، قادم من ${fromLoc} متجه إلى ${toLoc} باستخدام ${transport}.`;
     }
     function generateAIParagraph(g) {
-        // فقرة وصفية مع إضافة اسم الفندق Hôtel Les Oliviers Palace
         const people = g.peopleCount || 'عدد غير محدد';
         const nationality = g.nationality || 'جنسية غير محددة';
         const fromLoc = g.fromLocation || 'مكان غير محدد';
@@ -586,7 +599,7 @@
     };
 
     // ============================================================
-    // 6. وظائف كرت المتابعة الأمنية (SECURITY CARD) - مع إعادة استخدام الصورة
+    // 6. وظائف كرت المتابعة الأمنية (SECURITY CARD) - مع إضافة الصور
     // ============================================================
     function updateSecurityPreview(g, customText) {
         const preview = document.getElementById('securityCardPreview');
@@ -595,12 +608,24 @@
         const transportHtml = getTransportBlackBox(g.transportType);
         const plateHtml = getPlateBlackBox(g.plate1, g.plate2, g.plateFunction, g.extraPlate, g.plateFlag || '🇹🇳');
         const aiPara = generateAIParagraph(g);
+        
+        // بناء قسم الصور إذا كانت موجودة
+        let imagesHtml = '';
+        if (g.busPhoto || g.guidePhoto) {
+            imagesHtml = `<div class="security-section"><div class="security-section-title"><i class="fas fa-image"></i> الصور المرفقة</div>
+                          <div class="security-images">`;
+            if (g.busPhoto) imagesHtml += `<img src="${g.busPhoto}" onclick="showFullImage('${g.busPhoto}')" onerror="this.style.display='none'" style="cursor:pointer;">`;
+            if (g.guidePhoto) imagesHtml += `<img src="${g.guidePhoto}" onclick="showFullImage('${g.guidePhoto}')" onerror="this.style.display='none'" style="cursor:pointer;">`;
+            imagesHtml += `</div></div>`;
+        }
+        
         preview.innerHTML = `
             <div class="security-card">
                 <div class="security-header"><strong>NOTE PRO WORK</strong><div style="font-size:10px;">${subTitle}</div></div>
                 <div style="padding:10px;"><div class="datetime-bar" style="margin-bottom:10px; border-radius:8px;"><span><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString()}</span><span><i class="far fa-clock"></i> ${now.toLocaleTimeString()}</span><div class="weather-info">${getWeatherHtml()}</div></div></div>
                 <div class="security-body">
                     <div class="security-section"><div class="security-section-title"><i class="fas fa-robot"></i> تقرير المتابعة</div><div class="ai-paragraph">${aiPara}</div></div>
+                    ${imagesHtml}
                     <div class="security-section"><div class="security-section-title"><i class="fas fa-users"></i> بيانات الوفد</div><div class="security-grid"><div><strong>عدد الأفراد:</strong> ${g.peopleCount || '—'}</div><div><strong>الجنسية:</strong> ${g.nationality || '—'}</div><div><strong>من/إلى:</strong> ${g.fromLocation || '—'} → ${g.toLocation || '—'}</div></div></div>
                     <div class="security-section"><div class="security-section-title"><i class="fas fa-truck"></i> نوع النقل واللوحة</div>${transportHtml}${plateHtml}</div>
                     <div class="security-section"><div class="security-section-title"><i class="fas fa-user-tie"></i> بيانات المرشد</div><div><strong>الاسم:</strong> ${g.name || '—'}</div>${g.phone ? `<div><strong>الهاتف:</strong> ${g.phone}</div>` : ''}</div>
@@ -633,7 +658,6 @@
                             </div>`;
             container.appendChild(div);
         });
-        // أحداث الإرسال للأرقام المحفوظة
         document.querySelectorAll('.send-saved-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const number = btn.getAttribute('data-number');
@@ -645,7 +669,6 @@
                 const groupLabel = document.getElementById('securityGroupLabel').value.trim();
                 await sendToWhatsApp(number, window.lastGeneratedImageUrl, groupLabel);
                 toast(`تم إرسال إلى ${number}`);
-                // إضافة علامة الإرسال بجانب الرقم (تحديث الزر)
                 btn.innerHTML = '<i class="fab fa-whatsapp"></i> تم ✓';
                 btn.disabled = true;
                 btn.style.opacity = '0.6';
