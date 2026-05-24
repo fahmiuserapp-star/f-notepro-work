@@ -20,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ========== لا ألوان صفراء ========== */
+        /* ========== الأنماط الرئيسية (بدون أي لون أصفر) ========== */
         :root {
             --olive: #556B2F;
             --olive-dark: #3d4d21;
@@ -122,7 +122,7 @@
         .card-img-area .overlay-avatar { position: absolute; bottom: 12px; right: 12px; width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--olive); object-fit: cover; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.2); cursor: pointer; }
         .info-box { background: var(--bg); border-radius: 10px; padding: 8px; border: 1px solid var(--border); }
         .info-box .value { font-weight: 800; font-size: 14px; color: var(--olive); }
-        /* مستطيلات سوداء منفصلة */
+        /* المستطيلات السوداء العرضية */
         .black-rectangle {
             background-color: #1e293b;
             border-radius: 12px;
@@ -179,8 +179,6 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .flex-btns { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
         .flex-btns button { flex: 1; }
-        .link-item { display: flex; justify-content: space-between; align-items: center; padding: 6px; border-bottom: 1px solid var(--border); font-size:11px; direction:ltr; }
-        .link-item a { background: var(--wa); color: white; padding: 3px 10px; border-radius: 20px; text-decoration: none; font-size: 11px; }
         .profile-avatar { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; display: block; border: 3px solid var(--olive); }
         .image-viewer-modal { background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); }
         .image-viewer-modal .modal-box { background: transparent; box-shadow: none; padding: 0; max-width: 95%; text-align: center; }
@@ -192,20 +190,23 @@
         .call-btn { background: var(--ok); }
         .wa-btn { background: var(--wa); }
         .form-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .form-row .half { flex: 1; }
         .icon-btn { background: var(--olive); color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; margin-left: 5px; }
+        /* تنسيق بطاقة المتابعة الأمنية */
         .security-card { display: flex; flex-direction: column; gap: 0; }
         .security-header { background: var(--olive); color: white; padding: 10px; text-align: center; border-radius: 16px 16px 0 0; }
         .security-body { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
         .security-section { background: var(--bg); border-radius: 12px; padding: 10px; border: 1px solid var(--border); }
         .security-section-title { font-weight: 800; color: var(--olive); margin-bottom: 6px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
         .security-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .security-item { font-size: 12px; }
-        .security-item strong { color: var(--olive); }
-        .send-status { display: inline-block; width: 18px; text-align: center; margin-right: 8px; color: var(--ok); }
+        .send-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); }
+        .send-status { color: var(--ok); font-weight: bold; margin-right: 8px; }
+        .ai-summary { background: var(--olive-light); color: white; padding: 8px; border-radius: 12px; margin-top: 8px; font-size: 12px; }
     </style>
 </head>
 <body>
 
+<!-- شاشة الدخول -->
 <div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;">
     <div style="background:var(--card);border-radius:24px;padding:30px 24px;max-width:380px;width:100%;text-align:center;">
         <img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" class="logo-pulse" style="width:100px;margin-bottom:15px;">
@@ -219,6 +220,7 @@
     </div>
 </div>
 
+<!-- التطبيق الرئيسي -->
 <div id="appContainer" style="display:none;">
     <div class="header">
         <div class="logo-area"><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png"><span class="logo-text">F‑Note Pro</span></div>
@@ -261,9 +263,39 @@
 <div class="modal" id="termsModal"><div class="modal-box"><h3>📜 شروط الخدمة والحقوق</h3><p>باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط.</p><button class="btn-secondary" id="closeTermsBtn">إغلاق</button></div></div>
 <div class="modal" id="profileModal"><div class="modal-box"><h3>👤 تعديل الملف الشخصي</h3><div class="upload-area" id="profileUploadBtn"><img id="profileAvatar" class="profile-avatar" src=""><i class="fa-solid fa-camera"></i> تغيير الصورة<div class="upload-spinner"></div></div><input type="text" id="profileDisplayName" placeholder="اسم العرض"><input type="email" id="profileEmail" disabled><button id="changePasswordBtn" class="btn-secondary">🔑 تغيير كلمة المرور</button><button id="saveProfileBtn" class="btn-primary">💾 حفظ التغييرات</button><button id="closeProfileBtn" class="btn-secondary">إلغاء</button></div></div>
 <div class="modal" id="passwordModal"><div class="modal-box"><h3>🔑 تغيير كلمة المرور</h3><input type="password" id="oldPassword" placeholder="كلمة المرور الحالية"><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button id="confirmPasswordBtn" class="btn-primary">تغيير</button><button id="closePasswordBtn" class="btn-secondary">إلغاء</button></div></div>
-<div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle">➕ إضافة مرشد جديد</h3><input type="text" id="gName" placeholder="اسم المرشد *"><div id="phoneFieldContainer"><input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr"></div><div class="form-row"><div><input type="text" id="gNationality" placeholder="الجنسية"></div><div><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" min="1"></div></div><select id="gDelegationType"><option value="سياحي">وفد سياحي</option><option value="دبلوماسي">وفد دبلوماسي</option><option value="قنصلي">وفد قنصلي</option><option value="إعلامي">وفد إعلامي</option><option value="أمني">وفد أمني</option></select><select id="gTransport"><option value="">نوع النقل</option><option value="حافلة صغيرة">حافلة صغيرة</option><option value="حافلة كبيرة">حافلة كبيرة</option><option value="سيارة">سيارة</option><option value="سيارة دبلوماسية">سيارة دبلوماسية</option><option value="سيارة قنصلية">سيارة قنصلية</option><option value="فان">فان</option><option value="أخرى">أخرى</option></select><div style="display:flex; gap:8px; align-items:center; margin:8px 0;"><input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2; text-align:center;" maxlength="5" inputmode="numeric"><div class="flag-selector" id="flagSelectorBtn"><span id="selectedFlagEmoji" class="flag-icon">🇹🇳</span><i class="fas fa-chevron-down"></i></div><input type="text" id="gPlate2" placeholder="XXX" style="flex:1; text-align:center;" maxlength="3" inputmode="numeric"></div><input type="text" id="gPlateFunction" placeholder="الوظيفة / الغرض من اللوحة (اختياري)"><div id="extraPlateContainer" style="margin-top:6px;"></div><div class="form-row"><div><input type="text" id="gFrom" placeholder="من"></div><div><input type="text" id="gTo" placeholder="إلى"></div></div><div id="stayDurationContainer" style="display:none;"><input type="number" id="gStayDuration" placeholder="مدة الإقامة (بالأيام)" min="1"></div><div class="form-row"><div><input type="text" id="gIdNumber" placeholder="رقم الهوية / جواز السفر"></div><div><input type="text" id="gAffiliation" placeholder="جهة التبعية / المؤسسة"></div></div><div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> 📸 صورة المرشد<img id="guidePreview" src="" style="display:none;"><div class="upload-spinner"></div></div><div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> 🚌 صورة وسيلة النقل<img id="busPreview" src="" style="display:none;"><div class="upload-spinner"></div></div><input type="text" id="gAgency" placeholder="الوكالة"><textarea id="gNotes" placeholder="ملاحظات"></textarea><select id="gVisibility"><option value="private">🔒 خاص</option><option value="public">🌍 عام</option></select><button class="btn-primary" id="saveGuideBtn">💾 حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn">إلغاء</button></div></div>
-<div class="modal" id="delegationModal"><div class="modal-box"><h3>📋 معلومات الوفد</h3><div id="delegationCard" class="delegation-card"><div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span><span><i class="far fa-clock"></i> <span id="delegationTime"></span></span><div id="delegationWeather" class="weather-info"></div></div><div style="padding:10px;display:flex;justify-content:space-between;"><div><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" width="28"></div><div><h4 style="color:var(--olive);">NOTE PRO WORK</h4><span id="delegationSubTitle"></span></div></div><div class="card-img-area"><img id="delegationMainImg" class="main-img"><img id="delegationAvatar" class="overlay-avatar"></div><div style="padding:12px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div class="info-box"><span>عدد الأفراد</span><br><span id="delegationPeopleCount" class="value"></span></div><div class="info-box"><span>الجنسية</span><br><span id="delegationNationality" class="value"></span></div><div class="info-box"><span>الوجهة</span><br><span id="delegationFromTo" class="value"></span></div></div><div id="delegationTransportPlateArea"></div><div id="stayDurationDisplay" class="info-box" style="display:none;"><span>مدة الإقامة</span><br><span id="delegationStayDuration" class="value"></span></div><div id="additionalFieldsDisplay" class="info-box" style="display:none;"><span>رقم الهوية</span><br><span id="delegationIdNumber" class="value"></span><br><span>جهة التبعية</span><br><span id="delegationAffiliation" class="value"></span></div><div id="guideInfoBox" class="info-box"><div><span>المرشد</span><br><span id="delegationGuideName" class="value"></span></div></div><div id="guideContactRow" class="contact-row" style="display:none;"><span class="guide-phone-number" id="delegationGuidePhoneDisplay"></span><div class="contact-buttons"><button class="call-btn" id="callGuideBtn"><i class="fas fa-phone-alt"></i></button><button class="wa-btn" id="waGuideBtn"><i class="fab fa-whatsapp"></i></button></div></div><div id="delegationNotesRow" class="info-box" style="display:none;"><span>ملاحظات</span><br><span id="delegationNotes"></span></div><div class="timestamp-row"><span><i class="far fa-plus-square"></i> تاريخ الإضافة: <span id="creationTimestamp"></span></span><span><i class="fab fa-whatsapp"></i> تاريخ الإرسال: <span id="sendTimestamp"></span></span><span><i class="fas fa-user-check"></i> المنشئ: <span id="creatorName"></span></span></div></div></div><div class="flex-btns"><button class="btn-primary" id="shareDelegationBtn"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button></div><button class="btn-secondary" id="closeDelegationBtn">إغلاق</button></div></div>
+
+<!-- مودال إضافة/تعديل المرشد (بدون حقول الهوية والتبعية) -->
+<div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle">➕ إضافة مرشد جديد</h3>
+    <input type="text" id="gName" placeholder="اسم المرشد *">
+    <div id="phoneFieldContainer"><input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr"></div>
+    <div class="form-row"><div class="half"><input type="text" id="gNationality" placeholder="الجنسية"></div><div class="half"><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" min="1"></div></div>
+    <select id="gDelegationType"><option value="سياحي">وفد سياحي</option><option value="دبلوماسي">وفد دبلوماسي</option><option value="قنصلي">وفد قنصلي</option><option value="إعلامي">وفد إعلامي</option><option value="أمني">وفد أمني</option></select>
+    <select id="gTransport"><option value="">نوع النقل</option><option value="حافلة صغيرة">حافلة صغيرة</option><option value="حافلة كبيرة">حافلة كبيرة</option><option value="سيارة">سيارة</option><option value="سيارة دبلوماسية">سيارة دبلوماسية</option><option value="سيارة قنصلية">سيارة قنصلية</option><option value="فان">فان</option><option value="أخرى">أخرى</option></select>
+    <!-- اللوحة مع العلم -->
+    <div style="display:flex; gap:8px; align-items:center; margin:8px 0;">
+        <input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2; text-align:center;" maxlength="5" inputmode="numeric">
+        <div class="flag-selector" id="flagSelectorBtn"><span id="selectedFlagEmoji" class="flag-icon">🇹🇳</span><i class="fas fa-chevron-down"></i></div>
+        <input type="text" id="gPlate2" placeholder="XXX" style="flex:1; text-align:center;" maxlength="3" inputmode="numeric">
+    </div>
+    <input type="text" id="gPlateFunction" placeholder="الوظيفة / الغرض من اللوحة (اختياري)">
+    <div id="extraPlateContainer" style="margin-top:6px;"></div>
+    <div class="form-row"><div class="half"><input type="text" id="gFrom" placeholder="من"></div><div class="half"><input type="text" id="gTo" placeholder="إلى"></div></div>
+    <div id="stayDurationContainer" style="display:none;"><input type="number" id="gStayDuration" placeholder="مدة الإقامة (بالأيام)" min="1"></div>
+    <!-- رفع الصور -->
+    <div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> 📸 صورة المرشد<img id="guidePreview" src="" style="display:none;"><div class="upload-spinner"></div></div>
+    <div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> 🚌 صورة وسيلة النقل<img id="busPreview" src="" style="display:none;"><div class="upload-spinner"></div></div>
+    <input type="text" id="gAgency" placeholder="الوكالة">
+    <textarea id="gNotes" placeholder="ملاحظات (حتى 200 حرف)" maxlength="200"></textarea>
+    <select id="gVisibility"><option value="private">🔒 خاص</option><option value="public">🌍 عام</option></select>
+    <button class="btn-primary" id="saveGuideBtn">💾 حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn">إلغاء</button>
+</div></div>
+
+<!-- مودال عرض بطاقة الوفد -->
+<div class="modal" id="delegationModal"><div class="modal-box"><h3>📋 معلومات الوفد</h3><div id="delegationCard" class="delegation-card"><div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span><span><i class="far fa-clock"></i> <span id="delegationTime"></span></span><div id="delegationWeather" class="weather-info"></div></div><div style="padding:10px;display:flex;justify-content:space-between;"><div><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" width="28"></div><div><h4 style="color:var(--olive);">NOTE PRO WORK</h4><span id="delegationSubTitle"></span></div></div><div class="card-img-area"><img id="delegationMainImg" class="main-img"><img id="delegationAvatar" class="overlay-avatar"></div><div style="padding:12px;"><div class="info-box" style="margin-bottom:6px;"><span>ملخص ذكاء اصطناعي</span><br><span id="aiSummary" class="value" style="font-size:12px;"></span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div class="info-box"><span>عدد الأفراد</span><br><span id="delegationPeopleCount" class="value"></span></div><div class="info-box"><span>الجنسية</span><br><span id="delegationNationality" class="value"></span></div><div class="info-box"><span>من</span><br><span id="delegationFrom" class="value"></span></div><div class="info-box"><span>إلى</span><br><span id="delegationTo" class="value"></span></div></div><div id="delegationTransportPlateArea"></div><div id="stayDurationDisplay" class="info-box" style="display:none;"><span>مدة الإقامة</span><br><span id="delegationStayDuration" class="value"></span></div><div id="guideInfoBox" class="info-box"><div><span>المرشد</span><br><span id="delegationGuideName" class="value"></span></div></div><div id="guideContactRow" class="contact-row" style="display:none;"><span class="guide-phone-number" id="delegationGuidePhoneDisplay"></span><div class="contact-buttons"><button class="call-btn" id="callGuideBtn"><i class="fas fa-phone-alt"></i></button><button class="wa-btn" id="waGuideBtn"><i class="fab fa-whatsapp"></i></button></div></div><div id="delegationNotesRow" class="info-box" style="display:none;"><span>ملاحظات</span><br><span id="delegationNotes"></span></div><div class="timestamp-row"><span><i class="far fa-plus-square"></i> تاريخ الإضافة: <span id="creationTimestamp"></span></span><span><i class="fab fa-whatsapp"></i> تاريخ الإرسال: <span id="sendTimestamp"></span></span><span><i class="fas fa-user-check"></i> المنشئ: <span id="creatorName"></span></span></div></div></div><div class="flex-btns"><button class="btn-primary" id="shareDelegationBtn"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button></div><button class="btn-secondary" id="closeDelegationBtn">إغلاق</button></div></div>
+
+<!-- مودال بطاقة التنسيق والمتابعة الأمنية -->
 <div class="modal" id="securityModal"><div class="modal-box"><h3><i class="fas fa-exchange-alt"></i> بطاقة التنسيق والمتابعة</h3><div id="securityCardPreview" class="delegation-card" style="margin-bottom:12px;"></div><label>🏷️ المجموعة:</label><input type="text" id="securityGroupLabel"><label>📞 أرقام الواتساب (سطر لكل رقم):</label><textarea id="securityPhonesList" rows="3"></textarea><button class="btn-primary" id="generateSecurityCardBtn" style="background:var(--olive);">🔄 إنشاء البطاقة والروابط</button><div id="securityLinksContainer" style="margin-top:12px; display:none;"></div><button class="btn-secondary" id="closeSecurityBtn">إغلاق</button></div></div>
+
 <div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box"><div class="close-viewer" id="closeImageViewer">&times;</div><img id="fullImageView"></div></div>
 <div class="modal flags-modal" id="flagsModal"><div class="modal-box"><h3>اختر علم اللوحة</h3><div class="flags-grid" id="flagsGrid"></div><button class="btn-secondary" id="closeFlagsBtn">إلغاء</button></div></div>
 
@@ -387,6 +419,20 @@
         setTimeout(() => div.remove(), 2600);
     }
 
+    // دالة الذكاء الاصطناعي لتوليد ملخص وصفي
+    function generateAISummary(g) {
+        const people = g.peopleCount || 'عدد غير محدد';
+        const nationality = g.nationality || 'جنسية غير محددة';
+        const fromLoc = g.fromLocation || 'مكان غير محدد';
+        const toLoc = g.toLocation || 'مكان غير محدد';
+        const transport = g.transportType || 'وسيلة نقل غير محددة';
+        let summary = `وفد مكون من ${people} فرداً من ${nationality}، قادم من ${fromLoc} متجه إلى ${toLoc} باستخدام ${transport}.`;
+        if (g.notes && g.notes.length > 0) {
+            summary += ` ملاحظات: ${g.notes.substring(0, 100)}.`;
+        }
+        return summary;
+    }
+
     // دوال المستطيلات السوداء
     function getTransportBlackBox(transportType) {
         if (!transportType) transportType = 'غير محدد';
@@ -461,8 +507,6 @@
         document.getElementById('gFrom').value = g.fromLocation || '';
         document.getElementById('gTo').value = g.toLocation || '';
         document.getElementById('gStayDuration').value = g.stayDuration || '';
-        document.getElementById('gIdNumber').value = g.idNumber || '';
-        document.getElementById('gAffiliation').value = g.affiliation || '';
         document.getElementById('gAgency').value = g.agency || '';
         document.getElementById('gNotes').value = g.notes || '';
         document.getElementById('gVisibility').value = g.visibility || 'private';
@@ -527,8 +571,6 @@
                 fromLocation: document.getElementById('gFrom').value.trim(),
                 toLocation: document.getElementById('gTo').value.trim(),
                 stayDuration: delegationType !== 'سياحي' ? document.getElementById('gStayDuration').value : null,
-                idNumber: document.getElementById('gIdNumber').value.trim(),
-                affiliation: document.getElementById('gAffiliation').value.trim(),
                 guidePhoto: finalGuide || null,
                 busPhoto: finalBus || null,
                 agency: document.getElementById('gAgency').value.trim(),
@@ -552,7 +594,7 @@
         }
     };
 
-    // عرض بطاقة الوفد
+    // عرض بطاقة الوفد مع ملخص الذكاء الاصطناعي
     window.showDelegationCard = async function(id) {
         const g = guides.find(x => x.id === id);
         if (!g) return;
@@ -561,8 +603,9 @@
         document.getElementById('delegationAvatar').src = g.guidePhoto || '';
         document.getElementById('delegationPeopleCount').innerHTML = g.peopleCount || '—';
         document.getElementById('delegationNationality').innerHTML = g.nationality || '—';
-        document.getElementById('delegationFromTo').innerHTML = `${g.fromLocation || '—'} → ${g.toLocation || '—'}`;
-        // عرض نوع النقل واللوحة في مستطيلين أسودين منفصلين
+        document.getElementById('delegationFrom').innerHTML = g.fromLocation || '—';
+        document.getElementById('delegationTo').innerHTML = g.toLocation || '—';
+        // عرض نوع النقل واللوحة في مستطيلين أسودين
         const transportHtml = getTransportBlackBox(g.transportType);
         const plateHtml = getPlateBlackBox(g.plate1, g.plate2, g.plateFunction, g.extraPlate, g.plateFlag || '🇹🇳');
         document.getElementById('delegationTransportPlateArea').innerHTML = transportHtml + plateHtml;
@@ -580,12 +623,8 @@
         document.getElementById('delegationStayDuration').innerHTML = g.stayDuration || '';
         if (g.notes) { document.getElementById('delegationNotesRow').style.display = 'block'; document.getElementById('delegationNotes').innerHTML = g.notes; }
         else document.getElementById('delegationNotesRow').style.display = 'none';
-        const additionalDiv = document.getElementById('additionalFieldsDisplay');
-        if (g.idNumber || g.affiliation) {
-            additionalDiv.style.display = 'block';
-            document.getElementById('delegationIdNumber').innerHTML = g.idNumber || '—';
-            document.getElementById('delegationAffiliation').innerHTML = g.affiliation || '—';
-        } else additionalDiv.style.display = 'none';
+        // ملخص الذكاء الاصطناعي
+        document.getElementById('aiSummary').innerHTML = generateAISummary(g);
         const now = new Date();
         document.getElementById('delegationDate').innerHTML = now.toLocaleDateString('ar-TN');
         document.getElementById('delegationTime').innerHTML = now.toLocaleTimeString('ar-TN');
@@ -628,9 +667,9 @@
         } catch(err) { toast('⚠️ ' + err.message); }
     };
 
-    // بطاقة المتابعة الأمنية مع إرسال متسلسل وحفظ الحالة
-    let sendQueue = [];          // قائمة الأرقام المتبقية
-    let sentStatus = {};         // تخزين حالة الإرسال لكل رقم
+    // بطاقة المتابعة الأمنية مع أزرار إرسال فردية وحفظ الحالة
+    let sendQueue = [];
+    let sentStatus = {};
     let currentSendIndex = 0;
     let isSending = false;
 
@@ -647,7 +686,7 @@
                 <div class="security-body">
                     <div class="security-section"><div class="security-section-title"><i class="fas fa-users"></i> بيانات الوفد</div><div class="security-grid"><div><strong>عدد الأفراد:</strong> ${g.peopleCount || '—'}</div><div><strong>الجنسية:</strong> ${g.nationality || '—'}</div><div><strong>من/إلى:</strong> ${g.fromLocation || '—'} → ${g.toLocation || '—'}</div></div></div>
                     <div class="security-section"><div class="security-section-title"><i class="fas fa-truck"></i> نوع النقل واللوحة</div>${transportHtml}${plateHtml}</div>
-                    <div class="security-section"><div class="security-section-title"><i class="fas fa-user-tie"></i> بيانات المرشد</div><div><strong>الاسم:</strong> ${g.name || '—'}</div>${g.phone ? `<div><strong>الهاتف:</strong> ${g.phone}</div>` : ''}${g.idNumber ? `<div><strong>رقم الهوية:</strong> ${g.idNumber}</div>` : ''}${g.affiliation ? `<div><strong>جهة التبعية:</strong> ${g.affiliation}</div>` : ''}</div>
+                    <div class="security-section"><div class="security-section-title"><i class="fas fa-user-tie"></i> بيانات المرشد</div><div><strong>الاسم:</strong> ${g.name || '—'}</div>${g.phone ? `<div><strong>الهاتف:</strong> ${g.phone}</div>` : ''}</div>
                     ${customText ? `<div class="security-section"><div class="security-section-title"><i class="fas fa-tag"></i> المجموعة</div><div>${customText}</div></div>` : ''}
                     <div class="security-section"><div class="security-section-title"><i class="fas fa-info-circle"></i> معلومات إضافية</div><div><strong>الوكالة:</strong> ${g.agency || '—'}</div><div><strong>ملاحظات:</strong> ${g.notes || 'لا توجد'}</div></div>
                     <div class="timestamp-row" style="justify-content:space-between;"><span>📅 الإضافة: ${g.createdAt ? new Date(g.createdAt).toLocaleString() : 'غير معروف'}</span><span>✉️ الإرسال: ${new Date().toLocaleString()}</span><span>👤 المنشئ: ${g.creatorName || 'غير معروف'}</span></div>
@@ -665,14 +704,16 @@
             sentStatus[phone] = false;
             const clean = phone.replace(/[^0-9+]/g, '');
             const finalPhone = clean.startsWith('+') ? clean : '+216' + clean.replace(/^0+/, '');
-            sendQueue.push({ phone: finalPhone, original: phone });
+            sendQueue.push({ phone: finalPhone, original: phone, idx });
             const div = document.createElement('div');
-            div.className = 'link-item';
+            div.className = 'send-item';
             div.id = `send-item-${idx}`;
-            div.innerHTML = `<span>${finalPhone}</span><button class="send-wa-btn" data-phone="${finalPhone}" data-original="${phone}" style="background:var(--wa); color:white; border:none; padding:4px 12px; border-radius:20px;"><i class="fab fa-whatsapp"></i> إرسال</button><span class="send-status" id="status-${idx}"></span>`;
+            div.innerHTML = `<span style="flex:1;">${finalPhone}</span>
+                            <button class="send-wa-btn" data-phone="${finalPhone}" data-idx="${idx}" style="background:var(--wa); color:white; border:none; padding:4px 12px; border-radius:20px;"><i class="fab fa-whatsapp"></i> إرسال</button>
+                            <span class="send-status" id="status-${idx}"></span>`;
             container.appendChild(div);
         });
-        // إضافة أزرار الإرسال المتسلسل
+        // أزرار التحكم العامة
         const controlsDiv = document.createElement('div');
         controlsDiv.style.marginTop = '12px';
         controlsDiv.style.display = 'flex';
@@ -691,12 +732,12 @@
             currentSendIndex = 0;
             toast('تم إعادة تعيين حالة الإرسال');
         });
-        // إضافة حدث لكل زر إرسال فردي
+        // إضافة أحداث الأزرار الفردية
         document.querySelectorAll('.send-wa-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const phone = btn.getAttribute('data-phone');
-                const idx = sendQueue.findIndex(q => q.phone === phone);
-                if (idx !== -1 && !sentStatus[phone]) {
+                const idx = parseInt(btn.getAttribute('data-idx'));
+                if (!sentStatus[phone]) {
                     sendToWhatsApp(phone, imageUrl, groupLabel);
                     sentStatus[phone] = true;
                     const statusSpan = document.getElementById(`status-${idx}`);
@@ -704,7 +745,7 @@
                     btn.disabled = true;
                     btn.style.opacity = '0.6';
                     toast(`تم إرسال إلى ${phone}`);
-                } else if (sentStatus[phone]) {
+                } else {
                     toast(`تم الإرسال مسبقاً إلى ${phone}`);
                 }
             });
@@ -716,15 +757,11 @@
         const msg = encodeURIComponent(`📢 بطاقة التنسيق والمتابعة:\n${imageUrl}\n${groupLabel ? `المجموعة: ${groupLabel}` : ''}\n${getWeatherHtml()}`);
         const url = `https://wa.me/${phone}?text=${msg}`;
         window.open(url, '_blank');
-        // انتظار 2 ثانية للسماح بفتح الواتساب ثم متابعة الإرسال التلقائي
         return new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     async function startSequentialSend(imageUrl, groupLabel) {
-        if (isSending) {
-            toast('جاري الإرسال حالياً، انتظر قليلاً');
-            return;
-        }
+        if (isSending) { toast('جاري الإرسال حالياً، انتظر قليلاً'); return; }
         isSending = true;
         for (let i = currentSendIndex; i < sendQueue.length; i++) {
             const item = sendQueue[i];
@@ -737,7 +774,6 @@
             const btn = document.querySelector(`.send-wa-btn[data-phone="${item.phone}"]`);
             if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
             currentSendIndex = i + 1;
-            // بعد إرسال كل رقم، ننتظر قليلاً ثم ننتقل إلى التالي
             await new Promise(r => setTimeout(r, 1500));
         }
         isSending = false;
@@ -812,6 +848,7 @@
     document.getElementById('busUploadBtn')?.addEventListener('click', () => pickAndUploadImg('busPreview', 'busUploadBtn', (url) => { busPhotoUrl = url; }, (blob) => { busPhotoBlob = blob; }));
     document.getElementById('profileUploadBtn')?.addEventListener('click', () => pickAndUploadImg('profileAvatar', 'profileUploadBtn', async (url) => { userProfile.photoURL = url; if (currentUser) await currentUser.updateProfile({ photoURL: url }); await db.collection('users').doc(currentUser.uid).set({ photoURL: url }, { merge: true }); toast('✅ تم تحديث الصورة'); loadProfile(); }, blob => profilePhotoBlob = blob));
 
+    // ربط الأزرار الجانبية والأساسية
     document.getElementById('darkToggle').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('fnote_dark', document.body.classList.contains('dark')); };
     document.getElementById('menuBtn').onclick = () => { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); };
     document.getElementById('overlay').onclick = () => { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
@@ -821,7 +858,7 @@
     document.getElementById('exportPdfBtn').onclick = () => { const el = document.createElement('div'); el.innerHTML = '<h1>F-Note Pro Max</h1>' + guides.map(g => `<p>${g.name} - ${g.phone}</p>`).join(''); html2pdf().from(el).save('guides.pdf'); toast('📕 تم التصدير'); };
     document.getElementById('voiceSearchBtn').onclick = () => { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) return toast('غير مدعوم'); const rec = new SpeechRecognition(); rec.lang = 'ar-TN'; rec.start(); rec.onresult = e => { document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); }; };
     document.getElementById('searchInput').oninput = renderGuides;
-    document.getElementById('addGuideBtn').onclick = () => { editId = null; guidePhotoUrl = ''; busPhotoUrl = ''; extraPlateValue = ''; selectedFlag = '🇹🇳'; document.getElementById('selectedFlagEmoji').innerHTML = selectedFlag; updateExtraPlateUI(); document.getElementById('gName').value = ''; document.getElementById('gPhone').value = ''; document.getElementById('gNationality').value = ''; document.getElementById('gPeopleCount').value = ''; document.getElementById('gDelegationType').value = 'سياحي'; document.getElementById('gTransport').value = ''; document.getElementById('gPlate1').value = ''; document.getElementById('gPlate2').value = ''; document.getElementById('gPlateFunction').value = ''; document.getElementById('gFrom').value = ''; document.getElementById('gTo').value = ''; document.getElementById('gStayDuration').value = ''; document.getElementById('gIdNumber').value = ''; document.getElementById('gAffiliation').value = ''; document.getElementById('gAgency').value = ''; document.getElementById('gNotes').value = ''; document.getElementById('gVisibility').value = 'private'; document.getElementById('guidePreview').style.display = 'none'; document.getElementById('busPreview').style.display = 'none'; document.getElementById('modalTitle').innerHTML = '➕ إضافة مرشد جديد'; document.getElementById('guideModal').classList.add('show'); };
+    document.getElementById('addGuideBtn').onclick = () => { editId = null; guidePhotoUrl = ''; busPhotoUrl = ''; extraPlateValue = ''; selectedFlag = '🇹🇳'; document.getElementById('selectedFlagEmoji').innerHTML = selectedFlag; updateExtraPlateUI(); document.getElementById('gName').value = ''; document.getElementById('gPhone').value = ''; document.getElementById('gNationality').value = ''; document.getElementById('gPeopleCount').value = ''; document.getElementById('gDelegationType').value = 'سياحي'; document.getElementById('gTransport').value = ''; document.getElementById('gPlate1').value = ''; document.getElementById('gPlate2').value = ''; document.getElementById('gPlateFunction').value = ''; document.getElementById('gFrom').value = ''; document.getElementById('gTo').value = ''; document.getElementById('gStayDuration').value = ''; document.getElementById('gAgency').value = ''; document.getElementById('gNotes').value = ''; document.getElementById('gVisibility').value = 'private'; document.getElementById('guidePreview').style.display = 'none'; document.getElementById('busPreview').style.display = 'none'; document.getElementById('modalTitle').innerHTML = '➕ إضافة مرشد جديد'; document.getElementById('guideModal').classList.add('show'); };
     document.getElementById('closeGuideBtn').onclick = () => document.getElementById('guideModal').classList.remove('show');
     document.getElementById('closeDelegationBtn').onclick = () => document.getElementById('delegationModal').classList.remove('show');
     document.getElementById('closeSecurityBtn').onclick = () => document.getElementById('securityModal').classList.remove('show');
