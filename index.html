@@ -20,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ========== الأنماط الرئيسية (بدون أي لون أصفر) ========== */
+        /* ========== الأنماط الرئيسية بدون أي لون أصفر ========== */
         :root {
             --olive: #556B2F;
             --olive-dark: #3d4d21;
@@ -122,12 +122,12 @@
         .card-img-area .overlay-avatar { position: absolute; bottom: 12px; right: 12px; width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--olive); object-fit: cover; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.2); cursor: pointer; }
         .info-box { background: var(--bg); border-radius: 10px; padding: 8px; border: 1px solid var(--border); }
         .info-box .value { font-weight: 800; font-size: 14px; color: var(--olive); }
-        /* المستطيلات السوداء العرضية */
+        /* المستطيلات السوداء المنفصلة */
         .black-rectangle {
             background-color: #1e293b;
             border-radius: 12px;
             padding: 10px 12px;
-            margin: 6px 0;
+            margin: 8px 0;
             width: 100%;
             text-align: center;
             color: white;
@@ -201,6 +201,9 @@
         .security-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .send-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); }
         .send-status { color: var(--ok); font-weight: bold; margin-right: 8px; }
+        .saved-number-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); background: var(--card); border-radius: 12px; margin: 4px 0; }
+        .saved-number-item .number { font-family: monospace; font-size: 14px; }
+        .saved-number-actions button { margin: 0 4px; padding: 4px 8px; border-radius: 20px; font-size: 12px; }
         .ai-summary { background: var(--olive-light); color: white; padding: 8px; border-radius: 12px; margin-top: 8px; font-size: 12px; }
     </style>
 </head>
@@ -264,14 +267,17 @@
 <div class="modal" id="profileModal"><div class="modal-box"><h3>👤 تعديل الملف الشخصي</h3><div class="upload-area" id="profileUploadBtn"><img id="profileAvatar" class="profile-avatar" src=""><i class="fa-solid fa-camera"></i> تغيير الصورة<div class="upload-spinner"></div></div><input type="text" id="profileDisplayName" placeholder="اسم العرض"><input type="email" id="profileEmail" disabled><button id="changePasswordBtn" class="btn-secondary">🔑 تغيير كلمة المرور</button><button id="saveProfileBtn" class="btn-primary">💾 حفظ التغييرات</button><button id="closeProfileBtn" class="btn-secondary">إلغاء</button></div></div>
 <div class="modal" id="passwordModal"><div class="modal-box"><h3>🔑 تغيير كلمة المرور</h3><input type="password" id="oldPassword" placeholder="كلمة المرور الحالية"><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button id="confirmPasswordBtn" class="btn-primary">تغيير</button><button id="closePasswordBtn" class="btn-secondary">إلغاء</button></div></div>
 
-<!-- مودال إضافة/تعديل المرشد (بدون حقول الهوية والتبعية) -->
+<!-- مودال إضافة/تعديل المرشد (مع أقسام منفصلة) -->
 <div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle">➕ إضافة مرشد جديد</h3>
-    <input type="text" id="gName" placeholder="اسم المرشد *">
-    <div id="phoneFieldContainer"><input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr"></div>
+    <!-- قسم معلومات الوفد -->
+    <div class="security-section-title"><i class="fas fa-users"></i> معلومات الوفد</div>
     <div class="form-row"><div class="half"><input type="text" id="gNationality" placeholder="الجنسية"></div><div class="half"><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" min="1"></div></div>
     <select id="gDelegationType"><option value="سياحي">وفد سياحي</option><option value="دبلوماسي">وفد دبلوماسي</option><option value="قنصلي">وفد قنصلي</option><option value="إعلامي">وفد إعلامي</option><option value="أمني">وفد أمني</option></select>
+    <div class="form-row"><div class="half"><input type="text" id="gFrom" placeholder="من"></div><div class="half"><input type="text" id="gTo" placeholder="إلى"></div></div>
+
+    <!-- قسم نوع النقل واللوحة -->
+    <div class="security-section-title" style="margin-top:10px;"><i class="fas fa-truck"></i> نوع النقل واللوحة</div>
     <select id="gTransport"><option value="">نوع النقل</option><option value="حافلة صغيرة">حافلة صغيرة</option><option value="حافلة كبيرة">حافلة كبيرة</option><option value="سيارة">سيارة</option><option value="سيارة دبلوماسية">سيارة دبلوماسية</option><option value="سيارة قنصلية">سيارة قنصلية</option><option value="فان">فان</option><option value="أخرى">أخرى</option></select>
-    <!-- اللوحة مع العلم -->
     <div style="display:flex; gap:8px; align-items:center; margin:8px 0;">
         <input type="text" id="gPlate1" placeholder="XXXXX" style="flex:2; text-align:center;" maxlength="5" inputmode="numeric">
         <div class="flag-selector" id="flagSelectorBtn"><span id="selectedFlagEmoji" class="flag-icon">🇹🇳</span><i class="fas fa-chevron-down"></i></div>
@@ -279,28 +285,64 @@
     </div>
     <input type="text" id="gPlateFunction" placeholder="الوظيفة / الغرض من اللوحة (اختياري)">
     <div id="extraPlateContainer" style="margin-top:6px;"></div>
-    <div class="form-row"><div class="half"><input type="text" id="gFrom" placeholder="من"></div><div class="half"><input type="text" id="gTo" placeholder="إلى"></div></div>
+
+    <!-- قسم معلومات المرشد -->
+    <div class="security-section-title" style="margin-top:10px;"><i class="fas fa-user-tie"></i> معلومات المرشد</div>
+    <input type="text" id="gName" placeholder="اسم المرشد *">
+    <div id="phoneFieldContainer"><input type="tel" id="gPhone" placeholder="رقم الجوال (للوفود السياحية)" dir="ltr"></div>
     <div id="stayDurationContainer" style="display:none;"><input type="number" id="gStayDuration" placeholder="مدة الإقامة (بالأيام)" min="1"></div>
+
+    <!-- قسم الوكالة (مع مستطيل للإضافة اليدوية) -->
+    <div class="security-section-title" style="margin-top:10px;"><i class="fas fa-building"></i> الوكالة</div>
+    <div class="black-rectangle" style="background:var(--bg); color:var(--txt); border:1px solid var(--border);">
+        <input type="text" id="gAgency" placeholder="اسم الوكالة" style="background:transparent; border:none; margin:0; padding:0;">
+    </div>
+
+    <!-- قسم الملاحظات (مستقلة) -->
+    <div class="security-section-title" style="margin-top:10px;"><i class="fas fa-sticky-note"></i> الملاحظات</div>
+    <div class="black-rectangle" style="background:var(--bg); color:var(--txt); border:1px solid var(--border);">
+        <textarea id="gNotes" placeholder="ملاحظات (حتى 200 حرف)" maxlength="200" style="background:transparent; border:none; margin:0; padding:0;"></textarea>
+    </div>
+
     <!-- رفع الصور -->
     <div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> 📸 صورة المرشد<img id="guidePreview" src="" style="display:none;"><div class="upload-spinner"></div></div>
     <div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> 🚌 صورة وسيلة النقل<img id="busPreview" src="" style="display:none;"><div class="upload-spinner"></div></div>
-    <input type="text" id="gAgency" placeholder="الوكالة">
-    <textarea id="gNotes" placeholder="ملاحظات (حتى 200 حرف)" maxlength="200"></textarea>
+
     <select id="gVisibility"><option value="private">🔒 خاص</option><option value="public">🌍 عام</option></select>
     <button class="btn-primary" id="saveGuideBtn">💾 حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn">إلغاء</button>
 </div></div>
 
 <!-- مودال عرض بطاقة الوفد -->
-<div class="modal" id="delegationModal"><div class="modal-box"><h3>📋 معلومات الوفد</h3><div id="delegationCard" class="delegation-card"><div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span><span><i class="far fa-clock"></i> <span id="delegationTime"></span></span><div id="delegationWeather" class="weather-info"></div></div><div style="padding:10px;display:flex;justify-content:space-between;"><div><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" width="28"></div><div><h4 style="color:var(--olive);">NOTE PRO WORK</h4><span id="delegationSubTitle"></span></div></div><div class="card-img-area"><img id="delegationMainImg" class="main-img"><img id="delegationAvatar" class="overlay-avatar"></div><div style="padding:12px;"><div class="info-box" style="margin-bottom:6px;"><span>ملخص ذكاء اصطناعي</span><br><span id="aiSummary" class="value" style="font-size:12px;"></span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div class="info-box"><span>عدد الأفراد</span><br><span id="delegationPeopleCount" class="value"></span></div><div class="info-box"><span>الجنسية</span><br><span id="delegationNationality" class="value"></span></div><div class="info-box"><span>من</span><br><span id="delegationFrom" class="value"></span></div><div class="info-box"><span>إلى</span><br><span id="delegationTo" class="value"></span></div></div><div id="delegationTransportPlateArea"></div><div id="stayDurationDisplay" class="info-box" style="display:none;"><span>مدة الإقامة</span><br><span id="delegationStayDuration" class="value"></span></div><div id="guideInfoBox" class="info-box"><div><span>المرشد</span><br><span id="delegationGuideName" class="value"></span></div></div><div id="guideContactRow" class="contact-row" style="display:none;"><span class="guide-phone-number" id="delegationGuidePhoneDisplay"></span><div class="contact-buttons"><button class="call-btn" id="callGuideBtn"><i class="fas fa-phone-alt"></i></button><button class="wa-btn" id="waGuideBtn"><i class="fab fa-whatsapp"></i></button></div></div><div id="delegationNotesRow" class="info-box" style="display:none;"><span>ملاحظات</span><br><span id="delegationNotes"></span></div><div class="timestamp-row"><span><i class="far fa-plus-square"></i> تاريخ الإضافة: <span id="creationTimestamp"></span></span><span><i class="fab fa-whatsapp"></i> تاريخ الإرسال: <span id="sendTimestamp"></span></span><span><i class="fas fa-user-check"></i> المنشئ: <span id="creatorName"></span></span></div></div></div><div class="flex-btns"><button class="btn-primary" id="shareDelegationBtn"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button></div><button class="btn-secondary" id="closeDelegationBtn">إغلاق</button></div></div>
+<div class="modal" id="delegationModal"><div class="modal-box"><h3>📋 معلومات الوفد</h3><div id="delegationCard" class="delegation-card"><div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span><span><i class="far fa-clock"></i> <span id="delegationTime"></span></span><div id="delegationWeather" class="weather-info"></div></div><div style="padding:10px;display:flex;justify-content:space-between;"><div><img src="https://i.ibb.co/ds6SXvq6/1778351155986-removebg-preview.png" width="28"></div><div><h4 style="color:var(--olive);">NOTE PRO WORK</h4><span id="delegationSubTitle"></span></div></div><div class="card-img-area"><img id="delegationMainImg" class="main-img"><img id="delegationAvatar" class="overlay-avatar"></div><div style="padding:12px;"><div class="info-box" style="margin-bottom:6px;"><span>ملخص ذكاء اصطناعي</span><br><span id="aiSummary" class="value" style="font-size:12px;"></span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div class="info-box"><span>عدد الأفراد</span><br><span id="delegationPeopleCount" class="value"></span></div><div class="info-box"><span>الجنسية</span><br><span id="delegationNationality" class="value"></span></div><div class="info-box"><span>من</span><br><span id="delegationFrom" class="value"></span></div><div class="info-box"><span>إلى</span><br><span id="delegationTo" class="value"></span></div></div>
+    <!-- نوع النقل واللوحة كل في مستطيل أسود منفصل -->
+    <div id="delegationTransportBox"></div>
+    <div id="delegationPlateBox"></div>
+    <div id="stayDurationDisplay" class="info-box" style="display:none;"><span>مدة الإقامة</span><br><span id="delegationStayDuration" class="value"></span></div>
+    <div id="guideInfoBox" class="info-box"><div><span>المرشد</span><br><span id="delegationGuideName" class="value"></span></div></div>
+    <div id="guideContactRow" class="contact-row" style="display:none;"><span class="guide-phone-number" id="delegationGuidePhoneDisplay"></span><div class="contact-buttons"><button class="call-btn" id="callGuideBtn"><i class="fas fa-phone-alt"></i></button><button class="wa-btn" id="waGuideBtn"><i class="fab fa-whatsapp"></i></button></div></div>
+    <div id="delegationNotesRow" class="info-box" style="display:none;"><span>الملاحظات</span><br><span id="delegationNotes"></span></div>
+    <div id="delegationAgencyRow" class="info-box" style="display:none;"><span>الوكالة</span><br><span id="delegationAgency"></span></div>
+    <div class="timestamp-row"><span><i class="far fa-plus-square"></i> تاريخ الإضافة: <span id="creationTimestamp"></span></span><span><i class="fab fa-whatsapp"></i> تاريخ الإرسال: <span id="sendTimestamp"></span></span><span><i class="fas fa-user-check"></i> المنشئ: <span id="creatorName"></span></span></div></div></div><div class="flex-btns"><button class="btn-primary" id="shareDelegationBtn"><i class="fas fa-share-alt"></i> مشاركة البطاقة</button></div><button class="btn-secondary" id="closeDelegationBtn">إغلاق</button></div></div>
 
-<!-- مودال بطاقة التنسيق والمتابعة الأمنية -->
-<div class="modal" id="securityModal"><div class="modal-box"><h3><i class="fas fa-exchange-alt"></i> بطاقة التنسيق والمتابعة</h3><div id="securityCardPreview" class="delegation-card" style="margin-bottom:12px;"></div><label>🏷️ المجموعة:</label><input type="text" id="securityGroupLabel"><label>📞 أرقام الواتساب (سطر لكل رقم):</label><textarea id="securityPhonesList" rows="3"></textarea><button class="btn-primary" id="generateSecurityCardBtn" style="background:var(--olive);">🔄 إنشاء البطاقة والروابط</button><div id="securityLinksContainer" style="margin-top:12px; display:none;"></div><button class="btn-secondary" id="closeSecurityBtn">إغلاق</button></div></div>
+<!-- مودال بطاقة التنسيق والمتابعة الأمنية (مع حفظ الأرقام) -->
+<div class="modal" id="securityModal"><div class="modal-box"><h3><i class="fas fa-exchange-alt"></i> بطاقة التنسيق والمتابعة</h3><div id="securityCardPreview" class="delegation-card" style="margin-bottom:12px;"></div>
+    <label>🏷️ المجموعة:</label><input type="text" id="securityGroupLabel">
+    <label>📞 أرقام الواتساب المحفوظة:</label>
+    <div id="savedNumbersList" style="max-height:150px; overflow-y:auto; margin:6px 0;"></div>
+    <div style="display:flex; gap:6px; align-items:center;">
+        <input type="tel" id="newPhoneNumber" placeholder="رقم جديد (مثال: 55123456)" dir="ltr" style="flex:1;">
+        <button id="savePhoneNumberBtn" class="btn-primary" style="background:var(--olive); width:auto; padding:8px 12px; margin-top:0;">💾 حفظ الرقم</button>
+    </div>
+    <button class="btn-primary" id="generateSecurityCardBtn" style="background:var(--olive); margin-top:10px;">🔄 إنشاء البطاقة والروابط</button>
+    <div id="securityLinksContainer" style="margin-top:12px; display:none;"></div>
+    <button class="btn-secondary" id="closeSecurityBtn">إغلاق</button>
+</div></div>
 
 <div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box"><div class="close-viewer" id="closeImageViewer">&times;</div><img id="fullImageView"></div></div>
 <div class="modal flags-modal" id="flagsModal"><div class="modal-box"><h3>اختر علم اللوحة</h3><div class="flags-grid" id="flagsGrid"></div><button class="btn-secondary" id="closeFlagsBtn">إلغاء</button></div></div>
 
 <script>
-    // Firebase config
+    // Firebase config (ثابت)
     const firebaseConfig = {
         apiKey: "AIzaSyB3c1RP9ZZGC25BepSCxZYJ31okyBpdoEo",
         authDomain: "f-notepromax-work.firebaseapp.com",
@@ -433,7 +475,7 @@
         return summary;
     }
 
-    // دوال المستطيلات السوداء
+    // دوال المستطيلات السوداء المنفصلة
     function getTransportBlackBox(transportType) {
         if (!transportType) transportType = 'غير محدد';
         return `<div class="black-rectangle"><i class="fas fa-bus"></i> ${transportType}</div>`;
@@ -456,7 +498,7 @@
     document.getElementById('closeImageViewer')?.addEventListener('click', () => document.getElementById('imageViewerModal').classList.remove('show'));
     document.getElementById('imageViewerModal')?.addEventListener('click', e => { if (e.target === document.getElementById('imageViewerModal')) document.getElementById('imageViewerModal').classList.remove('show'); });
 
-    // رندر قائمة المرشدين
+    // رندر قائمة المرشدين (كما هو)
     function renderGuides() {
         let filtered = guides;
         if (currentUser && currentUser.uid !== 'offline') filtered = guides.filter(g => g.visibility === 'public' || g.userId === currentUser.uid);
@@ -576,6 +618,7 @@
                 agency: document.getElementById('gAgency').value.trim(),
                 notes: document.getElementById('gNotes').value.trim(),
                 visibility: document.getElementById('gVisibility').value,
+                savedNumbers: g?.savedNumbers || [],  // الحفاظ على الأرقام المحفوظة إن وجدت
                 updatedAt: now.toISOString(),
                 createdAt: editId ? (guides.find(g => g.id === editId)?.createdAt || now.toISOString()) : now.toISOString()
             };
@@ -594,7 +637,7 @@
         }
     };
 
-    // عرض بطاقة الوفد مع ملخص الذكاء الاصطناعي
+    // عرض بطاقة الوفد
     window.showDelegationCard = async function(id) {
         const g = guides.find(x => x.id === id);
         if (!g) return;
@@ -605,10 +648,9 @@
         document.getElementById('delegationNationality').innerHTML = g.nationality || '—';
         document.getElementById('delegationFrom').innerHTML = g.fromLocation || '—';
         document.getElementById('delegationTo').innerHTML = g.toLocation || '—';
-        // عرض نوع النقل واللوحة في مستطيلين أسودين
-        const transportHtml = getTransportBlackBox(g.transportType);
-        const plateHtml = getPlateBlackBox(g.plate1, g.plate2, g.plateFunction, g.extraPlate, g.plateFlag || '🇹🇳');
-        document.getElementById('delegationTransportPlateArea').innerHTML = transportHtml + plateHtml;
+        // عرض نوع النقل واللوحة في مستطيلين أسودين منفصلين
+        document.getElementById('delegationTransportBox').innerHTML = getTransportBlackBox(g.transportType);
+        document.getElementById('delegationPlateBox').innerHTML = getPlateBlackBox(g.plate1, g.plate2, g.plateFunction, g.extraPlate, g.plateFlag || '🇹🇳');
         document.getElementById('delegationGuideName').innerHTML = g.name || '—';
         const contactRow = document.getElementById('guideContactRow');
         if (g.delegationType === 'سياحي' && g.phone) {
@@ -623,7 +665,8 @@
         document.getElementById('delegationStayDuration').innerHTML = g.stayDuration || '';
         if (g.notes) { document.getElementById('delegationNotesRow').style.display = 'block'; document.getElementById('delegationNotes').innerHTML = g.notes; }
         else document.getElementById('delegationNotesRow').style.display = 'none';
-        // ملخص الذكاء الاصطناعي
+        if (g.agency) { document.getElementById('delegationAgencyRow').style.display = 'block'; document.getElementById('delegationAgency').innerHTML = g.agency; }
+        else document.getElementById('delegationAgencyRow').style.display = 'none';
         document.getElementById('aiSummary').innerHTML = generateAISummary(g);
         const now = new Date();
         document.getElementById('delegationDate').innerHTML = now.toLocaleDateString('ar-TN');
@@ -667,11 +710,108 @@
         } catch(err) { toast('⚠️ ' + err.message); }
     };
 
-    // بطاقة المتابعة الأمنية مع أزرار إرسال فردية وحفظ الحالة
-    let sendQueue = [];
-    let sentStatus = {};
-    let currentSendIndex = 0;
-    let isSending = false;
+    // ========== بطاقة المتابعة الأمنية مع حفظ الأرقام ==========
+    function renderSavedNumbers(guideId) {
+        const g = guides.find(x => x.id === guideId);
+        if (!g) return;
+        const container = document.getElementById('savedNumbersList');
+        if (!container) return;
+        const saved = g.savedNumbers || [];
+        if (saved.length === 0) {
+            container.innerHTML = '<div style="color:var(--txt3); text-align:center;">لا توجد أرقام محفوظة. أضف رقم جديد.</div>';
+            return;
+        }
+        container.innerHTML = '';
+        saved.forEach((num, idx) => {
+            const div = document.createElement('div');
+            div.className = 'saved-number-item';
+            div.innerHTML = `<span class="number">${num}</span>
+                            <div class="saved-number-actions">
+                                <button class="send-saved-btn" data-number="${num}" style="background:var(--wa); color:white; border:none; padding:4px 8px; border-radius:20px;"><i class="fab fa-whatsapp"></i> إرسال</button>
+                                <button class="edit-saved-btn" data-number="${num}" data-idx="${idx}" style="background:#3b82f6; color:white;">✏️</button>
+                                <button class="delete-saved-btn" data-number="${num}" data-idx="${idx}" style="background:var(--err); color:white;">🗑️</button>
+                            </div>`;
+            container.appendChild(div);
+        });
+        // ربط أحداث الأزرار
+        document.querySelectorAll('.send-saved-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const number = btn.getAttribute('data-number');
+                if (!currentGuideForCards) return;
+                // إنشاء البطاقة أولاً إذا لم تكن موجودة
+                if (!window.lastGeneratedImageUrl) {
+                    toast('⚠️ يرجى إنشاء البطاقة أولاً باستخدام زر "إنشاء البطاقة والروابط"');
+                    return;
+                }
+                const groupLabel = document.getElementById('securityGroupLabel').value.trim();
+                await sendToWhatsApp(number, window.lastGeneratedImageUrl, groupLabel);
+                toast(`تم إرسال إلى ${number}`);
+            });
+        });
+        document.querySelectorAll('.edit-saved-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const oldNumber = btn.getAttribute('data-number');
+                const idx = parseInt(btn.getAttribute('data-idx'));
+                const newNumber = prompt('تعديل الرقم', oldNumber);
+                if (newNumber && newNumber.trim() && /^[\+]?[0-9]{7,15}$/.test(newNumber.replace(/\s/g, ''))) {
+                    const cleanNew = newNumber.trim();
+                    const g = guides.find(x => x.id === currentGuideForCards.id);
+                    if (g) {
+                        g.savedNumbers[idx] = cleanNew;
+                        LDB.saveGuides(guides);
+                        if (currentUser && currentUser.uid !== 'offline' && navigator.onLine) {
+                            db.collection('guides').doc(g.id).update({ savedNumbers: g.savedNumbers }).catch(e => console.warn(e));
+                        }
+                        renderSavedNumbers(currentGuideForCards.id);
+                        toast('✅ تم تعديل الرقم');
+                    }
+                } else toast('⚠️ رقم غير صالح');
+            });
+        });
+        document.querySelectorAll('.delete-saved-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.getAttribute('data-idx'));
+                if (confirm('هل تريد حذف هذا الرقم؟')) {
+                    const g = guides.find(x => x.id === currentGuideForCards.id);
+                    if (g) {
+                        g.savedNumbers.splice(idx, 1);
+                        LDB.saveGuides(guides);
+                        if (currentUser && currentUser.uid !== 'offline' && navigator.onLine) {
+                            db.collection('guides').doc(g.id).update({ savedNumbers: g.savedNumbers }).catch(e => console.warn(e));
+                        }
+                        renderSavedNumbers(currentGuideForCards.id);
+                        toast('🗑️ تم الحذف');
+                    }
+                }
+            });
+        });
+    }
+
+    // حفظ رقم جديد
+    document.getElementById('savePhoneNumberBtn')?.addEventListener('click', () => {
+        const newNumber = document.getElementById('newPhoneNumber').value.trim();
+        if (!newNumber) return toast('⚠️ أدخل رقم الهاتف');
+        if (!/^[\+]?[0-9]{7,15}$/.test(newNumber.replace(/\s/g, ''))) {
+            return toast('⚠️ رقم غير صالح. يجب أن يحتوي على 7-15 رقماً');
+        }
+        if (!currentGuideForCards) return toast('⚠️ لم يتم تحديد الوفد');
+        const g = guides.find(x => x.id === currentGuideForCards.id);
+        if (g) {
+            if (!g.savedNumbers) g.savedNumbers = [];
+            if (g.savedNumbers.includes(newNumber)) {
+                toast('⚠️ الرقم موجود مسبقاً');
+                return;
+            }
+            g.savedNumbers.push(newNumber);
+            LDB.saveGuides(guides);
+            if (currentUser && currentUser.uid !== 'offline' && navigator.onLine) {
+                db.collection('guides').doc(g.id).update({ savedNumbers: g.savedNumbers }).catch(e => console.warn(e));
+            }
+            renderSavedNumbers(currentGuideForCards.id);
+            document.getElementById('newPhoneNumber').value = '';
+            toast('✅ تم حفظ الرقم');
+        }
+    });
 
     function updateSecurityPreview(g, customText) {
         const preview = document.getElementById('securityCardPreview');
@@ -695,64 +835,6 @@
         `;
     }
 
-    function buildSendList(phones, imageUrl, groupLabel) {
-        const container = document.getElementById('securityLinksContainer');
-        container.innerHTML = '';
-        sendQueue = [];
-        sentStatus = {};
-        phones.forEach((phone, idx) => {
-            sentStatus[phone] = false;
-            const clean = phone.replace(/[^0-9+]/g, '');
-            const finalPhone = clean.startsWith('+') ? clean : '+216' + clean.replace(/^0+/, '');
-            sendQueue.push({ phone: finalPhone, original: phone, idx });
-            const div = document.createElement('div');
-            div.className = 'send-item';
-            div.id = `send-item-${idx}`;
-            div.innerHTML = `<span style="flex:1;">${finalPhone}</span>
-                            <button class="send-wa-btn" data-phone="${finalPhone}" data-idx="${idx}" style="background:var(--wa); color:white; border:none; padding:4px 12px; border-radius:20px;"><i class="fab fa-whatsapp"></i> إرسال</button>
-                            <span class="send-status" id="status-${idx}"></span>`;
-            container.appendChild(div);
-        });
-        // أزرار التحكم العامة
-        const controlsDiv = document.createElement('div');
-        controlsDiv.style.marginTop = '12px';
-        controlsDiv.style.display = 'flex';
-        controlsDiv.style.gap = '8px';
-        controlsDiv.innerHTML = `<button id="startSequentialSendBtn" class="btn-primary" style="background:var(--olive);">▶ إرسال إلى جميع الأرقام تلقائياً</button>
-                                 <button id="resetSendStatusBtn" class="btn-secondary">🔄 إعادة تعيين الحالة</button>`;
-        container.appendChild(controlsDiv);
-        document.getElementById('startSequentialSendBtn')?.addEventListener('click', () => startSequentialSend(imageUrl, groupLabel));
-        document.getElementById('resetSendStatusBtn')?.addEventListener('click', () => {
-            for (let i = 0; i < sendQueue.length; i++) {
-                sentStatus[sendQueue[i].phone] = false;
-                const statusSpan = document.getElementById(`status-${i}`);
-                if (statusSpan) statusSpan.innerHTML = '';
-            }
-            isSending = false;
-            currentSendIndex = 0;
-            toast('تم إعادة تعيين حالة الإرسال');
-        });
-        // إضافة أحداث الأزرار الفردية
-        document.querySelectorAll('.send-wa-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const phone = btn.getAttribute('data-phone');
-                const idx = parseInt(btn.getAttribute('data-idx'));
-                if (!sentStatus[phone]) {
-                    sendToWhatsApp(phone, imageUrl, groupLabel);
-                    sentStatus[phone] = true;
-                    const statusSpan = document.getElementById(`status-${idx}`);
-                    if (statusSpan) statusSpan.innerHTML = '✓';
-                    btn.disabled = true;
-                    btn.style.opacity = '0.6';
-                    toast(`تم إرسال إلى ${phone}`);
-                } else {
-                    toast(`تم الإرسال مسبقاً إلى ${phone}`);
-                }
-            });
-        });
-        container.style.display = 'block';
-    }
-
     async function sendToWhatsApp(phone, imageUrl, groupLabel) {
         const msg = encodeURIComponent(`📢 بطاقة التنسيق والمتابعة:\n${imageUrl}\n${groupLabel ? `المجموعة: ${groupLabel}` : ''}\n${getWeatherHtml()}`);
         const url = `https://wa.me/${phone}?text=${msg}`;
@@ -760,24 +842,30 @@
         return new Promise(resolve => setTimeout(resolve, 2000));
     }
 
-    async function startSequentialSend(imageUrl, groupLabel) {
-        if (isSending) { toast('جاري الإرسال حالياً، انتظر قليلاً'); return; }
-        isSending = true;
-        for (let i = currentSendIndex; i < sendQueue.length; i++) {
-            const item = sendQueue[i];
-            if (sentStatus[item.phone]) continue;
-            toast(`جاري إرسال إلى ${item.phone} ...`);
-            await sendToWhatsApp(item.phone, imageUrl, groupLabel);
-            sentStatus[item.phone] = true;
-            const statusSpan = document.getElementById(`status-${i}`);
-            if (statusSpan) statusSpan.innerHTML = '✓';
-            const btn = document.querySelector(`.send-wa-btn[data-phone="${item.phone}"]`);
-            if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
-            currentSendIndex = i + 1;
-            await new Promise(r => setTimeout(r, 1500));
-        }
-        isSending = false;
-        toast('✅ تم إرسال البطاقة إلى جميع الأرقام');
+    function buildSendList(phones, imageUrl, groupLabel) {
+        const container = document.getElementById('securityLinksContainer');
+        container.innerHTML = '';
+        phones.forEach((phone, idx) => {
+            const div = document.createElement('div');
+            div.className = 'send-item';
+            div.innerHTML = `<span style="flex:1;">${phone}</span>
+                            <button class="send-now-btn" data-phone="${phone}" data-idx="${idx}" style="background:var(--wa); color:white; border:none; padding:4px 12px; border-radius:20px;"><i class="fab fa-whatsapp"></i> إرسال الآن</button>
+                            <span class="send-status" id="status-${idx}"></span>`;
+            container.appendChild(div);
+        });
+        document.querySelectorAll('.send-now-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const phone = btn.getAttribute('data-phone');
+                await sendToWhatsApp(phone, imageUrl, groupLabel);
+                const idx = btn.getAttribute('data-idx');
+                const statusSpan = document.getElementById(`status-${idx}`);
+                if (statusSpan) statusSpan.innerHTML = '✓';
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                toast(`تم إرسال إلى ${phone}`);
+            });
+        });
+        container.style.display = 'block';
     }
 
     window.showSecurityCard = async function(id) {
@@ -786,18 +874,21 @@
         currentGuideForCards = g;
         await fetchWeather();
         document.getElementById('securityGroupLabel').value = '';
-        document.getElementById('securityPhonesList').value = '';
+        document.getElementById('newPhoneNumber').value = '';
         document.getElementById('securityLinksContainer').style.display = 'none';
         updateSecurityPreview(g, '');
+        renderSavedNumbers(g.id);
         document.getElementById('securityModal').classList.add('show');
     };
 
+    window.lastGeneratedImageUrl = null;
     document.getElementById('generateSecurityCardBtn').onclick = async () => {
         const groupLabel = document.getElementById('securityGroupLabel').value.trim();
-        const phonesRaw = document.getElementById('securityPhonesList').value;
-        if (!phonesRaw.trim()) return toast('⚠️ أدخل رقم واحد على الأقل');
-        const phoneNumbers = phonesRaw.split(/\r?\n/).map(p => p.trim()).filter(p => /^[\+]?[0-9]{7,15}$/.test(p.replace(/\s/g, '')));
-        if (!phoneNumbers.length) return toast('⚠️ أرقام غير صالحة');
+        const savedNumbers = currentGuideForCards?.savedNumbers || [];
+        if (savedNumbers.length === 0) {
+            toast('⚠️ لا توجد أرقام محفوظة. قم بحفظ رقم أولاً.');
+            return;
+        }
         updateSecurityPreview(currentGuideForCards, groupLabel);
         const cardEl = document.getElementById('securityCardPreview');
         toast('⏳ جاري إنشاء البطاقة...');
@@ -820,7 +911,9 @@
             const canvas = await html2canvas(prepared, { scale: 2, useCORS: true });
             const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
             const imageUrl = await uploadImage(blob);
-            buildSendList(phoneNumbers, imageUrl, groupLabel);
+            window.lastGeneratedImageUrl = imageUrl;
+            buildSendList(savedNumbers, imageUrl, groupLabel);
+            toast('✅ تم إنشاء البطاقة وعرض أزرار الإرسال');
         } catch(err) {
             toast('❌ فشل: ' + err.message);
         }
