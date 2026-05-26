@@ -303,7 +303,7 @@
     <div id="guidesContainer" class="guides"><div style="text-align:center;padding:30px;color:var(--txt3);">⏳ جاري التحميل...</div></div>
 </div>
 
-<!-- المودالات (بعضها اختصار) -->
+<!-- المودالات -->
 <div class="modal" id="termsModal"><div class="modal-box"><h3 id="termsModalTitle">📜 شروط الخدمة والحقوق</h3><div style="font-size:12px;"><p id="termsModalText">باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.</p></div><button class="btn-secondary" id="closeTermsBtn" data-i18n="close">إغلاق</button></div></div>
 <div class="modal" id="profileModal"><div class="modal-box"><h3 data-i18n="profile_title">👤 تعديل الملف الشخصي</h3><div class="upload-area" id="profileUploadBtn"><img id="profileAvatar" class="profile-avatar" src=""><i class="fa-solid fa-camera"></i> <span data-i18n="change_photo">تغيير الصورة</span><div class="upload-spinner"><span class="spinner-small"></span></div></div><input type="text" id="profileDisplayName" placeholder="اسم العرض" data-i18n-placeholder="display_name"><input type="email" id="profileEmail" disabled><button id="changePasswordBtn" class="btn-secondary" data-i18n="change_password">🔑 تغيير كلمة المرور</button><button id="saveProfileBtn" class="btn-primary" data-i18n="save_profile">💾 حفظ التغييرات</button><button id="closeProfileBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
 <div class="modal" id="passwordModal"><div class="modal-box"><h3 data-i18n="change_password_title">🔑 تغيير كلمة المرور</h3><input type="password" id="oldPassword" placeholder="كلمة المرور الحالية"><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button id="confirmPasswordBtn" class="btn-primary" data-i18n="change">تغيير</button><button id="closePasswordBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
@@ -331,7 +331,7 @@
     </div>
 </div>
 
-<!-- ========== كرت التنسيق والمتابعة (نسخة محسنة وجديدة) ========== -->
+<!-- كرت التنسيق والمتابعة (نسخة محسنة) -->
 <div class="modal" id="securityModal">
     <div class="modal-box">
         <h3><i class="fas fa-exchange-alt"></i> <span data-i18n="security_card_title">كرت التنسيق والمتابعة</span></h3>
@@ -370,7 +370,7 @@
 <div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box" style="position:relative;"><div class="close-viewer" id="closeImageViewer">&times;</div><img id="fullImageView" src=""></div></div>
 
 <script>
-    // ==================== التهيئة والإعدادات الأساسية (كما هي) ====================
+    // ==================== التهيئة والإعدادات الأساسية ====================
     const CLOUDINARY_CLOUD_NAME = 'dmhtx93nj';
     const CLOUDINARY_UPLOAD_PRESET = 'fcloud_preset';
     
@@ -487,13 +487,7 @@
             reader.readAsDataURL(file);
         });
     }
-    async function uploadToFirebaseStorage(blob, folder) {
-        if (!navigator.onLine) throw new Error("غير متصل");
-        const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
-        const ref = storage.ref(fileName);
-        await ref.put(blob);
-        return await ref.getDownloadURL();
-    }
+    
     async function uploadToCloudinary(file) {
         return new Promise((resolve, reject) => {
             const formData = new FormData();
@@ -514,11 +508,14 @@
             .catch(err => reject(err));
         });
     }
+    
     async function uploadCardToCloudinary(blob) {
         const file = new File([blob], 'card.png', { type: 'image/png' });
         return await uploadToCloudinary(file);
     }
-    function setupImageUpload(btnId, imgId, progressId, callback, useFirebase = true) {
+    
+    // دالة رفع الصور المعدلة: تستخدم Cloudinary بدلاً من Firebase Storage
+    function setupImageUpload(btnId, imgId, progressId, callback) {
         const btn = document.getElementById(btnId);
         const img = document.getElementById(imgId);
         const progressBar = document.getElementById(progressId);
@@ -538,20 +535,20 @@
                 const fill = progressBar?.querySelector('.progress-fill');
                 if (fill) fill.style.width = '30%';
                 try {
-                    let finalUrl = previewUrl;
-                    if (useFirebase && navigator.onLine) {
-                        const compressed = await compressToBase64(file, 500, 0.6);
-                        const blob = await (await fetch(compressed)).blob();
-                        finalUrl = await uploadToFirebaseStorage(blob, 'guides');
+                    let finalUrl;
+                    if (navigator.onLine) {
+                        // استخدام Cloudinary بدلاً من Firebase Storage
+                        finalUrl = await uploadToCloudinary(file);
                         if (fill) fill.style.width = '100%';
                     } else {
+                        // وضع عدم الاتصال: حفظ كـ base64
                         const base64 = await compressToBase64(file, 500, 0.6);
                         finalUrl = base64;
                         if (fill) fill.style.width = '100%';
                     }
                     img.src = finalUrl;
                     callback(finalUrl);
-                    toast('✅ تم رفع الصورة');
+                    toast('✅ تم رفع الصورة بنجاح');
                 } catch (err) {
                     console.error(err);
                     toast('❌ فشل الرفع، تم الحفظ محلياً');
@@ -567,6 +564,7 @@
             input.click();
         };
     }
+    
     async function fetchWeather(){ if(!WEATHER_API_KEY){ currentWeather={temp:'?', condition:translations[currentLang].weather_unavailable, city:CITY}; return; } try{ const url = `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${WEATHER_API_KEY}&units=metric&lang=${currentLang==='ar'?'ar':'en'}`; const res = await fetch(url); if(!res.ok) throw new Error(); const data = await res.json(); currentWeather = { temp: Math.round(data.main.temp), condition: data.weather[0].description, city: data.name }; } catch(e){ currentWeather = { temp:'?', condition:translations[currentLang].weather_unavailable, city:CITY }; } }
     function getWeatherHtml(){ return `<i class="fas fa-cloud-sun"></i> ${currentWeather.city}: ${currentWeather.temp}°C, ${currentWeather.condition}`; }
     function toast(msg){ const div = document.createElement('div'); div.className = 'toast'; div.textContent = msg; document.body.appendChild(div); setTimeout(()=>{ div.style.opacity='0'; },2000); setTimeout(()=>div.remove(),2500); }
@@ -578,7 +576,7 @@
     document.getElementById('gPlateRight')?.addEventListener('input', updatePlateValue);
     document.getElementById('gPlateLeft')?.addEventListener('input', updatePlateValue);
     
-    // رفع الصور
+    // رفع الصور باستخدام الدالة المعدلة
     setupImageUpload('guideUploadBtn', 'guidePreview', 'guideProgress', (url) => { guidePhotoBase64 = url; }, true);
     setupImageUpload('busUploadBtn', 'busPreview', 'busProgress', (url) => { busPhotoBase64 = url; }, true);
     setupImageUpload('profileUploadBtn', 'profileAvatar', null, async (url) => { userProfile.photoURL = url; if(currentUser) await currentUser.updateProfile({photoURL:url}); await db.collection('users').doc(currentUser.uid).set({photoURL:url},{merge:true}); toast('✅ ' + (currentLang === 'ar' ? 'تم تحديث الصورة' : (currentLang === 'fr' ? 'Photo mise à jour' : 'Photo updated'))); loadProfile(); }, true);
@@ -804,7 +802,7 @@
         }
     }
     
-    // عرض معاينة البطاقة في الـ Preview
+    // عرض معاينة البطاقة في الـ Preview (مع إزالة الخلفية الصفراء)
     function updateSecurityPreview(g, customText) {
         const preview = document.getElementById('securityCardPreview');
         const now = new Date();
@@ -823,7 +821,7 @@
                 </div>
                 <div class="agency-box"><span class="label">${translations[currentLang].agency}</span><span class="value">${g.agency || '—'}</span></div>
                 ${g.notes ? `<div class="notes-box"><span class="label">${translations[currentLang].notes}</span><span class="value">${g.notes}</span></div>` : ''}
-                ${customText ? `<div class="notes-box" style="background:#fff3cd;"><span class="label">${translations[currentLang].custom_group_label}</span><span class="value">${customText}</span></div>` : ''}
+                ${customText ? `<div class="notes-box" style="background: var(--bg);"><span class="label">${translations[currentLang].custom_group_label}</span><span class="value">${customText}</span></div>` : ''}
                 <div class="timestamp-row"><span><i class="far fa-plus-square"></i> ${translations[currentLang].created_at} ${g.createdAt?new Date(g.createdAt).toLocaleString():'غير معروف'}</span><span><i class="fab fa-whatsapp"></i> ${translations[currentLang].sent_at} ${new Date().toLocaleString()}</span><span><i class="fas fa-user-check"></i> ${translations[currentLang].created_by} ${g.creatorName||'غير معروف'}</span></div>
             </div>
         `;
