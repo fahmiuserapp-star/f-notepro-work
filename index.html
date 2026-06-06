@@ -102,11 +102,17 @@
         .c-edit { background: #3b82f6; }
         .c-del { background: var(--err); }
         .c-security { background: #1e40af; }
+        .phone-action-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; color: var(--txt2); transition: 0.1s; padding: 0; }
+        .phone-action-btn.call-btn { background: var(--ok); color: white; border-color: var(--ok); }
+        .phone-action-btn.call-btn:hover { background: #059669; }
+        .phone-action-btn.whatsapp-btn { background: var(--wa); color: white; border-color: var(--wa); }
+        .phone-action-btn.whatsapp-btn:hover { background: #1da851; }
         .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
         .modal.show { visibility: visible; opacity: 1; }
         .modal-box { background: var(--card); border-radius: 24px; padding: 20px; width: 92%; max-width: 500px; max-height: 88vh; overflow-y: auto; }
         .modal-box h3 { text-align: center; color: var(--olive); margin-bottom: 12px; font-size: 18px; }
         .upload-area { border: 2px dashed var(--olive); border-radius: 16px; padding: 12px; text-align: center; margin: 6px 0; cursor: pointer; position: relative; }
+        @keyframes safetyFade { 0%{opacity:0;transform:translateY(-6px)} 15%{opacity:1;transform:translateY(0)} 75%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-6px)} }
         .upload-area:hover { border-color: var(--gold); background: rgba(85, 107, 47, 0.03); }
         .upload-area img { width: 55px; height: 55px; object-fit: cover; border-radius: 12px; margin-top: 5px; }
         .upload-area .upload-spinner { display: none; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.7); border-radius: 16px; align-items: center; justify-content: center; font-size: 22px; color: var(--olive); }
@@ -290,6 +296,7 @@
         </div>
         <div class="sidebar-section" id="developerSection" style="display:none;">
             <div class="sidebar-section-title"><i class="fas fa-code"></i> <span data-i18n="developer_section">👨‍💻 قسم المطور</span></div>
+            <div class="s-item" id="manageAdminsBtn"><i class="fas fa-user-shield"></i> <span data-i18n="manage_admins">🛡️ إدارة المديرين</span></div>
             <div class="s-item" id="manageUsersBtn"><i class="fas fa-users-cog"></i> <span data-i18n="manage_users">👥 إدارة الحسابات</span></div>
             <div class="s-item" id="viewAllGuidesBtn"><i class="fas fa-eye"></i> <span data-i18n="view_all_guides">📋 رؤية جميع الإضافات (خاصة/عامة)</span></div>
         </div>
@@ -305,12 +312,13 @@
 
 <!-- المودالات -->
 <div class="modal" id="termsModal"><div class="modal-box"><h3 id="termsModalTitle">📜 شروط الخدمة والحقوق</h3><div style="font-size:12px;"><p id="termsModalText">باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.</p></div><button class="btn-secondary" id="closeTermsBtn" data-i18n="close">إغلاق</button></div></div>
-<div class="modal" id="profileModal"><div class="modal-box"><h3 data-i18n="profile_title">👤 تعديل الملف الشخصي</h3><div class="upload-area" id="profileUploadBtn"><img id="profileAvatar" class="profile-avatar" src=""><i class="fa-solid fa-camera"></i> <span data-i18n="change_photo">تغيير الصورة</span><div class="upload-spinner"><span class="spinner-small"></span></div></div><input type="text" id="profileDisplayName" placeholder="اسم العرض" data-i18n-placeholder="display_name"><input type="email" id="profileEmail" disabled><button id="changePasswordBtn" class="btn-secondary" data-i18n="change_password">🔑 تغيير كلمة المرور</button><button id="saveProfileBtn" class="btn-primary" data-i18n="save_profile">💾 حفظ التغييرات</button><button id="closeProfileBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
+<div class="modal" id="profileModal"><div class="modal-box"><h3 data-i18n="profile_title">👤 تعديل الملف الشخصي</h3><div class="upload-area" id="profileUploadBtn"><img id="profileAvatar" class="profile-avatar" src=""><i class="fa-solid fa-camera"></i> <span data-i18n="change_photo">تغيير الصورة</span><div class="upload-spinner"><span class="spinner-small"></span></div></div><input type="text" id="profileDisplayName" placeholder="اسم العرض" data-i18n-placeholder="display_name"><input type="email" id="profileEmail" disabled><hr style="border-color:var(--olive);margin:10px 0;"><div style="font-size:13px;font-weight:bold;margin-bottom:5px;"><i class="fas fa-shield-alt"></i> معلومات عون السلامة (تضاف تلقائياً للوفود)</div><input type="text" id="profileSafetyName" placeholder="اسم عون السلامة"><input type="tel" id="profileSafetyPhone" placeholder="رقم هاتف عون السلامة" dir="ltr"><div class="upload-area" id="profileSafetyPhotoBtn" style="padding:6px;font-size:12px;"><i class="fas fa-camera"></i> <span>صورة عون السلامة</span><div class="upload-spinner"><span class="spinner-small"></span></div></div><hr style="border-color:var(--olive);margin:10px 0;"><button id="changePasswordBtn" class="btn-secondary" data-i18n="change_password">🔑 تغيير كلمة المرور</button><button id="saveProfileBtn" class="btn-primary" data-i18n="save_profile">💾 حفظ التغييرات</button><button id="closeProfileBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
 <div class="modal" id="passwordModal"><div class="modal-box"><h3 data-i18n="change_password_title">🔑 تغيير كلمة المرور</h3><input type="password" id="oldPassword" placeholder="كلمة المرور الحالية"><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button id="confirmPasswordBtn" class="btn-primary" data-i18n="change">تغيير</button><button id="closePasswordBtn" class="btn-secondary" data-i18n="cancel">إلغاء</button></div></div>
 <div class="modal" id="usersModal"><div class="modal-box"><h3 data-i18n="manage_users_title">👥 إدارة المستخدمين</h3><div id="usersList" class="users-list"></div><div class="add-user-area"><input type="email" id="newUserEmail" placeholder="البريد الإلكتروني" dir="ltr"><input type="password" id="newUserPassword" placeholder="كلمة المرور المؤقتة"><button id="createUserBtn" class="btn-primary" data-i18n="create_user">➕ إنشاء حساب جديد</button><div id="createUserResult" style="font-size:11px; margin-top:5px; color:var(--err);"></div></div><button class="btn-secondary" id="closeUsersBtn" data-i18n="close">إغلاق</button></div></div>
+<div class="modal" id="adminUidsModal"><div class="modal-box"><h3>🛡️ إدارة المديرين</h3><div id="adminUidsList" style="max-height:250px;overflow-y:auto;margin-bottom:10px;"></div><div style="display:flex;gap:5px;"><input type="text" id="newAdminUid" placeholder="أدخل UID المستخدم" dir="ltr" style="flex:1;font-size:12px;"><button id="addAdminUidBtn" class="btn-primary" style="white-space:nowrap;">➕ إضافة</button></div><button class="btn-secondary" style="margin-top:10px;" id="closeAdminUidsBtn">إغلاق</button></div></div>
 <div class="modal" id="allGuidesModal"><div class="modal-box" style="max-width:550px;"><h3 data-i18n="all_guides_title">📋 جميع الإضافات (خاصة وعامة)</h3><div id="allGuidesList" style="max-height:400px; overflow-y:auto;"></div><button class="btn-secondary" id="closeAllGuidesBtn" data-i18n="close">إغلاق</button></div></div>
 <div id="customPlateModal" class="custom-plate-modal"><div class="custom-plate-box"><h4><i class="fas fa-plus-circle"></i> <span data-i18n="add_custom_plate">إضافة لوحة مخصصة</span></h4><input type="text" id="customPlateInput" placeholder="مثال: CD 12345 | POL 789 | 123 ABC" dir="ltr"><div class="modal-buttons"><button id="confirmCustomPlate" class="btn-confirm" data-i18n="add">إضافة</button><button id="cancelCustomPlate" class="btn-cancel" data-i18n="cancel">إلغاء</button></div></div></div>
-<div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3><input type="text" id="gName" placeholder="اسم المرشد *" data-i18n-placeholder="guide_name"><input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr" data-i18n-placeholder="phone"><div style="display:flex;gap:5px;"><input type="text" id="gNationality" placeholder="الجنسية" style="flex:1;" data-i18n-placeholder="nationality"><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1;" min="1" data-i18n-placeholder="people_count"></div><select id="gTransport" data-i18n-placeholder="transport_type"><option value="" data-i18n="transport_type">نوع النقل</option><option value="حافلة صغيرة" data-i18n="small_bus">حافلة صغيرة</option><option value="حافلة كبيرة" data-i18n="large_bus">حافلة كبيرة</option><option value="سيارة" data-i18n="car">سيارة</option><option value="فان" data-i18n="van">فان</option><option value="أخرى" data-i18n="other">أخرى</option></select><div style="display:flex;gap:5px;"><input type="text" id="gFrom" placeholder="من" style="flex:1;" data-i18n-placeholder="from"><input type="text" id="gTo" placeholder="إلى" style="flex:1;" data-i18n-placeholder="to"></div><div class="plate-split"><input type="text" id="gPlateRight" placeholder="الأرقام اليمنى" maxlength="5" style="text-align:center;"><span>🇹🇳 TN 🇹🇳</span><input type="text" id="gPlateLeft" placeholder="الأرقام اليسرى" maxlength="4" style="text-align:center;"><button type="button" id="addCustomPlateBtn" class="plus-btn" title="إضافة لوحة مخصصة"><i class="fas fa-plus"></i></button></div><input type="hidden" id="gPlate" value=""><div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> <span data-i18n="guide_photo">📸 صورة المرشد</span><img id="guidePreview" src="" style="display:none;"><div class="upload-spinner"><span class="spinner-small"></span></div><div class="progress-bar" id="guideProgress"><div class="progress-fill"></div></div></div><div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> <span data-i18n="bus_photo">🚌 صورة السيارة</span><img id="busPreview" src="" style="display:none;"><div class="upload-spinner"><span class="spinner-small"></span></div><div class="progress-bar" id="busProgress"><div class="progress-fill"></div></div></div><input type="text" id="gAgency" placeholder="الوكالة" data-i18n-placeholder="agency"><textarea id="gNotes" placeholder="ملاحظات" data-i18n-placeholder="notes"></textarea><select id="gVisibility"><option value="public" selected data-i18n="public">🌍 عام (يظهر للجميع)</option><option value="private" data-i18n="private">🔒 خاص</option></select><button class="btn-primary" id="saveGuideBtn" data-i18n="save_guide">💾 حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn" data-i18n="cancel">إلغاء</button></div></div>
+<div class="modal" id="guideModal"><div class="modal-box"><h3 id="modalTitle" data-i18n="add_guide_title">➕ إضافة مرشد جديد</h3><input type="text" id="gName" placeholder="اسم المرشد (اختياري)" data-i18n-placeholder="guide_name_opt"><input type="tel" id="gPhone" placeholder="رقم الجوال *" dir="ltr" data-i18n-placeholder="phone"><div style="display:flex;gap:5px;"><input type="text" id="gNationality" placeholder="الجنسية" style="flex:1;" data-i18n-placeholder="nationality"><input type="number" id="gPeopleCount" placeholder="عدد الأفراد" style="flex:1;" min="1" data-i18n-placeholder="people_count"></div><select id="gTransport" data-i18n-placeholder="transport_type"><option value="" data-i18n="transport_type">نوع النقل</option><option value="حافلة صغيرة" data-i18n="small_bus">حافلة صغيرة</option><option value="حافلة كبيرة" data-i18n="large_bus">حافلة كبيرة</option><option value="سيارة" data-i18n="car">سيارة</option><option value="فان" data-i18n="van">فان</option><option value="دراجة نارية" data-i18n="motorcycle">🏍️ دراجة نارية</option><option value="أخرى" data-i18n="other">أخرى</option></select><div style="display:flex;gap:5px;"><input type="text" id="gFrom" placeholder="من" style="flex:1;" data-i18n-placeholder="from"><input type="text" id="gTo" placeholder="إلى" style="flex:1;" data-i18n-placeholder="to"></div><div class="plate-split"><input type="text" id="gPlateRight" placeholder="الأرقام اليمنى" maxlength="5" style="text-align:center;"><span>🇹🇳 TN 🇹🇳</span><input type="text" id="gPlateLeft" placeholder="الأرقام اليسرى" maxlength="4" style="text-align:center;"><button type="button" id="addCustomPlateBtn" class="plus-btn" title="إضافة لوحة مخصصة"><i class="fas fa-plus"></i></button></div><input type="hidden" id="gPlate" value=""><div class="upload-area" id="guideUploadBtn"><i class="fa-solid fa-user"></i> <span data-i18n="guide_photo">📸 صورة المرشد</span><img id="guidePreview" src="" style="display:none;"><div class="upload-spinner"><span class="spinner-small"></span></div><div class="progress-bar" id="guideProgress"><div class="progress-fill"></div></div></div><div class="upload-area" id="busUploadBtn"><i class="fa-solid fa-bus"></i> <span data-i18n="bus_photo">🚌 صورة السيارة</span><img id="busPreview" src="" style="display:none;"><div class="upload-spinner"><span class="spinner-small"></span></div><div class="progress-bar" id="busProgress"><div class="progress-fill"></div></div></div><div style="margin:8px 0 4px;font-size:12px;font-weight:bold;">🏍️ صور الدراجة النارية (حد أقصى 5)</div><div class="motorcycle-grid" id="motorcycleGrid" style="display:flex;flex-wrap:wrap;gap:4px;"></div><button type="button" id="addMotorcyclePhotoBtn" style="border:1px dashed var(--olive);background:none;color:var(--olive);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;width:100%;margin-bottom:6px;"><i class="fas fa-plus"></i> إضافة صورة دراجة نارية</button><input type="file" id="motorcycleFileInput" accept="image/*" style="display:none;"><input type="text" id="gAgency" placeholder="الوكالة" data-i18n-placeholder="agency"><textarea id="gNotes" placeholder="ملاحظات" data-i18n-placeholder="notes"></textarea><select id="gVisibility"><option value="public" selected data-i18n="public">🌍 عام (يظهر للجميع)</option><option value="private" data-i18n="private">🔒 خاص</option></select><button class="btn-primary" id="saveGuideBtn" data-i18n="save_guide">💾 حفظ المرشد</button><button class="btn-secondary" id="closeGuideBtn" data-i18n="cancel">إلغاء</button></div></div>
 
 <!-- بطاقة الوفد -->
 <div class="modal" id="delegationModal">
@@ -318,9 +326,9 @@
         <div id="delegationCard" class="delegation-card">
             <div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> <span id="delegationDate"></span></span><span><i class="far fa-clock"></i> <span id="delegationTime"></span></span><div id="delegationWeather" class="weather-info"></div></div>
             <div class="card-img-area"><img id="delegationMainImg" class="main-img" src="" crossorigin="anonymous"><img id="delegationAvatar" class="overlay-avatar" src="" crossorigin="anonymous"></div>
-            <div class="guide-info-row"><span class="guide-name-card" id="delegationGuideName"></span><span class="guide-phone-card" id="delegationPhone"></span></div>
+            <div class="guide-info-row" style="flex-wrap:wrap;gap:6px;"><img id="delegationGuidePhoto" src="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);display:none;flex-shrink:0;cursor:pointer;" onclick="showFullImage(this.src)"><span class="guide-name-card" id="delegationGuideName"></span><span class="guide-phone-card" id="delegationPhone"></span><span id="delegationPhoneActions" style="display:inline-flex;gap:10px;align-items:center;"></span><span style="font-size:10px;opacity:0.8;" id="delegationAgencyHeader"></span></div>
             <div class="card-content">
-                <div class="info-grid"><div class="info-item"><span class="label" data-i18n="nationality">الجنسية</span><span id="delegationNationality" class="value"></span></div><div class="info-item"><span class="label" data-i18n="people_count">عدد الأفراد</span><span id="delegationPeopleCount" class="value"></span></div><div class="info-item"><span class="label" data-i18n="transport">نوع النقل</span><span id="delegationTransport" class="value"></span></div><div class="info-item"><span class="label" data-i18n="plate">رقم السيارة</span><span id="delegationPlate" class="value plate-display"></span></div><div class="info-item"><span class="label" data-i18n="from">من</span><span id="delegationFrom" class="value"></span></div><div class="info-item"><span class="label" data-i18n="to">إلى</span><span id="delegationTo" class="value"></span></div></div>
+                <div class="info-grid"><div class="info-item"><span class="label" data-i18n="nationality">الجنسية</span><span id="delegationNationality" class="value"></span></div><div class="info-item"><span class="label" data-i18n="people_count">عدد الأفراد</span><span id="delegationPeopleCount" class="value"></span></div><div class="info-item"><span class="label">🚗 عدد السيارات</span><span id="delegationCarCount" class="value"></span></div><div class="info-item"><span class="label" data-i18n="transport">نوع النقل</span><span id="delegationTransport" class="value"></span></div><div class="info-item" style="grid-column:span 2;"><span class="label" data-i18n="plate">اللوحة التونسية</span><span id="delegationPlate" class="value plate-display" style="display:block;text-align:center;"></span></div><div class="info-item"><span class="label" data-i18n="from">من</span><span id="delegationFrom" class="value"></span></div><div class="info-item"><span class="label" data-i18n="to">إلى</span><span id="delegationTo" class="value"></span></div></div>
                 <div class="agency-box"><span class="label" data-i18n="agency">الوكالة</span><span id="delegationAgency" class="value"></span></div>
                 <div id="delegationNotesRow" class="notes-box" style="display:none;"><span class="label" data-i18n="notes">ملاحظات</span><span id="delegationNotes" style="font-size:13px;"></span></div>
                 <div class="timestamp-row"><span><i class="far fa-plus-square"></i> <span data-i18n="created_at">تاريخ الإضافة:</span> <span id="creationTimestamp"></span></span><span><i class="fab fa-whatsapp"></i> <span data-i18n="sent_at">تاريخ الإرسال:</span> <span id="sendTimestamp"></span></span><span><i class="fas fa-user-check"></i> <span data-i18n="created_by">المنشئ:</span> <span id="creatorName"></span></span></div>
@@ -367,6 +375,8 @@
     </div>
 </div>
 
+<div class="modal" id="safetyOfficerModal"><div class="modal-box" style="text-align:center;"><img id="safetyOfficerModalPhoto" style="width:120px;height:120px;border-radius:50%;object-fit:cover;margin-bottom:10px;"><h3 id="safetyOfficerModalName"></h3><p id="safetyOfficerModalPhone" dir="ltr"></p><div class="action-buttons"><button id="callSafetyOfficerBtn" class="btn-primary" style="background:var(--ok);"><i class="fas fa-phone-alt"></i> اتصال</button><button id="sendToSafetyOfficerBtn" class="btn-primary" style="background:#25D366;"><i class="fab fa-whatsapp"></i> واتساب</button></div><button class="btn-secondary" id="closeSafetyOfficerBtn">إغلاق</button></div></div>
+
 <div class="modal image-viewer-modal" id="imageViewerModal"><div class="modal-box" style="position:relative;"><div class="close-viewer" id="closeImageViewer">&times;</div><img id="fullImageView" src=""></div></div>
 
 <script>
@@ -385,11 +395,20 @@
     const WEATHER_API_KEY = '8d3316e943ba32112e54a2c8e75fe242';
     const CITY = 'Sfax';
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const storage = firebase.storage();
-    db.enablePersistence({ synchronizeTabs: true }).catch(err => console.warn("Persistence:", err));
+    let db, auth, storage;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+        storage = firebase.storage();
+        db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn(e));
+    } catch (e) {
+        console.warn("Firebase init failed, entering offline mode", e);
+        const dummyCollection = () => ({ doc: () => ({ set: async()=>{}, get: async()=>({exists:false,data:()=>({})}), update: async()=>{}, delete: async()=>{} }), where: () => ({ get: async()=>({ forEach: ()=>{}, docs: [] }) }), orderBy: () => ({ get: async()=>({ forEach: ()=>{}, docs: [] }) }), onSnapshot: (cb) => { cb({ docChanges: () => [] }); return ()=>{}; } });
+        db = { collection: dummyCollection };
+        auth = { onAuthStateChanged: (cb) => { setTimeout(() => cb(null), 0); return ()=>{}; }, signInWithEmailAndPassword: async () => { throw new Error("Firebase unavailable"); }, signOut: ()=>{} };
+        storage = { ref: () => ({ put: async()=>{}, getDownloadURL: async()=>"" }) };
+    }
 
     const LDB = {
         get(k) { try { return JSON.parse(localStorage.getItem('fnote_'+k)||'null'); } catch(e){return null;}},
@@ -409,7 +428,8 @@
     };
 
     let currentUser = null, guides = LDB.getGuides(), editId = null;
-    let guidePhotoBase64 = '', busPhotoBase64 = '';
+    let guidePhotoBase64 = '', busPhotoBase64 = '', motorcyclePhotos = [];
+    let profileSafetyPhotoBase64 = '';
     let userProfile = { displayName: '', photoURL: '' };
     let currentLang = localStorage.getItem('fnote_lang') || 'ar';
     let currentGuideForCards = null;
@@ -419,12 +439,14 @@
     
     const DEVELOPER_UID = 'OK7lshSuUrhVBV7WHn2EL0tiOJo2';
     let isDeveloper = false;
+    let adminUids = JSON.parse(localStorage.getItem('fnote_admin_uids') || '[]');
+    function isDevUser(uid) { return uid === DEVELOPER_UID || adminUids.includes(uid); }
 
     // الترجمات (مختصرة لكن كافية)
     const translations = {
-        ar: { login_sub:"إدارة الوفود السياحية والدبلوماسية", login_btn:"دخول", offline_btn:"🔄 بدون إنترنت", login_info:"🔐 يتم إنشاء الحسابات عن طريق السيد فهمي (مدير النظام)", edit_profile:"تعديل الملف الشخصي", tools_section:"أدوات متقدمة", sync:"مزامنة السحابة", export_json:"تصدير JSON", export_pdf:"تصدير PDF", logout:"تسجيل الخروج", language:"اللغة", terms:"📜 شروط الخدمة والحقوق", terms_title:"📜 شروط الخدمة والحقوق", terms_text:"باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.", close:"إغلاق", profile_title:"👤 تعديل الملف الشخصي", change_photo:"تغيير الصورة", display_name:"اسم العرض", change_password:"🔑 تغيير كلمة المرور", save_profile:"💾 حفظ التغييرات", cancel:"إلغاء", change_password_title:"🔑 تغيير كلمة المرور", change:"تغيير", add_guide_title:"➕ إضافة مرشد جديد", guide_name:"اسم المرشد", phone:"رقم الجوال", nationality:"الجنسية", people_count:"عدد الأفراد", transport_type:"نوع النقل", small_bus:"حافلة صغيرة", large_bus:"حافلة كبيرة", car:"سيارة", van:"فان", other:"أخرى", guide_photo:"📸 صورة المرشد", bus_photo:"🚌 صورة السيارة", agency:"الوكالة", notes:"ملاحظات", private:"🔒 خاص", public:"🌍 عام (يظهر للجميع)", save_guide:"💾 حفظ المرشد", delegation_info:"📋 معلومات الوفد", transport:"نوع النقل", plate:"رقم السيارة", from:"من", to:"إلى", created_at:"تاريخ الإضافة:", sent_at:"تاريخ الإرسال:", created_by:"المنشئ:", share_card:"مشاركة البطاقة", security_card_title:"كرت التنسيق والمتابعة", custom_group_label:"🏷️ الفقرة المخصصة:", saved_numbers_label:"📋 الأرقام المحفوظة (اضغط للإرسال):", add_numbers_label:"➕ إضافة أرقام جديدة (رقم واحد في كل سطر):", save_numbers:"💾 حفظ الأرقام", generate_card:"🔄 إنشاء البطاقة", search_placeholder:"🔍 بحث عن مرشد...", delete_confirm:"هل أنت متأكد من الحذف؟", deleted:"🗑️ تم الحذف", saved:"✅ تم الحفظ بنجاح", sync_ok:"✅ تمت المزامنة", sync_fail:"❌ فشلت المزامنة", no_results:"😕 لا توجد نتائج", save_error:"❌ خطأ في الحفظ", weather_unavailable:"غير متوفر", add_custom_plate:"إضافة لوحة مخصصة", add:"إضافة", more:"المزيد", call:"اتصل", card:"البطاقة", follow_up:"متابعة", edit:"تعديل", delete:"حذف", send:"إرسال", link:"رابط", sent_history:"سجل الإرسال", resend:"إعادة إرسال", developer_section:"👨‍💻 قسم المطور", manage_users:"👥 إدارة الحسابات", view_all_guides:"📋 رؤية جميع الإضافات (خاصة/عامة)", manage_users_title:"👥 إدارة المستخدمين", create_user:"➕ إنشاء حساب جديد", all_guides_title:"📋 جميع الإضافات (خاصة وعامة)", no_users:"لا يوجد مستخدمين", loading:"جاري التحميل...", private_badge:"🔒 خاص", public_badge:"🌍 عام", no_saved_numbers:"لا توجد أرقام محفوظة. قم بإضافة أرقام جديدة", card_ready:"البطاقة جاهزة للإرسال" },
-        fr: { login_sub:"Gestion des délégations touristiques et diplomatiques", login_btn:"Connexion", offline_btn:"🔄 Hors ligne", login_info:"🔐 Les comptes sont créés par M. Fahmi (administrateur)", edit_profile:"Modifier le profil", tools_section:"Outils avancés", sync:"Synchronisation", export_json:"Exporter JSON", export_pdf:"Exporter PDF", logout:"Déconnexion", language:"Langue", terms:"📜 Conditions d'utilisation", terms_title:"📜 Conditions d'utilisation", terms_text:"En utilisant cette application, vous acceptez toutes les conditions.", close:"Fermer", profile_title:"👤 Modifier le profil", change_photo:"Changer la photo", display_name:"Nom d'affichage", change_password:"🔑 Changer le mot de passe", save_profile:"💾 Enregistrer", cancel:"Annuler", change_password_title:"🔑 Changer le mot de passe", change:"Changer", add_guide_title:"➕ Ajouter un guide", guide_name:"Nom du guide", phone:"Téléphone", nationality:"Nationalité", people_count:"Nombre de personnes", transport_type:"Type de transport", small_bus:"Petit bus", large_bus:"Grand bus", car:"Voiture", van:"Van", other:"Autre", guide_photo:"📸 Photo du guide", bus_photo:"🚌 Photo du véhicule", agency:"Agence", notes:"Notes", private:"🔒 Privé", public:"🌍 Public (visible par tous)", save_guide:"💾 Enregistrer le guide", delegation_info:"📋 Informations de la délégation", transport:"Type de transport", plate:"Plaque", from:"De", to:"À", created_at:"Ajouté le :", sent_at:"Envoyé le :", created_by:"Créé par :", share_card:"Partager la carte", security_card_title:"Fiche de coordination", custom_group_label:"🏷️ Paragraphe personnalisé :", saved_numbers_label:"📋 Numéros enregistrés (cliquer pour envoyer):", add_numbers_label:"➕ Ajouter de nouveaux numéros (un par ligne):", save_numbers:"💾 Enregistrer les numéros", generate_card:"🔄 Générer la carte", search_placeholder:"🔍 Rechercher un guide...", delete_confirm:"Supprimer ce guide ?", deleted:"🗑️ Supprimé", saved:"✅ Enregistré avec succès", sync_ok:"✅ Synchronisation réussie", sync_fail:"❌ Échec de synchronisation", no_results:"😕 Aucun résultat", save_error:"❌ Erreur d'enregistrement", weather_unavailable:"Indisponible", add_custom_plate:"Ajouter une plaque personnalisée", add:"Ajouter", more:"Plus", call:"Appeler", card:"Carte", follow_up:"Suivi", edit:"Modifier", delete:"Supprimer", send:"Envoyer", link:"Lien", sent_history:"Historique d'envoi", resend:"Renvoyer", developer_section:"👨‍💻 Section développeur", manage_users:"👥 Gérer les comptes", view_all_guides:"📋 Voir tous les ajouts", manage_users_title:"👥 Gérer les utilisateurs", create_user:"➕ Créer un compte", all_guides_title:"📋 Tous les ajouts", no_users:"Aucun utilisateur", loading:"Chargement...", private_badge:"🔒 Privé", public_badge:"🌍 Public", no_saved_numbers:"Aucun numéro enregistré. Ajoutez-en", card_ready:"Carte prête à envoyer" },
-        en: { login_sub:"Touristic & Diplomatic Delegations Management", login_btn:"Login", offline_btn:"🔄 Offline", login_info:"🔐 Accounts are created by Mr. Fahmi (admin)", edit_profile:"Edit Profile", tools_section:"Advanced Tools", sync:"Cloud Sync", export_json:"Export JSON", export_pdf:"Export PDF", logout:"Logout", language:"Language", terms:"📜 Terms of Service", terms_title:"📜 Terms of Service", terms_text:"By using this application, you agree to all terms.", close:"Close", profile_title:"👤 Edit Profile", change_photo:"Change Photo", display_name:"Display Name", change_password:"🔑 Change Password", save_profile:"💾 Save Changes", cancel:"Cancel", change_password_title:"🔑 Change Password", change:"Change", add_guide_title:"➕ Add New Guide", guide_name:"Guide Name", phone:"Phone Number", nationality:"Nationality", people_count:"Number of People", transport_type:"Transport Type", small_bus:"Small Bus", large_bus:"Large Bus", car:"Car", van:"Van", other:"Other", guide_photo:"📸 Guide Photo", bus_photo:"🚌 Vehicle Photo", agency:"Agency", notes:"Notes", private:"🔒 Private", public:"🌍 Public (visible to all)", save_guide:"💾 Save Guide", delegation_info:"📋 Delegation Information", transport:"Transport Type", plate:"Vehicle Plate", from:"From", to:"To", created_at:"Added on:", sent_at:"Sent on:", created_by:"Created by:", share_card:"Share Card", security_card_title:"Coordination Card", custom_group_label:"🏷️ Custom Paragraph:", saved_numbers_label:"📋 Saved Numbers (click to send):", add_numbers_label:"➕ Add New Numbers (one per line):", save_numbers:"💾 Save Numbers", generate_card:"🔄 Generate Card", search_placeholder:"🔍 Search guide...", delete_confirm:"Are you sure you want to delete?", deleted:"🗑️ Deleted", saved:"✅ Saved successfully", sync_ok:"✅ Sync successful", sync_fail:"❌ Sync failed", no_results:"😕 No results found", save_error:"❌ Save error", weather_unavailable:"Unavailable", add_custom_plate:"Add Custom Plate", add:"Add", more:"More", call:"Call", card:"Card", follow_up:"Follow up", edit:"Edit", delete:"Delete", send:"Send", link:"Link", sent_history:"Send History", resend:"Resend", developer_section:"👨‍💻 Developer Section", manage_users:"👥 Manage Accounts", view_all_guides:"📋 View All Additions", manage_users_title:"👥 Manage Users", create_user:"➕ Create New Account", all_guides_title:"📋 All Additions", no_users:"No users found", loading:"Loading...", private_badge:"🔒 Private", public_badge:"🌍 Public", no_saved_numbers:"No saved numbers. Add new numbers", card_ready:"Card ready to send" }
+        ar: { login_sub:"إدارة الوفود السياحية والدبلوماسية", login_btn:"دخول", offline_btn:"🔄 بدون إنترنت", login_info:"🔐 يتم إنشاء الحسابات عن طريق السيد فهمي (مدير النظام)", edit_profile:"تعديل الملف الشخصي", tools_section:"أدوات متقدمة", sync:"مزامنة السحابة", export_json:"تصدير JSON", export_pdf:"تصدير PDF", logout:"تسجيل الخروج", language:"اللغة", terms:"📜 شروط الخدمة والحقوق", terms_title:"📜 شروط الخدمة والحقوق", terms_text:"باستخدامك لهذا التطبيق، فإنك توافق على جميع الشروط المذكورة.", close:"إغلاق", profile_title:"👤 تعديل الملف الشخصي", change_photo:"تغيير الصورة", display_name:"اسم العرض", change_password:"🔑 تغيير كلمة المرور", save_profile:"💾 حفظ التغييرات", cancel:"إلغاء", change_password_title:"🔑 تغيير كلمة المرور", change:"تغيير", add_guide_title:"➕ إضافة مرشد جديد", guide_name:"اسم المرشد", guide_name_opt:"اسم المرشد (اختياري)", phone:"رقم الجوال", nationality:"الجنسية", people_count:"عدد الأفراد", transport_type:"نوع النقل", small_bus:"حافلة صغيرة", large_bus:"حافلة كبيرة", car:"سيارة", van:"فان", other:"أخرى", guide_photo:"📸 صورة المرشد", bus_photo:"🚌 صورة السيارة", agency:"الوكالة", notes:"ملاحظات", private:"🔒 خاص", public:"🌍 عام (يظهر للجميع)", save_guide:"💾 حفظ المرشد", delegation_info:"📋 معلومات الوفد", transport:"نوع النقل", plate:"رقم السيارة", from:"من", to:"إلى", created_at:"تاريخ الإضافة:", sent_at:"تاريخ الإرسال:", created_by:"المنشئ:", share_card:"مشاركة البطاقة", security_card_title:"كرت التنسيق والمتابعة", custom_group_label:"🏷️ الفقرة المخصصة:", saved_numbers_label:"📋 الأرقام المحفوظة (اضغط للإرسال):", add_numbers_label:"➕ إضافة أرقام جديدة (رقم واحد في كل سطر):", save_numbers:"💾 حفظ الأرقام", generate_card:"🔄 إنشاء البطاقة", search_placeholder:"🔍 بحث عن مرشد...", delete_confirm:"هل أنت متأكد من الحذف؟", deleted:"🗑️ تم الحذف", saved:"✅ تم الحفظ بنجاح", sync_ok:"✅ تمت المزامنة", sync_fail:"❌ فشلت المزامنة", no_results:"😕 لا توجد نتائج", save_error:"❌ خطأ في الحفظ", weather_unavailable:"غير متوفر", add_custom_plate:"إضافة لوحة مخصصة", add:"إضافة", more:"المزيد", call:"اتصل", card:"البطاقة", follow_up:"متابعة", edit:"تعديل", delete:"حذف", send:"إرسال", link:"رابط", sent_history:"سجل الإرسال", resend:"إعادة إرسال", developer_section:"👨‍💻 قسم المطور", manage_admins:"🛡️ إدارة المديرين", manage_users:"👥 إدارة الحسابات", view_all_guides:"📋 رؤية جميع الإضافات (خاصة/عامة)", manage_users_title:"👥 إدارة المستخدمين", create_user:"➕ إنشاء حساب جديد", all_guides_title:"📋 جميع الإضافات (خاصة وعامة)", no_users:"لا يوجد مستخدمين", loading:"جاري التحميل...", private_badge:"🔒 خاص", public_badge:"🌍 عام", no_saved_numbers:"لا توجد أرقام محفوظة. قم بإضافة أرقام جديدة", card_ready:"البطاقة جاهزة للإرسال" },
+        fr: { login_sub:"Gestion des délégations touristiques et diplomatiques", login_btn:"Connexion", offline_btn:"🔄 Hors ligne", login_info:"🔐 Les comptes sont créés par M. Fahmi (administrateur)", edit_profile:"Modifier le profil", tools_section:"Outils avancés", sync:"Synchronisation", export_json:"Exporter JSON", export_pdf:"Exporter PDF", logout:"Déconnexion", language:"Langue", terms:"📜 Conditions d'utilisation", terms_title:"📜 Conditions d'utilisation", terms_text:"En utilisant cette application, vous acceptez toutes les conditions.", close:"Fermer", profile_title:"👤 Modifier le profil", change_photo:"Changer la photo", display_name:"Nom d'affichage", change_password:"🔑 Changer le mot de passe", save_profile:"💾 Enregistrer", cancel:"Annuler", change_password_title:"🔑 Changer le mot de passe", change:"Changer", add_guide_title:"➕ Ajouter un guide", guide_name:"Nom du guide", guide_name_opt:"Nom du guide (optionnel)", phone:"Téléphone", nationality:"Nationalité", people_count:"Nombre de personnes", transport_type:"Type de transport", small_bus:"Petit bus", large_bus:"Grand bus", car:"Voiture", van:"Van", other:"Autre", guide_photo:"📸 Photo du guide", bus_photo:"🚌 Photo du véhicule", agency:"Agence", notes:"Notes", private:"🔒 Privé", public:"🌍 Public (visible par tous)", save_guide:"💾 Enregistrer le guide", delegation_info:"📋 Informations de la délégation", transport:"Type de transport", plate:"Plaque", from:"De", to:"À", created_at:"Ajouté le :", sent_at:"Envoyé le :", created_by:"Créé par :", share_card:"Partager la carte", security_card_title:"Fiche de coordination", custom_group_label:"🏷️ Paragraphe personnalisé :", saved_numbers_label:"📋 Numéros enregistrés (cliquer pour envoyer):", add_numbers_label:"➕ Ajouter de nouveaux numéros (un par ligne):", save_numbers:"💾 Enregistrer les numéros", generate_card:"🔄 Générer la carte", search_placeholder:"🔍 Rechercher un guide...", delete_confirm:"Supprimer ce guide ?", deleted:"🗑️ Supprimé", saved:"✅ Enregistré avec succès", sync_ok:"✅ Synchronisation réussie", sync_fail:"❌ Échec de synchronisation", no_results:"😕 Aucun résultat", save_error:"❌ Erreur d'enregistrement", weather_unavailable:"Indisponible", add_custom_plate:"Ajouter une plaque personnalisée", add:"Ajouter", more:"Plus", call:"Appeler", card:"Carte", follow_up:"Suivi", edit:"Modifier", delete:"Supprimer", send:"Envoyer", link:"Lien", sent_history:"Historique d'envoi", resend:"Renvoyer", developer_section:"👨‍💻 Section développeur", manage_admins:"🛡️ Gérer les administrateurs", manage_users:"👥 Gérer les comptes", view_all_guides:"📋 Voir tous les ajouts", manage_users_title:"👥 Gérer les utilisateurs", create_user:"➕ Créer un compte", all_guides_title:"📋 Tous les ajouts", no_users:"Aucun utilisateur", loading:"Chargement...", private_badge:"🔒 Privé", public_badge:"🌍 Public", no_saved_numbers:"Aucun numéro enregistré. Ajoutez-en", card_ready:"Carte prête à envoyer" },
+        en: { login_sub:"Touristic & Diplomatic Delegations Management", login_btn:"Login", offline_btn:"🔄 Offline", login_info:"🔐 Accounts are created by Mr. Fahmi (admin)", edit_profile:"Edit Profile", tools_section:"Advanced Tools", sync:"Cloud Sync", export_json:"Export JSON", export_pdf:"Export PDF", logout:"Logout", language:"Language", terms:"📜 Terms of Service", terms_title:"📜 Terms of Service", terms_text:"By using this application, you agree to all terms.", close:"Close", profile_title:"👤 Edit Profile", change_photo:"Change Photo", display_name:"Display Name", change_password:"🔑 Change Password", save_profile:"💾 Save Changes", cancel:"Cancel", change_password_title:"🔑 Change Password", change:"Change", add_guide_title:"➕ Add New Guide", guide_name:"Guide Name", guide_name_opt:"Guide name (optional)", phone:"Phone Number", nationality:"Nationality", people_count:"Number of People", transport_type:"Transport Type", small_bus:"Small Bus", large_bus:"Large Bus", car:"Car", van:"Van", other:"Other", guide_photo:"📸 Guide Photo", bus_photo:"🚌 Vehicle Photo", agency:"Agency", notes:"Notes", private:"🔒 Private", public:"🌍 Public (visible to all)", save_guide:"💾 Save Guide", delegation_info:"📋 Delegation Information", transport:"Transport Type", plate:"Vehicle Plate", from:"From", to:"To", created_at:"Added on:", sent_at:"Sent on:", created_by:"Created by:", share_card:"Share Card", security_card_title:"Coordination Card", custom_group_label:"🏷️ Custom Paragraph:", saved_numbers_label:"📋 Saved Numbers (click to send):", add_numbers_label:"➕ Add New Numbers (one per line):", save_numbers:"💾 Save Numbers", generate_card:"🔄 Generate Card", search_placeholder:"🔍 Search guide...", delete_confirm:"Are you sure you want to delete?", deleted:"🗑️ Deleted", saved:"✅ Saved successfully", sync_ok:"✅ Sync successful", sync_fail:"❌ Sync failed", no_results:"😕 No results found", save_error:"❌ Save error", weather_unavailable:"Unavailable", add_custom_plate:"Add Custom Plate", add:"Add", more:"More", call:"Call", card:"Card", follow_up:"Follow up", edit:"Edit", delete:"Delete", send:"Send", link:"Link", sent_history:"Send History", resend:"Resend", developer_section:"👨‍💻 Developer Section", manage_admins:"🛡️ Manage Admins", manage_users:"👥 Manage Accounts", view_all_guides:"📋 View All Additions", manage_users_title:"👥 Manage Users", create_user:"➕ Create New Account", all_guides_title:"📋 All Additions", no_users:"No users found", loading:"Loading...", private_badge:"🔒 Private", public_badge:"🌍 Public", no_saved_numbers:"No saved numbers. Add new numbers", card_ready:"Card ready to send" }
     };
 
     function setLanguage(lang, updateLoginScreen = true) {
@@ -514,8 +536,7 @@
         return await uploadToCloudinary(file);
     }
     
-    // دالة رفع الصور المعدلة: تستخدم Cloudinary بدلاً من Firebase Storage
-    function setupImageUpload(btnId, imgId, progressId, callback) {
+    function setupImageUpload(btnId, imgId, progressId, callback, useFirebase = true) {
         const btn = document.getElementById(btnId);
         const img = document.getElementById(imgId);
         const progressBar = document.getElementById(progressId);
@@ -535,17 +556,26 @@
                 const fill = progressBar?.querySelector('.progress-fill');
                 if (fill) fill.style.width = '30%';
                 try {
-                    let finalUrl;
+                    let finalUrl = previewUrl;
                     if (navigator.onLine) {
-                        // استخدام Cloudinary بدلاً من Firebase Storage
-                        finalUrl = await uploadToCloudinary(file);
-                        if (fill) fill.style.width = '100%';
+                        try {
+                            finalUrl = await uploadToCloudinary(file);
+                        } catch(cloudErr) {
+                            if (useFirebase) {
+                                const compressed = await compressToBase64(file, 500, 0.6);
+                                const blob = await fetch(compressed).then(r => r.blob());
+                                const fileName = `guides/${Date.now()}_${Math.random().toString(36)}.jpg`;
+                                const ref = storage.ref(fileName);
+                                await ref.put(blob);
+                                finalUrl = await ref.getDownloadURL();
+                            } else {
+                                finalUrl = await compressToBase64(file, 500, 0.6);
+                            }
+                        }
                     } else {
-                        // وضع عدم الاتصال: حفظ كـ base64
-                        const base64 = await compressToBase64(file, 500, 0.6);
-                        finalUrl = base64;
-                        if (fill) fill.style.width = '100%';
+                        finalUrl = await compressToBase64(file, 500, 0.6);
                     }
+                    if (fill) fill.style.width = '100%';
                     img.src = finalUrl;
                     callback(finalUrl);
                     toast('✅ تم رفع الصورة بنجاح');
@@ -579,7 +609,48 @@
     // رفع الصور باستخدام الدالة المعدلة
     setupImageUpload('guideUploadBtn', 'guidePreview', 'guideProgress', (url) => { guidePhotoBase64 = url; }, true);
     setupImageUpload('busUploadBtn', 'busPreview', 'busProgress', (url) => { busPhotoBase64 = url; }, true);
+    // نظام صور الدراجة النارية (متعدد، إضافة/تعديل/حذف)
+    let editingMotorcycleIdx = -1;
+    const motorcycleFileInput = document.getElementById('motorcycleFileInput');
+    if (motorcycleFileInput) {
+        motorcycleFileInput.onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if (editingMotorcycleIdx >= 0 && editingMotorcycleIdx < motorcyclePhotos.length) {
+                    motorcyclePhotos[editingMotorcycleIdx] = ev.target.result;
+                } else if (motorcyclePhotos.length < 5) {
+                    motorcyclePhotos.push(ev.target.result);
+                }
+                editingMotorcycleIdx = -1;
+                renderMotorcycleGrid();
+            };
+            reader.readAsDataURL(file);
+            this.value = '';
+        };
+    }
+    const addMotoBtn = document.getElementById('addMotorcyclePhotoBtn');
+    if (addMotoBtn && motorcycleFileInput) {
+        addMotoBtn.onclick = () => {
+            if (motorcyclePhotos.length >= 5) return toast('⚠️ الحد الأقصى 5 صور');
+            editingMotorcycleIdx = -1;
+            motorcycleFileInput.click();
+        };
+    }
+    window.renderMotorcycleGrid = function() {
+        const grid = document.getElementById('motorcycleGrid');
+        if (!grid) return;
+        const photos = motorcyclePhotos.filter(p => p);
+        grid.innerHTML = photos.map((p, i) => `<div style="position:relative;width:52px;height:52px;border-radius:6px;overflow:hidden;border:1px solid var(--olive);flex-shrink:0;"><img src="${p}" style="width:100%;height:100%;object-fit:cover;cursor:pointer;" onclick="editMotorcyclePhoto(${i})"><button onclick="event.stopPropagation();deleteMotorcyclePhoto(${i})" style="position:absolute;top:-2px;right:-2px;border:none;background:#e74c3c;color:#fff;width:16px;height:16px;border-radius:50%;cursor:pointer;font-size:8px;padding:0;display:flex;align-items:center;justify-content:center;">✕</button></div>`).join('');
+    };
+    window.editMotorcyclePhoto = function(idx) { editingMotorcycleIdx = idx; if (motorcycleFileInput) motorcycleFileInput.click(); };
+    window.deleteMotorcyclePhoto = function(idx) {
+        motorcyclePhotos.splice(idx, 1);
+        renderMotorcycleGrid();
+    };
     setupImageUpload('profileUploadBtn', 'profileAvatar', null, async (url) => { userProfile.photoURL = url; if(currentUser) await currentUser.updateProfile({photoURL:url}); await db.collection('users').doc(currentUser.uid).set({photoURL:url},{merge:true}); toast('✅ ' + (currentLang === 'ar' ? 'تم تحديث الصورة' : (currentLang === 'fr' ? 'Photo mise à jour' : 'Photo updated'))); loadProfile(); }, true);
+    setupImageUpload('profileSafetyPhotoBtn', null, null, (url) => { profileSafetyPhotoBase64 = url; }, true);
     
     // عرض القائمة
     function renderGuides(){
@@ -595,24 +666,30 @@
         const container = document.getElementById('guidesContainer');
         if(!filtered.length){ container.innerHTML = `<div style="text-align:center;padding:30px;">😕 ${translations[currentLang].no_results}</div>`; return; }
         container.innerHTML = filtered.map(g => `
-            <div class="guide-card" data-id="${g.id}">
-                <div class="card-top">
-                    <img class="avatar" src="${g.guidePhoto || ''}" onclick="showFullImage('${g.guidePhoto || ''}')" onerror="this.style.display='none'">
-                    <div class="card-mid">
-                        <div class="name">${g.name || ''} ${g.nationality ? '('+g.nationality+')' : ''}</div>
-                        <div style="font-size:10px;color:var(--txt3);">🚐 ${g.transportType || '—'} | 👥 ${g.peopleCount || '—'} | ${g.visibility === 'private' ? '🔒' : '🌍'}</div>
-                        <div class="phone">📞 ${g.phone || ''}</div>
-                    </div>
-                </div>
-                <div style="padding:0 10px 10px 10px;">
-                    <button class="more-btn" data-id="${g.id}"><i class="fas fa-ellipsis-h"></i> ${translations[currentLang].more}</button>
-                    <div class="hidden-buttons" id="hidden-buttons-${g.id}">
-                        <button class="c-btn c-call" onclick="location.href='tel:${g.phone}'"><i class="fas fa-phone-alt"></i> ${translations[currentLang].call}</button>
-                        <button class="c-btn c-wa" onclick="window.open('https://wa.me/${(g.phone || '').replace(/[^0-9]/g, '')}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-                        <button class="c-btn c-card" onclick="showDelegationCard('${g.id}')"><i class="fas fa-id-card"></i> ${translations[currentLang].card}</button>
-                        <button class="c-btn c-security" onclick="showSecurityCard('${g.id}')"><i class="fas fa-exchange-alt"></i> ${translations[currentLang].follow_up}</button>
-                        ${(g.userId === currentUser?.uid || isDeveloper) ? `<button class="c-btn c-edit" onclick="editGuide('${g.id}')"><i class="fas fa-edit"></i> ${translations[currentLang].edit}</button>
-                        <button class="c-btn c-del" onclick="deleteGuide('${g.id}')"><i class="fas fa-trash-alt"></i> ${translations[currentLang].delete}</button>` : ''}
+            <div class="guide-card" data-id="${g.id}" style="overflow:hidden;" onclick="showSafetyTooltip('${g.id}')">
+                <div style="display:flex;min-height:100%;">
+                    <div style="width:4px;flex-shrink:0;background:${g.userId === 'offline' ? '#f1c40f' : '#2ecc71'};"></div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="card-top">
+                            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                                <span style="font-size:8px;color:var(--txt3);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;cursor:pointer;" title="${g.creatorName || ''}" onclick="event.stopPropagation();showGuideSafetyInfo('${g.id}')"><i class="fas fa-user-plus" style="font-size:7px;margin-right:1px;"></i> ${g.creatorName || ''}</span>
+                                ${g.phone ? `<div style="display:flex;align-items:center;border:1px solid var(--olive);border-radius:20px;overflow:hidden;"><button class="mini-phone-btn" onclick="event.stopPropagation();location.href='tel:+216${(g.phone||'').replace(/[^0-9]/g,'')}'" style="border:none;background:var(--ok);color:#fff;width:24px;height:24px;cursor:pointer;font-size:9px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="fas fa-phone-alt"></i></button><span style="font-size:9px;padding:0 3px;white-space:nowrap;cursor:pointer;" onclick="event.stopPropagation();location.href='tel:+216${(g.phone||'').replace(/[^0-9]/g,'')}'">+216 ${(g.phone||'').replace(/[^0-9]/g,'').slice(-8)}</span><button class="mini-wa-btn" onclick="event.stopPropagation();window.open('https://wa.me/216${(g.phone||'').replace(/[^0-9]/g,'')}')" style="border:none;background:#25D366;color:#fff;width:24px;height:24px;cursor:pointer;font-size:9px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="fab fa-whatsapp"></i></button></div>` : ''}
+                            </div>
+                            <img class="avatar" src="${g.guidePhoto || ''}" onclick="event.stopPropagation();showFullImage('${g.guidePhoto || ''}')" onerror="this.style.display='none'">
+                            <div class="card-mid">
+                                <div class="name">${g.name || ''} ${g.nationality ? '('+g.nationality+')' : ''}</div>
+                                <div style="font-size:10px;color:var(--txt3);">🚐 ${g.transportType || '—'} | 👥 ${g.peopleCount || '—'} | ${g.visibility === 'private' ? '🔒' : '🌍'}</div>
+                            </div>
+                        </div>
+                        <div style="padding:0 10px 10px 10px;">
+                            <button class="more-btn" data-id="${g.id}"><i class="fas fa-ellipsis-h"></i> ${translations[currentLang].more}</button>
+                            <div class="hidden-buttons" id="hidden-buttons-${g.id}">
+                                <button class="c-btn c-card" onclick="event.stopPropagation();showDelegationCard('${g.id}')"><i class="fas fa-id-card"></i> ${translations[currentLang].card}</button>
+                                <button class="c-btn c-security" onclick="event.stopPropagation();showSecurityCard('${g.id}')"><i class="fas fa-exchange-alt"></i> ${translations[currentLang].follow_up}</button>
+                                ${(g.userId === currentUser?.uid || isDeveloper) ? `<button class="c-btn c-edit" onclick="event.stopPropagation();editGuide('${g.id}')"><i class="fas fa-edit"></i> ${translations[currentLang].edit}</button>
+                                <button class="c-btn c-del" onclick="event.stopPropagation();deleteGuide('${g.id}')"><i class="fas fa-trash-alt"></i> ${translations[currentLang].delete}</button>` : ''}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -623,7 +700,9 @@
     window.editGuide = function(id){
         const g = guides.find(x=>x.id===id); if(!g) return;
         editId = id; guidePhotoBase64 = g.guidePhoto || ''; busPhotoBase64 = g.busPhoto || '';
-        document.getElementById('gName').value = g.name || ''; document.getElementById('gPhone').value = g.phone || '';
+        motorcyclePhotos = g.motorcyclePhotos ? [...g.motorcyclePhotos] : (g.motorcyclePhoto ? [g.motorcyclePhoto] : []);
+        document.getElementById('gName').value = g.name || '';
+        document.getElementById('gPhone').value = g.phone || '';
         document.getElementById('gNationality').value = g.nationality || ''; document.getElementById('gPeopleCount').value = g.peopleCount || '';
         document.getElementById('gTransport').value = g.transportType || ''; document.getElementById('gFrom').value = g.fromLocation || '';
         document.getElementById('gTo').value = g.toLocation || ''; document.getElementById('gAgency').value = g.agency || '';
@@ -635,12 +714,14 @@
         document.getElementById('gPlate').value = plateValue;
         document.getElementById('guidePreview').src = guidePhotoBase64; document.getElementById('guidePreview').style.display = guidePhotoBase64 ? 'block' : 'none';
         document.getElementById('busPreview').src = busPhotoBase64; document.getElementById('busPreview').style.display = busPhotoBase64 ? 'block' : 'none';
+        renderMotorcycleGrid();
         document.getElementById('modalTitle').innerHTML = translations[currentLang].edit + ' ' + translations[currentLang].guide_name;
         document.getElementById('guideModal').classList.add('show');
     };
     document.getElementById('addGuideBtn').onclick = () => {
-        editId = null; guidePhotoBase64 = ''; busPhotoBase64 = '';
-        document.getElementById('gName').value = ''; document.getElementById('gPhone').value = '';
+        editId = null; guidePhotoBase64 = ''; busPhotoBase64 = ''; motorcyclePhotos = [];
+        document.getElementById('gName').value = '';
+        document.getElementById('gPhone').value = '';
         document.getElementById('gNationality').value = ''; document.getElementById('gPeopleCount').value = '';
         document.getElementById('gTransport').value = ''; document.getElementById('gFrom').value = '';
         document.getElementById('gTo').value = ''; document.getElementById('gPlateRight').value = '';
@@ -648,6 +729,7 @@
         document.getElementById('gAgency').value = ''; document.getElementById('gNotes').value = '';
         document.getElementById('gVisibility').value = 'public';
         document.getElementById('guidePreview').style.display = 'none'; document.getElementById('busPreview').style.display = 'none';
+        renderMotorcycleGrid();
         document.getElementById('modalTitle').innerHTML = translations[currentLang].add_guide_title;
         document.getElementById('guideModal').classList.add('show');
     };
@@ -672,10 +754,66 @@
     cancelCustomPlate?.addEventListener('click', closeCustomPlateModal);
     customPlateModal?.addEventListener('click', (e) => { if(e.target === customPlateModal) closeCustomPlateModal(); });
     
+    // دوال عون السلامة
+    function showSafetyOfficerModal(officer) {
+        if (!officer || !officer.name) return;
+        document.getElementById('safetyOfficerModalPhoto').src = officer.photo || '';
+        document.getElementById('safetyOfficerModalName').innerText = officer.name;
+        document.getElementById('safetyOfficerModalPhone').innerHTML = '📞 ' + (officer.phone || 'غير متوفر');
+        document.getElementById('sendToSafetyOfficerBtn').setAttribute('data-phone', officer.phone || '');
+        document.getElementById('callSafetyOfficerBtn').setAttribute('data-phone', officer.phone || '');
+        document.getElementById('safetyOfficerModal').classList.add('show');
+    }
+    document.getElementById('sendToSafetyOfficerBtn').onclick = function() {
+        const phone = this.getAttribute('data-phone');
+        if (!phone) return toast('⚠️ رقم الهاتف غير متوفر');
+        let clean = phone.replace(/[^0-9+]/g, '');
+        if (!clean.startsWith('+')) clean = '+216' + clean.replace(/^0+/, '');
+        window.open('https://wa.me/' + clean + '?text=' + encodeURIComponent('مرحباً، هذه رسالة من تطبيق F-Note Pro Max'), '_blank');
+        toast('✅ تم فتح واتساب');
+    };
+    document.getElementById('callSafetyOfficerBtn').onclick = function() {
+        const phone = document.getElementById('safetyOfficerModalPhone').textContent.replace('📞 ', '').trim();
+        if (!phone || phone === 'غير متوفر') return toast('⚠️ رقم الهاتف غير متوفر');
+        let clean = phone.replace(/[^0-9+]/g, '');
+        if (!clean.startsWith('+')) clean = '+216' + clean.replace(/^0+/, '');
+        window.location.href = 'tel:' + clean;
+    };
+    document.getElementById('closeSafetyOfficerBtn').onclick = () => document.getElementById('safetyOfficerModal').classList.remove('show');
+    
+    window.showGuideSafetyInfo = function(id) {
+        const g = guides.find(x => x.id === id);
+        if (!g) return;
+        const officer = { name: g.safetyOfficerName || '', photo: g.safetyOfficerPhoto || '', phone: g.safetyOfficerPhone || '' };
+        showSafetyOfficerModal(officer);
+    };
+
+    window.showSafetyTooltip = function(id) {
+        const card = document.querySelector(`.guide-card[data-id="${id}"]`);
+        const g = guides.find(x => x.id === id);
+        if (!g || !card) return;
+        const existing = card.querySelector('.safety-tooltip');
+        if (existing) { existing.remove(); }
+        const tip = document.createElement('div');
+        tip.className = 'safety-tooltip';
+        const name = g.safetyOfficerName || 'عون السلامة';
+        const phone = g.safetyOfficerPhone ? '📞'+g.safetyOfficerPhone : '';
+        tip.innerHTML = '🛡️ '+ name + (phone ? ' '+phone : '');
+        Object.assign(tip.style, {
+            position: 'absolute', top: '4px', left: '50%', transform: 'translateX(-50%)',
+            background: 'var(--card)', border: '1px solid var(--olive)', borderRadius: '8px',
+            padding: '4px 10px', fontSize: '11px', zIndex: '20', whiteSpace: 'nowrap',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)', pointerEvents: 'none',
+            animation: 'safetyFade 1.2s ease-in-out forwards'
+        });
+        card.style.position = 'relative';
+        card.appendChild(tip);
+        setTimeout(() => { const t = card.querySelector('.safety-tooltip'); if(t) t.remove(); }, 1300);
+    };
+    
     document.getElementById('saveGuideBtn').onclick = async function() {
-        const name = document.getElementById('gName').value.trim();
+        const name = document.getElementById('gName').value.trim() || '';
         const phone = document.getElementById('gPhone').value.trim();
-        if (!name) return toast('⚠️ ' + (currentLang === 'ar' ? 'الاسم مطلوب' : (currentLang === 'fr' ? 'Nom requis' : 'Name required')));
         if (!phone) return toast('⚠️ ' + (currentLang === 'ar' ? 'رقم الجوال مطلوب' : (currentLang === 'fr' ? 'Téléphone requis' : 'Phone required')));
         const saveBtn = this; saveBtn.disabled = true; saveBtn.innerHTML = '<span class="spinner-small"></span> ' + (currentLang === 'ar' ? 'حفظ...' : (currentLang === 'fr' ? 'Enregistrement...' : 'Saving...'));
         try {
@@ -703,9 +841,14 @@
                 plate: plateValue,
                 guidePhoto: guidePhotoBase64 || null,
                 busPhoto: busPhotoBase64 || null,
+                motorcyclePhotos: motorcyclePhotos.filter(p => p),
+                safetyOfficerName: (userProfile.safetyOfficerName || '').trim(),
+                safetyOfficerPhone: (userProfile.safetyOfficerPhone || '').trim(),
+                safetyOfficerPhoto: userProfile.safetyOfficerPhoto || null,
                 agency: document.getElementById('gAgency').value.trim(),
                 notes: document.getElementById('gNotes').value.trim(),
                 visibility: document.getElementById('gVisibility').value,
+                _synced: currentUser && currentUser.uid !== 'offline' && navigator.onLine,
                 updatedAt: now.toISOString(),
                 createdAt: editId ? (guides.find(g => g.id === editId)?.createdAt || now.toISOString()) : now.toISOString()
             };
@@ -724,10 +867,13 @@
         document.getElementById('sidebarDisplayName').innerHTML = userProfile.displayName || currentUser?.email || '...';
         document.getElementById('sidebarEmail').innerHTML = currentUser?.email || '';
         document.getElementById('sidebarAvatar').src = userProfile.photoURL || 'https://ui-avatars.com/api/?background=556B2F&color=fff&name='+encodeURIComponent(userProfile.displayName||'User');
+        document.getElementById('profileSafetyName').value = userProfile.safetyOfficerName || '';
+        document.getElementById('profileSafetyPhone').value = userProfile.safetyOfficerPhone || '';
+        profileSafetyPhotoBase64 = userProfile.safetyOfficerPhoto || '';
     }
     document.getElementById('editProfileSidebarBtn').onclick = ()=>document.getElementById('profileModal').classList.add('show');
     document.getElementById('closeProfileBtn').onclick = ()=>document.getElementById('profileModal').classList.remove('show');
-    document.getElementById('saveProfileBtn').onclick = async ()=>{ const newName = document.getElementById('profileDisplayName').value.trim(); if(newName && currentUser){ await currentUser.updateProfile({displayName:newName}); userProfile.displayName = newName; await db.collection('users').doc(currentUser.uid).set({displayName:newName, photoURL:userProfile.photoURL},{merge:true}); toast('✅ ' + (currentLang === 'ar' ? 'تم تحديث الاسم' : (currentLang === 'fr' ? 'Nom mis à jour' : 'Name updated'))); loadProfile(); } document.getElementById('profileModal').classList.remove('show'); };
+    document.getElementById('saveProfileBtn').onclick = async ()=>{ const newName = document.getElementById('profileDisplayName').value.trim(); const safetyName = document.getElementById('profileSafetyName').value.trim(); const safetyPhone = document.getElementById('profileSafetyPhone').value.trim(); if(newName && currentUser){ await currentUser.updateProfile({displayName:newName}); userProfile.displayName = newName; userProfile.safetyOfficerName = safetyName; userProfile.safetyOfficerPhone = safetyPhone; if(profileSafetyPhotoBase64) userProfile.safetyOfficerPhoto = profileSafetyPhotoBase64; await db.collection('users').doc(currentUser.uid).set({displayName:newName, photoURL:userProfile.photoURL, safetyOfficerName:safetyName, safetyOfficerPhone:safetyPhone, safetyOfficerPhoto:userProfile.safetyOfficerPhoto||null},{merge:true}); toast('✅ ' + (currentLang === 'ar' ? 'تم تحديث الملف الشخصي' : (currentLang === 'fr' ? 'Profil mis à jour' : 'Profile updated'))); loadProfile(); } document.getElementById('profileModal').classList.remove('show'); };
     document.getElementById('changePasswordBtn').onclick = ()=>document.getElementById('passwordModal').classList.add('show');
     document.getElementById('closePasswordBtn').onclick = ()=>document.getElementById('passwordModal').classList.remove('show');
     document.getElementById('confirmPasswordBtn').onclick = async ()=>{ const oldPwd = document.getElementById('oldPassword').value, newPwd = document.getElementById('newPassword').value, confirm = document.getElementById('confirmPassword').value; if(newPwd !== confirm) return toast('❌ ' + (currentLang === 'ar' ? 'كلمة المرور الجديدة غير متطابقة' : (currentLang === 'fr' ? 'Les mots de passe ne correspondent pas' : 'Passwords do not match'))); try{ const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, oldPwd); await currentUser.reauthenticateWithCredential(credential); await currentUser.updatePassword(newPwd); toast('✅ ' + (currentLang === 'ar' ? 'تم تغيير كلمة المرور' : (currentLang === 'fr' ? 'Mot de passe changé' : 'Password changed'))); document.getElementById('passwordModal').classList.remove('show'); } catch(err){ toast('❌ ' + (currentLang === 'ar' ? 'فشل التغيير: ' : (currentLang === 'fr' ? 'Échec : ' : 'Failed: ')) + err.message); } };
@@ -735,13 +881,30 @@
     window.showDelegationCard = async function(id){
         const g = guides.find(x=>x.id===id); if(!g) return; currentGuideForCards = g; await fetchWeather();
         document.getElementById('delegationMainImg').src = g.busPhoto || ''; document.getElementById('delegationAvatar').src = g.guidePhoto || '';
+        const gp = g.guidePhoto || ''; const gpEl = document.getElementById('delegationGuidePhoto');
+        if (gp) { gpEl.src = gp; gpEl.style.display = 'inline-block'; } else gpEl.style.display = 'none';
         document.getElementById('delegationGuideName').innerHTML = g.name || '—'; document.getElementById('delegationPhone').innerHTML = g.phone || '—';
+        document.getElementById('delegationAgencyHeader').textContent = g.agency ? '🏢 ' + g.agency : '';
+        const pa = document.getElementById('delegationPhoneActions');
+        if (pa && g.phone) { pa.innerHTML = '<button class="phone-action-btn call-btn" onclick="location.href=\'tel:' + g.phone + '\'"><i class="fas fa-phone-alt"></i></button><button class="phone-action-btn whatsapp-btn" onclick="window.open(\'https://wa.me/' + (g.phone||'').replace(/[^0-9]/g,'') + '\')"><i class="fab fa-whatsapp"></i></button>'; }
+        else if (pa) pa.innerHTML = '';
         document.getElementById('delegationNationality').innerHTML = g.nationality || '—'; document.getElementById('delegationPeopleCount').innerHTML = g.peopleCount || '—';
+        document.getElementById('delegationCarCount').innerHTML = (g.carCount || 0) + ((g.carCount || 0) > 1 ? ' سيارات' : ' سيارة');
         document.getElementById('delegationTransport').innerHTML = g.transportType || '—'; document.getElementById('delegationPlate').innerHTML = formatPlateDisplay(g.plate || '—');
         document.getElementById('delegationFrom').innerHTML = g.fromLocation || '—'; document.getElementById('delegationTo').innerHTML = g.toLocation || '—';
         document.getElementById('delegationAgency').innerHTML = g.agency || '—';
         if (g.notes) { document.getElementById('delegationNotesRow').style.display = 'block'; document.getElementById('delegationNotes').innerHTML = g.notes; }
         else { document.getElementById('delegationNotesRow').style.display = 'none'; }
+        // عرض عون السلامة
+        const officer = { name: g.safetyOfficerName, photo: g.safetyOfficerPhoto, phone: g.safetyOfficerPhone };
+        const existingSafetyDiv = document.getElementById('safetyOfficerCardBtn');
+        if (existingSafetyDiv) existingSafetyDiv.remove();
+        if (officer.name) {
+            const officerHtml = '<div class="agency-box" style="background:var(--bg); border-radius:14px; padding:10px; margin-bottom:12px; cursor:pointer;" id="safetyOfficerCardBtn"><span class="label"><i class="fas fa-shield-alt"></i> عون السلامة</span><div style="display:flex; align-items:center; gap:10px; margin-top:6px;"><img src="' + (officer.photo||'') + '" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" onerror="this.src=\'https://ui-avatars.com/api/?background=556B2F&color=fff&name=' + encodeURIComponent(officer.name) + '\'"><div><strong>' + officer.name + '</strong><br><span style="font-size:12px;">📞 ' + (officer.phone||'—') + '</span></div><div style="display:flex;gap:4px;margin-right:auto;"><button class="phone-action-btn call-btn" onclick="event.stopPropagation();var p=\'' + (officer.phone||'').replace(/'/g,"\\'") + '\';if(p){var c=p.replace(/[^0-9+]/g,\'\');if(!c.startsWith(\'+\'))c=\'+216\'+c.replace(/^0+/,\'\');location.href=\'tel:\'+c;}"><i class="fas fa-phone-alt"></i></button><button class="phone-action-btn whatsapp-btn" onclick="event.stopPropagation();var p=\'' + (officer.phone||'').replace(/'/g,"\\'") + '\';if(p){var c=p.replace(/[^0-9+]/g,\'\');if(!c.startsWith(\'+\'))c=\'+216\'+c.replace(/^0+/,\'\');window.open(\'https://wa.me/\'+c);}"><i class="fab fa-whatsapp"></i></button></div></div></div>';
+            const agencyBox = document.querySelector('#delegationCard .agency-box');
+            if (agencyBox) agencyBox.insertAdjacentHTML('beforebegin', officerHtml);
+            setTimeout(() => document.getElementById('safetyOfficerCardBtn')?.addEventListener('click', () => showSafetyOfficerModal(officer)), 50);
+        }
         const now = new Date(); document.getElementById('delegationDate').innerHTML = now.toLocaleDateString('ar-TN'); document.getElementById('delegationTime').innerHTML = now.toLocaleTimeString('ar-TN');
         document.getElementById('delegationWeather').innerHTML = getWeatherHtml();
         document.getElementById('creationTimestamp').innerHTML = g.createdAt ? new Date(g.createdAt).toLocaleString('ar-TN') : (currentLang === 'ar' ? 'غير معروف' : (currentLang === 'fr' ? 'Inconnu' : 'Unknown'));
@@ -809,13 +972,14 @@
         preview.innerHTML = `
             <div class="datetime-bar"><span><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString()}</span><span><i class="far fa-clock"></i> ${now.toLocaleTimeString()}</span><div class="weather-info">${getWeatherHtml()}</div></div>
             <div class="card-img-area" style="height:130px;"><img class="main-img" src="${g.busPhoto || ''}"><img class="overlay-avatar" src="${g.guidePhoto || ''}" style="width:45px;height:45px;"></div>
-            <div class="guide-info-row" style="padding:8px 12px;"><span class="guide-name-card">${g.name || '—'}</span><span class="guide-phone-card">${g.phone || '—'}</span></div>
+            <div class="guide-info-row" style="padding:8px 12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${g.guidePhoto?'<img src="'+g.guidePhoto+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0;">':''}<span class="guide-name-card">${g.name || '—'}</span><span class="guide-phone-card">${g.phone || '—'}</span><span style="font-size:9px;opacity:0.8;">${g.agency?'🏢 '+g.agency:''}</span></div>
             <div class="card-content">
                 <div class="info-grid">
                     <div class="info-item"><span class="label">${translations[currentLang].nationality}</span><span class="value">${g.nationality || '—'}</span></div>
                     <div class="info-item"><span class="label">${translations[currentLang].people_count}</span><span class="value">${g.peopleCount || '—'}</span></div>
+                    <div class="info-item"><span class="label">🚗 سيارات</span><span class="value">${g.carCount || 0}</span></div>
                     <div class="info-item"><span class="label">${translations[currentLang].transport}</span><span class="value">${g.transportType || '—'}</span></div>
-                    <div class="info-item"><span class="label">${translations[currentLang].plate}</span><span class="value">${formatPlateDisplay(g.plate || '—')}</span></div>
+                    <div class="info-item" style="grid-column:span 2;"><span class="label">${translations[currentLang].plate}</span><span class="value" style="display:block;text-align:center;">${formatPlateDisplay(g.plate || '—')}</span></div>
                     <div class="info-item"><span class="label">${translations[currentLang].from}</span><span class="value">${g.fromLocation || '—'}</span></div>
                     <div class="info-item"><span class="label">${translations[currentLang].to}</span><span class="value">${g.toLocation || '—'}</span></div>
                 </div>
@@ -825,6 +989,11 @@
                 <div class="timestamp-row"><span><i class="far fa-plus-square"></i> ${translations[currentLang].created_at} ${g.createdAt?new Date(g.createdAt).toLocaleString():'غير معروف'}</span><span><i class="fab fa-whatsapp"></i> ${translations[currentLang].sent_at} ${new Date().toLocaleString()}</span><span><i class="fas fa-user-check"></i> ${translations[currentLang].created_by} ${g.creatorName||'غير معروف'}</span></div>
             </div>
         `;
+        const officer = { name: g.safetyOfficerName, photo: g.safetyOfficerPhoto, phone: g.safetyOfficerPhone };
+        if (officer.name) {
+            preview.innerHTML += '<div class="agency-box" style="background:var(--bg); border-radius:14px; padding:10px; margin-top:8px; cursor:pointer;" id="securitySafetyOfficerBtn"><span class="label"><i class="fas fa-shield-alt"></i> عون السلامة</span><div style="display:flex; align-items:center; gap:10px; margin-top:6px;"><img src="' + (officer.photo||'') + '" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" onerror="this.src=\'https://ui-avatars.com/api/?background=556B2F&color=fff&name=' + encodeURIComponent(officer.name) + '\'"><div><strong>' + officer.name + '</strong><br><span style="font-size:12px;">📞 ' + (officer.phone||'—') + '</span></div></div></div>';
+            setTimeout(() => document.getElementById('securitySafetyOfficerBtn')?.addEventListener('click', () => showSafetyOfficerModal(officer)), 100);
+        }
     }
     
     // إنشاء البطاقة ورفعها إلى Cloudinary
@@ -902,10 +1071,10 @@
     document.getElementById('saveNumbersBtn')?.addEventListener('click', saveNewNumbers);
     
     // دوال المزامنة والمطور (كما هي)
-    async function syncGuicesToCloud(){ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userDocs = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicDocs = await db.collection('guides').where('visibility','==','public').get(); const cloudMap = new Map(); userDocs.forEach(doc=>cloudMap.set(doc.id, {id:doc.id, ...doc.data()})); publicDocs.forEach(doc=>{ if(!cloudMap.has(doc.id)) cloudMap.set(doc.id, {id:doc.id, ...doc.data()}); }); let changed = false; for(let cloud of cloudMap.values()){ const local = guides.find(g=>g.id===cloud.id); if(!local){ guides.push(cloud); changed = true; } else if(new Date(cloud.updatedAt||0) > new Date(local.updatedAt||0)){ const index = guides.findIndex(g=>g.id===cloud.id); guides[index] = cloud; changed = true; } } for(let local of guides){ const cloud = cloudMap.get(local.id); if(!cloud && (local.userId === currentUser.uid || local.visibility === 'public')){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } else if(cloud && new Date(local.updatedAt||0) > new Date(cloud.updatedAt||0) && local.userId === currentUser.uid){ await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } return true; } catch(e){ console.error(e); return false; } }
-    async function syncGuidesFromCloud(){ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userSnap = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicSnap = await db.collection('guides').where('visibility','==','public').get(); let cloudGuides = []; userSnap.forEach(d=>cloudGuides.push({id:d.id, ...d.data()})); publicSnap.forEach(d=>{ if(!cloudGuides.find(c=>c.id===d.id)) cloudGuides.push({id:d.id, ...d.data()}); }); const merged = [...guides]; for(let cloud of cloudGuides){ const idx = merged.findIndex(l=>l.id===cloud.id); if(idx === -1) merged.push(cloud); else if(new Date(cloud.updatedAt||0) > new Date(merged[idx].updatedAt||0)) merged[idx] = cloud; } guides = merged; LDB.saveGuides(guides); renderGuides(); return true; } catch(e){ console.error(e); return false; } }
+    async function syncGuicesToCloud(){ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userDocs = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicDocs = await db.collection('guides').where('visibility','==','public').get(); const cloudMap = new Map(); userDocs.forEach(doc=>cloudMap.set(doc.id, {id:doc.id, ...doc.data()})); publicDocs.forEach(doc=>{ if(!cloudMap.has(doc.id)) cloudMap.set(doc.id, {id:doc.id, ...doc.data()}); }); let changed = false; for(let cloud of cloudMap.values()){ const local = guides.find(g=>g.id===cloud.id); if(!local){ cloud._synced = true; guides.push(cloud); changed = true; } else if(new Date(cloud.updatedAt||0) > new Date(local.updatedAt||0)){ const index = guides.findIndex(g=>g.id===cloud.id); cloud._synced = true; guides[index] = cloud; changed = true; } } for(let local of guides){ const cloud = cloudMap.get(local.id); if(!cloud && (local.userId === currentUser.uid || local.visibility === 'public')){ local._synced = true; await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } else if(cloud && new Date(local.updatedAt||0) > new Date(cloud.updatedAt||0) && local.userId === currentUser.uid){ local._synced = true; await db.collection('guides').doc(local.id).set(local, {merge:true}); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } return true; } catch(e){ console.error(e); return false; } }
+    async function syncGuidesFromCloud(){ if(!currentUser || currentUser.uid==='offline' || !navigator.onLine) return false; try{ const userSnap = await db.collection('guides').where('userId','==',currentUser.uid).get(); const publicSnap = await db.collection('guides').where('visibility','==','public').get(); let cloudGuides = []; userSnap.forEach(d=>{ const g = {id:d.id, ...d.data()}; g._synced = true; cloudGuides.push(g); }); publicSnap.forEach(d=>{ if(!cloudGuides.find(c=>c.id===d.id)){ const g = {id:d.id, ...d.data()}; g._synced = true; cloudGuides.push(g); } }); const merged = [...guides]; for(let cloud of cloudGuides){ const idx = merged.findIndex(l=>l.id===cloud.id); if(idx === -1) merged.push(cloud); else if(new Date(cloud.updatedAt||0) > new Date(merged[idx].updatedAt||0)) merged[idx] = cloud; } guides = merged; LDB.saveGuides(guides); renderGuides(); return true; } catch(e){ console.error(e); return false; } }
     async function fullSync(){ toast('⏳ ' + (currentLang === 'ar' ? 'جاري المزامنة...' : (currentLang === 'fr' ? 'Synchronisation...' : 'Syncing...'))); const ok = await syncGuicesToCloud() && await syncGuidesFromCloud(); if(ok) toast(translations[currentLang].sync_ok); else toast(translations[currentLang].sync_fail); }
-    function startFirestoreListener(){ if(unsubscribeFirestore) unsubscribeFirestore(); if(!currentUser || currentUser.uid==='offline') return; unsubscribeFirestore = db.collection('guides').onSnapshot(async snapshot=>{ let changed = false; for(let change of snapshot.docChanges()){ const newData = {id:change.doc.id, ...change.doc.data()}; const index = guides.findIndex(g=>g.id===newData.id); if(change.type === 'added' || change.type === 'modified'){ if(index !== -1){ if(new Date(newData.updatedAt||0) > new Date(guides[index].updatedAt||0)){ guides[index] = newData; changed = true; } } else { guides.push(newData); changed = true; } } else if(change.type === 'removed'){ guides = guides.filter(g=>g.id !== change.doc.id); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } }, err=>{ console.warn("Listener error, retrying in 5s", err); setTimeout(startFirestoreListener,5000); }); }
+    function startFirestoreListener(){ if(unsubscribeFirestore) unsubscribeFirestore(); if(!currentUser || currentUser.uid==='offline') return; unsubscribeFirestore = db.collection('guides').onSnapshot(async snapshot=>{ let changed = false; for(let change of snapshot.docChanges()){ const newData = {id:change.doc.id, ...change.doc.data()}; newData._synced = true; const index = guides.findIndex(g=>g.id===newData.id); if(change.type === 'added' || change.type === 'modified'){ if(index !== -1){ if(new Date(newData.updatedAt||0) > new Date(guides[index].updatedAt||0)){ guides[index] = newData; changed = true; } } else { guides.push(newData); changed = true; } } else if(change.type === 'removed'){ guides = guides.filter(g=>g.id !== change.doc.id); changed = true; } } if(changed){ LDB.saveGuides(guides); renderGuides(); } }, err=>{ console.warn("Listener error, retrying in 5s", err); setTimeout(startFirestoreListener,5000); }); }
     document.getElementById('refreshBtn').onclick = async ()=>{ if(!currentUser || currentUser.uid==='offline') return toast('⚠️ ' + (currentLang === 'ar' ? 'المزامنة تتطلب اتصالاً' : (currentLang === 'fr' ? 'La synchronisation nécessite une connexion' : 'Sync requires connection'))); await fullSync(); };
     document.getElementById('syncBtn').onclick = async ()=>{ if(!currentUser || currentUser.uid==='offline') return toast('⚠️ ' + (currentLang === 'ar' ? 'تتطلب اتصالاً' : (currentLang === 'fr' ? 'Connexion requise' : 'Connection required'))); await fullSync(); };
     document.getElementById('voiceSearchBtn').onclick = ()=>{ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if(!SpeechRecognition) return toast('⚠️ ' + (currentLang === 'ar' ? 'غير مدعوم' : (currentLang === 'fr' ? 'Non supporté' : 'Not supported'))); const rec = new SpeechRecognition(); rec.lang = currentLang === 'ar' ? 'ar-TN' : (currentLang === 'fr' ? 'fr-FR' : 'en-US'); rec.start(); rec.onresult = e=>{ document.getElementById('searchInput').value = e.results[0][0].transcript; renderGuides(); }; rec.onerror = ()=>toast('⚠️ ' + (currentLang === 'ar' ? 'لم يتم التعرف' : (currentLang === 'fr' ? 'Non reconnu' : 'Not recognized'))); };
@@ -923,11 +1092,42 @@
     document.getElementById('closeTermsBtn')?.addEventListener('click', ()=>document.getElementById('termsModal').classList.remove('show'));
     document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
     document.getElementById('loginBtn').onclick = async ()=>{ const email = document.getElementById('loginEmail').value.trim(); const pass = document.getElementById('loginPassword').value; if(!email || !pass) return toast('⚠️ ' + (currentLang === 'ar' ? 'أدخل البريد وكلمة المرور' : (currentLang === 'fr' ? 'Entrez email et mot de passe' : 'Enter email and password'))); try{ await auth.signInWithEmailAndPassword(email,pass); } catch(e){ document.getElementById('loginError').textContent = 'خطأ: '+e.message; document.getElementById('loginError').style.display = 'block'; toast('❌ ' + (currentLang === 'ar' ? 'فشل تسجيل الدخول' : (currentLang === 'fr' ? 'Échec de connexion' : 'Login failed'))); } };
-    document.getElementById('offlineBtn').onclick = ()=>{ currentUser = { uid:'offline', email:'offline@local' }; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; guides = LDB.getGuides(); renderGuides(); if(unsubscribeFirestore) unsubscribeFirestore(); isDeveloper = false; document.getElementById('developerSection').style.display = 'none'; };
+    document.getElementById('offlineBtn').onclick = ()=>{ currentUser = { uid:'offline', email:'offline@local' }; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block'; guides = LDB.getGuides(); renderGuides(); if(unsubscribeFirestore) unsubscribeFirestore(); isDeveloper = isDevUser('offline'); document.getElementById('developerSection').style.display = isDeveloper ? 'block' : 'none'; };
     document.getElementById('signOutBtn').onclick = ()=>auth.signOut();
     document.getElementById('exportJsonBtn').onclick = ()=>{ const blob = new Blob([JSON.stringify(guides,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'guides_backup.json'; a.click(); toast('📄 ' + (currentLang === 'ar' ? 'تم التصدير' : (currentLang === 'fr' ? 'Exporté' : 'Exported'))); };
     document.getElementById('exportPdfBtn').onclick = ()=>{ const el = document.createElement('div'); el.style.padding = '20px'; el.innerHTML = '<h1>F-Note Pro Max</h1><hr>'+guides.map(g=>`<p><strong>${g.name}</strong> – ${g.phone} | ${g.nationality||''} | ${g.transportType||''}</p>`).join(''); html2pdf().from(el).save('guides.pdf'); toast('📕 ' + (currentLang === 'ar' ? 'تم التصدير' : (currentLang === 'fr' ? 'Exporté' : 'Exported'))); };
     // دوال المطور
+    function refreshAdminUidsList() {
+        const container = document.getElementById('adminUidsList');
+        adminUids = JSON.parse(localStorage.getItem('fnote_admin_uids') || '[]');
+        if (adminUids.length === 0) { container.innerHTML = '<div style="text-align:center;padding:15px;color:var(--txt3);">لا يوجد مديرين إضافيين</div>'; return; }
+        container.innerHTML = adminUids.map((uid, idx) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--bg);border-radius:8px;margin-bottom:5px;"><code style="font-size:11px;word-break:break-all;flex:1;">${uid}</code><button class="remove-admin-btn" data-index="${idx}" style="border:none;background:#e74c3c;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;flex-shrink:0;"><i class="fas fa-times"></i></button></div>`).join('');
+        document.querySelectorAll('.remove-admin-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                adminUids.splice(idx, 1);
+                localStorage.setItem('fnote_admin_uids', JSON.stringify(adminUids));
+                refreshAdminUidsList();
+                if (currentUser) { isDeveloper = isDevUser(currentUser.uid); document.getElementById('developerSection').style.display = isDeveloper ? 'block' : 'none'; }
+                toast('✅ تم إزالة المدير');
+            });
+        });
+    }
+    document.getElementById('manageAdminsBtn')?.addEventListener('click', () => { if (!isDeveloper) return; refreshAdminUidsList(); document.getElementById('adminUidsModal').classList.add('show'); });
+    document.getElementById('closeAdminUidsBtn')?.addEventListener('click', () => { document.getElementById('adminUidsModal').classList.remove('show'); });
+    document.getElementById('addAdminUidBtn')?.addEventListener('click', () => {
+        const uid = document.getElementById('newAdminUid').value.trim();
+        if (!uid) return toast('⚠️ الرجاء إدخال UID');
+        if (uid === 'OK7lshSuUrhVBV7WHn2EL0tiOJo2') return toast('⚠️ هذا هو المطور الأساسي بالفعل');
+        adminUids = JSON.parse(localStorage.getItem('fnote_admin_uids') || '[]');
+        if (adminUids.includes(uid)) return toast('⚠️ هذا المستخدم مضاف بالفعل');
+        adminUids.push(uid);
+        localStorage.setItem('fnote_admin_uids', JSON.stringify(adminUids));
+        document.getElementById('newAdminUid').value = '';
+        refreshAdminUidsList();
+        if (currentUser) { isDeveloper = isDevUser(currentUser.uid); document.getElementById('developerSection').style.display = isDeveloper ? 'block' : 'none'; }
+        toast('✅ تم إضافة مدير جديد');
+    });
     async function loadUsersList() {
         if (!isDeveloper) return;
         const usersListDiv = document.getElementById('usersList');
@@ -952,9 +1152,8 @@
             currentUser = u; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'block';
             const doc = await db.collection('users').doc(u.uid).get();
             if(doc.exists) userProfile = doc.data(); else { userProfile = { displayName: u.email, photoURL: '' }; await db.collection('users').doc(u.uid).set(userProfile); }
-            isDeveloper = (u.uid === DEVELOPER_UID);
-            if (isDeveloper) { document.getElementById('developerSection').style.display = 'block'; }
-            else { document.getElementById('developerSection').style.display = 'none'; }
+            isDeveloper = isDevUser(u.uid);
+            document.getElementById('developerSection').style.display = isDeveloper ? 'block' : 'none';
             await loadProfile(); await fullSync(); startFirestoreListener();
         } else { if(unsubscribeFirestore) unsubscribeFirestore(); currentUser = null; isDeveloper = false; document.getElementById('appContainer').style.display = 'none'; document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('loginEmail').value = ''; document.getElementById('loginPassword').value = ''; document.getElementById('loginError').style.display = 'none'; }
     });
